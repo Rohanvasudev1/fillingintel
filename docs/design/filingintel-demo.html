@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FilingIntel — MVP demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F6F7F5; --panel:#FFFFFF; --ink:#1B2A41; --ink-2:#4A5668; --rule:#D3D8DE;
+  --hl:#F7E48A; --hl-ink:#3B3212; --teal:#2F6F73; --teal-soft:#E3EFEF; --loss:#A8433D; --loss-soft:#F6E6E4;
+  --win:#2F6F73; --focus:#2F6F73;
+  --sans:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --serif:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141B25; --panel:#1B2431; --ink:#E6EAF0; --ink-2:#A3AEBD; --rule:#2F3A49;
+    --hl:#5E5220; --hl-ink:#FFF3C2; --teal:#6FB3B6; --teal-soft:#1E3336; --loss:#E08A83; --loss-soft:#3A2323; --win:#6FB3B6; --focus:#6FB3B6;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141B25; --panel:#1B2431; --ink:#E6EAF0; --ink-2:#A3AEBD; --rule:#2F3A49;
+  --hl:#5E5220; --hl-ink:#FFF3C2; --teal:#6FB3B6; --teal-soft:#1E3336; --loss:#E08A83; --loss-soft:#3A2323; --win:#6FB3B6; --focus:#6FB3B6;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:3px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+/* top bar */
+.bar{display:flex;align-items:center;gap:24px;padding:14px 28px;border-bottom:1px solid var(--rule);background:var(--panel);flex-wrap:wrap}
+.mark{font-weight:600;font-size:17px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+.mark svg{flex:none}
+.tabs{display:flex;gap:4px}
+.tab{background:none;border:0;padding:8px 14px;border-radius:6px;cursor:pointer;color:var(--ink-2);font-weight:500}
+.tab[aria-selected="true"]{background:var(--teal-soft);color:var(--ink)}
+.corpus{margin-left:auto;display:flex;gap:8px;align-items:center;font-size:13px;color:var(--ink-2);flex-wrap:wrap}
+.filing{border:1px solid var(--rule);border-radius:4px;padding:3px 8px;color:var(--ink);font-variant-numeric:tabular-nums}
+.demo-note{background:var(--hl);color:var(--hl-ink);padding:6px 28px;font-size:13px}
+
+main{max-width:1400px;margin:0 auto;padding:24px 28px 48px}
+[hidden]{display:none!important}
+
+/* ask view */
+.ask{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,440px);gap:28px;align-items:start}
+.qbox{display:flex;gap:8px;margin-bottom:12px}
+.qbox input{flex:1;min-width:0;font:inherit;font-size:16px;padding:12px 14px;border:1px solid var(--rule);border-radius:8px;background:var(--panel);color:var(--ink)}
+.qbox button{border:0;background:var(--ink);color:var(--paper);padding:0 18px;border-radius:8px;cursor:pointer;font-weight:500}
+.samples{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px}
+.sample{background:none;border:1px solid var(--rule);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer;color:var(--ink-2);text-align:left}
+.sample[aria-pressed="true"]{border-color:var(--teal);color:var(--ink);background:var(--teal-soft)}
+
+.question{font-size:22px;font-weight:500;letter-spacing:-.01em;margin:0 0 6px;line-height:1.3}
+.route{font-size:13px;color:var(--ink-2);margin-bottom:18px}
+.route b{color:var(--teal);font-weight:600}
+.answer{font-family:var(--serif);font-size:18px;line-height:1.65;max-width:68ch;margin:0 0 28px}
+.answer p{margin:0 0 .9em}
+.cite{font-family:var(--sans);font-size:11px;font-weight:600;vertical-align:super;line-height:0;border:1px solid var(--rule);background:var(--panel);border-radius:3px;padding:3px 5px;margin:0 1px;cursor:pointer;color:var(--ink-2)}
+.cite[aria-pressed="true"]{background:var(--hl);color:var(--hl-ink);border-color:transparent}
+.declined{border-left:3px solid var(--loss);padding-left:14px}
+
+details.trace{border-top:1px solid var(--rule);padding-top:14px;max-width:760px}
+details.trace summary{cursor:pointer;font-weight:500;font-size:14px}
+.steps{list-style:none;margin:14px 0 0;padding:0;counter-reset:s}
+.steps li{position:relative;padding:0 0 16px 34px;font-size:14px;color:var(--ink-2)}
+.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;border:1px solid var(--rule);display:grid;place-items:center;font-size:12px;color:var(--ink)}
+.steps li strong{color:var(--ink);font-weight:500;display:block}
+.scroll{overflow-x:auto;max-width:100%}
+pre.cypher{font-family:var(--mono);font-size:12.5px;background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:10px 12px;margin:8px 0 0;color:var(--ink);white-space:pre}
+table.chunks{border-collapse:collapse;font-size:13px;margin-top:8px;width:100%;min-width:420px}
+.chunks td,.chunks th{padding:5px 8px;border-bottom:1px solid var(--rule);text-align:left;font-variant-numeric:tabular-nums}
+.chunks th{font-weight:500;color:var(--ink-2)}
+.chunks tr.used td{color:var(--ink)}
+.chunks .tag{font-size:11px;color:var(--teal);font-weight:600}
+
+/* source panel */
+.source{position:sticky;top:16px;background:var(--panel);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.source header{padding:14px 18px;border-bottom:1px solid var(--rule)}
+.source h2{font-size:14px;margin:0;font-weight:600}
+.source .meta{font-size:12.5px;color:var(--ink-2);margin-top:2px}
+.doc{font-family:var(--serif);font-size:15.5px;line-height:1.7;padding:18px;max-height:62vh;overflow:auto}
+.doc p{margin:0 0 1em}
+.doc mark{background:var(--hl);color:var(--hl-ink);padding:1px 2px;border-radius:2px;transition:background .3s}
+.doc .dim{color:var(--ink-2)}
+.source footer{padding:10px 18px;border-top:1px solid var(--rule);font-size:12px;color:var(--ink-2);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.empty{padding:28px 18px;color:var(--ink-2);font-size:14px}
+
+/* eval view */
+.evalhead{display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap;margin-bottom:18px}
+.evalhead h1{font-size:24px;margin:0;font-weight:500;letter-spacing:-.01em}
+.evalhead p{margin:4px 0 0;color:var(--ink-2);max-width:62ch}
+.seg{display:flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden;flex-wrap:wrap}
+.seg button{background:var(--panel);border:0;border-right:1px solid var(--rule);padding:7px 12px;font-size:13px;cursor:pointer;color:var(--ink-2)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.tablewrap{overflow-x:auto;background:var(--panel);border:1px solid var(--rule);border-radius:10px}
+table.bench{border-collapse:collapse;width:100%;min-width:760px;font-variant-numeric:tabular-nums}
+.bench th,.bench td{padding:12px 16px;text-align:right;border-bottom:1px solid var(--rule);font-size:14px}
+.bench th:first-child,.bench td:first-child{text-align:left}
+.bench thead th{font-weight:500;color:var(--ink-2);font-size:13px;vertical-align:bottom}
+.bench thead th small{display:block;font-weight:400}
+.bench tbody tr:last-child td{border-bottom:0}
+.bench td.best{color:var(--win);font-weight:600}
+.bench td.loss{color:var(--loss);background:var(--loss-soft)}
+.bench td .arm{font-weight:500}
+.bench td .desc{display:block;font-size:12px;color:var(--ink-2)}
+.legend{font-size:12.5px;color:var(--ink-2);margin:10px 2px 0;display:flex;gap:18px;flex-wrap:wrap}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.legend .l-best::before{background:var(--win)}
+.legend .l-loss::before{background:var(--loss-soft);border:1px solid var(--loss)}
+.takeaway{margin:22px 0 0;font-family:var(--serif);font-size:17px;max-width:70ch;line-height:1.6}
+
+.ci{margin-top:36px}
+.ci h2{font-size:17px;font-weight:500;margin:0 0 4px}
+.ci > p{margin:0 0 14px;color:var(--ink-2);font-size:14px;max-width:70ch}
+.runs{list-style:none;margin:0;padding:0;border:1px solid var(--rule);border-radius:10px;background:var(--panel)}
+.runs li{display:grid;grid-template-columns:90px 110px minmax(0,1fr) auto;gap:14px;padding:12px 16px;border-bottom:1px solid var(--rule);font-size:14px;align-items:baseline}
+.runs li:last-child{border-bottom:0}
+.runs code{font-family:var(--mono);font-size:12.5px;color:var(--ink-2)}
+.status{font-weight:600;font-size:13px}
+.status.pass{color:var(--win)} .status.block{color:var(--loss)}
+.runs .when{color:var(--ink-2);font-size:13px}
+
+/* graph view */
+.graph{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,400px);gap:28px;align-items:start}
+.canvas{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:8px}
+.canvas svg{width:100%;height:auto;display:block}
+.node circle{stroke-width:1.5}
+.node text{font-family:var(--sans);font-size:13px;fill:var(--ink)}
+.node .kind{font-size:10.5px;fill:var(--ink-2)}
+.edge line{stroke:var(--rule);stroke-width:1.6;transition:stroke .2s,stroke-width .2s}
+.edge .hit{stroke:transparent;stroke-width:16;cursor:pointer}
+.edge.on line.vis{stroke:var(--teal);stroke-width:3}
+.edge text{font-size:10.5px;fill:var(--ink-2);font-family:var(--sans)}
+.edgelist{list-style:none;margin:0 0 18px;padding:0}
+.edgelist button{width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--rule);padding:9px 2px;cursor:pointer;font-size:14px;color:var(--ink-2)}
+.edgelist button[aria-pressed="true"]{color:var(--ink);font-weight:500}
+.edgelist .rel{font-size:12px;color:var(--teal);font-weight:600;margin:0 6px}
+.graph h1{font-size:24px;margin:0 0 4px;font-weight:500}
+.graph .lede{margin:0 0 18px;color:var(--ink-2);max-width:62ch}
+
+footer.site{max-width:1400px;margin:0 auto;padding:0 28px 32px;font-size:12.5px;color:var(--ink-2)}
+
+@media (max-width:900px){
+  .ask,.graph{grid-template-columns:1fr}
+  .source{position:static}
+  .bar{padding:12px 16px;gap:12px}
+  main{padding:18px 16px 40px}
+  .corpus{margin-left:0;width:100%}
+  .demo-note{padding:6px 16px}
+  .runs li{grid-template-columns:1fr auto;}
+  .runs li .msg{grid-column:1 / -1}
+  footer.site{padding:0 16px 28px}
+}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="mark">
+    <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><rect x="3" y="2" width="14" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="6" y="7" width="8" height="3" rx="1" fill="#F7E48A"/><line x1="6" y1="13" x2="14" y2="13" stroke="currentColor" stroke-width="1.4"/><line x1="6" y1="16" x2="11" y2="16" stroke="currentColor" stroke-width="1.4"/></svg>
+    FilingIntel
+  </div>
+  <div class="tabs" role="tablist" aria-label="Views">
+    <button class="tab" role="tab" aria-selected="true" aria-controls="v-ask" id="t-ask">Ask</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="v-eval" id="t-eval">Benchmarks</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="v-graph" id="t-graph">Knowledge graph</button>
+  </div>
+  <div class="corpus" aria-label="Loaded filings">
+    Loaded filings
+    <span class="filing">AAPL 10-K</span><span class="filing">NVDA 10-K</span><span class="filing">MSFT 10-K</span>
+  </div>
+</div>
+<div class="demo-note">Demo with sample data. Filing excerpts are paraphrased placeholders, and benchmark numbers are illustrative until the real eval run.</div>
+
+<main>
+  <!-- ASK -->
+  <section id="v-ask" role="tabpanel" aria-labelledby="t-ask">
+    <div class="ask">
+      <div>
+        <form class="qbox" id="qform" onsubmit="return false">
+          <label for="q" class="sr" hidden>Ask about the loaded filings</label>
+          <input id="q" type="text" placeholder="Ask about what these companies disclose…" autocomplete="off">
+          <button type="submit" id="qgo">Ask</button>
+        </form>
+        <div class="samples" id="samples" aria-label="Sample questions"></div>
+        <div id="result"></div>
+      </div>
+      <aside class="source" id="source" aria-live="polite">
+        <div class="empty">Select a citation to see the exact passage it comes from.</div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- EVAL -->
+  <section id="v-eval" role="tabpanel" aria-labelledby="t-eval" hidden>
+    <div class="evalhead">
+      <div>
+        <h1>Retrieval arms, same 120 questions</h1>
+        <p>Every arm answers the same hand-labelled question set. Losses stay in the table.</p>
+      </div>
+      <div class="seg" id="cats" aria-label="Question category"></div>
+    </div>
+    <div class="tablewrap"><table class="bench" id="bench"></table></div>
+    <div class="legend"><span class="l-best">Best in column</span><span class="l-loss">Graph arm below the vector baseline</span></div>
+    <p class="takeaway" id="takeaway"></p>
+
+    <div class="ci">
+      <h2>Quality gate</h2>
+      <p>Each pull request re-runs the eval set in CI. A merge is blocked if faithfulness or answer correctness drops more than 2 points in any category.</p>
+      <ul class="runs" id="runs"></ul>
+    </div>
+  </section>
+
+  <!-- GRAPH -->
+  <section id="v-graph" role="tabpanel" aria-labelledby="t-graph" hidden>
+    <div class="graph">
+      <div>
+        <h1>Every edge cites its source</h1>
+        <p class="lede">Entities and relationships extracted from the filings. An edge without a source chunk is rejected at load time, so any path the system reasons over can be traced back to text.</p>
+        <div class="canvas"><svg id="gsvg" viewBox="0 0 680 430" role="img" aria-label="Knowledge graph of companies, suppliers, risks and competitors"></svg></div>
+      </div>
+      <div>
+        <ul class="edgelist" id="edgelist" aria-label="Relationships"></ul>
+        <aside class="source" id="esource"><div class="empty">Select a relationship to see the passage that supports it.</div></aside>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="site">FilingIntel answers questions about what companies disclose. It does not give buy, hold or sell recommendations.</footer>
+
+<script>
+/* ---------- sample data ---------- */
+const Q = [
+ {id:"nvda-supply", q:"What supply-chain concentration risks does NVIDIA disclose?", arm:"Vector search",
+  why:"one company, one topic, so dense retrieval over the risk-factor chunks is enough",
+  keys:["supply","nvidia","nvda","concentration"],
+  answer:["NVIDIA says it does not manufacture its own chips and relies on third-party foundries, principally TSMC, to produce its wafers [1]. It also depends on a small number of partners for packaging, memory and testing, and warns that capacity limits at any of them could constrain supply [2].","Because it commits to manufacturing capacity well ahead of demand, NVIDIA flags a second-order risk: if demand shifts, it can be left with excess inventory or purchase obligations [2]."],
+  sources:[
+   {doc:"NVDA 10-K", sec:"Item 1A · Risk factors", chunk:"nvda-1a-041", before:"Our business depends on our ability to obtain sufficient supply to meet demand.", cited:"We do not own manufacturing facilities and rely on third-party foundries, primarily TSMC, to fabricate our wafers.", after:"Any disruption at these foundries could delay or reduce our product shipments."},
+   {doc:"NVDA 10-K", sec:"Item 1A · Risk factors", chunk:"nvda-1a-044", before:"We also work with a limited number of partners for assembly, testing and packaging, and for memory components.", cited:"Capacity constraints at these partners may limit our ability to meet demand, and we place orders well in advance, which can result in excess inventory if demand declines.", after:"Long lead times make these commitments difficult to adjust."}],
+  trace:{chunks:[["nvda-1a-041",.89,1],["nvda-1a-044",.86,1],["nvda-7-012",.74,0],["aapl-1a-022",.61,0],["nvda-1-008",.58,0]]},
+  armScores:[["Vector",.93],["Graph local",.90],["Cypher",.71],["Community global",.62]]},
+
+ {id:"shared", q:"Which manufacturing dependencies do Apple and NVIDIA both disclose?", arm:"Cypher traversal",
+  why:"two named companies and a relationship to match across them, so a graph query beats text similarity",
+  keys:["both","apple","aapl","shared","common","manufactur"],
+  cypher:"MATCH (c:Company)-[r:DEPENDS_ON]->(s)\nWHERE c.ticker IN ['AAPL','NVDA']\nWITH s, collect(DISTINCT c.ticker) AS cos,\n     collect(r.source_chunk) AS chunks\nWHERE size(cos) = 2\nRETURN s.name, cos, chunks",
+  answer:["Both companies disclose reliance on outsourced manufacturing concentrated in Asia [1][2]. NVIDIA goes further and names TSMC as its primary foundry [3].","Apple describes its partners in general terms, noting that many components are single-sourced, but does not name a foundry in the retrieved sections [1]. So the graph links Apple to the region rather than to TSMC, and no shared named supplier was found."],
+  sources:[
+   {doc:"AAPL 10-K", sec:"Item 1A · Risk factors", chunk:"aapl-1a-022", before:"The Company depends on component and product manufacturing and logistical services provided by outsourcing partners.", cited:"Substantially all of the Company's manufacturing is performed by outsourcing partners located primarily in Asia, and some components are available only from a single source.", after:"Supply shortages or disruptions could materially affect results."},
+   {doc:"NVDA 10-K", sec:"Item 1A · Risk factors", chunk:"nvda-1a-044", before:"We also work with a limited number of partners for assembly, testing and packaging.", cited:"Most of these partners are located in Asia, and geopolitical or natural events in the region could disrupt our supply.", after:"We may not be able to find alternative sources quickly."},
+   {doc:"NVDA 10-K", sec:"Item 1A · Risk factors", chunk:"nvda-1a-041", before:"Our business depends on our ability to obtain sufficient supply.", cited:"We rely on third-party foundries, primarily TSMC, to fabricate our wafers.", after:"Any disruption at these foundries could delay shipments."}],
+  trace:{chunks:[["aapl-1a-022",1,1],["nvda-1a-044",1,1],["nvda-1a-041",1,1]], path:"AAPL —DEPENDS_ON→ Asia manufacturing partners ←DEPENDS_ON— NVDA —DEPENDS_ON→ TSMC"},
+  armScores:[["Vector",.64],["Graph local",.78],["Cypher",.94],["Community global",.70]]},
+
+ {id:"themes", q:"What risk themes come up across all three companies?", arm:"Community global search",
+  why:"a corpus-wide, thematic question, so summaries of graph communities are used instead of individual chunks",
+  keys:["theme","across","all three","common risk","overall"],
+  answer:["Four clusters of risk recur. Supply-chain concentration appears for Apple and NVIDIA [1][2]. Export controls and trade policy hit NVIDIA most directly and Apple through its manufacturing footprint [3].","Competition in cloud and AI infrastructure links Microsoft and NVIDIA [4], and cybersecurity and data protection appear in all three filings [5]."],
+  sources:[
+   {doc:"AAPL 10-K", sec:"Item 1A · Risk factors", chunk:"aapl-1a-022", before:"", cited:"Substantially all manufacturing is performed by outsourcing partners located primarily in Asia.", after:""},
+   {doc:"NVDA 10-K", sec:"Item 1A · Risk factors", chunk:"nvda-1a-041", before:"", cited:"We rely on third-party foundries, primarily TSMC, to fabricate our wafers.", after:""},
+   {doc:"NVDA 10-K", sec:"Item 1A · Risk factors", chunk:"nvda-1a-060", before:"Government actions may limit our ability to sell products in certain markets.", cited:"Export controls on advanced computing products have restricted, and may further restrict, sales to certain customers and regions.", after:"Such restrictions could reduce demand for our products."},
+   {doc:"MSFT 10-K", sec:"Item 1 · Business, competition", chunk:"msft-1-031", before:"", cited:"Our cloud and AI offerings face intense competition from large, well-funded providers as well as specialised entrants.", after:""},
+   {doc:"MSFT 10-K", sec:"Item 1A · Risk factors", chunk:"msft-1a-015", before:"", cited:"Cyberattacks and security vulnerabilities could lead to reduced revenue, increased costs and damage to our reputation.", after:""}],
+  trace:{communities:[["Supply-chain concentration",14],["Trade policy & export controls",9],["Cloud & AI competition",11],["Cybersecurity & data protection",8]]},
+  armScores:[["Vector",.48],["Graph local",.55],["Cypher",.31],["Community global",.81]]},
+
+ {id:"msft", q:"How does Microsoft describe competition in cloud?", arm:"Graph local search",
+  why:"one entity plus its immediate neighbours in the graph answers this well",
+  keys:["microsoft","msft","cloud","azure","compet"],
+  answer:["Microsoft names Amazon and Google as its main competitors in cloud infrastructure, and says it also competes with smaller specialised providers and open-source offerings [1].","It frames AI as intensifying that competition, and ties its ability to compete to continued heavy investment in datacenter capacity [2]."],
+  sources:[
+   {doc:"MSFT 10-K", sec:"Item 1 · Business, competition", chunk:"msft-1-031", before:"Our Azure and other cloud services compete in a rapidly evolving market.", cited:"Our main competitors in cloud infrastructure include Amazon and Google, along with a range of smaller providers and open-source alternatives.", after:"Competitors may offer lower prices or different capabilities."},
+   {doc:"MSFT 10-K", sec:"Item 1A · Risk factors", chunk:"msft-1a-009", before:"AI is changing how customers choose cloud platforms.", cited:"Competing effectively requires significant investment in datacenter infrastructure, and we may not realise the expected returns on that investment.", after:"Capacity constraints could also limit our ability to serve demand."}],
+  trace:{chunks:[["msft-1-031",1,1],["msft-1a-009",1,1],["msft-1-030",1,0]], path:"MSFT —COMPETES_WITH→ Amazon, Google (2 hops, 3 source chunks)"},
+  armScores:[["Vector",.82],["Graph local",.88],["Cypher",.79],["Community global",.66]]},
+
+ {id:"buy", q:"Should I buy NVDA stock?", decline:true, arm:"Router",
+  why:"this asks for an investment recommendation, which is out of scope",
+  keys:["buy","sell","hold","invest","should i","price target"],
+  answer:["FilingIntel answers questions about what companies disclose in their filings. It doesn't give buy, hold or sell recommendations.","Try asking what NVIDIA discloses about a specific risk, customer concentration, or business segment instead."]}
+];
+
+const CATS = [
+ {id:"all",label:"All",n:120},{id:"lookup",label:"Single-fact lookup",n:50},{id:"multi",label:"Multi-hop",n:30},
+ {id:"cross",label:"Cross-company",n:25},{id:"theme",label:"Thematic",n:15}];
+const ARMS = [
+ ["Vector search","Dense retrieval over chunks",true],["Graph local","Entity plus neighbours"],["Cypher traversal","Text-to-Cypher query"],
+ ["Community global","Leiden community summaries"],["Router","LangGraph picks an arm per question"]];
+// [correctness, faithfulness, context precision, path precision, p50 latency s, cost ¢]
+const DATA = {
+ all:   [[.71,.88,.74,null,1.2,.4],[.69,.90,.70,.66,2.1,.9],[.64,.93,.81,.78,1.8,.7],[.58,.85,.52,null,6.4,3.1],[.76,.90,.77,.72,2.0,.8]],
+ lookup:[[.86,.91,.84,null,1.1,.4],[.79,.90,.76,.70,2.0,.9],[.70,.92,.83,.81,1.7,.7],[.41,.82,.39,null,6.1,3.0],[.85,.91,.83,.74,1.5,.6]],
+ multi: [[.52,.84,.61,null,1.3,.4],[.66,.89,.68,.64,2.2,.9],[.74,.94,.82,.79,1.9,.7],[.49,.84,.50,null,6.6,3.2],[.72,.91,.76,.75,2.1,.8]],
+ cross: [[.55,.85,.63,null,1.3,.4],[.60,.88,.64,.60,2.3,1.0],[.71,.93,.79,.76,2.0,.8],[.62,.87,.58,null,6.5,3.1],[.70,.90,.74,.71,2.2,.9]],
+ theme: [[.48,.83,.55,null,1.4,.5],[.55,.87,.60,.58,2.4,1.0],[.31,.90,.62,.69,2.2,.8],[.74,.88,.66,null,7.0,3.4],[.70,.88,.64,.62,4.8,2.2]]};
+const TAKE = {
+ all:"Across the full set the router wins on correctness, but the plain vector baseline is close behind at a fraction of the latency and cost. The community arm is the most expensive and the weakest overall.",
+ lookup:"On single-fact lookups the vector baseline wins outright. Every graph arm is slower and less accurate here, and the community arm is badly outmatched.",
+ multi:"Multi-hop is where graph retrieval earns its keep: Cypher traversal leads on correctness, faithfulness and path precision.",
+ cross:"Cross-company questions favour Cypher traversal. The vector arm tends to retrieve one company's chunks and miss the other.",
+ theme:"Thematic questions are the only category the community arm wins, and Cypher struggles because the questions don't map to a clean query."};
+const RUNS = [
+ ["a41c9e2","Passed","pass","All categories within threshold. Correctness +1.4 on multi-hop.","2 days ago"],
+ ["7f03b1d","Blocked","block","Faithfulness −3.1 on multi-hop after changing entity-resolution order. Merge blocked.","4 days ago"],
+ ["c52e880","Passed","pass","Text-to-Cypher schema hints added. Cypher failures down from 14 to 6.","6 days ago"],
+ ["19bd4aa","Passed","pass","Baseline established: 120 questions, 4 arms.","9 days ago"]];
+
+const NODES = {
+ AAPL:{x:120,y:90,k:"Company"}, NVDA:{x:340,y:70,k:"Company"}, MSFT:{x:570,y:90,k:"Company"},
+ ASIA:{x:150,y:270,k:"Supplier group",label:"Asia manufacturing partners"}, TSMC:{x:360,y:230,k:"Supplier"},
+ EXP:{x:260,y:370,k:"Risk",label:"Export controls"}, AMZN:{x:600,y:250,k:"Competitor",label:"Amazon"}, GOOG:{x:500,y:360,k:"Competitor",label:"Google"}};
+const EDGES = [
+ ["AAPL","ASIA","DEPENDS_ON",Q[1].sources[0]],["NVDA","ASIA","DEPENDS_ON",Q[1].sources[1]],["NVDA","TSMC","DEPENDS_ON",Q[0].sources[0]],
+ ["NVDA","EXP","EXPOSED_TO",Q[2].sources[2]],
+ ["AAPL","EXP","EXPOSED_TO",{doc:"AAPL 10-K",sec:"Item 1A · Risk factors",chunk:"aapl-1a-031",before:"The Company's business is subject to international trade risks.",cited:"Tariffs, export restrictions and other trade measures could increase costs or limit the Company's ability to source components or sell products.",after:""}],
+ ["MSFT","AMZN","COMPETES_WITH",Q[3].sources[0]],["MSFT","GOOG","COMPETES_WITH",Q[3].sources[0]]];
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const name = id => NODES[id].label || id;
+
+function renderSource(el, s){
+  el.innerHTML = `<header><h2>${esc(s.doc)}</h2><div class="meta">${esc(s.sec)}</div></header>
+   <div class="doc"><p>${s.before?`<span class="dim">${esc(s.before)}</span> `:""}<mark>${esc(s.cited)}</mark>${s.after?` <span class="dim">${esc(s.after)}</span>`:""}</p></div>
+   <footer><span>Chunk ${esc(s.chunk)}</span><span>Sample excerpt, paraphrased</span></footer>`;
+}
+
+/* ---------- tabs ---------- */
+const tabs = [["t-ask","v-ask"],["t-eval","v-eval"],["t-graph","v-graph"]];
+tabs.forEach(([t,v])=>$("#"+t).addEventListener("click",()=>{
+  tabs.forEach(([t2,v2])=>{$("#"+t2).setAttribute("aria-selected",t2===t);$("#"+v2).hidden = t2!==t;});
+}));
+
+/* ---------- ask ---------- */
+const samples = $("#samples");
+Q.forEach(item=>{
+  const b=document.createElement("button");b.className="sample";b.textContent=item.q;b.setAttribute("aria-pressed","false");
+  b.onclick=()=>{$("#q").value=item.q;show(item);};samples.appendChild(b);
+});
+
+function show(item){
+  [...samples.children].forEach((b,i)=>b.setAttribute("aria-pressed",Q[i]===item));
+  const src=$("#source");
+  const paras = item.answer.map(p=>"<p>"+esc(p).replace(/\[(\d)\]/g,(m,n)=>`<button class="cite" data-n="${n}" aria-pressed="false" aria-label="Source ${n}">${n}</button>`)+"</p>").join("");
+  let trace="";
+  if(!item.decline){
+    let steps=`<li><strong>Routed to ${esc(item.arm)}</strong>The router judged this ${esc(item.why)}.</li>`;
+    if(item.cypher) steps+=`<li><strong>Generated a graph query</strong>Validated against the schema before running.<div class="scroll"><pre class="cypher">${esc(item.cypher)}</pre></div></li>`;
+    if(item.trace.path) steps+=`<li><strong>Followed a graph path</strong>${esc(item.trace.path)}</li>`;
+    if(item.trace.communities) steps+=`<li><strong>Read community summaries</strong><div class="scroll"><table class="chunks"><tr><th>Community</th><th>Entities</th></tr>${item.trace.communities.map(c=>`<tr class="used"><td>${esc(c[0])}</td><td>${c[1]}</td></tr>`).join("")}</table></div></li>`;
+    if(item.trace.chunks) steps+=`<li><strong>Retrieved source chunks</strong><div class="scroll"><table class="chunks"><tr><th>Chunk</th><th>Score</th><th></th></tr>${item.trace.chunks.map(c=>`<tr class="${c[2]?"used":""}"><td>${c[0]}</td><td>${c[1].toFixed(2)}</td><td>${c[2]?'<span class="tag">Cited</span>':""}</td></tr>`).join("")}</table></div></li>`;
+    steps+=`<li><strong>Checked every claim has a citation</strong>Sentences without a supporting chunk are removed before the answer is shown.</li>`;
+    steps+=`<li><strong>How each arm scored on this question</strong><div class="scroll"><table class="chunks"><tr><th>Arm</th><th>Faithfulness</th></tr>${item.armScores.map(a=>`<tr class="used"><td>${a[0]}</td><td>${a[1].toFixed(2)}</td></tr>`).join("")}</table></div></li>`;
+    trace=`<details class="trace"><summary>How this was answered</summary><ol class="steps">${steps}</ol></details>`;
+  }
+  $("#result").innerHTML = `<h1 class="question">${esc(item.q)}</h1>
+    <div class="route">${item.decline?"Declined by the router: "+esc(item.why)+".":`Answered with <b>${esc(item.arm)}</b> from ${item.sources.length} source passage${item.sources.length>1?"s":""}`}</div>
+    <div class="answer${item.decline?" declined":""}">${paras}</div>${trace}`;
+  if(item.decline){src.innerHTML='<div class="empty">No sources. This question is outside what the filings can answer.</div>';return;}
+  const cites=[...document.querySelectorAll("#result .cite")];
+  const pick=n=>{cites.forEach(c=>c.setAttribute("aria-pressed",c.dataset.n==n));renderSource(src,item.sources[n-1]);};
+  cites.forEach(c=>c.onclick=()=>pick(c.dataset.n));
+  pick(1);
+}
+
+$("#qform").addEventListener("submit",()=>{
+  const t=$("#q").value.toLowerCase().trim(); if(!t) return;
+  let best=null,score=0;
+  Q.forEach(item=>{const s=item.keys.filter(k=>t.includes(k)).length; if(s>score){score=s;best=item;}});
+  if(best) show(best);
+  else{
+    [...samples.children].forEach(b=>b.setAttribute("aria-pressed","false"));
+    $("#result").innerHTML=`<h1 class="question">${esc($("#q").value)}</h1><div class="answer"><p>This demo answers the five sample questions above. The full build answers any question about the loaded filings.</p></div>`;
+    $("#source").innerHTML='<div class="empty">Pick a sample question to see cited sources.</div>';
+  }
+});
+show(Q[1]);
+
+/* ---------- benchmarks ---------- */
+let cat="all";
+const catEl=$("#cats");
+CATS.forEach(c=>{const b=document.createElement("button");b.textContent=`${c.label} (${c.n})`;b.setAttribute("aria-pressed",c.id===cat);
+  b.onclick=()=>{cat=c.id;[...catEl.children].forEach((x,i)=>x.setAttribute("aria-pressed",CATS[i].id===cat));bench();};catEl.appendChild(b);});
+
+function bench(){
+  const rows=DATA[cat];
+  const cols=[["Answer correctness",1],["Faithfulness",1],["Context precision",1],["Path precision","",1],["Latency","p50, seconds",0],["Cost","per query, ¢",0]];
+  const best=cols.map((c,j)=>{const v=rows.map(r=>r[j]).filter(x=>x!=null);const hi=c[2]===undefined?c[1]!==0:c[2];return (j>=4)?Math.min(...v):Math.max(...v);});
+  let h=`<thead><tr><th>Retrieval arm</th>${cols.map(c=>`<th>${c[0]}${typeof c[1]==="string"&&c[1]?`<small>${c[1]}</small>`:""}</th>`).join("")}</tr></thead><tbody>`;
+  rows.forEach((r,i)=>{
+    h+=`<tr><td><span class="arm">${ARMS[i][0]}</span><span class="desc">${ARMS[i][1]}</span></td>`;
+    r.forEach((v,j)=>{
+      if(v==null){h+=`<td aria-label="not applicable">—</td>`;return;}
+      const graphArm=i>=1&&i<=3; const loss=graphArm&&j===0&&v<rows[0][0];
+      const cls=v===best[j]?"best":(loss?"loss":"");
+      const txt=j===4?v.toFixed(1)+" s":j===5?v.toFixed(1)+"¢":v.toFixed(2);
+      h+=`<td class="${cls}">${txt}</td>`;});
+    h+="</tr>";});
+  $("#bench").innerHTML=h+"</tbody>";
+  $("#takeaway").textContent=TAKE[cat];
+}
+bench();
+$("#runs").innerHTML=RUNS.map(r=>`<li><code>${r[0]}</code><span class="status ${r[2]}">${r[1]}</span><span class="msg">${esc(r[3])}</span><span class="when">${r[4]}</span></li>`).join("");
+
+/* ---------- graph ---------- */
+const svg=$("#gsvg"), NS="http://www.w3.org/2000/svg";
+const colors={Company:"var(--ink)",Supplier:"var(--teal)","Supplier group":"var(--teal)",Risk:"var(--loss)",Competitor:"var(--ink-2)"};
+const edgeEls=[];
+EDGES.forEach((e,i)=>{
+  const a=NODES[e[0]],b=NODES[e[1]],g=document.createElementNS(NS,"g");g.setAttribute("class","edge");
+  g.innerHTML=`<line class="vis" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"/><line class="hit" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"/><text x="${(a.x+b.x)/2+6}" y="${(a.y+b.y)/2-4}">${e[2].toLowerCase().replace("_"," ")}</text>`;
+  g.querySelector(".hit").addEventListener("click",()=>pickEdge(i));svg.appendChild(g);edgeEls.push(g);
+});
+Object.entries(NODES).forEach(([id,n])=>{
+  const g=document.createElementNS(NS,"g");g.setAttribute("class","node");
+  const r=n.k==="Company"?22:14;
+  g.innerHTML=`<circle cx="${n.x}" cy="${n.y}" r="${r}" fill="var(--panel)" stroke="${colors[n.k]}"/>${n.k==="Company"?`<text x="${n.x}" y="${n.y+4}" text-anchor="middle" font-weight="600" font-size="11">${id}</text>`:`<text x="${n.x}" y="${n.y+r+15}" text-anchor="middle">${esc(name(id))}</text>`}<text class="kind" x="${n.x}" y="${n.k==="Company"?n.y-r-8:n.y+r+29}" text-anchor="middle">${n.k}</text>`;
+  svg.appendChild(g);
+});
+const el=$("#edgelist");
+EDGES.forEach((e,i)=>{const li=document.createElement("li");const b=document.createElement("button");b.setAttribute("aria-pressed","false");
+  b.innerHTML=`${esc(name(e[0]))}<span class="rel">${e[2]}</span>${esc(name(e[1]))}`;b.onclick=()=>pickEdge(i);li.appendChild(b);el.appendChild(li);});
+function pickEdge(i){
+  edgeEls.forEach((g,j)=>g.classList.toggle("on",i===j));
+  [...el.querySelectorAll("button")].forEach((b,j)=>b.setAttribute("aria-pressed",i===j));
+  renderSource($("#esource"),EDGES[i][3]);
+}
+pickEdge(2);
+</script>
+</body>
+</html>
