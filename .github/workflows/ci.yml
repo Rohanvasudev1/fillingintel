@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:0.8.6-pg16
+        env:
+          POSTGRES_USER: filingintel
+          POSTGRES_PASSWORD: filingintel
+          POSTGRES_DB: filingintel
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      DATABASE_URL: postgresql://filingintel:filingintel@localhost:5432/filingintel
+      POSTGRES_USER: filingintel
+      POSTGRES_PASSWORD: filingintel
+      POSTGRES_DB: filingintel
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+      # Placeholder value satisfies the missing-env-var guard in edgar_client;
+      # no real EDGAR requests are made in CI (pytest-socket blocks all external network).
+      EDGAR_USER_AGENT: "FilingIntel/CI ci-placeholder@example.com"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Install Python
+        run: uv python install
+
+      - name: Install dependencies
+        run: uv sync --group dev
+
+      - name: Initialize pgvector extension
+        run: |
+          PGPASSWORD=filingintel psql -h localhost -U filingintel -d filingintel \
+            -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
+      - name: Ruff lint
+        run: uv run ruff check .
+
+      - name: Run tests
+        run: uv run pytest
