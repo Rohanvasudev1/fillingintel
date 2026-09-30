@@ -76,6 +76,61 @@ class TestParsedFiling:
 
 
 class TestFilingMeta:
+    # ── accession_no validator ────────────────────────────────────────────
+
+    @pytest.mark.parametrize(
+        "bad_accession",
+        [
+            "../../etc/passwd",          # path traversal
+            "0001045810-25-00000",       # too short (5 digits in last segment)
+            "0001045810-25-0000003",     # too long (7 digits in last segment)
+            "000104581025000003",        # missing hyphens
+            "XXXXXXXXXX-25-000003",      # letters in CIK segment
+            "",                          # empty
+        ],
+    )
+    def test_invalid_accession_no_rejected(self, bad_accession):
+        from datetime import date
+
+        with pytest.raises(Exception):  # ValidationError
+            FilingMeta(
+                cik="1045810",
+                accession_no=bad_accession,
+                form_type="10-K",
+                company_name="NVIDIA CORP",
+                fiscal_period="FY2025",
+                report_date=date(2025, 1, 26),
+                filing_date=date(2025, 2, 26),
+                primary_document="nvda-20250126.htm",
+            )
+
+    # ── primary_document validator ────────────────────────────────────────
+
+    @pytest.mark.parametrize(
+        "bad_doc",
+        [
+            "../../etc/passwd",          # path traversal
+            "subdir/file.htm",           # slash present
+            "../sibling.htm",            # parent-dir traversal
+            "file name.htm",             # space in filename
+            "",                          # empty
+        ],
+    )
+    def test_invalid_primary_document_rejected(self, bad_doc):
+        from datetime import date
+
+        with pytest.raises(Exception):  # ValidationError
+            FilingMeta(
+                cik="1045810",
+                accession_no="0001045810-25-000003",
+                form_type="10-K",
+                company_name="NVIDIA CORP",
+                fiscal_period="FY2025",
+                report_date=date(2025, 1, 26),
+                filing_date=date(2025, 2, 26),
+                primary_document=bad_doc,
+            )
+
     def test_valid_filing_meta(self):
         from datetime import date
 

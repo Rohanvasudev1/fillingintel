@@ -16,6 +16,11 @@ dev = [
     "pytest-socket>=0.7",
     "ruff>=0.6",
 ]
+spike = [
+    "edgartools>=2.0",      # edgartools: high-level EDGAR API with inline-XBRL parsing
+    "sec-parser>=0.58",     # sec-parser: structural HTML → section tree, alternative parser
+    "python-dotenv>=1.0",   # python-dotenv: load .env for spike scripts (not used in prod)
+]
 
 [tool.ruff]
 line-length = 100

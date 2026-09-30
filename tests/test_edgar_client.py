@@ -227,6 +227,207 @@ def test_list_filings_sets_fiscal_period_and_metadata(tmp_path, monkeypatch):
     assert tenq.primary_document == "nvda-20241027.htm"
 
 
+# ─── Non-target form skipping ────────────────────────────────────────────────
+
+
+def test_non_target_form_skipped(tmp_path, monkeypatch):
+    """Forms that are neither target (10-K/10-Q) nor amended are silently skipped."""
+    monkeypatch.setenv("EDGAR_USER_AGENT", "Test/1.0 test@example.com")
+    payload = {
+        "name": "NVIDIA CORP",
+        "fiscalYearEnd": "0126",
+        "filings": {
+            "recent": {
+                "accessionNumber": ["0001045810-25-999001"],
+                "form": ["8-K"],            # irrelevant form
+                "reportDate": ["2025-01-26"],
+                "filingDate": ["2025-01-27"],
+                "primaryDocument": ["nvda-8k.htm"],
+            }
+        },
+    }
+    url = "https://data.sec.gov/submissions/CIK0001045810.json"
+    edgar = _mock_client(tmp_path, {url: json.dumps(payload).encode()})
+
+    filings = edgar.list_filings("1045810")
+
+    assert filings == []
+
+
+# ─── Malformed EDGAR response shape ──────────────────────────────────────────
+
+
+def test_malformed_edgar_response_returns_empty(tmp_path, monkeypatch, caplog):
+    """list_filings returns [] and warns when EDGAR fields are not lists."""
+    monkeypatch.setenv("EDGAR_USER_AGENT", "Test/1.0 test@example.com")
+    bad_payload = {
+        "name": "BAD CORP",
+        "fiscalYearEnd": "1231",
+        "filings": {
+            "recent": {
+                "accessionNumber": "not-a-list",  # wrong type
+                "form": ["10-K"],
+                "reportDate": ["2024-12-28"],
+                "filingDate": ["2025-01-15"],
+                "primaryDocument": ["bad-20241228.htm"],
+            }
+        },
+    }
+    url = "https://data.sec.gov/submissions/CIK0000099999.json"
+    edgar = _mock_client(tmp_path, {url: json.dumps(bad_payload).encode()})
+
+    with caplog.at_level(logging.WARNING, logger="ingest.edgar_client"):
+        filings = edgar.list_filings("99999")
+
+    assert filings == []
+    assert any("Unexpected EDGAR" in r.message for r in caplog.records)
+
+
+def test_blank_report_date_skipped(tmp_path, monkeypatch, caplog):
+    """Entries with blank reportDate are skipped with a warning."""
+    monkeypatch.setenv("EDGAR_USER_AGENT", "Test/1.0 test@example.com")
+    payload = {
+        "name": "NVIDIA CORP",
+        "fiscalYearEnd": "0126",
+        "filings": {
+            "recent": {
+                "accessionNumber": ["0001045810-25-000003"],
+                "form": ["10-K"],
+                "reportDate": [""],   # blank
+                "filingDate": ["2025-02-26"],
+                "primaryDocument": ["nvda-20250126.htm"],
+            }
+        },
+    }
+    url = "https://data.sec.gov/submissions/CIK0001045810.json"
+    edgar = _mock_client(tmp_path, {url: json.dumps(payload).encode()})
+
+    with caplog.at_level(logging.WARNING, logger="ingest.edgar_client"):
+        filings = edgar.list_filings("1045810")
+
+    assert filings == []
+    assert any("No report date" in r.message for r in caplog.records)
+
+
+def test_blank_filing_date_skipped(tmp_path, monkeypatch, caplog):
+    """Entries with blank filingDate are skipped with a warning."""
+    monkeypatch.setenv("EDGAR_USER_AGENT", "Test/1.0 test@example.com")
+    payload = {
+        "name": "NVIDIA CORP",
+        "fiscalYearEnd": "0126",
+        "filings": {
+            "recent": {
+                "accessionNumber": ["0001045810-25-000003"],
+                "form": ["10-K"],
+                "reportDate": ["2025-01-26"],
+                "filingDate": [""],   # blank
+                "primaryDocument": ["nvda-20250126.htm"],
+            }
+        },
+    }
+    url = "https://data.sec.gov/submissions/CIK0001045810.json"
+    edgar = _mock_client(tmp_path, {url: json.dumps(payload).encode()})
+
+    with caplog.at_level(logging.WARNING, logger="ingest.edgar_client"):
+        filings = edgar.list_filings("1045810")
+
+    assert filings == []
+    assert any("No filing date" in r.message for r in caplog.records)
+
+
+# ─── HTTP error logging ───────────────────────────────────────────────────────
+
+
+def test_http_error_logged_and_raised(tmp_path, monkeypatch, caplog):
+    """A 4xx response is logged at ERROR with the URL, then HTTPStatusError is raised."""
+    monkeypatch.setenv("EDGAR_USER_AGENT", "Test/1.0 test@example.com")
+    f = _filing()
+
+    def error_handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(404, content=b"not found")
+
+    edgar = EdgarClient(
+        cache_dir=tmp_path,
+        http_client=httpx.Client(transport=httpx.MockTransport(error_handler)),
+    )
+
+    with caplog.at_level(logging.ERROR, logger="ingest.edgar_client"):
+        with pytest.raises(httpx.HTTPStatusError):
+            edgar.download_filing(f)
+
+    assert any("404" in r.message for r in caplog.records)
+    assert any(f.primary_document in r.message for r in caplog.records)
+
+
+# ─── max_filings cutoff ───────────────────────────────────────────────────────
+
+
+def test_max_filings_cutoff(tmp_path, monkeypatch):
+    """list_filings stops at max_filings even if more are available."""
+    monkeypatch.setenv("EDGAR_USER_AGENT", "Test/1.0 test@example.com")
+    url = "https://data.sec.gov/submissions/CIK0001045810.json"
+    edgar = _mock_client(tmp_path, {url: json.dumps(SAMPLE_SUBMISSIONS).encode()})
+
+    filings = edgar.list_filings("1045810", max_filings=1)
+
+    assert len(filings) == 1
+
+
+# ─── close() and context manager ─────────────────────────────────────────────
+
+
+def test_close_closes_http_client(tmp_path, monkeypatch):
+    """close() delegates to the underlying httpx.Client."""
+    monkeypatch.setenv("EDGAR_USER_AGENT", "Test/1.0 test@example.com")
+    mock_http = httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200)))
+    edgar = EdgarClient(cache_dir=tmp_path, http_client=mock_http)
+
+    edgar.close()
+
+    # After close(), the underlying client is closed; further requests raise.
+    with pytest.raises(Exception):
+        mock_http.get("http://example.com")
+
+
+def test_context_manager_closes_on_exit(tmp_path, monkeypatch):
+    """EdgarClient can be used as a context manager; client is closed on __exit__."""
+    monkeypatch.setenv("EDGAR_USER_AGENT", "Test/1.0 test@example.com")
+    mock_http = httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200)))
+
+    with EdgarClient(cache_dir=tmp_path, http_client=mock_http) as edgar:
+        assert edgar is not None  # __enter__ returns self
+
+    # Client should be closed after the with-block exits.
+    with pytest.raises(Exception):
+        mock_http.get("http://example.com")
+
+
+# ─── derive_fiscal_period — edge cases ───────────────────────────────────────
+
+
+def test_derive_fiscal_period_bad_mmdd_raises():
+    """A malformed fiscal_year_end_mmdd raises ValueError."""
+    with pytest.raises(ValueError, match="MMDD"):
+        derive_fiscal_period("10-K", "2025-01-26", "126")   # 3 chars, not 4
+
+    with pytest.raises(ValueError, match="MMDD"):
+        derive_fiscal_period("10-K", "2025-01-26", "01AB")  # non-digit chars
+
+
+def test_derive_fiscal_period_quarter_clamp_warns(caplog):
+    """A report date very late in the fiscal year rounds to Q4, which is clamped to Q3.
+
+    Synthetic date: FYE = Dec 28, report_date = Nov 15 of the same year.
+    days_elapsed = 323, days_in_year = 366 (2024 leap year).
+    323 * 4 / 366 ≈ 3.53 → round() → 4 → clamped to 3, warning emitted.
+    """
+    with caplog.at_level(logging.WARNING, logger="ingest.edgar_client"):
+        result = derive_fiscal_period("10-Q", "2024-11-15", "1228")
+
+    assert result == "FY2024-Q3"
+    assert any("clamped" in r.message for r in caplog.records)
+
+
 # ─── derive_fiscal_period ─────────────────────────────────────────────────────
 
 

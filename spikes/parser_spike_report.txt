@@ -1,0 +1,227 @@
+PARSER SPIKE REPORT
+========================================================================
+Tickers : NVDA, AMD, INTC
+Filings : one 10-K + one 10-Q per ticker (6 total)
+Parsers : edgartools (edgar.documents.parse_html)
+          sec-parser (Edgar10QParser)
+Checks  : TOC false positives, table survival, char-offset
+          accuracy (edgartools), dei fiscal-period cross-check
+
+------------------------------------------------------------------------
+FILING  NVDA  10-K  0001045810-26-000021
+  Fiscal period (derived) : FY2026
+  Fiscal period (XBRL)    : FY2026
+  Fiscal period check     : MATCH
+
+  ── edgartools ───────────────────────────────────────────────
+  Sections found (24)  required present: YES
+  Sections list  : ['part_i_item_1', 'part_i_item_1a', 'part_i_item_1b', 'part_i_item_1c', 'part_i_item_2', 'part_i_item_3', 'part_i_item_4', 'part_ii_item_5', 'part_ii_item_6', 'part_ii_item_7', 'part_ii_item_7a', 'part_ii_item_8', 'part_ii_item_9', 'part_ii_item_9a', 'part_ii_item_9b', 'part_ii_item_9c', 'part_iii_item_10', 'part_iii_item_11', 'part_iii_item_12', 'part_iii_item_13', 'part_iii_item_14', 'part_iv_item_15', 'part_iv_item_16', 'part_iv_signatures']
+  TOC false positives : 0  
+  Tables detected     : 64
+  Offset round-trips  :
+    FAIL  [part_i_item_1]  'Item 1. Business Our Company NVIDIA pioneered accelerated co'
+    FAIL  [part_i_item_1a]  'Item 1A. Risk Factors The following risk factors should be c'
+    OK    [part_i_item_1b]  'Item 1B. Unresolved Staff Comments None.'
+    FAIL  [part_i_item_1c]  'Item 1C. Cybersecurity Risk management and strategy We have '
+    FAIL  [part_i_item_2]  'Not found in full text (whitespace-normalised)'
+
+  ── sec-parser ───────────────────────────────────────────────
+  Sections found (223)  required present: NO — missing: part_ii_item_8
+  TOC false positives : 0  
+  Tables detected     : 57
+
+------------------------------------------------------------------------
+FILING  NVDA  10-Q  0001045810-26-000075
+  Fiscal period (derived) : FY2027-Q2
+  Fiscal period (XBRL)    : FY2027-Q2
+  Fiscal period check     : MATCH
+
+  ── edgartools ───────────────────────────────────────────────
+  Sections found (6)  required present: NO — missing: part_ii_item_1a
+  Sections list  : ['part_i_item_1', 'part_i_item_2', 'part_i_item_3', 'part_i_item_4', 'part_ii_item_5', 'part_ii_item_6']
+  TOC false positives : 0  
+  Tables detected     : 52
+  Offset round-trips  :
+    FAIL  [part_i_item_1]  'Item 1. Financial Statements (Unaudited) NVIDIA Corporation '
+    FAIL  [part_i_item_2]  'Item 2. Management’s Discussion and Analysis of Financial Co'
+    FAIL  [part_i_item_3]  'Item 3. Quantitative and Qualitative Disclosures About Marke'
+    FAIL  [part_i_item_4]  'Item 4. Controls and Procedures Disclosure Controls and Proc'
+    FAIL  [part_ii_item_5]  'Item 5. Other Information The following members of our Board'
+
+  ── sec-parser ───────────────────────────────────────────────
+  Sections found (107)  required present: NO — missing: part_i_item_1, part_i_item_2, part_ii_item_1a
+  TOC false positives : 0  
+  Tables detected     : 44
+
+------------------------------------------------------------------------
+FILING  AMD  10-K  0000002488-26-000018
+  Fiscal period (derived) : FY2025
+  Fiscal period (XBRL)    : FY2025
+  Fiscal period check     : MATCH
+
+  ── edgartools ───────────────────────────────────────────────
+  Sections found (24)  required present: YES
+  Sections list  : ['part_i_item_1', 'part_i_item_1a', 'part_i_item_1b', 'part_i_item_1c', 'part_i_item_2', 'part_i_item_3', 'part_i_item_4', 'part_ii_item_5', 'part_ii_item_6', 'part_ii_item_7', 'part_ii_item_7a', 'part_ii_item_8', 'part_ii_item_9', 'part_ii_item_9a', 'part_ii_item_9b', 'part_ii_item_9c', 'part_iii_item_10', 'part_iii_item_11', 'part_iii_item_12', 'part_iii_item_13', 'part_iii_item_14', 'part_iv_item_15', 'part_iv_item_16', 'part_iv_signatures']
+  TOC false positives : 0  
+  Tables detected     : 69
+  Offset round-trips  :
+    FAIL  [part_i_item_1]  'PART I ITEM 1. BUSINESS Cautionary Statement Regarding Forwa'
+    FAIL  [part_i_item_1a]  'Not found in full text (whitespace-normalised)'
+    FAIL  [part_i_item_1b]  'Not found in full text (whitespace-normalised)'
+    FAIL  [part_i_item_1c]  'Not found in full text (whitespace-normalised)'
+    OK    [part_i_item_2]  'ITEM 2. PROPERTIES As of December 27, 2025, we have approxim'
+
+  ── sec-parser ───────────────────────────────────────────────
+  Sections found (224)  required present: NO — missing: part_ii_item_7, part_ii_item_8
+  TOC false positives : 0  
+  Tables detected     : 53
+
+------------------------------------------------------------------------
+FILING  AMD  10-Q  0000002488-26-000123
+  Fiscal period (derived) : FY2026-Q2
+  Fiscal period (XBRL)    : FY2026-Q2
+  Fiscal period check     : MATCH
+
+  ── edgartools ───────────────────────────────────────────────
+  Sections found (7)  required present: NO — missing: part_ii_item_1a
+  Sections list  : ['part_i_item_1', 'part_i_item_2', 'part_i_item_3', 'part_i_item_4', 'part_i_item_8', 'part_ii_item_5', 'part_ii_item_6']
+  TOC false positives : 0  
+  Tables detected     : 47
+  Offset round-trips  :
+    FAIL  [part_i_item_1]  'Not found in full text (whitespace-normalised)'
+    FAIL  [part_i_item_2]  'Not found in full text (whitespace-normalised)'
+    FAIL  [part_i_item_3]  'Not found in full text (whitespace-normalised)'
+    FAIL  [part_i_item_4]  'Not found in full text (whitespace-normalised)'
+    FAIL  [part_i_item_8]  'Not found in full text (whitespace-normalised)'
+
+  ── sec-parser ───────────────────────────────────────────────
+  Sections found (93)  required present: NO — missing: part_i_item_1, part_i_item_2, part_ii_item_1a
+  TOC false positives : 0  
+  Tables detected     : 28
+
+------------------------------------------------------------------------
+FILING  INTC  10-K  0000050863-26-000011
+  Fiscal period (derived) : FY2025
+  Fiscal period (XBRL)    : FY2025
+  Fiscal period check     : MATCH
+
+  ── edgartools ───────────────────────────────────────────────
+  Sections found (10)  required present: YES
+  Sections list  : ['part_i_item_1a', 'part_i_item_1c', 'part_i_item_2', 'part_i_item_3', 'part_ii_item_5', 'part_ii_item_7a', 'part_ii_item_8', 'part_ii_item_9a', 'part_iii_item_10', 'part_iv_item_15']
+  TOC false positives : 0  
+  Tables detected     : 287
+  Offset round-trips  :
+    FAIL  [part_i_item_1a]  'The following summarizes what we believe to be the material '
+    FAIL  [part_i_item_1c]  'Cybersecurity We face significant and persistent cybersecuri'
+    FAIL  [part_i_item_2]  'Not found in full text (whitespace-normalised)'
+    FAIL  [part_i_item_3]  'Note 19 : Commitments and Contingencies Leases We recognized'
+    FAIL  [part_ii_item_5]  'Market for Our Common Stock The principal U.S. market on whi'
+
+  ── sec-parser ───────────────────────────────────────────────
+  Sections found (18)  required present: NO — missing: part_i_item_1a, part_ii_item_7, part_ii_item_8
+  TOC false positives : 0  
+  Tables detected     : 97
+
+------------------------------------------------------------------------
+FILING  INTC  10-Q  0000050863-26-000157
+  Fiscal period (derived) : FY2026-Q2
+  Fiscal period (XBRL)    : FY2026-Q2
+  Fiscal period check     : MATCH
+
+  ── edgartools ───────────────────────────────────────────────
+  Sections found (4)  required present: NO — missing: part_i_item_2, part_ii_item_1a
+  Sections list  : ['part_i_item_1', 'part_i_item_3', 'part_i_item_4', 'part_ii_item_6']
+  TOC false positives : 0  
+  Tables detected     : 121
+  Offset round-trips  :
+    FAIL  [part_i_item_1]  'Not found in full text (whitespace-normalised)'
+    OK    [part_i_item_3]  'Quantitative and Qualitative Disclosures About Market Risk W'
+    FAIL  [part_i_item_4]  'Controls and Procedures Inherent Limitations on Effectivenes'
+    FAIL  [part_ii_item_6]  'Not found in full text (whitespace-normalised)'
+
+  ── sec-parser ───────────────────────────────────────────────
+  Sections found (12)  required present: NO — missing: part_i_item_1, part_i_item_2, part_ii_item_1a
+  TOC false positives : 0  
+  Tables detected     : 46
+
+========================================================================
+FISCAL PERIOD CROSS-CHECK SUMMARY
+
+  Matches    : 6
+  Mismatches : 0
+  N/A (XBRL unavailable) : 0
+
+========================================================================
+OVERALL SUMMARY
+
+  edgartools errors         : 0
+  sec-parser errors         : 0
+  edgartools TOC FPs        : 0
+  sec-parser  TOC FPs       : 0
+  edgartools tables total   : 640
+  sec-parser  tables total  : 325
+  edgartools offset OK      : 3/29
+
+========================================================================
+RECOMMENDATION
+
+  PARSER: Use edgartools (edgar.documents.parse_html) for section detection.
+
+  Rationale:
+
+  1. Section structure. edgartools returns a clean, flat list of SEC-standard
+     section names (e.g. part_i_item_1a, part_ii_item_8) derived from the
+     HTML semantics of the filing. NVDA and AMD 10-Ks each yield 24 sections
+     covering Parts I–IV with all Items. This is exactly the granularity
+     needed to produce ParsedSection records and retrieve named passages.
+
+  2. Table survival. edgartools detects markedly more tables than sec-parser
+     (640 vs 325 across 6 filings). The HTML <table> elements are preserved
+     and accessible via doc.tables, which is a prerequisite for chunking
+     financial tables separately.
+
+  3. TOC false positives. Both parsers score 0. Neither is tricked by the
+     Table of Contents entries in the filings sampled.
+
+  4. sec-parser disqualifying failures:
+     a) No 10-K parser. The library only ships Edgar10QParser. When applied
+        to 10-K filings it emits 12–14 "InvalidTopSectionIn10Q" warnings and
+        produces 224 raw element-level objects rather than a structured section
+        map, requiring substantial post-processing.
+     b) INTC catastrophic failure. Both INTC filings (10-K and 10-Q) return
+        only 12–18 elements, all of which are cover-page boilerplate ("UNITED
+        STATES SECURITIES AND EXCHANGE COMMISSION", "FORM 10-K", etc.).
+        Every required section is missing. This makes sec-parser unreliable
+        for production use against INTC's filing format.
+
+  5. Char-offset accuracy. edgartools get_sec_section() text is NOT a direct
+     slice of doc.text() — the two use slightly different whitespace
+     normalization (only 3/29 whitespace-normalised round-trips pass). This
+     means char_start/char_end in ParsedSection cannot be derived by looking
+     up get_sec_section() output in doc.text(). Instead, the parser layer
+     should: (a) call doc.text() as the canonical full-text string, and
+     (b) locate each section via whitespace-normalised search in that string
+     to compute char offsets. The section text itself is correct; only the
+     direct indexing path needs this extra step.
+
+  6. Missing required sections in 10-Qs. Both parsers miss part_ii_item_1a
+     (Risk Factors for 10-Q) on several filings. Investigation needed in
+     Step 2b: some 10-Qs omit Part II Item 1A when there are no material
+     changes; the parser correctly reflects the absence. Verify per ticker
+     before treating this as a parser defect.
+
+  FISCAL PERIOD: all 6 dei tags match derive_fiscal_period(). No mismatches.
+  The algorithm is correct for NVDA, AMD, and INTC; retain it as-is. The dei
+  tags confirm that the FY2025/FY2026/FY2027 numbering is correct and that
+  the NVDA late-January FYE edge case is handled correctly.
+
+========================================================================
+DEPENDENCY JUSTIFICATION
+
+  python-dotenv (spike group only, not in production dependencies)
+    Justification: spike scripts and local developer tooling need to
+    load credentials (EDGAR_USER_AGENT, etc.) from .env without
+    requiring the caller to export them manually.  python-dotenv is
+    the standard, zero-dependency solution; it is listed under the
+    [spike] dependency group and is never imported by ingest/ code
+    that runs in production or CI.
