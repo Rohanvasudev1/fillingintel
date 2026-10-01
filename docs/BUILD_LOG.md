@@ -95,6 +95,42 @@ Current decisions live in `CLAUDE.md` under Decisions. This log records how and 
 
 ---
 
+## 2026-10-01 — Step 2b: production parser ✅
+
+**Built**
+- `ingest/parser.py`: `parse_filing(html, meta) -> ParsedFiling` with a three-step fallback chain: (1) content anchor via edgartools `get_sec_section()`, (2) sequential heading scan in the document body, (3) cross-reference index lookup for required sections.
+- `ingest/models.py`: added `ParsedTable` model, `tables` and `missing_sections` and `fallback_sections` fields to `ParsedFiling`.
+- `tests/fixtures/`: 6 gzipped HTML fixtures (nvda_10k, nvda_10q, intc_10k, intc_10q, amd_10k, amd_10q) cut from real downloads in `data/raw/`.
+- `tests/conftest.py`: session-scoped fixture pairs for all 6 filings.
+- `tests/test_parser.py`: 58 tests (unit + 6-filing integration) in the RED-then-GREEN TDD cycle.
+
+**Evidence**
+- 116/116 tests passing; ruff clean.
+- All 6 filings: required sections present (`missing_sections == []`), round-trip exact for every detected section, no overlap, no empty sections.
+- INTC 10-K `part_ii_item_7` found via cross-reference index, not heading — starts at MD&A body content, not in the cross-reference table itself.
+- NVDA/AMD 10-Q `part_ii_item_1a` found via heading fallback; tracked in `fallback_sections`.
+- Tables embedded inline via `doc.to_markdown()`.
+
+**Bugs found and fixed during implementation**
+- **edgartools maps two keys to identical content (INTC 10-K).** `part_ii_item_8` and `part_iv_item_15` both anchor to the same line ("Financial Statements and Supplemental Details"). Without deduplication, the required `part_ii_item_8` got a zero-length slice. Fixed by deduplicating on position, keeping the canonically-earlier key.
+- **Sequential heading scan over-advanced `next_min` (AMD 10-Q).** `part_i_item_2`'s content anchor placed it at 98.2% (cross-reference zone). In the heading scan, advancing `next_min` to 98.2% made `# ITEM 1A. RISK FACTORS` at 39.2% unreachable. Fixed by capping `next_min` advancement at the body boundary (90%).
+- **Cross-reference index gave Part II items priority over Part I (INTC 10-Q).** The parser scanned the last 12% for `| Item N. | title |` rows; for 10-Q filings both Part I and Part II cross-reference tables are in that window and the dict overwrote Part I entries with Part II entries. Fixed by keeping the first occurrence per item number.
+- **`part_iv_signatures` content anchor returned wrong position (NVDA 10-K).** The section text starts with executive officer content, so the first unique line appeared in the executive officers table at 15.5%. Signatures are always in the last 20% of a filing; the anchor search is now restricted to that range.
+- **Signatures pattern false positive.** Bare `^signatures` (IGNORECASE) matched unrelated headings. Tightened to require a markdown heading `# Signatures` or a standalone bold `**Signatures**`.
+- **`missing_sections` used `found` instead of `parsed_sections`.** A section that landed in `found` but was later skipped (empty slice) would not appear in either `sections` or `missing_sections`, silently giving a false "all present" signal. Fixed by computing `missing` from `parsed_labels` after construction.
+- **`_find_content_anchor` counted occurrences from `body_min` but searched from `start`.** When `min_pos` was advanced past `body_min`, lines appearing before `start` were counted in the uniqueness filter but then not found by `md.find`. Fixed by aligning the count range with `start`.
+
+**Issues caught in python-review**
+- Two HIGH fixes applied: empty-md guard (`ValueError` if `to_markdown()` < 500 chars) and the `_find_content_anchor` count/start alignment.
+- MEDIUM noted: `_build_section_positions` is 110 lines (guideline is 50). Left for Step 3 refactor when the function's role is finalised. `missing_sections` latent bug fixed.
+
+**Open questions going into Step 3**
+- How many table chunks exceed 1200 tokens? (Step 3 concern, deferred.)
+- `part_iv_signatures` content anchor restriction (80%) is a constant; could be a filing-structure heuristic for other back-matter sections in future.
+- Section positions for INTC 10-Q are partly in the ToC zone (2–3%). These are edgartools positions, not heading matches. The round-trip passes, but the extracted text includes ToC entries for those sections rather than body content. Logged for Step 3 review.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.

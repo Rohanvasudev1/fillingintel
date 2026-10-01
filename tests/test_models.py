@@ -2,7 +2,7 @@
 import pytest
 from pydantic import ValidationError
 
-from ingest.models import FilingMeta, ParsedFiling, ParsedSection
+from ingest.models import FilingMeta, ParsedFiling, ParsedSection, ParsedTable
 
 
 class TestParsedSection:
@@ -162,3 +162,72 @@ class TestFilingMeta:
         )
         with pytest.raises(Exception):
             m.cik = "9999999"  # type: ignore[misc]
+
+
+class TestParsedTable:
+    def test_valid_table(self):
+        t = ParsedTable(index=0, markdown="| a | b |\n| 1 | 2 |")
+        assert t.index == 0
+        assert t.markdown == "| a | b |\n| 1 | 2 |"
+        assert t.section_key is None
+
+    def test_section_key_can_be_set(self):
+        t = ParsedTable(index=3, markdown="| x |", section_key="part_ii_item_8")
+        assert t.section_key == "part_ii_item_8"
+
+    def test_immutable(self):
+        t = ParsedTable(index=0, markdown="| a |")
+        with pytest.raises(Exception):
+            t.markdown = "changed"  # type: ignore[misc]
+
+
+class TestParsedFilingExtended:
+    """Tests for tables and missing_sections fields added in Step 2b."""
+
+    def test_tables_default_empty(self):
+        f = ParsedFiling(
+            accession_no="0001045810-25-000003",
+            cik="1045810",
+            form_type="10-K",
+            fiscal_period="FY2025",
+            text="hello",
+            sections=[],
+        )
+        assert f.tables == []
+
+    def test_missing_sections_default_empty(self):
+        f = ParsedFiling(
+            accession_no="0001045810-25-000003",
+            cik="1045810",
+            form_type="10-K",
+            fiscal_period="FY2025",
+            text="hello",
+            sections=[],
+        )
+        assert f.missing_sections == []
+
+    def test_tables_stored(self):
+        t = ParsedTable(index=0, markdown="| col |\n| val |")
+        f = ParsedFiling(
+            accession_no="0001045810-25-000003",
+            cik="1045810",
+            form_type="10-K",
+            fiscal_period="FY2025",
+            text="hello",
+            sections=[],
+            tables=[t],
+        )
+        assert len(f.tables) == 1
+        assert f.tables[0].index == 0
+
+    def test_missing_sections_stored(self):
+        f = ParsedFiling(
+            accession_no="0001045810-25-000003",
+            cik="1045810",
+            form_type="10-K",
+            fiscal_period="FY2025",
+            text="hello",
+            sections=[],
+            missing_sections=["part_ii_item_7", "part_ii_item_8"],
+        )
+        assert "part_ii_item_7" in f.missing_sections

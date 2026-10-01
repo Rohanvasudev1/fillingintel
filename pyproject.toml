@@ -8,6 +8,7 @@ dependencies = [
     "pydantic>=2.0",
     "psycopg[binary]>=3.2",
     "tiktoken>=0.7",
+    "edgartools>=2.0",
 ]
 
 [dependency-groups]

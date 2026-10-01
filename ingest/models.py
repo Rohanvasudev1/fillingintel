@@ -66,6 +66,16 @@ class ParsedSection(BaseModel):
         return v
 
 
+class ParsedTable(BaseModel):
+    """A table extracted from a filing's HTML, serialised as pipe-delimited markdown."""
+
+    model_config = {"frozen": True}
+
+    index: int  # position in edgartools doc.tables
+    markdown: str  # pipe-delimited row representation
+    section_key: str | None = None  # assigned in Step 3; None in Step 2b
+
+
 class ParsedFiling(BaseModel):
     """Full parsed text of a filing with section boundaries as character offsets.
 
@@ -81,6 +91,9 @@ class ParsedFiling(BaseModel):
     fiscal_period: str
     text: str
     sections: list[ParsedSection]
+    tables: list[ParsedTable] = []
+    missing_sections: list[str] = []
+    fallback_sections: list[str] = []  # keys found via heading/cross_ref, not edgartools
 
     @model_validator(mode="after")
     def offsets_within_text(self) -> ParsedFiling:
