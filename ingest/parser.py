@@ -487,6 +487,19 @@ def _dedupe_positions(
     )
 
 
+def _choose_start(
+    md: str, anchor: int | None, ref_pos: int | None, ref_method: str
+) -> tuple[int, str] | None:
+    """Pick between an edgartools anchor and the independent reference, or neither."""
+    if anchor is not None and _anchor_agrees(md, anchor, ref_pos):
+        # With a reference, start at the heading itself rather than at the
+        # first unique content line after it.
+        return (anchor if ref_pos is None else ref_pos), "edgartools"
+    if ref_pos is not None:
+        return ref_pos, ref_method
+    return None
+
+
 def _build_section_positions(
     md: str, form_type: str, doc: object
 ) -> tuple[list[tuple[str, int, str]], frozenset[str]]:
@@ -504,13 +517,10 @@ def _build_section_positions(
     * otherwise the reference is used and labelled by where it came from:
       ``heading`` or ``cross_reference_index``.
 
-    A required item the index also lists sub-topics for can have further spans
-    after other items (``_continuation_starts``); each span is its own entry.
-
-    The second return value is the set of keys edgartools itself identified,
-    whether or not its anchor was used.  Keys edgartools reports that are not
-    in the canonical order are ignored: their text stays inside the preceding
-    canonical section.
+    A required item the index lists sub-topics for can have further spans
+    (``_continuation_starts``).  The second return value is the set of keys
+    edgartools itself identified, whether or not its anchor was used; its keys
+    outside the canonical order are ignored.
     """
     is_10k = "10-K" in form_type
     order = SECTION_ORDER_10K if is_10k else SECTION_ORDER_10Q
@@ -527,12 +537,9 @@ def _build_section_positions(
     for key in order:
         ref_pos, ref_method = _locate_reference(md, key, headings, cross_ref, required, max_pos)
         anchor = _locate_anchor(md, doc, key) if key in identified else None
-        if anchor is not None and _anchor_agrees(md, anchor, ref_pos):
-            # With a reference, start at the heading itself rather than at the
-            # first unique content line after it.
-            positions[key] = (anchor if ref_pos is None else ref_pos, "edgartools")
-        elif ref_pos is not None:
-            positions[key] = (ref_pos, ref_method)
+        chosen = _choose_start(md, anchor, ref_pos, ref_method)
+        if chosen is not None:
+            positions[key] = chosen
 
     continuations = _continuation_starts(
         md, positions, required, _parse_index_subtitles(md), max_pos
@@ -620,11 +627,8 @@ def parse_filing_with_methods(
     a key it identified but a heading positioned is labelled ``heading`` yet is
     not a fallback.
 
-    ``result.text[sec.char_start : sec.char_end] == sec_text`` for every
-    section — guaranteed by construction, not search.
-
-    Tables are embedded inline in section texts via ``doc.to_markdown()``.
-    ``ParsedTable.section_key`` is ``None`` in Step 2b; assigned in Step 3.
+    Offsets are exact by construction, not search.  Tables are embedded inline
+    in the section text; ``ParsedTable.section_key`` is ``None`` until Step 3.
     """
     doc = parse_html(html)
     md: str = doc.to_markdown()  # type: ignore[attr-defined]

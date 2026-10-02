@@ -203,7 +203,7 @@ Current decisions live in `CLAUDE.md` under Decisions. This log records how and 
 - 24 of 24 filings: all three required sections present. Methods over 72 required sections: **edgartools 20, heading 34, cross_reference_index 18.** No missing-quarter warnings: all 24 manifest filings were found.
 - Required sections under 2,000 chars: 2, both NVIDIA 10-K Item 8 (211 chars), the documented exception.
 - Tables (24 filings): 2,338 detected; 1,876 inserted; 24 not inserted; 438 indeterminate. Not-inserted fell from 82 to 24 because the preamble now keeps the cover-page and ToC tables. The 438 indeterminate (numeric-only) tables are what the Step 3 table-placement item targets.
-- Tests: 415 passed, 1 skipped (the documented pointer case) before the final review fixes; coverage 97-98% on `ingest/corpus.py` and `ingest/parser.py`; ruff and pyright clean on production modules.
+- Tests: 451 passed, 1 skipped (the documented pointer case); coverage 97-98% on `ingest/corpus.py` and `ingest/parser.py`; ruff (whole repo) and pyright (production modules) clean.
 
 **Review catches (python-review of the preamble/span/manifest change)**
 - HIGH: the continuation search could run to the end of the body when no later required section was located, matching generic titles inside unrelated sections. Fixed: no search without a later required section; generic titles ("None", "Not applicable") and titles under 10 characters ignored.

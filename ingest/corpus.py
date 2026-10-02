@@ -218,11 +218,7 @@ def _fmt_required(rep: FilingReport) -> str:
 
 
 def format_report(reports: list[FilingReport], header: tuple[str, ...] = ()) -> str:
-    """Render the per-filing tables as plain markdown.
-
-    *header* lines (commit, versions, manifest rule) go under the title so a
-    saved report says which code and config produced its numbers.
-    """
+    """Render the per-filing tables as markdown; *header* lines go under the title."""
     out: list[str] = ["# Full-corpus parser run", "", *header, ""]
     for form, order in (("10-K", REQUIRED_SECTIONS_10K), ("10-Q", REQUIRED_SECTIONS_10Q)):
         subset = [r for r in reports if r.meta.form_type == form]
@@ -308,7 +304,8 @@ def run_header(n_filings: int) -> tuple[str, ...]:
         f"each a 10-K plus its three 10-Qs aligned by fiscal_period ({n_filings} filings)",
         f"- thresholds: short section < {MIN_SECTION_CHARS:,} chars; "
         f"anchor tolerance {ANCHOR_TOLERANCE} chars",
-        "- table counts: a table is 'inserted' when >=80% of its row labels occur "
+        f"- table counts: a table is 'inserted' when >={_ROW_MATCH_RATIO:.0%} of its row "
+        "labels occur "
         "anywhere in the filing's section text (an upper bound; shared labels such as "
         "'Net income' can over-count)",
     )

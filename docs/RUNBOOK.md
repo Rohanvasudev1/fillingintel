@@ -52,7 +52,7 @@ Parse to clean text with section boundaries preserved. Item 1A (risk factors), I
 The parser is accepted only when all of these hold. `/code-review` checks them.
 
 1. **Full corpus.** Run over every filing in the manifest (two most recent complete fiscal years per ticker: each 10-K plus its three 10-Qs, aligned by `fiscal_period`; 24 filings), downloading any not cached. `python -m ingest.corpus` writes `spikes/corpus_report.txt` with the commit and config.
-2. **Report per filing:** required sections present (yes/no), extraction method per required section (`edgartools` / `heading` / `cross_reference_index`) and character length of each. Flag any section under 2,000 characters.
+2. **Report per filing:** required sections present (yes/no), extraction method per required section (`edgartools` / `heading` / `cross_reference_index`) and character length of each. The parser also emits `preamble` (the leading text) and `continuation` (a later span of an item); a section's reported method is its first span's, and its length is the sum of its spans. Flag any section under 2,000 characters.
 3. **Failure policy.** A required section that is missing, under 2,000 characters, or not starting at its own title is a bug, fixed test-first. The only accepted short section is an Item 8 that points to Item 15 (NVIDIA), verified in the filing and tested. Never weaken a check to pass.
 4. **Position rules generalise.** The 90%, last-20% and 15% rules were tuned on 6 filings; the corpus run is the evidence they hold.
 5. **Boundaries verified against the filing.** Check a section's end as well as its start (INTC 10-K Item 7: pin the real last sentence of MD&A in a test).

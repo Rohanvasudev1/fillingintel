@@ -57,5 +57,5 @@ Files changed; evidence (tests, eval results with commit); regressions; decision
 - Financial statements: when Item 8 is only a pointer (NVIDIA: "set forth in" Item 15), part_iv_item_15 holds the statements. A required section under 2,000 chars is a failure unless it is this verified pointer case.
 - Fiscal period: derive_fiscal_period(), confirmed against XBRL dei tags on all 6 spike filings.
 - Embedding model: chosen in Step 5. Step 3 creates no vector column.
-- CI makes no network calls; pytest-socket allows localhost only. Parser and chunker tests use small fixture files in tests/fixtures/.
+- CI makes no network calls; pytest-socket allows localhost only. Parser and chunker tests use the gzipped real filings in tests/fixtures/, rebuilt from data/raw by scripts/build_fixtures.py.
 - docs/design/filingintel-demo.html is a layout reference only. Its tickers, question categories and numbers are placeholders; RUNBOOK is the source of truth.
