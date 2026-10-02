@@ -77,6 +77,9 @@ ANCHOR_TOLERANCE = 400
 _BODY_MAX_FRAC = 0.995
 _CROSS_REF_TAIL_FRAC = 0.88  # the filer's item cross-reference index sits in this tail
 _SIGNATURES_MIN_FRAC = 0.80  # signatures are always in the last 20 % of a filing
+_ANCHOR_MIN_LINE_CHARS = 15  # shorter lines are too generic to anchor on
+_ANCHOR_MAX_OCCURRENCES = 5  # a line seen more often than this is not unique
+_BODY_MIN_FRAC = 0.02  # content anchors ignore the cover page / ToC before this point
 _TITLE_PHRASE_CHARS = 35
 _MIN_TITLE_WORD_CHARS = 4
 _BARE_LINE_MAX_EXTRA = 60
@@ -230,20 +233,20 @@ def _find_content_anchor(
 ) -> int | None:
     """Find where *sec_text* content begins in *md* using the first unique line.
 
-    Searches in md[min_pos:max_pos] for the first line of *sec_text* that
-    appears ≤ 5 times in the body (2–99.5 % of md).
+    Searches the body (from 2 % to 99.5 % of *md*) for the first line of
+    *sec_text* of at least 15 characters that appears at most 5 times.
 
     *min_pos* overrides the default 2 % lower bound (used for signatures).
     """
-    body_min = int(md_len * 0.02)
-    max_pos = int(md_len * 0.995)
+    body_min = int(md_len * _BODY_MIN_FRAC)
+    max_pos = int(md_len * _BODY_MAX_FRAC)
     start = max(min_pos, body_min) if min_pos is not None else body_min
 
     for line in (ln.strip() for ln in sec_text.splitlines()):
-        if len(line) < 15:
+        if len(line) < _ANCHOR_MIN_LINE_CHARS:
             continue
         count = md.count(line, start, max_pos)
-        if 0 < count <= 5:
+        if 0 < count <= _ANCHOR_MAX_OCCURRENCES:
             pos = md.find(line, start, max_pos)
             if pos != -1:
                 return pos
@@ -459,6 +462,53 @@ def parse_filing(html: str, meta: FilingMeta) -> ParsedFiling:
     return parse_filing_with_methods(html, meta)[0]
 
 
+def _assemble_sections(
+    md: str,
+    found: list[tuple[str, int, str]],
+    identified: frozenset[str],
+) -> tuple[str, list[ParsedSection], list[str], dict[str, str]]:
+    """Slice *md* at the located positions and build offsets by construction.
+
+    Returns ``(text, sections, fallback_keys, methods)``.  ``text`` is the
+    section texts joined by ``_SEPARATOR``; each section's offsets are recorded
+    as it is appended, so ``text[start:end]`` is exact without any search.
+    """
+    cursor = 0
+    sections: list[ParsedSection] = []
+    parts: list[str] = []
+    fallback_keys: list[str] = []
+    methods: dict[str, str] = {}
+
+    for i, (key, md_start, method) in enumerate(found):
+        md_end = found[i + 1][1] if i + 1 < len(found) else len(md)
+        sec_text = md[md_start:md_end].rstrip()
+        if not sec_text.strip():
+            continue
+
+        char_end = cursor + len(sec_text)
+        sections.append(ParsedSection(label=key, char_start=cursor, char_end=char_end))
+        parts.append(sec_text)
+        cursor = char_end + len(_SEPARATOR)
+        methods[key] = method
+        # A fallback is a section edgartools did not locate itself: a key it does
+        # not know, or one placed through the cross-reference index.
+        if method == "cross_reference_index" or (method == "heading" and key not in identified):
+            fallback_keys.append(key)
+
+    return _SEPARATOR.join(parts), sections, fallback_keys, methods
+
+
+def _convert_tables(doc: object) -> list[ParsedTable]:
+    """Flat list of non-empty tables; ``section_key`` stays ``None`` until Step 3."""
+    raw_tables: list[object] = getattr(doc, "tables", [])
+    converted = [(i, _table_to_markdown(tbl)) for i, tbl in enumerate(raw_tables)]
+    return [
+        ParsedTable(index=i, markdown=tbl_md, section_key=None)
+        for i, tbl_md in converted
+        if tbl_md.strip()
+    ]
+
+
 def parse_filing_with_methods(
     html: str, meta: FilingMeta
 ) -> tuple[ParsedFiling, dict[str, str]]:
@@ -484,67 +534,27 @@ def parse_filing_with_methods(
             f"for {meta.accession_no}. Possibly a parse failure."
         )
 
-    required = REQUIRED_SECTIONS_10K if "10-K" in meta.form_type else REQUIRED_SECTIONS_10Q
-
     found, identified = _build_section_positions(md, meta.form_type, doc)
+    text, sections, fallback_keys, methods = _assemble_sections(md, found, identified)
 
-    # ── Construction-based offsets ────────────────────────────────────────────
-    cursor = 0
-    parsed_sections: list[ParsedSection] = []
-    text_parts: list[str] = []
-    fallback_keys: list[str] = []
-    methods: dict[str, str] = {}
-
-    for i, (key, md_start, method) in enumerate(found):
-        md_end = found[i + 1][1] if i + 1 < len(found) else len(md)
-        sec_text = md[md_start:md_end].rstrip()
-        if not sec_text.strip():
-            continue
-
-        char_start = cursor
-        char_end = cursor + len(sec_text)
-        cursor = char_end + len(_SEPARATOR)
-
-        parsed_sections.append(
-            ParsedSection(label=key, char_start=char_start, char_end=char_end)
-        )
-        text_parts.append(sec_text)
-        methods[key] = method
-        # A fallback is a section edgartools did not locate itself: a key it does
-        # not know, or one placed through the cross-reference index.
-        if method == "cross_reference_index" or (method == "heading" and key not in identified):
-            fallback_keys.append(key)
-
-    full_text = _SEPARATOR.join(text_parts)
-
-    # ── Missing required sections ─────────────────────────────────────────────
-    # Build from the actual parsed_sections list (not from `found`) so that
-    # sections with empty text slices — which are skipped above — do not create
-    # a false "all present" signal in the returned object.
-    parsed_labels = {s.label for s in parsed_sections}
-    missing = sorted(required - parsed_labels)
+    # Built from the parsed sections (not from `found`) so a section skipped for
+    # an empty slice cannot create a false "all present" signal.
+    required = REQUIRED_SECTIONS_10K if "10-K" in meta.form_type else REQUIRED_SECTIONS_10Q
+    missing = sorted(required - {s.label for s in sections})
     for sec in missing:
         logger.warning(
             "Required section '%s' missing from %s (%s)",
             sec, meta.accession_no, meta.form_type,
         )
 
-    # ── Tables (flat list; section_key=None until Step 3) ────────────────────
-    raw_tables: list[object] = getattr(doc, "tables", [])
-    parsed_tables: list[ParsedTable] = []
-    for i, tbl in enumerate(raw_tables):
-        tbl_md = _table_to_markdown(tbl)
-        if tbl_md.strip():
-            parsed_tables.append(ParsedTable(index=i, markdown=tbl_md, section_key=None))
-
     filing = ParsedFiling(
         accession_no=meta.accession_no,
         cik=meta.cik,
         form_type=meta.form_type,
         fiscal_period=meta.fiscal_period,
-        text=full_text,
-        sections=parsed_sections,
-        tables=parsed_tables,
+        text=text,
+        sections=sections,
+        tables=_convert_tables(doc),
         missing_sections=missing,
         fallback_sections=fallback_keys,
     )

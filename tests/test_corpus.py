@@ -192,3 +192,41 @@ class TestBuildReports:
         reports, failures = build_reports(client, [nvda_10k_meta])
         assert reports == []
         assert nvda_10k_meta.accession_no in failures[0]
+
+
+class TestRunHeaderAndMain:
+    def test_run_header_names_commit_library_and_rules(self):
+        from ingest.corpus import run_header
+
+        header = "\n".join(run_header(24))
+        assert "- commit:" in header and "- edgartools: 5." in header
+        assert "24 filings" in header and "anchor tolerance 400" in header
+
+    def test_main_writes_report_and_exits_nonzero_on_failure(
+        self, monkeypatch, tmp_path, nvda_10k_html, nvda_10k_meta
+    ):
+        import ingest.corpus as corpus
+
+        html_path = tmp_path / "ok.html"
+        html_path.write_text(nvda_10k_html, encoding="utf-8")
+        bad = _meta("1045810", 9, "10-K", date(2024, 12, 31))
+
+        class FakeEdgarClient(_FakeClient):
+            def __init__(self, _cache_dir):
+                super().__init__({nvda_10k_meta.accession_no: html_path})
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_):
+                return None
+
+            def list_filings(self, cik):
+                return [nvda_10k_meta, bad] if cik == "1045810" else []
+
+        monkeypatch.setattr(corpus, "EdgarClient", FakeEdgarClient)
+        out = tmp_path / "nested" / "report.txt"
+        assert corpus.main([str(out)]) == 1
+        text = out.read_text(encoding="utf-8")
+        assert "## Failures" in text and bad.accession_no in text
+        assert "- commit:" in text
