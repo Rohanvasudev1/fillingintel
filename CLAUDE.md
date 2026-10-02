@@ -22,10 +22,15 @@ Python 3.11+ (uv), FastAPI, LangGraph, Postgres + pgvector, Neo4j Community, Rag
 
 ## Workflow
 ECC commands in this install use the /everything-claude-code: prefix.
-Plan with /everything-claude-code:plan and wait for approval. Write tests first (tdd-workflow skill) for deterministic logic. Implement the minimal change. Review with /everything-claude-code:python-review, plus the database-reviewer agent for SQL or Cypher. Verify with the verification-loop skill and the relevant eval slice. Stop at the checkpoint and report.
+1. Plan with /everything-claude-code:plan and wait for approval. For major design decisions (ontology, entity resolution, research plan), run a grilling session with me first.
+2. Write tests first (tdd-workflow skill) for deterministic logic, and show them failing.
+3. Implement the minimal change.
+4. Review code quality with /everything-claude-code:python-review, plus the database-reviewer agent for SQL or Cypher. Fix the findings.
+5. Review spec compliance with /code-review (Matt Pocock skill) against the current RUNBOOK step, my latest instructions in this session, and docs/OPEN-DECISIONS.md. Fix every spec-compliance finding, or report why it can't be fixed. Never resolve a finding by weakening an acceptance check.
+6. Verify with the verification-loop skill and the relevant eval slice.
+7. Append a dated entry to docs/BUILD-LOG.md, ending with a "Next session starts with" note. Run /everything-claude-code:save-session. Stop and report.
 Use search-first before writing integration code for edgartools, LangGraph, Ragas, DeepEval or graph drivers.
 Test fixtures are excerpts cut from real downloaded filings, never hand-written HTML.
-At each checkpoint, append a dated entry to docs/BUILD-LOG.md: what was built, evidence, bugs found, review catches, decisions, open questions. Record problems and reversals as faithfully as wins. Then run /everything-claude-code:save-session.
 Ask before: adding a dependency, changing a schema, changing the eval harness or CI, or anything outside the current milestone.
 
 ## Commands
