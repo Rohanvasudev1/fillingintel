@@ -47,6 +47,20 @@ Parse to clean text with section boundaries preserved. Item 1A (risk factors), I
 
 **Stop condition:** 24 filings on disk as raw HTML plus parsed text with section labels. Spot-check three by eye — parsed section boundaries are wrong more often than you'd think.
 
+#### Step 2b — acceptance checks (amended 2026-10-02)
+
+The parser is accepted only when all of these hold. `/code-review` checks them.
+
+1. **Full corpus.** Run over every filing in the manifest (two most recent complete fiscal years per ticker: each 10-K plus its three 10-Qs, aligned by `fiscal_period`; 24 filings), downloading any not cached. `python -m ingest.corpus` writes `spikes/corpus_report.txt` with the commit and config.
+2. **Report per filing:** required sections present (yes/no), extraction method per required section (`edgartools` / `heading` / `cross_reference_index`) and character length of each. Flag any section under 2,000 characters.
+3. **Failure policy.** A required section that is missing, under 2,000 characters, or not starting at its own title is a bug, fixed test-first. The only accepted short section is an Item 8 that points to Item 15 (NVIDIA), verified in the filing and tested. Never weaken a check to pass.
+4. **Position rules generalise.** The 90%, last-20% and 15% rules were tuned on 6 filings; the corpus run is the evidence they hold.
+5. **Boundaries verified against the filing.** Check a section's end as well as its start (INTC 10-K Item 7: pin the real last sentence of MD&A in a test).
+6. **Whole-filing coverage.** Text before the first located section is kept as a `preamble` section. The sections' text reproduces the filing's markdown (whitespace aside).
+7. **Tables.** Report detected vs inserted into section text, per filing.
+8. **Pins and fixtures.** edgartools pinned `>=5.59,<6.0`. Fixtures are real filings (gzipped), rebuilt from `data/raw/` by `scripts/build_fixtures.py`.
+9. **Process.** Tests written first and shown failing; python-review, verification-loop and `/code-review` run; BUILD-LOG entry ending "Next session starts with"; commit pushed and CI green.
+
 ### Step 3. Chunking
 
 Section-aware, not naive. A chunk should not span an Item boundary. Target ~800 tokens with ~100 token overlap, but keep tables intact even when that means an oversized chunk.
