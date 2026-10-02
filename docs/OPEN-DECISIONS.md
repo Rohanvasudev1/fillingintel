@@ -36,6 +36,5 @@ Decisions raised but not yet made, grouped by the step where each must be settle
 - Set the tool-call cap before the benchmark run.
 
 ## Paper
-- Check RTX's outside-publication policy before posting to arXiv.
 - Decide on a UCSD faculty co-author.
 - Optional: Wayfinder for planning the paper and agentic arms.

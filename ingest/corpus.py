@@ -299,7 +299,7 @@ def build_reports(
 
 def main(argv: list[str] | None = None) -> int:
     """Run the manifest, write the report, exit non-zero on any failure or missing section."""
-    parser = argparse.ArgumentParser(description="Parse the filing manifest and write a section report.")
+    parser = argparse.ArgumentParser(description="Parse the filing manifest and report sections.")
     parser.add_argument("report_path", nargs="?", type=Path, default=DEFAULT_REPORT_PATH)
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO)
