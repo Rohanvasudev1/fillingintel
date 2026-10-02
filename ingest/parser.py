@@ -70,7 +70,11 @@ REQUIRED_SECTIONS_10Q: frozenset[str] = frozenset({
 })
 
 _SEPARATOR = "\n\n"
-
+# Label of the text before the first located section (cover page, ToC, glossary).
+# Step 3 decides whether the chunker embeds it; offsets cover it either way.
+PREAMBLE_KEY = "preamble"
+_MIN_CONTINUATION_TITLE_CHARS = 10
+_GENERIC_INDEX_TITLES = frozenset({"none", "not applicable", "n/a"})
 # An edgartools content anchor is trusted over a heading or cross-reference
 # title only when it lands within this many characters of it.
 ANCHOR_TOLERANCE = 400
@@ -358,6 +362,84 @@ def _anchor_agrees(md: str, anchor: int, reference: int | None) -> bool:
     )
 
 
+_INDEX_ITEM_ROW = re.compile(
+    r"^\| *item +(\d+[a-c]?)\.? *\| *[^|\n]+? *\|", re.IGNORECASE | re.MULTILINE
+)
+_INDEX_SUB_ROW = re.compile(r"^\| *\| *([^|\n]+?) *\|", re.MULTILINE)
+
+
+def _parse_index_subtitles(md: str) -> dict[str, list[str]]:
+    """Sub-topics the filer's cross-reference index lists under each item.
+
+    Intel's index has rows such as ``|  | Critical accounting estimates | Pages
+    34-36 |`` directly under ``| Item 7. | ... |``.  Returns
+    ``{item_num_lower: [sub_title, ...]}``; the first occurrence of an item wins.
+    """
+    tail = md[int(len(md) * _CROSS_REF_TAIL_FRAC):]
+    subtitles: dict[str, list[str]] = {}
+    current: str | None = None
+    for line in tail.splitlines():
+        item = _INDEX_ITEM_ROW.match(line)
+        if item:
+            num = item.group(1).lower()
+            if num in subtitles:
+                current = None  # a second Part's rows must not extend the first
+            else:
+                subtitles[num] = []
+                current = num
+            continue
+        sub = _INDEX_SUB_ROW.match(line)
+        if sub and current is not None:
+            subtitles[current].append(sub.group(1).strip())
+    return subtitles
+
+
+def _continuation_starts(
+    md: str,
+    positions: dict[str, tuple[int, str]],
+    required: frozenset[str],
+    subtitles: dict[str, list[str]],
+    max_pos: int,
+) -> list[tuple[str, int]]:
+    """Starts of required items that continue after another item's section.
+
+    A sub-topic the index lists under a required item counts when its title is
+    found after the item's contiguous block ends and before the next located
+    required section.  Intel prints Critical Accounting Estimates (Item 7) after
+    Item 7A.  Deliberately conservative:
+
+    * no later required section located: no search (the window would be open-ended);
+    * item numbers shared by two Parts (10-Q Item 1, 2, ...) are skipped, because
+      the index map is keyed by number only;
+    * generic or very short titles ("None", "Not applicable") are ignored.
+    """
+    ordered = sorted((pos, key) for key, (pos, _) in positions.items())
+    used = {pos for pos, _ in ordered}
+    nums = [_item_num_from_key(key) for key in positions]
+    starts: list[tuple[str, int]] = []
+    for key in sorted(required & positions.keys()):
+        num = _item_num_from_key(key) or ""
+        titles = [t for t in subtitles.get(num, []) if _is_specific_title(t)]
+        later = [(pos, other) for pos, other in ordered if pos > positions[key][0]]
+        next_required = next((pos for pos, other in later if other in required), None)
+        if not titles or not later or next_required is None or nums.count(num) > 1:
+            continue
+        for title in titles:
+            pos = _find_title_in_body(md, title, later[0][0], min(next_required, max_pos))
+            if pos is not None and pos not in used:
+                starts.append((key, pos))
+                used.add(pos)
+    return starts
+
+
+def _is_specific_title(title: str) -> bool:
+    """False for index sub-rows too generic to locate in the body."""
+    return (
+        len(title) >= _MIN_CONTINUATION_TITLE_CHARS
+        and title.lower().rstrip(".") not in _GENERIC_INDEX_TITLES
+    )
+
+
 def _locate_reference(
     md: str,
     key: str,
@@ -392,11 +474,11 @@ def _locate_anchor(md: str, doc: object, key: str) -> int | None:
 
 
 def _dedupe_positions(
-    positions: dict[str, tuple[int, str]], order: list[str]
+    entries: list[tuple[str, int, str]], order: list[str]
 ) -> list[tuple[str, int, str]]:
     """Resolve keys sharing a position (keep the canonically-earlier) and sort by position."""
     seen: dict[int, tuple[str, str]] = {}
-    for key, (pos, method) in positions.items():
+    for key, pos, method in entries:
         if pos not in seen or _sort_key(key, order) < _sort_key(seen[pos][0], order):
             seen[pos] = (key, method)
     return sorted(
@@ -421,6 +503,9 @@ def _build_section_positions(
       not a ToC row) is used and labelled ``edgartools``;
     * otherwise the reference is used and labelled by where it came from:
       ``heading`` or ``cross_reference_index``.
+
+    A required item the index also lists sub-topics for can have further spans
+    after other items (``_continuation_starts``); each span is its own entry.
 
     The second return value is the set of keys edgartools itself identified,
     whether or not its anchor was used.  Keys edgartools reports that are not
@@ -449,7 +534,12 @@ def _build_section_positions(
         elif ref_pos is not None:
             positions[key] = (ref_pos, ref_method)
 
-    return _dedupe_positions(positions, order), identified
+    continuations = _continuation_starts(
+        md, positions, required, _parse_index_subtitles(md), max_pos
+    )
+    entries = [(key, pos, method) for key, (pos, method) in positions.items()]
+    entries += [(key, pos, "continuation") for key, pos in continuations]
+    return _dedupe_positions(entries, order), identified
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
@@ -472,7 +562,12 @@ def _assemble_sections(
     Returns ``(text, sections, fallback_keys, methods)``.  ``text`` is the
     section texts joined by ``_SEPARATOR``; each section's offsets are recorded
     as it is appended, so ``text[start:end]`` is exact without any search.
+    Text before the first located section becomes a ``preamble`` section, so
+    the whole filing is covered by offsets.  A key may own several spans; its
+    method is that of its first span.
     """
+    if not found or found[0][1] > 0:
+        found = [(PREAMBLE_KEY, 0, PREAMBLE_KEY), *found]
     cursor = 0
     sections: list[ParsedSection] = []
     parts: list[str] = []
@@ -489,10 +584,13 @@ def _assemble_sections(
         sections.append(ParsedSection(label=key, char_start=cursor, char_end=char_end))
         parts.append(sec_text)
         cursor = char_end + len(_SEPARATOR)
-        methods[key] = method
+        methods.setdefault(key, method)
         # A fallback is a section edgartools did not locate itself: a key it does
         # not know, or one placed through the cross-reference index.
-        if method == "cross_reference_index" or (method == "heading" and key not in identified):
+        is_fallback = method == "cross_reference_index" or (
+            method == "heading" and key not in identified
+        )
+        if is_fallback and key not in fallback_keys:
             fallback_keys.append(key)
 
     return _SEPARATOR.join(parts), sections, fallback_keys, methods
@@ -514,11 +612,13 @@ def parse_filing_with_methods(
 ) -> tuple[ParsedFiling, dict[str, str]]:
     """Parse raw EDGAR HTML; also return ``{section_key: extraction_method}``.
 
-    Methods are ``edgartools`` (its content anchor was used), ``heading`` or
-    ``cross_reference_index``, and cover exactly the sections present in
-    ``ParsedFiling.sections``.  ``fallback_sections`` lists the sections edgartools
-    did not locate itself; a key it identified but a heading positioned is
-    labelled ``heading`` yet is not a fallback.
+    Methods are ``edgartools`` (its content anchor was used), ``heading``,
+    ``cross_reference_index``, ``preamble`` for the leading text, or ``continuation``
+    for a later span of an item; a key's method is that of its first span.
+    They cover exactly the labels present in ``ParsedFiling.sections``.
+    ``fallback_sections`` lists the sections edgartools did not locate itself;
+    a key it identified but a heading positioned is labelled ``heading`` yet is
+    not a fallback.
 
     ``result.text[sec.char_start : sec.char_end] == sec_text`` for every
     section — guaranteed by construction, not search.

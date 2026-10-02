@@ -131,6 +131,8 @@ class TestNvda10K:
 
     def test_section_order(self, nvda_10k_filing):
         labels = [s.label for s in nvda_10k_filing.sections]
+        assert labels[0] == "preamble"  # text before the first item, kept for full coverage
+        labels = labels[1:]
         for a, b in zip(labels, labels[1:]):
             a_idx = SECTION_ORDER_10K.index(a) if a in SECTION_ORDER_10K else len(SECTION_ORDER_10K)
             b_idx = SECTION_ORDER_10K.index(b) if b in SECTION_ORDER_10K else len(SECTION_ORDER_10K)

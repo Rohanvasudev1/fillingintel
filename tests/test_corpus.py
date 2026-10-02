@@ -14,7 +14,7 @@ from ingest.corpus import (
 from ingest.models import FilingMeta, ParsedTable
 from ingest.parser import parse_filing, parse_filing_with_methods
 
-VALID_METHODS = {"edgartools", "heading", "cross_reference_index"}
+VALID_METHODS = {"edgartools", "heading", "cross_reference_index", "preamble"}
 
 
 def _meta(cik: str, n: int, form: str, report: date) -> FilingMeta:
@@ -32,32 +32,81 @@ def _meta(cik: str, n: int, form: str, report: date) -> FilingMeta:
 
 # ── select_manifest ───────────────────────────────────────────────────────────
 
+def _meta_fp(cik: str, n: int, form: str, fiscal_period: str, report: date) -> FilingMeta:
+    return FilingMeta(
+        cik=cik,
+        accession_no=f"{int(cik):010d}-{report.year % 100:02d}-{n:06d}",
+        form_type=form,
+        company_name="X",
+        fiscal_period=fiscal_period,
+        report_date=report,
+        filing_date=report,
+        primary_document="x.htm",
+    )
+
+
 class TestSelectManifest:
-    def _filings(self) -> list[FilingMeta]:
+    """Two most recent complete fiscal years: each 10-K plus the three 10-Qs of that year."""
+
+    def _company(self, cik: str) -> list[FilingMeta]:
         out: list[FilingMeta] = []
-        for cik in ("1", "2"):
-            for i in range(4):
-                out.append(_meta(cik, i, "10-K", date(2020 + i, 12, 31)))
-            for i in range(9):
-                out.append(_meta(cik, 100 + i, "10-Q", date(2020 + i // 3, 3 + 3 * (i % 3), 28)))
+        n = 0
+        for fy in (2023, 2024, 2025):
+            n += 1
+            out.append(_meta_fp(cik, n, "10-K", f"FY{fy}", date(fy, 12, 28)))
+            for q in (1, 2, 3):
+                n += 1
+                out.append(_meta_fp(cik, n, "10-Q", f"FY{fy}-Q{q}", date(fy, 3 * q, 28)))
+        # A fiscal year in progress: two 10-Qs, no 10-K yet.
+        out.append(_meta_fp(cik, 90, "10-Q", "FY2026-Q1", date(2026, 3, 28)))
+        out.append(_meta_fp(cik, 91, "10-Q", "FY2026-Q2", date(2026, 6, 28)))
         return out
 
-    def test_two_newest_10k_and_six_newest_10q_per_company(self):
-        picked = select_manifest(self._filings())
+    def test_two_complete_fiscal_years_per_company(self):
+        picked = select_manifest(self._company("1") + self._company("2"))
         for cik in ("1", "2"):
-            ks = [f for f in picked if f.cik == cik and f.form_type == "10-K"]
-            qs = [f for f in picked if f.cik == cik and f.form_type == "10-Q"]
-            assert [f.report_date.year for f in ks] == [2023, 2022]
-            assert len(qs) == 6
-            assert min(q.report_date for q in qs) > date(2020, 12, 31)
+            mine = [f for f in picked if f.cik == cik]
+            assert len(mine) == 8
+            assert sorted(f.fiscal_period for f in mine if f.form_type == "10-K") == [
+                "FY2024", "FY2025",
+            ]
+            assert sorted(f.fiscal_period for f in mine if f.form_type == "10-Q") == [
+                "FY2024-Q1", "FY2024-Q2", "FY2024-Q3", "FY2025-Q1", "FY2025-Q2", "FY2025-Q3",
+            ]
         assert len(picked) == 16
 
-    def test_fewer_filings_than_quota_returns_all(self):
-        few = [_meta("1", 1, "10-K", date(2024, 12, 31))]
+    def test_fiscal_year_in_progress_is_excluded(self):
+        picked = select_manifest(self._company("1"))
+        assert not any(f.fiscal_period.startswith("FY2026") for f in picked)
+
+    def test_order_is_by_fiscal_year_then_form_then_quarter(self):
+        picked = select_manifest(self._company("1"))
+        assert [f.fiscal_period for f in picked][:4] == [
+            "FY2025", "FY2025-Q1", "FY2025-Q2", "FY2025-Q3",
+        ]
+
+    def test_missing_quarter_is_returned_short_and_logged(self, caplog):
+        filings = [f for f in self._company("1") if f.fiscal_period != "FY2024-Q2"]
+        with caplog.at_level("WARNING"):
+            picked = select_manifest(filings)
+        assert len(picked) == 7
+        assert "FY2024" in caplog.text and "Q2" in caplog.text
+
+    def test_duplicate_filings_for_a_period_use_the_earliest_and_warn(self, caplog):
+        filings = self._company("1")
+        dup = _meta_fp("1", 95, "10-Q", "FY2025-Q1", date(2025, 4, 15))
+        with caplog.at_level("WARNING"):
+            picked = select_manifest([*filings, dup])
+        q1 = [f for f in picked if f.fiscal_period == "FY2025-Q1"]
+        assert len(q1) == 1 and q1[0].filing_date == date(2025, 3, 28)
+        assert "FY2025-Q1" in caplog.text
+
+    def test_fewer_complete_years_than_quota_returns_what_exists(self):
+        few = [_meta_fp("1", 1, "10-K", "FY2024", date(2024, 12, 31))]
         assert select_manifest(few) == few
 
     def test_input_not_mutated(self):
-        filings = self._filings()
+        filings = self._company("1")
         before = list(filings)
         select_manifest(filings)
         assert filings == before
@@ -138,6 +187,15 @@ class TestBuildReport:
         filing = parse_filing(amd_10q_html, amd_10q_meta)
         by_label = {s.label: s.char_end - s.char_start for s in filing.sections}
         assert {r.key: r.length for r in rep.sections} == by_label
+
+    def test_multi_span_item_is_summed_and_counted(self, intc_10k_html, intc_10k_meta):
+        rep = build_report(intc_10k_html, intc_10k_meta)
+        filing = parse_filing(intc_10k_html, intc_10k_meta)
+        item7 = {r.key: r for r in rep.sections}["part_ii_item_7"]
+        spans = [s for s in filing.sections if s.label == "part_ii_item_7"]
+        assert item7.spans == len(spans) == 2
+        assert item7.length == sum(s.char_end - s.char_start for s in spans)
+        assert "(2 spans)" in format_report([rep])
 
     def test_short_flag_marks_the_known_stub(self, nvda_10k_html, nvda_10k_meta):
         rep = build_report(nvda_10k_html, nvda_10k_meta)
@@ -230,3 +288,23 @@ class TestRunHeaderAndMain:
         text = out.read_text(encoding="utf-8")
         assert "## Failures" in text and bad.accession_no in text
         assert "- commit:" in text
+
+
+class TestSectionRows:
+    def test_two_spans_sum_and_count_in_document_order(self):
+        from ingest.corpus import _section_rows
+        from ingest.models import ParsedFiling, ParsedSection
+
+        filing = ParsedFiling(
+            accession_no="0000000001-25-000001", cik="1", form_type="10-K",
+            fiscal_period="FY2025", text="x" * 100,
+            sections=[
+                ParsedSection(label="b", char_start=60, char_end=100),
+                ParsedSection(label="a", char_start=0, char_end=20),
+                ParsedSection(label="b", char_start=20, char_end=40),
+            ],
+        )
+        rows = _section_rows(filing, {"a": "heading", "b": "edgartools"}, frozenset({"b"}))
+        assert [(r.key, r.length, r.spans, r.required) for r in rows] == [
+            ("a", 20, 1, False), ("b", 60, 2, True),
+        ]

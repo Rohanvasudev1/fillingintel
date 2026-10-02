@@ -4,9 +4,9 @@ Usage (needs ``EDGAR_USER_AGENT`` in the environment; downloads are cached)::
 
     uv run python -m ingest.corpus [report_path]
 
-Manifest rule: per company, the 2 most recent 10-Ks and the 6 most recent
-10-Qs (24 filings for three companies).  Amended forms are already excluded
-by ``EdgarClient.list_filings``.
+Manifest rule: per company, the two most recent complete fiscal years (a 10-K
+plus the three 10-Qs with the same fiscal_period year): 24 filings for three
+companies.  Amended forms are already excluded by ``EdgarClient.list_filings``.
 """
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from typing import Protocol
 import httpx
 
 from ingest.edgar_client import EdgarClient
-from ingest.models import FilingMeta, ParsedTable
+from ingest.models import FilingMeta, ParsedFiling, ParsedTable
 from ingest.parser import (
     ANCHOR_TOLERANCE,
     REQUIRED_SECTIONS_10K,
@@ -33,8 +33,8 @@ from ingest.parser import (
 logger = logging.getLogger(__name__)
 
 CIKS: dict[str, str] = {"NVDA": "1045810", "AMD": "2488", "INTC": "50863"}
-N_10K = 2
-N_10Q = 6
+N_FISCAL_YEARS = 2
+QUARTERS = (1, 2, 3)  # 10-Qs filed per fiscal year; the fourth quarter is in the 10-K
 MIN_SECTION_CHARS = 2000
 # A table counts as inserted when this share of its labelled rows appear in the text.
 _ROW_MATCH_RATIO = 0.8
@@ -53,8 +53,9 @@ class SectionRow:
 
     key: str
     method: str
-    length: int
+    length: int  # total over all spans of the key
     required: bool
+    spans: int = 1
 
     @property
     def short(self) -> bool:
@@ -83,19 +84,46 @@ class FilingReport:
 
 # ── Manifest ──────────────────────────────────────────────────────────────────
 
+def _quarters_of(tenk: FilingMeta, company_filings: list[FilingMeta]) -> list[FilingMeta]:
+    """The 10-Qs of *tenk*'s fiscal year (Q1-Q3), one per period; gaps are logged."""
+    found: list[FilingMeta] = []
+    for quarter in QUARTERS:
+        period = f"{tenk.fiscal_period}-Q{quarter}"
+        matches = sorted(
+            (f for f in company_filings if f.form_type == "10-Q" and f.fiscal_period == period),
+            key=lambda f: f.filing_date,
+        )
+        if not matches:
+            logger.warning("CIK %s: no 10-Q found for %s", tenk.cik, period)
+            continue
+        if len(matches) > 1:
+            logger.warning(
+                "CIK %s: %d filings for %s; using the earliest", tenk.cik, len(matches), period
+            )
+        found.append(matches[0])
+    return found
+
+
 def select_manifest(
-    filings: list[FilingMeta], n_10k: int = N_10K, n_10q: int = N_10Q
+    filings: list[FilingMeta], n_years: int = N_FISCAL_YEARS
 ) -> list[FilingMeta]:
-    """Return the newest *n_10k* 10-Ks and *n_10q* 10-Qs per company."""
+    """The *n_years* most recent complete fiscal years per company.
+
+    A fiscal year is complete once its 10-K is filed.  For each, the 10-K and
+    the three 10-Qs whose ``fiscal_period`` is ``<FY>-Q1`` to ``-Q3``.  A missing
+    quarter is logged and skipped, so the result can be short.
+    """
     picked: list[FilingMeta] = []
     for cik in sorted({f.cik for f in filings}):
-        mine = sorted(
-            (f for f in filings if f.cik == cik),
+        mine = [f for f in filings if f.cik == cik]
+        tenks = sorted(
+            (f for f in mine if f.form_type == "10-K"),
             key=lambda f: f.report_date,
             reverse=True,
-        )
-        picked.extend([f for f in mine if f.form_type == "10-K"][:n_10k])
-        picked.extend([f for f in mine if f.form_type == "10-Q"][:n_10q])
+        )[:n_years]
+        for tenk in tenks:
+            picked.append(tenk)
+            picked.extend(_quarters_of(tenk, mine))
     return picked
 
 
@@ -140,19 +168,32 @@ def classify_tables(tables: list[ParsedTable], text: str) -> TableCounts:
 
 # ── Per-filing report ─────────────────────────────────────────────────────────
 
+def _section_rows(
+    filing: ParsedFiling, methods: dict[str, str], required: frozenset[str]
+) -> tuple[SectionRow, ...]:
+    """One row per label, in document order; a label with several spans sums them."""
+    lengths: dict[str, int] = {}
+    spans: dict[str, int] = {}
+    for sec in sorted(filing.sections, key=lambda s: s.char_start):
+        lengths[sec.label] = lengths.get(sec.label, 0) + sec.char_end - sec.char_start
+        spans[sec.label] = spans.get(sec.label, 0) + 1
+    return tuple(
+        SectionRow(
+            key=label,
+            method=methods[label],
+            length=length,
+            required=label in required,
+            spans=spans[label],
+        )
+        for label, length in lengths.items()
+    )
+
+
 def build_report(html: str, meta: FilingMeta) -> FilingReport:
     """Parse one filing and summarise sections, methods, lengths and tables."""
     filing, methods = parse_filing_with_methods(html, meta)
     required = REQUIRED_SECTIONS_10K if "10-K" in meta.form_type else REQUIRED_SECTIONS_10Q
-    rows = tuple(
-        SectionRow(
-            key=s.label,
-            method=methods[s.label],
-            length=s.char_end - s.char_start,
-            required=s.label in required,
-        )
-        for s in filing.sections
-    )
+    rows = _section_rows(filing, methods, required)
     return FilingReport(
         meta=meta,
         sections=rows,
@@ -168,9 +209,11 @@ def _fmt_required(rep: FilingReport) -> str:
     cells: list[str] = []
     for key in sorted(order):
         r = by_key.get(key)
-        cells.append(
-            f"{r.method} / {r.length:,}{' ⚠' if r.short else ''}" if r else "MISSING"
-        )
+        if r is None:
+            cells.append("MISSING")
+            continue
+        spans = f" ({r.spans} spans)" if r.spans > 1 else ""
+        cells.append(f"{r.method} / {r.length:,}{spans}{' ⚠' if r.short else ''}")
     return " | ".join(cells)
 
 
@@ -261,8 +304,8 @@ def run_header(n_filings: int) -> tuple[str, ...]:
     return (
         f"- commit: {_git_state()}",
         f"- edgartools: {version('edgartools')}",
-        f"- manifest: {N_10K} newest 10-Ks + {N_10Q} newest 10-Qs per company "
-        f"({n_filings} filings)",
+        f"- manifest: the {N_FISCAL_YEARS} most recent complete fiscal years per company, "
+        f"each a 10-K plus its three 10-Qs aligned by fiscal_period ({n_filings} filings)",
         f"- thresholds: short section < {MIN_SECTION_CHARS:,} chars; "
         f"anchor tolerance {ANCHOR_TOLERANCE} chars",
         "- table counts: a table is 'inserted' when >=80% of its row labels occur "

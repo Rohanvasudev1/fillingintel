@@ -51,9 +51,10 @@ CASES = [(name, key) for name, required in FILINGS for key in sorted(required)]
 
 
 def _text(filing, key: str) -> str:
-    sec = next((s for s in filing.sections if s.label == key), None)
-    assert sec is not None, f"section {key} missing"
-    return filing.text[sec.char_start:sec.char_end]
+    """All spans of *key* in document order, joined (an item may continue after another)."""
+    spans = sorted((s for s in filing.sections if s.label == key), key=lambda s: s.char_start)
+    assert spans, f"section {key} missing"
+    return "\n\n".join(filing.text[s.char_start:s.char_end] for s in spans)
 
 
 @pytest.mark.parametrize(("fixture", "key"), CASES)

@@ -32,14 +32,18 @@ _DOC_TYPE = re.compile(r"dei:DocumentType[^>]*>\s*(10-[KQ])\s*<", re.IGNORECASE)
 pytestmark = pytest.mark.skipif(not FILES, reason="no filings cached in data/raw/")
 
 
+def _doc_type(path: Path) -> str:
+    m = _DOC_TYPE.search(path.read_text(encoding="utf-8", errors="replace"))
+    assert m, f"no dei:DocumentType in {path.name}"
+    return m.group(1).upper()
+
+
 def _parse(path: Path):
     html = path.read_text(encoding="utf-8", errors="replace")
-    m = _DOC_TYPE.search(html)
-    assert m, f"no dei:DocumentType in {path.name}"
     meta = FilingMeta(
         cik=str(int(path.stem[:10])),  # filer prefix; these companies self-file
         accession_no=path.stem,
-        form_type=m.group(1).upper(),
+        form_type=_doc_type(path),
         company_name="X",
         fiscal_period="FY0000",
         report_date=date(2000, 1, 1),
@@ -50,8 +54,22 @@ def _parse(path: Path):
 
 
 @pytest.fixture(scope="module", params=FILES, ids=lambda p: p.stem)
-def filing(request):
-    return _parse(request.param)
+def parsed(request):
+    """``(ParsedFiling, markdown)`` for one cached filing, parsed once per module."""
+    from edgar.documents import parse_html
+
+    html = request.param.read_text(encoding="utf-8", errors="replace")
+    return _parse(request.param), parse_html(html).to_markdown()
+
+
+@pytest.fixture
+def filing(parsed):
+    return parsed[0]
+
+
+@pytest.fixture
+def markdown(parsed):
+    return parsed[1]
 
 
 def _required(filing) -> frozenset[str]:
@@ -59,9 +77,10 @@ def _required(filing) -> frozenset[str]:
 
 
 def _text(filing, key: str) -> str:
-    sec = next((s for s in filing.sections if s.label == key), None)
-    assert sec is not None, f"{filing.accession_no}: section {key} missing"
-    return filing.text[sec.char_start:sec.char_end]
+    """All spans of *key* in document order, joined (an item may continue after another)."""
+    spans = sorted((s for s in filing.sections if s.label == key), key=lambda s: s.char_start)
+    assert spans, f"{filing.accession_no}: section {key} missing"
+    return "\n\n".join(filing.text[s.char_start:s.char_end] for s in spans)
 
 
 def test_no_missing_required_sections(filing):
@@ -93,6 +112,22 @@ def test_required_sections_do_not_start_on_a_toc_row(filing):
         assert not re.search(r"\|\s*(?:\d{1,3}|Page)\s*\|\s*$", first_line), (
             f"{filing.accession_no}/{key}: {first_line!r}"
         )
+
+
+def test_sections_reproduce_the_whole_filing(filing, markdown):
+    """Every character of the filing's markdown is covered by some section's offsets."""
+    assert "".join(filing.text.split()) == "".join(markdown.split())
+
+
+INTEL_10KS = [p for p in FILES if p.stem.startswith("0000050863") and "10-K" in _doc_type(p)]
+
+
+@pytest.mark.parametrize("path", INTEL_10KS, ids=lambda p: p.stem)
+def test_critical_accounting_estimates_belong_to_item_7(path):
+    """Intel prints them after Item 7A; its index lists them under Item 7."""
+    filing = _parse(path)
+    assert "Critical Accounting Estimates" in _text(filing, "part_ii_item_7")
+    assert "Critical Accounting Estimates" not in _text(filing, "part_ii_item_7a")
 
 
 def test_sections_are_in_document_order_and_disjoint(filing):
