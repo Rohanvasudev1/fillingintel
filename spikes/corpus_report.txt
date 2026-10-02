@@ -1,0 +1,178 @@
+# Full-corpus parser run
+
+- commit: 16bd753
+- edgartools: 5.59.1
+- manifest: 2 newest 10-Ks + 6 newest 10-Qs per company (24 filings)
+- thresholds: short section < 2,000 chars; anchor tolerance 400 chars
+- table counts: a table is 'inserted' when >=80% of its row labels occur anywhere in the filing's section text (an upper bound; shared labels such as 'Net income' can over-count)
+
+## 10-K: required sections (method / chars; ⚠ = under 2,000)
+
+| Accession | Period | Present | part_i_item_1a | part_ii_item_7 | part_ii_item_8 |
+|---|---|---|---|---|---|
+| 0001045810-26-000021 | FY2026 | yes | edgartools / 116,128 | edgartools / 36,085 | heading / 211 ⚠ |
+| 0001045810-25-000023 | FY2025 | yes | edgartools / 112,009 | edgartools / 39,929 | heading / 211 ⚠ |
+| 0000002488-26-000018 | FY2025 | yes | edgartools / 133,441 | heading / 39,030 | edgartools / 118,630 |
+| 0000002488-25-000012 | FY2024 | yes | edgartools / 127,530 | heading / 34,047 | edgartools / 115,540 |
+| 0000050863-26-000011 | FY2025 | yes | cross_reference_index / 97,667 | cross_reference_index / 61,051 | cross_reference_index / 195,857 |
+| 0000050863-25-000009 | FY2024 | yes | cross_reference_index / 110,331 | cross_reference_index / 76,924 | cross_reference_index / 171,246 |
+
+## 10-Q: required sections (method / chars; ⚠ = under 2,000)
+
+| Accession | Period | Present | part_i_item_1 | part_i_item_2 | part_ii_item_1a |
+|---|---|---|---|---|---|
+| 0001045810-26-000075 | FY2027-Q2 | yes | edgartools / 67,753 | edgartools / 40,478 | heading / 34,947 |
+| 0001045810-26-000052 | FY2027-Q1 | yes | heading / 54,787 | edgartools / 31,049 | heading / 43,374 |
+| 0001045810-25-000230 | FY2026-Q3 | yes | edgartools / 63,789 | edgartools / 35,501 | heading / 47,145 |
+| 0001045810-25-000209 | FY2026-Q2 | yes | heading / 61,581 | edgartools / 35,255 | heading / 31,057 |
+| 0001045810-25-000116 | FY2026-Q1 | yes | heading / 57,324 | edgartools / 32,648 | heading / 36,311 |
+| 0001045810-24-000316 | FY2025-Q3 | yes | heading / 61,769 | edgartools / 38,190 | heading / 36,118 |
+| 0000002488-26-000123 | FY2026-Q2 | yes | heading / 54,716 | heading / 32,380 | heading / 141,700 |
+| 0000002488-26-000076 | FY2026-Q1 | yes | heading / 50,035 | heading / 26,073 | heading / 138,369 |
+| 0000002488-25-000166 | FY2025-Q3 | yes | heading / 58,193 | heading / 34,728 | heading / 130,512 |
+| 0000002488-25-000108 | FY2025-Q2 | yes | heading / 55,406 | heading / 34,586 | heading / 129,650 |
+| 0000002488-25-000047 | FY2025-Q1 | yes | heading / 43,696 | heading / 25,855 | heading / 133,068 |
+| 0000002488-24-000163 | FY2024-Q3 | yes | heading / 46,092 | heading / 30,457 | heading / 126,339 |
+| 0000050863-26-000157 | FY2026-Q2 | yes | edgartools / 100,537 | cross_reference_index / 50,580 | cross_reference_index / 6,268 |
+| 0000050863-26-000079 | FY2026-Q1 | yes | edgartools / 92,728 | cross_reference_index / 43,230 | cross_reference_index / 6,271 |
+| 0000050863-25-000179 | FY2025-Q3 | yes | edgartools / 112,039 | cross_reference_index / 53,796 | cross_reference_index / 16,199 |
+| 0000050863-25-000109 | FY2025-Q2 | yes | edgartools / 90,393 | cross_reference_index / 59,929 | cross_reference_index / 17,357 |
+| 0000050863-25-000074 | FY2025-Q1 | yes | heading / 75,859 | cross_reference_index / 27,618 | cross_reference_index / 11,762 |
+| 0000050863-24-000149 | FY2024-Q3 | yes | edgartools / 91,130 | cross_reference_index / 52,973 | cross_reference_index / 7,036 |
+
+## Sections under 2,000 characters (any section)
+
+| Accession | Form | Section | Method | Chars | Required |
+|---|---|---|---|---|---|
+| 0001045810-26-000021 | 10-K | part_i_item_1b | edgartools | 44 | no |
+| 0001045810-26-000021 | 10-K | part_i_item_2 | edgartools | 918 | no |
+| 0001045810-26-000021 | 10-K | part_i_item_3 | edgartools | 201 | no |
+| 0001045810-26-000021 | 10-K | part_i_item_4 | edgartools | 62 | no |
+| 0001045810-26-000021 | 10-K | part_ii_item_6 | edgartools | 46 | no |
+| 0001045810-26-000021 | 10-K | part_ii_item_8 | heading | 211 | yes |
+| 0001045810-26-000021 | 10-K | part_ii_item_9 | heading | 102 | no |
+| 0001045810-26-000021 | 10-K | part_ii_item_9b | heading | 622 | no |
+| 0001045810-26-000021 | 10-K | part_ii_item_9c | edgartools | 435 | no |
+| 0001045810-26-000021 | 10-K | part_iii_item_11 | edgartools | 363 | no |
+| 0001045810-26-000021 | 10-K | part_iii_item_12 | edgartools | 652 | no |
+| 0001045810-26-000021 | 10-K | part_iii_item_13 | edgartools | 458 | no |
+| 0001045810-26-000021 | 10-K | part_iii_item_14 | edgartools | 334 | no |
+| 0001045810-26-000021 | 10-K | part_iv_item_16 | heading | 46 | no |
+| 0001045810-25-000023 | 10-K | part_i_item_1b | edgartools | 54 | no |
+| 0001045810-25-000023 | 10-K | part_i_item_2 | edgartools | 918 | no |
+| 0001045810-25-000023 | 10-K | part_i_item_3 | edgartools | 201 | no |
+| 0001045810-25-000023 | 10-K | part_i_item_4 | edgartools | 62 | no |
+| 0001045810-25-000023 | 10-K | part_ii_item_6 | edgartools | 46 | no |
+| 0001045810-25-000023 | 10-K | part_ii_item_8 | heading | 211 | yes |
+| 0001045810-25-000023 | 10-K | part_ii_item_9 | heading | 102 | no |
+| 0001045810-25-000023 | 10-K | part_ii_item_9b | heading | 805 | no |
+| 0001045810-25-000023 | 10-K | part_ii_item_9c | edgartools | 435 | no |
+| 0001045810-25-000023 | 10-K | part_iii_item_11 | edgartools | 363 | no |
+| 0001045810-25-000023 | 10-K | part_iii_item_12 | edgartools | 652 | no |
+| 0001045810-25-000023 | 10-K | part_iii_item_13 | edgartools | 458 | no |
+| 0001045810-25-000023 | 10-K | part_iii_item_14 | edgartools | 334 | no |
+| 0001045810-25-000023 | 10-K | part_iv_item_16 | heading | 46 | no |
+| 0001045810-26-000075 | 10-Q | part_i_item_3 | edgartools | 1,856 | no |
+| 0001045810-26-000075 | 10-Q | part_ii_item_1 | heading | 257 | no |
+| 0001045810-26-000075 | 10-Q | part_ii_item_5 | heading | 1,096 | no |
+| 0001045810-26-000052 | 10-Q | part_i_item_3 | edgartools | 1,865 | no |
+| 0001045810-26-000052 | 10-Q | part_ii_item_1 | heading | 220 | no |
+| 0001045810-26-000052 | 10-Q | part_ii_item_5 | heading | 723 | no |
+| 0001045810-25-000230 | 10-Q | part_i_item_3 | edgartools | 1,815 | no |
+| 0001045810-25-000230 | 10-Q | part_ii_item_1 | heading | 386 | no |
+| 0001045810-25-000230 | 10-Q | part_ii_item_5 | heading | 592 | no |
+| 0001045810-25-000209 | 10-Q | part_i_item_3 | edgartools | 1,809 | no |
+| 0001045810-25-000209 | 10-Q | part_ii_item_1 | heading | 386 | no |
+| 0001045810-25-000209 | 10-Q | part_ii_item_5 | heading | 662 | no |
+| 0001045810-25-000116 | 10-Q | part_i_item_3 | edgartools | 894 | no |
+| 0001045810-25-000116 | 10-Q | part_ii_item_1 | heading | 386 | no |
+| 0001045810-25-000116 | 10-Q | part_ii_item_5 | heading | 587 | no |
+| 0001045810-24-000316 | 10-Q | part_i_item_3 | edgartools | 898 | no |
+| 0001045810-24-000316 | 10-Q | part_ii_item_1 | heading | 386 | no |
+| 0001045810-24-000316 | 10-Q | part_ii_item_5 | heading | 700 | no |
+| 0000002488-26-000018 | 10-K | part_i_item_1b | heading | 72 | no |
+| 0000002488-26-000018 | 10-K | part_i_item_2 | heading | 1,207 | no |
+| 0000002488-26-000018 | 10-K | part_i_item_3 | heading | 222 | no |
+| 0000002488-26-000018 | 10-K | part_i_item_4 | heading | 90 | no |
+| 0000002488-26-000018 | 10-K | part_ii_item_6 | heading | 48 | no |
+| 0000002488-26-000018 | 10-K | part_ii_item_9 | heading | 102 | no |
+| 0000002488-26-000018 | 10-K | part_ii_item_9b | heading | 609 | no |
+| 0000002488-26-000018 | 10-K | part_ii_item_9c | heading | 136 | no |
+| 0000002488-26-000018 | 10-K | part_iii_item_10 | heading | 1,147 | no |
+| 0000002488-26-000018 | 10-K | part_iii_item_11 | heading | 743 | no |
+| 0000002488-26-000018 | 10-K | part_iii_item_12 | heading | 333 | no |
+| 0000002488-26-000018 | 10-K | part_iii_item_13 | heading | 287 | no |
+| 0000002488-26-000018 | 10-K | part_iii_item_14 | heading | 831 | no |
+| 0000002488-25-000012 | 10-K | part_i_item_1b | heading | 44 | no |
+| 0000002488-25-000012 | 10-K | part_i_item_2 | heading | 1,198 | no |
+| 0000002488-25-000012 | 10-K | part_i_item_3 | heading | 206 | no |
+| 0000002488-25-000012 | 10-K | part_i_item_4 | heading | 88 | no |
+| 0000002488-25-000012 | 10-K | part_ii_item_6 | heading | 46 | no |
+| 0000002488-25-000012 | 10-K | part_ii_item_9 | heading | 102 | no |
+| 0000002488-25-000012 | 10-K | part_ii_item_9b | edgartools | 797 | no |
+| 0000002488-25-000012 | 10-K | part_ii_item_9c | heading | 134 | no |
+| 0000002488-25-000012 | 10-K | part_iii_item_10 | heading | 1,170 | no |
+| 0000002488-25-000012 | 10-K | part_iii_item_11 | heading | 743 | no |
+| 0000002488-25-000012 | 10-K | part_iii_item_12 | heading | 333 | no |
+| 0000002488-25-000012 | 10-K | part_iii_item_13 | heading | 287 | no |
+| 0000002488-25-000012 | 10-K | part_iii_item_14 | heading | 829 | no |
+| 0000002488-26-000123 | 10-Q | part_i_item_3 | heading | 1,019 | no |
+| 0000002488-26-000123 | 10-Q | part_i_item_4 | heading | 1,700 | no |
+| 0000002488-26-000123 | 10-Q | part_ii_item_1 | heading | 236 | no |
+| 0000002488-26-000123 | 10-Q | part_ii_item_2 | heading | 507 | no |
+| 0000002488-26-000123 | 10-Q | part_ii_item_5 | edgartools | 1,089 | no |
+| 0000002488-26-000076 | 10-Q | part_i_item_3 | heading | 398 | no |
+| 0000002488-26-000076 | 10-Q | part_i_item_4 | heading | 1,702 | no |
+| 0000002488-26-000076 | 10-Q | part_ii_item_1 | heading | 236 | no |
+| 0000002488-26-000076 | 10-Q | part_ii_item_2 | heading | 1,667 | no |
+| 0000002488-26-000076 | 10-Q | part_ii_item_5 | edgartools | 1,096 | no |
+| 0000002488-25-000166 | 10-Q | part_i_item_3 | heading | 398 | no |
+| 0000002488-25-000166 | 10-Q | part_i_item_4 | heading | 1,736 | no |
+| 0000002488-25-000166 | 10-Q | part_ii_item_1 | heading | 236 | no |
+| 0000002488-25-000166 | 10-Q | part_ii_item_2 | heading | 1,589 | no |
+| 0000002488-25-000166 | 10-Q | part_ii_item_5 | edgartools | 1,530 | no |
+| 0000002488-25-000108 | 10-Q | part_i_item_3 | heading | 398 | no |
+| 0000002488-25-000108 | 10-Q | part_i_item_4 | heading | 1,726 | no |
+| 0000002488-25-000108 | 10-Q | part_ii_item_1 | heading | 236 | no |
+| 0000002488-25-000108 | 10-Q | part_ii_item_2 | heading | 1,715 | no |
+| 0000002488-25-000108 | 10-Q | part_ii_item_5 | edgartools | 1,248 | no |
+| 0000002488-25-000047 | 10-Q | part_i_item_3 | heading | 398 | no |
+| 0000002488-25-000047 | 10-Q | part_i_item_4 | heading | 1,702 | no |
+| 0000002488-25-000047 | 10-Q | part_ii_item_1 | heading | 236 | no |
+| 0000002488-25-000047 | 10-Q | part_ii_item_2 | heading | 1,724 | no |
+| 0000002488-25-000047 | 10-Q | part_ii_item_5 | edgartools | 448 | no |
+| 0000002488-24-000163 | 10-Q | part_i_item_3 | heading | 398 | no |
+| 0000002488-24-000163 | 10-Q | part_i_item_4 | heading | 1,710 | no |
+| 0000002488-24-000163 | 10-Q | part_ii_item_1 | heading | 236 | no |
+| 0000002488-24-000163 | 10-Q | part_ii_item_2 | heading | 1,693 | no |
+| 0000002488-24-000163 | 10-Q | part_ii_item_5 | edgartools | 452 | no |
+| 0000050863-26-000011 | 10-K | part_i_item_1c | edgartools | 1,805 | no |
+
+## Tables: detected vs present in section text
+
+| Accession | Form | Detected | Inserted | Not inserted | Indeterminate |
+|---|---|---|---|---|---|
+| 0001045810-26-000021 | 10-K | 64 | 58 | 1 | 5 |
+| 0001045810-25-000023 | 10-K | 68 | 62 | 1 | 5 |
+| 0001045810-26-000075 | 10-Q | 52 | 44 | 2 | 6 |
+| 0001045810-26-000052 | 10-Q | 49 | 41 | 2 | 6 |
+| 0001045810-25-000230 | 10-Q | 50 | 42 | 2 | 6 |
+| 0001045810-25-000209 | 10-Q | 51 | 43 | 2 | 6 |
+| 0001045810-25-000116 | 10-Q | 51 | 43 | 2 | 6 |
+| 0001045810-24-000316 | 10-Q | 54 | 47 | 2 | 5 |
+| 0000002488-26-000018 | 10-K | 69 | 58 | 2 | 9 |
+| 0000002488-25-000012 | 10-K | 73 | 58 | 4 | 11 |
+| 0000002488-26-000123 | 10-Q | 47 | 29 | 2 | 16 |
+| 0000002488-26-000076 | 10-Q | 49 | 30 | 3 | 16 |
+| 0000002488-25-000166 | 10-Q | 52 | 34 | 2 | 16 |
+| 0000002488-25-000108 | 10-Q | 53 | 35 | 2 | 16 |
+| 0000002488-25-000047 | 10-Q | 47 | 29 | 2 | 16 |
+| 0000002488-24-000163 | 10-Q | 46 | 28 | 2 | 16 |
+| 0000050863-26-000011 | 10-K | 287 | 244 | 13 | 30 |
+| 0000050863-25-000009 | 10-K | 272 | 231 | 10 | 31 |
+| 0000050863-26-000157 | 10-Q | 121 | 100 | 4 | 17 |
+| 0000050863-26-000079 | 10-Q | 137 | 110 | 5 | 22 |
+| 0000050863-25-000179 | 10-Q | 159 | 123 | 4 | 32 |
+| 0000050863-25-000109 | 10-Q | 143 | 107 | 4 | 32 |
+| 0000050863-25-000074 | 10-Q | 130 | 105 | 4 | 21 |
+| 0000050863-24-000149 | 10-Q | 166 | 111 | 5 | 50 |

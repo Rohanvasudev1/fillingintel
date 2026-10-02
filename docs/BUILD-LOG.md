@@ -95,7 +95,9 @@ Current decisions live in `CLAUDE.md` under Decisions. This log records how and 
 
 ---
 
-## 2026-10-01 — Step 2b: production parser ✅
+## 2026-10-01 — Step 2b: production parser ✅ (superseded — see the 2026-10-02 close-out)
+
+> **Correction, 2026-10-02:** the "all 6 filings: required sections present" result below was a false pass. It tested that each required section existed, not that it was the right section. The full-corpus run found stubs and misplaced boundaries, and the position logic was rewritten. See the close-out entry.
 
 **Built**
 - `ingest/parser.py`: `parse_filing(html, meta) -> ParsedFiling` with a three-step fallback chain: (1) content anchor via edgartools `get_sec_section()`, (2) sequential heading scan in the document body, (3) cross-reference index lookup for required sections.
@@ -131,6 +133,58 @@ Current decisions live in `CLAUDE.md` under Decisions. This log records how and 
 
 ---
 
+## 2026-10-02 — Step 2b close-out: full-corpus run, boundary rewrite ✅ (pending two decisions)
+
+**What was built**
+- `ingest/corpus.py` (`python -m ingest.corpus`): picks the manifest, downloads (cached), parses, and writes `spikes/corpus_report.txt` with commit, edgartools version and thresholds in the header. Manifest rule, chosen by me because the repo had none: per company, the 2 newest 10-Ks and the 6 newest 10-Qs (24 filings).
+- `parse_filing_with_methods()` returns the extraction method per section; `parse_filing()` is unchanged.
+- `scripts/build_fixtures.py` rebuilds `tests/fixtures/*.html.gz` from `data/raw/` (byte-identical to the originals).
+- `tests/test_parser_substance.py` (substance checks on the 6 fixtures) and `tests/test_corpus_local.py` (all cached filings; skipped in CI because `data/` is gitignored).
+- edgartools constraint tightened from `>=2.0` to `>=5.59,<6.0` in both dependency groups; lock re-resolved (the installed version, 5.59.1, did not change).
+- `docs/BUILD_LOG.md` merged into `docs/BUILD-LOG.md`. The hyphen file did not exist, so this was a `git mv`.
+
+**Evidence** (commit 16bd753, edgartools 5.59.1; `spikes/corpus_report.txt`)
+- 24 of 24 filings have all three required sections. Required-section extraction methods over 72 sections: **edgartools 21, heading 33, cross_reference_index 18.**
+- Under 2,000 characters among required sections: 2, both NVIDIA 10-K Item 8 (211 chars). It is a pointer to Item 15 ("set forth in our Consolidated Financial Statements"); the statements are in `part_iv_item_15` (over 100k chars). See Decisions.
+- Tables, summed over 24 filings: 2,290 detected; 1,812 inserted into section text; 82 not inserted; 396 indeterminate (purely numeric tables, no label to match). "Inserted" is an upper bound: a table counts when 80% of its row labels appear anywhere in the section text. Per filing, not-inserted was 1–13, mostly cover-page and pre-first-section tables.
+- INTC 10-K Item 7 (FY2025, 61,051 chars) starts `| Management's Discussion and Analysis |` / `Overview` and ends `... see "Note 6: Other Financial Statement Details" ... | MD&A | 32 |` (a page footer).
+- Tests: 348 passed, 1 skipped (a documented-pointer case). Coverage 98% on production modules; overall 67% only because the throwaway `ingest/parser_spike.py` is at 0%. ruff and pyright clean on `ingest/` and `scripts/`.
+- CI: green on 16bd753. The preceding push (e39c3c3) was red because I committed a line-length lint error; fixed in the next commit.
+- Anchor-tolerance sensitivity (24 filings): 400 and 800 characters give identical results; 200 moves two required sections from edgartools to heading.
+
+**Bugs found** (all by the full-corpus run; none visible on the 6 tuned filings)
+- **False pass in the first Step 2b result.** `missing_sections == []` only meant a section existed. INTC 10-Q Item 2 and Item 1A were 69–246-character slices of the cross-reference/ToC rows in all 6 INTC 10-Qs; AMD 10-Q Item 1 (financial statements) was the exhibit list at 98.9%, 2–3k chars; INTC 10-K sections were cut by edgartools anchors that landed mid-sentence, on an index row, or in the wrong item.
+- **Root causes.** edgartools content anchors are noisy and were trusted first; the 2% body floor hid AMD's 1.7% Item 1; the cross-reference title search matched ToC rows; title matching took a repeated sub-heading ("# Risk Factors") ahead of the section's own title row; an anchor inside a table dropped the top of the income statement (INTC 10-Q lost "Net revenue"); anchors placed after `# ` left a stray `#` at the end of the previous section.
+- **Fix.** Headings and cross-reference body titles are now the reference. An edgartools anchor is used only if it agrees with the reference (within 400 characters) or, with no reference, starts a line and is not a ToC row. Anchors are snapped to table starts and line starts. Title matching is tiered (one-cell row, then `#` heading, then bare line). A statement-caption fallback covers a financial-statements section with no heading or title. Non-canonical edgartools keys are ignored.
+- **Method labels.** The first rewrite kept the old convention of labelling a heading-positioned section "edgartools" if edgartools knew the key. python-review (HIGH) said this overstated edgartools. Labels now say where the position came from; `fallback_sections` keeps its old meaning (sections edgartools did not locate itself) so the existing NVDA 10-K "no fallback" test is unchanged.
+
+**Review catches**
+- python-review: 1 HIGH (label honesty, fixed), MEDIUMs fixed: 90-line function split, prose false-positive in the statement-caption pattern (stricter, tested), heading-floor cascade guard (tested), per-filing error handling in the CLI (tested), tautological tests replaced, first-line title check instead of first-300-chars, helper unit tests added. Not done: `classify_tables` window check (limitation stated in the report header instead).
+- /code-review (Standards + Spec sub-agents, fixed point 1037c9f): fixed the over-long function and magic numbers; written up the missing BUILD-LOG entry (this one) and the push. One reported finding was wrong (the edgartools pin is not duplicated: line 11 is the main group, line 21 the spike group). Not available to the Spec review: the earlier "revised-plan instructions".
+- The new tests for the substance checks and the corpus module were written first and shown failing (the substance tests failed 15 ways against a stub). Two fixes came from the corpus run first and were then covered by tests afterwards: the statement-caption fallback (INTC 10-Q Q1-25 had no Item 1) and the dangling `#`. One of my own test expectations was wrong and was corrected after checking the filing (INTC FY2025 10-K's body heading is `| Risk Factors |`, not `| Risk Factors and Other Key Information |`); the assertion still requires the section to start at that heading.
+
+**Decisions**
+- Manifest: 2 newest 10-Ks + 6 newest 10-Qs per company. Includes all six fixture filings.
+- Section position: heading / cross-reference title first, edgartools anchor only if it agrees. This reverses the Step 2b order (edgartools first).
+- **Pending, need your call:** (1) NVIDIA Item 8 stub is kept as a documented, tested exception, not a bug fix. Recommendation: keep flagged; in Step 3 treat `part_iv_item_15` as the financial-statements content for such filings. (2) Fixtures are full filings, not excerpts, against CLAUDE.md. Recommendation: amend the CLAUDE.md wording; parser tests depend on whole-document positions.
+
+**Limitations (known, not fixed)**
+- Content before the first located section (cover page, forward-looking statements, glossary) is in no section and is dropped from `ParsedFiling.text`; up to about 8% of an INTC 10-Q.
+- INTC lays its filings out in a non-canonical order. Required sections are verified (substance tests plus first/last characters of all 72), but non-required INTC 10-K sections located only by edgartools anchors (Items 1C, 2, 5, 7A, 10 and so on) are unverified, and INTC 10-Q Item 1A spans from the Risk Factors heading to the exhibit list.
+- Only first and last characters were checked across the corpus. The RUNBOOK's "spot-check three by eye" has not been done by a person.
+- `/everything-claude-code:save-session` is not in this install's skill list, so it was not run.
+
+**Open questions**
+- Does Step 3 want an explicit `part_iv_item_15`-as-financial-statements mapping, or a table-schema field that records where a filing's statements live?
+- `docs/OPEN-DECISIONS.md` has an uncommitted edit in the working tree (an RTX line removed) that I did not make.
+
+**Next session starts with**
+1. Your answers on the two pending decisions (NVIDIA Item 8 exception, fixtures wording) and whether to commit `.claude/skills/` and `skills-lock.json` (Matt Pocock skills installed at project scope).
+2. The "Before Step 3 — setup session" items in `docs/OPEN-DECISIONS.md` (ECC upgrade, model switch, context-budget check).
+3. Then plan Step 3a (table schema) with `/everything-claude-code:plan` and wait for approval. Step 3 has not been started.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.
@@ -138,4 +192,5 @@ Short versions of the stories from this build so far, for interviews and write-u
 - **Test-first caught a real fiscal-calendar bug.** NVIDIA's fiscal year ends in late January, so a naive date calculation mislabels its filings by a year. A test written before the code caught it. The labels were then cross-checked against the filings' own XBRL tags.
 - **Choosing a parser from evidence.** A one-day spike on real filings showed one popular library failing completely on Intel's filings. That would have silently removed a third of the corpus.
 - **The citation guarantee nearly broke.** Only 3 of 29 section offsets from the library round-tripped. Instead of patching this with text search, offsets are now correct by construction.
+- **"Present" is not "correct".** The first Step 2b result said all required sections were present on all 6 filings. Running 24 showed some were 69-character table-of-contents rows and one was the exhibit list. Acceptance checks need to test content, not existence.
 - **Reviewing the agent's tests, not just its code.** Several agent-written tests would have passed while proving nothing: a loose rate-limit threshold, a circular round-trip test, and fixtures written by the same agent as the parser. Catching these is part of the job.
