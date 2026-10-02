@@ -133,7 +133,7 @@ Current decisions live in `CLAUDE.md` under Decisions. This log records how and 
 
 ---
 
-## 2026-10-02 — Step 2b close-out: full-corpus run, boundary rewrite ✅ (pending two decisions)
+## 2026-10-02 — Step 2b close-out: full-corpus run, boundary rewrite ✅ (decisions made; see the next entry for the final manifest and numbers)
 
 **What was built**
 - `ingest/corpus.py` (`python -m ingest.corpus`): picks the manifest, downloads (cached), parses, and writes `spikes/corpus_report.txt` with commit, edgartools version and thresholds in the header. Manifest rule, chosen by me because the repo had none: per company, the 2 newest 10-Ks and the 6 newest 10-Qs (24 filings).
@@ -182,6 +182,43 @@ Current decisions live in `CLAUDE.md` under Decisions. This log records how and 
 1. Your answers on the two pending decisions (NVIDIA Item 8 exception, fixtures wording) and whether to commit `.claude/skills/` and `skills-lock.json` (Matt Pocock skills installed at project scope).
 2. The "Before Step 3 — setup session" items in `docs/OPEN-DECISIONS.md` (ECC upgrade, model switch, context-budget check).
 3. Then plan Step 3a (table schema) with `/everything-claude-code:plan` and wait for approval. Step 3 has not been started.
+
+---
+
+## 2026-10-02 — Step 2b close-out, round 2: decisions applied ✅
+
+**Decisions received and applied**
+1. NVIDIA 10-K Item 8 (211 chars) stays as a verified, tested exception; Step 3 treats `part_iv_item_15` as the financial statements when Item 8 is a pointer. Recorded in CLAUDE.md Decisions and OPEN-DECISIONS (Step 3).
+2. CLAUDE.md fixtures rule amended to "real downloaded filings (gzipped)".
+3. `.claude/skills/` and `skills-lock.json` committed separately (f54255c). `.claude/settings.local.json` left untracked. Note: the installed `grill-me` skill only says "Call the Skill tool with 'grilling'" and the `grilling` skill is not installed, so `grill-me` does nothing yet.
+4. **Manifest changed** to the two most recent complete fiscal years per ticker: each 10-K plus its three 10-Qs, aligned by `fiscal_period`. Rule recorded in CLAUDE.md Decisions. Six filings outside this rule (the in-progress year: NVDA FY2027 Q1/Q2, AMD FY2026 Q1/Q2, INTC FY2026 Q1/Q2) stay cached and in the fixtures; the local test still covers them.
+5. **INTC 10-K Item 7 end, verified against the filing.** The page-32 footer was where Item 7's main block ends (Intel's index: "Liquidity and capital resources, Pages 29-32"), so that end was right. But the same index lists "Critical accounting estimates, Pages 34-36" under Item 7, and Intel prints it after Item 7A, so it sat inside the Item 7A section. MD&A was truncated. Fix, test-first: a required item can now own several spans, located from sub-rows of the filer's cross-reference index. FY2025 Item 7 is now 2 spans (77,643 chars); the test pins the real last sentence of MD&A ("...our results of operations and financial condition could be materially adversely affected.", then the `| MD&A | 36 |` footer) and that Item 7A no longer contains Critical Accounting Estimates. FY2024 already had it in Item 7.
+6. **Preamble.** Text before the first located section is now a `preamble` section, so offsets cover the whole filing. Tested for all six fixtures and all 30 cached filings: whitespace-stripped section text equals the whole markdown. Open for Step 3: the preamble includes the ToC and the Intel cross-reference text (30k chars in INTC FY2024 10-K), so the chunker must decide whether to embed it.
+7. `spikes/investigate_2b.py` deleted (my scratch file).
+8. `save-session` removed from the CLAUDE.md Workflow.
+9. Step 2b acceptance checks written into docs/RUNBOOK.md (amended section) so `/code-review` checks them from the repo.
+10. OPEN-DECISIONS: Step 3 now says place tables by document position, target zero indeterminate tables, report detected vs placed; and use `part_iv_item_15` as financial statements when Item 8 is a pointer. The resolved "Step 2b — close out" items were removed from that file, per its own rule.
+
+**Evidence** (commit e492e5e, edgartools 5.59.1; `spikes/corpus_report.txt`)
+- 24 of 24 filings: all three required sections present. Methods over 72 required sections: **edgartools 20, heading 34, cross_reference_index 18.** No missing-quarter warnings: all 24 manifest filings were found.
+- Required sections under 2,000 chars: 2, both NVIDIA 10-K Item 8 (211 chars), the documented exception.
+- Tables (24 filings): 2,338 detected; 1,876 inserted; 24 not inserted; 438 indeterminate. Not-inserted fell from 82 to 24 because the preamble now keeps the cover-page and ToC tables. The 438 indeterminate (numeric-only) tables are what the Step 3 table-placement item targets.
+- Tests: 415 passed, 1 skipped (the documented pointer case) before the final review fixes; coverage 97-98% on `ingest/corpus.py` and `ingest/parser.py`; ruff and pyright clean on production modules.
+
+**Review catches (python-review of the preamble/span/manifest change)**
+- HIGH: the continuation search could run to the end of the body when no later required section was located, matching generic titles inside unrelated sections. Fixed: no search without a later required section; generic titles ("None", "Not applicable") and titles under 10 characters ignored.
+- HIGH: index sub-topics are keyed by item number only, so 10-Q Part I and Part II items collide. Fixed: items whose number appears in both Parts are skipped.
+- HIGH: a continuation span was labelled `cross_reference_index`, which would mark an edgartools-located item as a fallback. Fixed with a distinct `continuation` method that is never a fallback.
+- MEDIUM, fixed: `PREAMBLE_KEY` constant, `select_manifest` split, tests join all spans of a label, the local corpus test parses each file once, tests added for empty/preamble-only/zero-offset/duplicate-period cases. Not fixed: nothing checks canonical order on INTC 10-K non-required sections (see Limitations).
+
+**Limitations / open**
+- INTC FY2024 10-K non-required sections located only by edgartools anchors are mislabeled or out of canonical order (Items 5, 2, 1C, 10, 3). Required sections are verified. Known since the first close-out; no test catches it, and I did not add one that would fail or be marked xfail.
+- Whole-filing coverage is verified on whitespace-stripped text, not byte for byte.
+- The RUNBOOK's "spot-check three by eye" is still a person's job.
+
+**Next session starts with**
+1. Setup session items in `docs/OPEN-DECISIONS.md` ("Before Step 3"): ECC upgrade, model switch, context-budget check. The Matt Pocock skills line there is done (f54255c) except `grilling`, which `grill-me` needs.
+2. Plan Step 3a with `/everything-claude-code:plan` and wait for approval: table schema, tables placed by document position, `preamble` handling, `part_iv_item_15` as statements when Item 8 is a pointer. Step 3 has not been started.
 
 ---
 
