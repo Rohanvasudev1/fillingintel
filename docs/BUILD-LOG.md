@@ -249,7 +249,7 @@ Model: Claude Opus 5.5 (claude-opus-5-5) for planning, implementation and review
 - The corpus report now prints the reconciliation per filing, with the identity in the report header.
 - `tests/table_checks.py` holds the acceptance checks shared by the fixture tests and the local corpus tests.
 
-**Evidence** (working tree on e88cc45, committed as the 3a commit; edgartools 5.59.1)
+**Evidence** (commit 9437e6a; edgartools 5.59.1)
 - Tests: 634 passed, 1 skipped, the documented NVDA pointer case.
 - Coverage: `ingest/tables.py` 98%, `corpus.py` 97%, `parser.py` 99%.
 - ruff is clean. pyright (run through uvx) reports 0 errors on the production modules.
@@ -269,7 +269,8 @@ Model: Claude Opus 5.5 (claude-opus-5-5) for planning, implementation and review
   | Glued headers | 6 |
 
   The counts reconcile exactly: 2,793 − 59 − 24 + 7 = 2,717. Tests check the identity, and the two zeros, on every fixture and cached filing.
-- The user ran `python -m ingest.corpus` over the 24-filing manifest, producing `spikes/corpus_report.txt` (header: commit e88cc45+dirty, which is this change before its commit).
+- The user ran `python -m ingest.corpus` over the 24-filing manifest, producing `spikes/corpus_report.txt`.
+  - The first run was on the uncommitted tree (header e88cc45+dirty). A rerun on the clean commit 9437e6a gives an identical report apart from the header line, which now reads commit 9437e6a.
   - Every filing has 0 renderings not in the text, 0 starting outside a span and 0 tables crossing a section.
   - Totals: 2,338 edgartools tables, 47 rendered empty, 15 sharing a span and 5 spans without a table, giving 2,281 table spans (2,338 − 47 − 15 + 5).
   - There are 6 unclosed rows, in the NVDA, AMD FY2024 and INTC 10-Ks, and 4 glued headers, in INTC 10-Qs.

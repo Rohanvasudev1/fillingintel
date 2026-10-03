@@ -1,6 +1,6 @@
 # Full-corpus parser run
 
-- commit: e88cc45+dirty
+- commit: 9437e6a
 - edgartools: 5.59.1
 - manifest: the 2 most recent complete fiscal years per company, each a 10-K plus its three 10-Qs aligned by fiscal_period (24 filings)
 - thresholds: short section < 2,000 chars; anchor tolerance 400 chars
