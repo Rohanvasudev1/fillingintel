@@ -26,9 +26,10 @@ ECC commands in this install use the /everything-claude-code: prefix.
 2. Write tests first (tdd-workflow skill) for deterministic logic, and show them failing.
 3. Implement the minimal change.
 4. Review code quality with /everything-claude-code:python-review, plus the database-reviewer agent for SQL or Cypher. Fix the findings.
-5. Review spec compliance with /code-review (Matt Pocock skill) against the current RUNBOOK step, my latest instructions in this session, and docs/OPEN-DECISIONS.md. Fix every spec-compliance finding, or report why it can't be fixed. Never resolve a finding by weakening an acceptance check.
+5. Review spec compliance with /step-review (project skill adapted from Matt Pocock's code-review) against .claude/plans/step-<N>.md, the current RUNBOOK step and docs/OPEN-DECISIONS.md. Write any instructions I gave in chat into the plan file before the review. Fix every spec-compliance finding, or report why it can't be fixed. Never resolve a finding by weakening an acceptance check.
 6. Verify with the verification-loop skill and the relevant eval slice.
 7. Append a dated entry to docs/BUILD-LOG.md, ending with a "Next session starts with" note. Stop and report.
+Apply the unslop skill to all prose: replies, docs, BUILD-LOG entries and commit messages.
 Use search-first before writing integration code for edgartools, LangGraph, Ragas, DeepEval or graph drivers.
 Test fixtures are real downloaded filings (gzipped), never hand-written HTML.
 Ask before: adding a dependency, changing a schema, changing the eval harness or CI, or anything outside the current milestone.
@@ -57,5 +58,12 @@ Files changed; evidence (tests, eval results with commit); regressions; decision
 - Financial statements: when Item 8 is only a pointer (NVIDIA: "set forth in" Item 15), part_iv_item_15 holds the statements. A required section under 2,000 chars is a failure unless it is this verified pointer case.
 - Fiscal period: derive_fiscal_period(), confirmed against XBRL dei tags on all 6 spike filings.
 - Embedding model: chosen in Step 5. Step 3 creates no vector column.
+- Step 3 runs as three sub-steps, one session each: 3a table spans, 3b chunker, 3c Postgres load and resolve(). Plan: .claude/plans/step-3.md.
+- Tables are located by their position in the parsed text (runs of `|` lines), not by matching edgartools tables by label. The chunk path does not use ParsedTable.section_key or doc.tables.
+- Chunk tokens are counted with tiktoken cl100k_base until Step 5 picks the embedding model. Each chunk stores its tokenizer name.
+- The preamble is chunked with section 'preamble'. Step 5 decides whether to embed it.
+- Chunk IDs are deterministic ({accession_no}:{ordinal:04d}) and each chunk stores chunker_version. Chunker settings are frozen before Step 4 writes gold chunk IDs.
+- Postgres schema for Step 3: a filings table (metadata, full parsed text, financial_statements_section) and a chunks table, from db/schema.sql. resolve() takes substr of the filing text; chunk text is not stored separately.
+- ECC upgrade deferred until after Step 3, because it renames workflow commands.
 - CI makes no network calls; pytest-socket allows localhost only. Parser and chunker tests use the gzipped real filings in tests/fixtures/, rebuilt from data/raw by scripts/build_fixtures.py.
 - docs/design/filingintel-demo.html is a layout reference only. Its tickers, question categories and numbers are placeholders; RUNBOOK is the source of truth.

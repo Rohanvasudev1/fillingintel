@@ -2,17 +2,11 @@
 
 Decisions raised but not yet made, grouped by the step where each must be settled. When one is resolved, record it in CLAUDE.md Decisions and delete it here.
 
-## Before Step 3 — setup session
-- Upgrade ECC to the current ecc@ecc plugin (single install method); update command names in CLAUDE.md.
-- Switch model: strongest available for planning and reviews, Sonnet-tier for implementation. Log the model and version in BUILD-LOG.
-- Install Matt Pocock's code-review and grilling skills at project scope; run the context-budget check before and after.
+## After Step 3
+- Upgrade ECC to the current ecc@ecc plugin (single install method); update command names in CLAUDE.md. Run its context-budget check (not in ECC 1.4.1).
+- Switch model: strongest available for planning and reviews, Sonnet-tier for implementation. Step 3 planning ran on Opus 5.5.
+- Install the `grilling` skill that `grill-me` calls, or remove `grill-me`.
 - Optional: pstack /arena for design comparisons at Steps 7 and 9.
-
-## Step 3 — chunking
-- Split into sub-checkpoints sized to one session: 3a table schema, 3b chunker, 3c Postgres load and resolve().
-- 3a: place tables by their position in the document, not by label matching. Target zero indeterminate tables; report detected vs placed per filing.
-- Use part_iv_item_15 as financial statements when Item 8 is a pointer.
-- ParsedFiling.sections can repeat a label (an item with several spans, e.g. INTC FY2025 Item 7) and starts with a `preamble` section (cover, ToC, index text). Decide how the chunker and resolve() treat both: group spans per label, and whether to embed the preamble.
 
 ## Step 4 — eval set and research design
 - FinRank as the main human-written question set, if its license allows research use. Own set shrinks to ~60 cross-period and cross-company questions.
