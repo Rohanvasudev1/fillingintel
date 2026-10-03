@@ -314,7 +314,7 @@ Model: Claude Opus 5.5 (claude-opus-5-5) for planning, implementation and review
 
 ---
 
-## 2026-10-03 — Step 3b: chunker ✅ (committed locally, not pushed; three decisions pending)
+## 2026-10-03 — Step 3b: chunker ✅ (committed locally, not pushed; two decisions pending)
 
 Model: Claude Opus 5.5. Fixed point de340b7. I ran the whole workflow while the user was away, after a planning session in which they answered four questions.
 
@@ -363,7 +363,11 @@ Model: Claude Opus 5.5. Fixed point de340b7. I ran the whole workflow while the 
 
 - Overlap: 1,957 of 2,249 transitions within a section overlap, with a median of 78 tokens and a maximum of 100. The other 292 mostly follow a table.
 - All chunk checks pass on every cached filing. Parse plus chunk takes about 21s for 30 filings.
-- Not run: `spikes/corpus_report.txt` with the new chunk table. It needs the network, so the user runs `python -m ingest.corpus`.
+- The user ran `python -m ingest.corpus` on the clean commit abbb145, adding a chunk table to `spikes/corpus_report.txt`. The 24 manifest filings produce:
+  - 2,144 chunks, 1,176 of them with a table;
+  - 93 chunks over 800 tokens, all table chunks;
+  - a largest chunk of 1,801 tokens.
+  - Every other section of the report is unchanged from 3a.
 
 **Review catches**
 - **python-review, HIGH, fixed.** Word runs were sized by an additive token estimate that assumed single spaces. Tab-separated words reached 1,040 tokens, and one 20k-character word reached 2,500 tokens, and nothing caught it. The tests came first: tab-separated words, and one ~4,000-token word. Runs are now sized by exact count, with a binary search.
@@ -397,7 +401,6 @@ Model: Claude Opus 5.5. Fixed point de340b7. I ran the whole workflow while the 
    - The original 3b plan says "every character of every section is in at least one chunk". The detailed 3b section, which I wrote, says "every non-whitespace character", and the check implements that.
    - The difference is whitespace only: blank lines between chunks where there's no overlap, and whitespace at section edges.
    - The user never agreed to that wording explicitly. Recommendation: accept "non-whitespace". `resolve()` returns exact offsets either way.
-3. **Corpus report.** The user runs `uv run --env-file .env python -m ingest.corpus` to add the chunk table for the 24 filings, then commits the report.
 
 **Next session starts with**
 1. The three decisions above. After decision 1, push and check CI with `gh run list`.
