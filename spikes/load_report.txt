@@ -1,0 +1,11 @@
+# Load and resolve() verification
+
+- commit: a5b0804
+- parsed dir: data/parsed (24 files)
+- filings loaded: 24
+- random sample: 20 of 20 resolved exactly (seed 20261003)
+- all chunks via resolve(): 2144 checked, mismatches: 0
+- filings whose stored chunk IDs or offsets differ from the chunker: 0
+- filings whose stored text hash differs from the file: 0
+- filings with no chunks: 0
+- result: PASS
