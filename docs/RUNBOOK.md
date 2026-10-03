@@ -49,7 +49,7 @@ Parse to clean text with section boundaries preserved. Item 1A (risk factors), I
 
 #### Step 2b — acceptance checks (amended 2026-10-02)
 
-The parser is accepted only when all of these hold. `/code-review` checks them.
+The parser is accepted only when all of these hold. `/step-review` checks them (it replaced `/code-review` on 2026-10-03).
 
 1. **Full corpus.** Run over every filing in the manifest (two most recent complete fiscal years per ticker: each 10-K plus its three 10-Qs, aligned by `fiscal_period`; 24 filings), downloading any not cached. `python -m ingest.corpus` writes `spikes/corpus_report.txt` with the commit and config.
 2. **Report per filing:** required sections present (yes/no), extraction method per required section (`edgartools` / `heading` / `cross_reference_index`) and character length of each. The parser also emits `preamble` (the leading text) and `continuation` (a later span of an item); a section's reported method is its first span's, and its length is the sum of its spans. Flag any section under 2,000 characters.
@@ -57,9 +57,9 @@ The parser is accepted only when all of these hold. `/code-review` checks them.
 4. **Position rules generalise.** The 90%, last-20% and 15% rules were tuned on 6 filings; the corpus run is the evidence they hold.
 5. **Boundaries verified against the filing.** Check a section's end as well as its start (INTC 10-K Item 7: pin the real last sentence of MD&A in a test).
 6. **Whole-filing coverage.** Text before the first located section is kept as a `preamble` section. The sections' text reproduces the filing's markdown (whitespace aside).
-7. **Tables.** Report detected vs inserted into section text, per filing.
+7. **Tables.** Report detected vs inserted into section text, per filing. (Superseded in Step 3a: tables are located by position in the text and reconciled exactly with edgartools' table list; see the corpus report.)
 8. **Pins and fixtures.** edgartools pinned `>=5.59,<6.0`. Fixtures are real filings (gzipped), rebuilt from `data/raw/` by `scripts/build_fixtures.py`.
-9. **Process.** Tests written first and shown failing; python-review, verification-loop and `/code-review` run; BUILD-LOG entry ending "Next session starts with"; commit pushed and CI green.
+9. **Process.** Tests written first and shown failing; python-review, verification-loop and `/step-review` run; BUILD-LOG entry ending "Next session starts with"; commit pushed and CI green.
 
 ### Step 3. Chunking
 
@@ -70,6 +70,15 @@ Every chunk carries: `chunk_id`, `cik`, `accession_no`, `form_type`, `fiscal_per
 Those character offsets are load-bearing. They're what makes citations verifiable later, and they're painful to retrofit.
 
 **Stop condition:** chunk table built in Postgres, and a function `resolve(chunk_id) -> exact source text` that round-trips correctly on a random sample of 20.
+
+#### Step 3 — outcome (met 2026-10-03)
+
+Built in three sub-steps (plan and decisions: `.claude/plans/step-3.md`):
+- **3a, table spans.** `ingest/tables.py` finds every table by its position in the parsed text and reconciles exactly with edgartools' table list. No table crosses a section.
+- **3b, chunker.** `ingest/chunker.py` produces chunks of up to 800 cl100k tokens with up to 100 tokens of text overlap. No chunk crosses a section span, and tables are never split; only table chunks exceed 800 tokens.
+- **3c, store.** `db/schema.sql`, `ingest/store.py` and `ingest/load.py`, with `resolve(chunk_id)` as SQL `substr` on the stored filing text.
+
+The stop condition is met on the 24 manifest filings. `spikes/load_report.txt` (commit a5b0804) shows 2,144 chunks, a seeded random sample of 20 resolved exactly, and all 2,144 chunks resolved exactly through `resolve()`. CI runs the same checks on the six fixture filings against its own Postgres.
 
 ---
 

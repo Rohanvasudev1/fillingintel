@@ -4,13 +4,24 @@ Citation-grounded question answering over SEC filings. Ask what NVDA, AMD or INT
 
 The project compares four retrieval strategies (vector search, graph neighbourhood search, Cypher traversal and community summaries) on one hand-written set of ~120 questions, and publishes where each one wins and loses.
 
-**Status:** in progress. No benchmark results yet; they'll appear here once they come from real runs.
+**Status:** in progress. Ingest, chunking and `resolve(chunk_id)` are built and verified on 24 filings (RUNBOOK Step 3). The eval set is next. No benchmark results yet; they'll appear here once they come from real runs.
 
 ## Docs
 
 - [Architecture](docs/ARCHITECTURE.md): system design
 - [Runbook](docs/RUNBOOK.md): build order and milestones
 - [Graph layer](docs/GRAPH-LAYER.md): ontology, entity resolution and graph retrieval design
+
+## Running it
+
+Needs Docker, [uv](https://docs.astral.sh/uv/) and a `.env` made from `.env.example`. `EDGAR_USER_AGENT` must hold a real name and email, as the SEC requires.
+
+```bash
+docker compose up -d                                          # Postgres and Neo4j
+uv run --env-file .env python -m ingest.corpus                # download, parse, report; writes data/parsed/
+uv run --env-file .env python -m ingest.load --verify         # load Postgres, check resolve() on every chunk
+uv run --env-file .env pytest                                 # tests (database tests need DATABASE_URL)
+```
 
 ## Stack
 

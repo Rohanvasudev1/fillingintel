@@ -5,7 +5,7 @@ Status: approved 2026-10-03. The user accepted all six recommendations.
 Fixed point for /step-review: set per sub-step when it starts.
 - 3a: e88cc45
 - 3b: de340b7
-- 3c: fdc87fc
+- 3c: fdc87fc (done: a5b0804, report 1982383)
 
 ## Spec (docs/RUNBOOK.md, Step 3)
 - Chunks follow sections and never cross an Item boundary.
@@ -108,6 +108,7 @@ Schema, in `db/schema.sql`, applied by a script that's safe to rerun (`CREATE ..
   - CHECK (`char_end > char_start`, `char_start >= 0`) and UNIQUE (`accession_no`, `ordinal`).
 - Indexes: `chunks(accession_no)` and `chunks(cik, fiscal_period, form_type)`.
 - Added after the database review, with the user's approval (2026-10-03): CHECK `chunk_id = accession_no || ':' || lpad(ordinal, 4, '0')`, CHECK `chunks.form_type IN ('10-K', '10-Q')`, and CHECK that `text_sha256` is the SHA-256 of `parsed_text`. `STORAGE EXTERNAL` was declined.
+- Accepted by the user after the build (2026-10-03): the chunk_id CHECK pads with `greatest(4, length(ordinal::text))` so ordinals of 10,000 and up are not truncated; four further CHECKs (accession_no pattern, `filings.form_type`, `ordinal >= 0`, `token_count >= 0`); and `git_state()` marks a run `+dirty` for untracked files under ingest/, db/, tests/ or scripts/.
 - No vector column (Step 5). No sections table (user decision 3c-3; propose later if the interface or evals need one).
 
 Code:

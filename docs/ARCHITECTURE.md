@@ -18,11 +18,9 @@ The project exists to produce an honest, reproducible comparison of retrieval st
                 EDGAR (SEC)
                      │  descriptive User-Agent, ≤10 req/s, cached
                      ▼
-ingest/      raw HTML → parsed text with section labels (Items 1A, 7, 8)
-                     │
-                     ▼
-index/       section-aware chunks with char offsets ──► Postgres (chunk table)
-                     │                                  + pgvector embeddings
+ingest/      raw HTML → parsed text with section labels (Items 1A, 7, 8) ──► data/parsed/
+             table spans + section-aware chunks with char offsets ──► Postgres (filings, chunks)
+                     │                                                 + pgvector embeddings (Step 5)
                      │
                      ├─► extraction → entity resolution → guarded write ──► Neo4j
                      │                                                      (EVIDENCED_BY on every node/edge)
@@ -44,11 +42,11 @@ Tracing: Phoenix spans on every retrieval, routing and generation call.
 ```
 
 ### Ingest
-Enumerate filings from the EDGAR submissions API, download raw HTML once into `data/raw/` keyed by accession number, and parse to text with section boundaries preserved. Raw files are never re-downloaded during development.
+Enumerate filings from the EDGAR submissions API, download raw HTML once into `data/raw/` keyed by accession number, and parse to text with section boundaries preserved. Raw files are never re-downloaded during development. `python -m ingest.corpus` picks the manifest (network), reports on it and writes each parsed filing to `data/parsed/{accession_no}.json`; `python -m ingest.load` loads Postgres from those files offline.
 
 ### Index
-- **Chunks** are section-aware (never span an Item boundary), about 800 tokens with overlap, and tables are kept intact. Each chunk stores `chunk_id`, `cik`, `accession_no`, `form_type`, `fiscal_period`, `section`, `char_start` and `char_end` in Postgres.
-- **`resolve(chunk_id)`** returns the exact source text. Citations, evals and the UI all depend on it.
+- **Chunks** are section-aware (never span an Item boundary), at most 800 cl100k_base tokens with up to 100 tokens of text overlap, and tables are kept intact (a table chunk may exceed 800). Tables are located by their position in the parsed text. Each chunk stores `chunk_id` (`{accession_no}:{ordinal:04d}`), `cik`, `accession_no`, `form_type`, `fiscal_period`, `section`, `char_start` and `char_end`, plus `token_count`, `tokenizer`, `chunker_version` and `contains_table`, in the Postgres `chunks` table (`db/schema.sql`).
+- **`resolve(chunk_id)`** returns the exact source text: `substr` of the filing's full parsed text, stored once in the `filings` table with its SHA-256. Chunk text is not stored separately. Citations, evals and the UI all depend on it; `python -m ingest.load --verify` checks it on the whole corpus.
 - **Embeddings** live in pgvector alongside the chunk table.
 - **Graph** (v2) lives in Neo4j. Ontology, extraction, entity resolution and the provenance rule are specified in `docs/GRAPH-LAYER.md`.
 - **Communities** (v2) are computed with Leiden in Python, independent of the database. Their summaries are embedded for global search.

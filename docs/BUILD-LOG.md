@@ -478,13 +478,13 @@ Model: Claude Opus 5.5. Fixed point fdc87fc. Planned with the user, who answered
 - **step-review, Standards:** duplicated constants and helpers consolidated (listed above).
   - Not changed: local list accumulators (never shared), `run()`'s two flags, and the denormalised (cik, form type, period) trio. That trio is deliberate, for filtering.
 
-**Decisions needed** (none blocking; each with a recommendation)
-1. **The chunk_id CHECK wording.** It uses `lpad(ordinal::text, greatest(4, length(ordinal::text)), '0')`, not the approved `lpad(ordinal, 4, '0')`, which truncates ordinals of 10,000 and above. Recommendation: keep it.
-2. **CHECKs beyond the approved list:** the accession_no pattern, `filings.form_type IN ('10-K','10-Q')`, `ordinal >= 0` and `token_count >= 0`. Recommendation: keep them.
-3. **Provenance change.** Untracked files under ingest/, db/, tests/ or scripts/ now mark a run `+dirty`, where before only tracked changes did. Recommendation: keep; it's stricter for invariant 2.
+**Decisions** (the user accepted all three recommendations on 2026-10-03)
+1. **The chunk_id CHECK wording.** It uses `lpad(ordinal::text, greatest(4, length(ordinal::text)), '0')`, not the approved `lpad(ordinal, 4, '0')`, which truncates ordinals of 10,000 and above. Kept.
+2. **CHECKs beyond the approved list:** the accession_no pattern, `filings.form_type IN ('10-K','10-Q')`, `ordinal >= 0` and `token_count >= 0`. Kept.
+3. **Provenance change.** Untracked files under ingest/, db/, tests/ or scripts/ now mark a run `+dirty`, where before only tracked changes did. Kept; it's stricter for invariant 2.
 
 **Next session starts with**
-1. Push 3c and check CI with `gh run list`. CI's Postgres runs the database tests, and the guard makes sure they don't skip.
+1. Check that CI passed on the 3c push (`gh run list`). CI's Postgres runs the database tests, and the guard makes sure they don't skip.
 2. Step 3 is complete. Next is Step 4: write the eval set by hand. Read the "Step 4" items in `docs/OPEN-DECISIONS.md` first (FinRank, hard negatives, invariant 1 wording, RESEARCH-PLAN). Per the workflow, the research design needs a grilling session with the user, and the `grilling` skill that `grill-me` calls is still not installed.
 
 ---
