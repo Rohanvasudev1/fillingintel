@@ -86,6 +86,11 @@ class _Span:
     contains_table: bool
 
 
+def make_chunk_id(accession_no: str, ordinal: int) -> str:
+    """``{accession_no}:{ordinal:04d}``; db/schema.sql enforces the same format."""
+    return f"{accession_no}:{ordinal:04d}"
+
+
 def count_tokens(text: str) -> int:
     """Number of cl100k_base tokens in *text*."""
     return len(_ENCODING.encode(text))
@@ -262,7 +267,7 @@ def chunk_filing(filing: ParsedFiling) -> tuple[Chunk, ...]:
 
 def _make_chunk(filing: ParsedFiling, label: str, span: _Span, ordinal: int) -> Chunk:
     return Chunk(
-        chunk_id=f"{filing.accession_no}:{ordinal:04d}",
+        chunk_id=make_chunk_id(filing.accession_no, ordinal),
         cik=filing.cik,
         accession_no=filing.accession_no,
         form_type=filing.form_type,

@@ -254,6 +254,34 @@ class TestBuildReports:
         assert nvda_10k_meta.accession_no in failures[0]
 
 
+class TestParsedFilesFromCorpus:
+    def test_build_reports_writes_a_parsed_file_per_success(
+        self, tmp_path, nvda_10k_html, nvda_10k_meta
+    ):
+        from ingest.parsed_files import read_parsed
+
+        path = tmp_path / "ok.html"
+        path.write_text(nvda_10k_html, encoding="utf-8")
+        bad = _meta("1", 9, "10-K", date(2024, 12, 31))
+        client = _FakeClient({nvda_10k_meta.accession_no: path})
+        parsed_dir = tmp_path / "parsed"
+        build_reports(client, [bad, nvda_10k_meta], parsed_dir=parsed_dir)
+        files = sorted(parsed_dir.glob("*.json"))
+        assert [f.stem for f in files] == [nvda_10k_meta.accession_no]
+        record = read_parsed(files[0])
+        assert record.meta == nvda_10k_meta
+        assert record.filing == parse_filing(nvda_10k_html, nvda_10k_meta)
+        assert record.parser_commit
+
+    def test_build_reports_without_a_parsed_dir_writes_nothing(
+        self, tmp_path, nvda_10k_html, nvda_10k_meta
+    ):
+        path = tmp_path / "ok.html"
+        path.write_text(nvda_10k_html, encoding="utf-8")
+        build_reports(_FakeClient({nvda_10k_meta.accession_no: path}), [nvda_10k_meta])
+        assert list(tmp_path.glob("**/*.json")) == []
+
+
 class TestRunHeaderAndMain:
     def test_run_header_names_commit_library_and_rules(self):
         from ingest.corpus import run_header
@@ -286,7 +314,9 @@ class TestRunHeaderAndMain:
 
         monkeypatch.setattr(corpus, "EdgarClient", FakeEdgarClient)
         out = tmp_path / "nested" / "report.txt"
-        assert corpus.main([str(out)]) == 1
+        parsed_dir = tmp_path / "parsed"
+        assert corpus.main([str(out), "--parsed-dir", str(parsed_dir)]) == 1
+        assert [p.stem for p in parsed_dir.glob("*.json")] == [nvda_10k_meta.accession_no]
         text = out.read_text(encoding="utf-8")
         assert "## Failures" in text and bad.accession_no in text
         assert "- commit:" in text

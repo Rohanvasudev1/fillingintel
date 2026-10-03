@@ -409,6 +409,86 @@ Model: Claude Opus 5.5. Fixed point de340b7. I ran the whole workflow while the 
 
 ---
 
+## 2026-10-03 — Step 3c: Postgres and resolve() ✅ (Step 3 stop condition met)
+
+Model: Claude Opus 5.5. Fixed point fdc87fc. Planned with the user, who answered four questions, approved the schema explicitly, and added three CHECK constraints after the database review.
+
+**Decisions** (in `.claude/plans/step-3.md`, "3c detailed plan")
+- 3c-1, two steps:
+  - `python -m ingest.corpus` (network) also writes `data/parsed/{accession_no}.json`.
+  - `python -m ingest.load` (offline) chunks and loads Postgres from those files.
+- 3c-2, a throwaway schema per test session. Tests skip without `DATABASE_URL`, and a guard test fails in CI if it's unset.
+- 3c-3: no sections table yet.
+- 3c-4: `--verify` command plus fixture tests.
+- Schema approved. Added after the database review: CHECKs on the chunk_id format, `chunks.form_type`, and `text_sha256` equal to the SHA-256 of `parsed_text`. `STORAGE EXTERNAL` was declined.
+
+**What was built**
+- `db/schema.sql`: the `filings` and `chunks` tables, with constraints and indexes.
+- `ingest/store.py`:
+  - `apply_schema` creates the tables, then fails with `SchemaMismatch` if the live columns differ from the code or the server isn't UTF-8.
+  - `load_filing` checks the chunks, upserts the filing, replaces its chunks in one transaction, and commits.
+  - `resolve(chunk_id)` runs `substr(parsed_text, char_start + 1, char_end - char_start)`. `get_chunk`, `stored_offsets` and `financial_statements_section` complete the module; the last gives `part_iv_item_15` for NVIDIA's pointer Item 8.
+- `ingest/parsed_files.py`:
+  - `ParsedRecord` (meta, filing, parser_commit) is checked for a matching accession.
+  - Writes are atomic, and file names are checked against the accession inside.
+- `ingest/load.py`, the loader and verifier. Exit codes: 0 ok, 1 verify failed, 2 bad input or no database, 3 load error. A connection error prints only its type, and a load error is cut to 500 characters.
+- `ingest/provenance.py`: `git_state()`, moved from `corpus.py`. Untracked files under the code paths now mark a run `+dirty`.
+- Shared helpers:
+  - `make_chunk_id` in `chunker.py`;
+  - `text_sha256` and `DEFAULT_PARSED_DIR` in `parsed_files.py`;
+  - `MIN_SECTION_CHARS`, now in `parser.py` and re-exported by `corpus.py`.
+
+**Evidence**
+- `python -m ingest.load --verify` on the 24 manifest filings, in the development database, passed. The report is `spikes/load_report.txt`, rerun on the 3c commit.
+
+  | Check | Result |
+  |---|---|
+  | Filings loaded | 24 |
+  | Chunks | 2,144 (matches the corpus report) |
+  | Seeded random sample (seed 20261003) | 20 of 20 resolved exactly; this is the RUNBOOK stop condition |
+  | All chunks through `resolve()` | 2,144, 0 mismatches |
+  | Stored offsets and text hashes vs the files | 0 differences |
+  | Run time | about 11s |
+
+- Tests: 745 passed, 1 skipped, with `DATABASE_URL` set. Without it, the 15 database tests skip and the CI guard passes.
+- The fixture tests resolve every chunk of the 6 fixtures, plus a seeded sample of 20, in CI's Postgres.
+- Coverage: `store.py` 98%, `load.py` 94%, `parsed_files.py` 100%.
+- ruff is clean, and pyright reports 0 errors with no `type: ignore` left.
+- `data/parsed` was written by the user's corpus run on fdc87fc+dirty. `git diff fdc87fc` shows no change to `parser.py`, `models.py`, `tables.py` or `chunker.py`, so the parse is the fdc87fc parse.
+
+**Review catches**
+- **python-review, HIGH:** `--verify` passed vacuously, reporting PASS with 0 of 0 on an empty parsed directory or a filing with no chunks. Tests came first. It now fails on no input, no chunks, no sample, a hash mismatch, or an ID or offset mismatch.
+- **python-review, MEDIUM:**
+  - A malformed `DATABASE_URL` could be echoed in a connection-error traceback. Now only the error type is printed, and a test covers it.
+  - Any error was reported as "could not connect".
+  - Nothing tested atomicity. A duplicate-ID load now raises, and the old rows stay intact.
+  - Parsed files weren't written atomically.
+- **database-reviewer, HIGH:**
+  - `CREATE TABLE IF NOT EXISTS` would hide schema drift; fixed with the live-column check.
+  - Offsets past the end of the text would make `substr` truncate silently; `load_filing` now refuses them.
+- **database-reviewer, MEDIUM:**
+  - The chunks' cik, form type and period could disagree with their filing; refused in code and partly in the schema.
+  - The test search path left out `public`, where Step 5's vector type will live.
+  - A docstring claimed bulk resolution saved decompression; it saves round trips.
+- **step-review, Spec:**
+  - The approved `chunks(accession_no)` index was missing, and is restored.
+  - "Every chunk" was checked through a bulk query, not `resolve()`; every chunk now goes through `resolve()`, sliced at the stored offsets.
+  - The end-before-start test used an invalid chunk ID, so it would have passed even without its CHECK. It's now a parametrized test with a passing control row.
+  - The `form_type` and `char_start` CHECKs are now tested.
+- **step-review, Standards:** duplicated constants and helpers consolidated (listed above).
+  - Not changed: local list accumulators (never shared), `run()`'s two flags, and the denormalised (cik, form type, period) trio. That trio is deliberate, for filtering.
+
+**Decisions needed** (none blocking; each with a recommendation)
+1. **The chunk_id CHECK wording.** It uses `lpad(ordinal::text, greatest(4, length(ordinal::text)), '0')`, not the approved `lpad(ordinal, 4, '0')`, which truncates ordinals of 10,000 and above. Recommendation: keep it.
+2. **CHECKs beyond the approved list:** the accession_no pattern, `filings.form_type IN ('10-K','10-Q')`, `ordinal >= 0` and `token_count >= 0`. Recommendation: keep them.
+3. **Provenance change.** Untracked files under ingest/, db/, tests/ or scripts/ now mark a run `+dirty`, where before only tracked changes did. Recommendation: keep; it's stricter for invariant 2.
+
+**Next session starts with**
+1. Push 3c and check CI with `gh run list`. CI's Postgres runs the database tests, and the guard makes sure they don't skip.
+2. Step 3 is complete. Next is Step 4: write the eval set by hand. Read the "Step 4" items in `docs/OPEN-DECISIONS.md` first (FinRank, hard negatives, invariant 1 wording, RESEARCH-PLAN). Per the workflow, the research design needs a grilling session with the user, and the `grilling` skill that `grill-me` calls is still not installed.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.

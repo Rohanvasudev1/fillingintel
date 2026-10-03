@@ -5,7 +5,7 @@ Status: approved 2026-10-03. The user accepted all six recommendations.
 Fixed point for /step-review: set per sub-step when it starts.
 - 3a: e88cc45
 - 3b: de340b7
-- 3c: (not started)
+- 3c: fdc87fc
 
 ## Spec (docs/RUNBOOK.md, Step 3)
 - Chunks follow sections and never cross an Item boundary.
@@ -82,6 +82,58 @@ Autonomy (user decision 3b-4): run the whole workflow, commit locally after the 
 - `resolve(chunk_id)` uses SQL `substr` on the filing text. Chunk text isn't stored separately.
 - The loader writes `data/parsed/{accession_no}.json`.
 - Tests: integration tests run against the CI Postgres service (localhost only). One resolves a random sample of 20 chunks, as the RUNBOOK asks, and one resolves every chunk.
+
+## 3c detailed plan (agreed 2026-10-03)
+
+The user approved the schema below explicitly on 2026-10-03, along with the commit policy: commit locally after reviews and verification pass, and don't push.
+
+Facts behind it:
+- `EdgarClient.list_filings()` is not cached; it calls EDGAR each time.
+- The 30 cached filings hold 6.9 MB of text, with no NUL characters and no characters outside the BMP, so Python string indexes and Postgres `substr` positions agree.
+
+Pipeline (user decision 3c-1, two steps):
+- `python -m ingest.corpus`, which already selects the manifest over the network, also writes `data/parsed/{accession_no}.json`. Each file holds the `FilingMeta` and the `ParsedFiling` (text and sections).
+- `python -m ingest.load` reads `data/parsed/*.json` offline, chunks each filing, and loads Postgres.
+- Each filing is loaded in one transaction: upsert the filing row, delete its chunks, insert the new chunks. A rerun gives the same rows.
+
+Schema, in `db/schema.sql`, applied by a script that's safe to rerun (`CREATE ... IF NOT EXISTS`):
+- `filings`:
+  - `accession_no` (primary key), `cik`, `company_name`, `form_type`, `fiscal_period`, `report_date`, `filing_date`, `primary_document`;
+  - `parsed_text` and `text_sha256`;
+  - `financial_statements_section`: `part_iv_item_15` when a 10-K's Item 8 is the verified pointer, else `part_ii_item_8` for a 10-K or `part_i_item_1` for a 10-Q;
+  - `parser_commit` and `loaded_at`.
+- `chunks`:
+  - `chunk_id` (primary key), and `accession_no` referencing `filings` with ON DELETE CASCADE;
+  - `cik`, `form_type`, `fiscal_period`, `section`, `char_start`, `char_end`, `ordinal`, `token_count`, `tokenizer`, `chunker_version`, `contains_table`;
+  - CHECK (`char_end > char_start`, `char_start >= 0`) and UNIQUE (`accession_no`, `ordinal`).
+- Indexes: `chunks(accession_no)` and `chunks(cik, fiscal_period, form_type)`.
+- Added after the database review, with the user's approval (2026-10-03): CHECK `chunk_id = accession_no || ':' || lpad(ordinal, 4, '0')`, CHECK `chunks.form_type IN ('10-K', '10-Q')`, and CHECK that `text_sha256` is the SHA-256 of `parsed_text`. `STORAGE EXTERNAL` was declined.
+- No vector column (Step 5). No sections table (user decision 3c-3; propose later if the interface or evals need one).
+
+Code:
+- `ingest/store.py`, a repository over a psycopg 3 connection, with every query parameterized:
+  - `apply_schema(conn)`;
+  - `load_filing(conn, meta, filing, chunks)`;
+  - `get_chunk(conn, chunk_id)`;
+  - `resolve(conn, chunk_id) -> str`, which runs `substr(parsed_text, char_start + 1, char_end - char_start)` and raises `ChunkNotFound` for an unknown ID.
+- `DATABASE_URL` comes from the environment and is validated at startup. It is never logged.
+
+Tests (user decision 3c-2):
+- Each test session creates a throwaway schema in the `DATABASE_URL` database, applies `db/schema.sql` there and drops it afterwards.
+- The database tests skip when `DATABASE_URL` is unset. A guard test fails when `CI` is set but `DATABASE_URL` is not, so the gate can't be skipped silently.
+
+Stop condition (user decision 3c-4):
+- `python -m ingest.load --verify` resolves a seeded random sample of 20 chunks, and every chunk, across the loaded filings. It checks each against `parsed_text[char_start:char_end]` from `data/parsed`, and writes `spikes/load_report.txt` with the seed and the commit.
+- The fixture tests in CI do the same for the 6 fixtures: a seeded sample of 20, plus all chunks.
+
+Acceptance:
+- `resolve()` equals the parsed-text slice for every chunk of the 6 fixtures in CI, and of the 24 manifest filings in the verify report.
+- A reload is idempotent: the same row counts and IDs.
+- An unknown chunk ID raises `ChunkNotFound`.
+- The schema applies twice without error.
+- Foreign keys and checks reject bad rows.
+- No secrets appear in logs.
+- The database-reviewer agent reviews the SQL.
 
 ## Decisions (recommendation; user's answer, 2026-10-03)
 1. Setup items from OPEN-DECISIONS. Recommendation: defer the ECC upgrade to after Step 3, because it renames workflow commands. Record the model (Opus 5.5) in BUILD-LOG, and run the context-budget check now. Answer: as recommended.

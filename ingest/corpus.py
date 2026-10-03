@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import argparse
 import logging
-import subprocess
 from dataclasses import dataclass
 from importlib.metadata import version
 from pathlib import Path
@@ -23,12 +22,15 @@ import httpx
 from ingest.chunker import MAX_CHUNK_TOKENS, TOKENIZER, chunk_filing
 from ingest.edgar_client import EdgarClient
 from ingest.models import FilingMeta, ParsedFiling
+from ingest.parsed_files import DEFAULT_PARSED_DIR, ParsedRecord, write_parsed
 from ingest.parser import (
     ANCHOR_TOLERANCE,
+    MIN_SECTION_CHARS,
     REQUIRED_SECTIONS_10K,
     REQUIRED_SECTIONS_10Q,
     parse_filing_with_methods,
 )
+from ingest.provenance import REPO_ROOT, git_state
 from ingest.tables import (
     MAX_ROW_LINES,
     TableReconciliation,
@@ -42,11 +44,8 @@ logger = logging.getLogger(__name__)
 CIKS: dict[str, str] = {"NVDA": "1045810", "AMD": "2488", "INTC": "50863"}
 N_FISCAL_YEARS = 2
 QUARTERS = (1, 2, 3)  # 10-Qs filed per fiscal year; the fourth quarter is in the 10-K
-MIN_SECTION_CHARS = 2000
-REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RAW_DIR = REPO_ROOT / "data" / "raw"
 DEFAULT_REPORT_PATH = REPO_ROOT / "spikes" / "corpus_report.txt"
-_GIT_TIMEOUT_SECONDS = 10
 
 
 # ── Result types ──────────────────────────────────────────────────────────────
@@ -189,18 +188,21 @@ def _section_rows(
     )
 
 
-def build_report(html: str, meta: FilingMeta) -> FilingReport:
-    """Parse one filing and summarise sections, methods, lengths, tables and chunks."""
-    filing, methods = parse_filing_with_methods(html, meta)
+def _report_for(meta: FilingMeta, filing: ParsedFiling, methods: dict[str, str]) -> FilingReport:
     required = REQUIRED_SECTIONS_10K if "10-K" in meta.form_type else REQUIRED_SECTIONS_10Q
-    rows = _section_rows(filing, methods, required)
     return FilingReport(
         meta=meta,
-        sections=rows,
+        sections=_section_rows(filing, methods, required),
         missing_required=tuple(filing.missing_sections),
         tables=count_tables(filing),
         chunks=count_chunks(filing),
     )
+
+
+def build_report(html: str, meta: FilingMeta) -> FilingReport:
+    """Parse one filing and summarise sections, methods, lengths, tables and chunks."""
+    filing, methods = parse_filing_with_methods(html, meta)
+    return _report_for(meta, filing, methods)
 
 
 def _fmt_required(rep: FilingReport) -> str:
@@ -302,30 +304,10 @@ def method_counts(reports: list[FilingReport]) -> dict[str, int]:
     return counts
 
 
-def _git_state() -> str:
-    """Return ``<short commit>`` plus ``+dirty`` when the working tree has local changes."""
-    def git(*args: str) -> str:
-        return subprocess.run(
-            ["git", *args],
-            capture_output=True,
-            text=True,
-            check=True,
-            cwd=REPO_ROOT,
-            timeout=_GIT_TIMEOUT_SECONDS,
-        ).stdout.strip()
-
-    try:
-        commit = git("rev-parse", "--short", "HEAD")
-        dirty = git("status", "--porcelain", "--untracked-files=no")
-    except (OSError, subprocess.SubprocessError):
-        return "unknown"
-    return f"{commit}{'+dirty' if dirty else ''}"
-
-
 def run_header(n_filings: int) -> tuple[str, ...]:
     """Lines identifying the code, library version and rules behind a report."""
     return (
-        f"- commit: {_git_state()}",
+        f"- commit: {git_state()}",
         f"- edgartools: {version('edgartools')}",
         f"- manifest: the {N_FISCAL_YEARS} most recent complete fiscal years per company, "
         f"each a 10-K plus its three 10-Qs aligned by fiscal_period ({n_filings} filings)",
@@ -347,19 +329,25 @@ class _Downloader(Protocol):
 
 
 def build_reports(
-    client: _Downloader, manifest: list[FilingMeta]
+    client: _Downloader, manifest: list[FilingMeta], parsed_dir: Path | None = None
 ) -> tuple[list[FilingReport], list[str]]:
     """Download and parse each filing; one bad filing does not stop the run.
 
-    Returns the reports and a ``"<accession>: <error>"`` line per failure.
+    With *parsed_dir*, each parsed filing is also written there as
+    ``{accession_no}.json`` for ``python -m ingest.load``.  Returns the reports
+    and a ``"<accession>: <error>"`` line per failure.
     """
+    commit = git_state()
     reports: list[FilingReport] = []
     failures: list[str] = []
     for meta in manifest:
         try:
-            path = client.download_filing(meta)
-            html = path.read_text(encoding="utf-8")
-            reports.append(build_report(html, meta))
+            html = client.download_filing(meta).read_text(encoding="utf-8")
+            filing, methods = parse_filing_with_methods(html, meta)
+            reports.append(_report_for(meta, filing, methods))
+            if parsed_dir is not None:
+                record = ParsedRecord(meta=meta, filing=filing, parser_commit=commit)
+                write_parsed(record, parsed_dir)
         except (httpx.HTTPError, OSError, ValueError) as exc:
             logger.error("%s failed: %s", meta.accession_no, exc)
             failures.append(f"{meta.accession_no}: {type(exc).__name__}: {exc}")
@@ -370,6 +358,10 @@ def main(argv: list[str] | None = None) -> int:
     """Run the manifest, write the report, exit non-zero on any failure or missing section."""
     parser = argparse.ArgumentParser(description="Parse the filing manifest and report sections.")
     parser.add_argument("report_path", nargs="?", type=Path, default=DEFAULT_REPORT_PATH)
+    parser.add_argument(
+        "--parsed-dir", type=Path, default=DEFAULT_PARSED_DIR,
+        help="where to write data/parsed/{accession_no}.json for python -m ingest.load",
+    )
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO)
 
@@ -379,7 +371,7 @@ def main(argv: list[str] | None = None) -> int:
             picked = select_manifest(client.list_filings(cik))
             logger.info("%s: %d filings selected", ticker, len(picked))
             manifest.extend(picked)
-        reports, failures = build_reports(client, manifest)
+        reports, failures = build_reports(client, manifest, args.parsed_dir)
 
     text = format_report(reports, run_header(len(manifest)))
     if failures:

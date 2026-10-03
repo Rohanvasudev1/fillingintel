@@ -81,6 +81,9 @@ _GENERIC_INDEX_TITLES = frozenset({"none", "not applicable", "n/a"})
 # An edgartools content anchor is trusted over a heading or cross-reference
 # title only when it lands within this many characters of it.
 ANCHOR_TOLERANCE = 400
+# CLAUDE.md: a required section under this many chars is a failure, unless it is the
+# verified pointer case (NVIDIA's Item 8 points to the statements in Item 15).
+MIN_SECTION_CHARS = 2000
 _BODY_MAX_FRAC = 0.995
 _CROSS_REF_TAIL_FRAC = 0.88  # the filer's item cross-reference index sits in this tail
 _SIGNATURES_MIN_FRAC = 0.80  # signatures are always in the last 20 % of a filing
