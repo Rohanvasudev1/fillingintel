@@ -1,7 +1,12 @@
 """Shared fixtures for parser tests — loads gzipped HTML from tests/fixtures/."""
 import gzip
+import os
 from datetime import date
 from pathlib import Path
+
+# tiktoken loads cl100k_base when ingest.chunker is imported, before pytest-socket
+# blocks the network; point it at the vendored copy so tests never download it.
+os.environ["TIKTOKEN_CACHE_DIR"] = str(Path(__file__).resolve().parents[1] / "vendor" / "tiktoken")
 
 import pytest
 

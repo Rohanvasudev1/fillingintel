@@ -36,7 +36,7 @@ Fixed point for /step-review: set per sub-step when it starts.
   - No chunk crosses a section or span boundary.
   - No table is split.
   - Only table chunks exceed 800 tokens.
-  - Every character of every section is in at least one chunk.
+  - Every non-whitespace character of every section is in at least one chunk. (The user accepted this wording on 2026-10-03; whitespace between chunks and at section edges may be left out.)
 
 ## 3b detailed plan (agreed 2026-10-03, before the user left)
 

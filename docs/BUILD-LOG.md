@@ -314,7 +314,7 @@ Model: Claude Opus 5.5 (claude-opus-5-5) for planning, implementation and review
 
 ---
 
-## 2026-10-03 — Step 3b: chunker ✅ (committed locally, not pushed; two decisions pending)
+## 2026-10-03 — Step 3b: chunker ✅
 
 Model: Claude Opus 5.5. Fixed point de340b7. I ran the whole workflow while the user was away, after a planning session in which they answered four questions.
 
@@ -390,21 +390,22 @@ Model: Claude Opus 5.5. Fixed point de340b7. I ran the whole workflow while the 
   - Accepted: scope beyond the plan (cutting a word over the limit by characters, the stricter whitespace-start check). Abbreviations over-split sentence starts, so an overlap can begin mid-sentence (after "U.S. "); this is documented in `sentence_starts`.
   - Two findings need the user; see Decisions needed.
 
-**Decisions needed** (each with a recommendation)
-1. **CI makes a network call (Standards review, HARD).**
-   - tiktoken downloads `cl100k_base` (1.68 MB) when `ingest.chunker` is imported. pytest-socket blocks the network only while tests run, not while modules are imported, so CI would pass but call openaipublic.blob.core.windows.net on every fresh runner. I reproduced this with an empty `TIKTOKEN_CACHE_DIR`.
-   - This breaks the CLAUDE.md decision "CI makes no network calls". The fix changes CI or adds a file, so it needs the user.
-   - Options: (a) commit the encoding file, for example `tokenizers/cl100k_base.tiktoken`, and set `TIKTOKEN_CACHE_DIR` in CI and the tests; (b) add a CI cache step, which still downloads on a cache miss.
-   - Recommendation: (a).
-   - **Don't push 3b until this is settled.**
-2. **Coverage wording (Spec review).**
-   - The original 3b plan says "every character of every section is in at least one chunk". The detailed 3b section, which I wrote, says "every non-whitespace character", and the check implements that.
-   - The difference is whitespace only: blank lines between chunks where there's no overlap, and whitespace at section edges.
-   - The user never agreed to that wording explicitly. Recommendation: accept "non-whitespace". `resolve()` returns exact offsets either way.
+**Decisions** (raised by the reviews, settled by the user on their return, both as recommended)
+1. **CI made a network call.**
+   - tiktoken downloads `cl100k_base` (1.68 MB) when `ingest.chunker` is imported. pytest-socket blocks the network only while tests run, not while modules are imported, so CI would have called openaipublic.blob.core.windows.net on every fresh runner. I reproduced this with an empty cache.
+   - Fix, test first: the encoding file is vendored as `vendor/tiktoken/9b5ad71b...`, named by tiktoken's cache key. Its SHA-256 matches tiktoken's expected hash (223921b7...). `tests/conftest.py` sets `TIKTOKEN_CACHE_DIR` to it.
+   - `tests/test_tokenizer_offline.py` checks the hash, and that the chunker tokenizes in a subprocess whose sockets raise on use. All 3 tests failed before the fix.
+   - A python-review of the fix found no blockers. Applied from it:
+     - The CI workflow also sets `TIKTOKEN_CACHE_DIR`, for any future step that imports the chunker outside pytest.
+     - The offline test blocks DNS lookups too.
+     - `.gitattributes` marks `vendor/**` as binary, so line-ending conversion can't break the hash.
+     - `vendor/tiktoken/README.md` records the source URL and hash.
+   - tiktoken is pinned at 0.14.0 in uv.lock. An upgrade that changed its cache-key scheme would make the offline test fail.
+   - Tests: 698 passed, 1 skipped.
+2. **Coverage wording.** The user accepted "every non-whitespace character of every section is in at least one chunk". It is recorded in the plan and in CLAUDE.md Decisions.
 
 **Next session starts with**
-1. The three decisions above. After decision 1, push and check CI with `gh run list`.
-2. Plan Step 3c: the Postgres `filings` and `chunks` tables, `db/schema.sql`, `resolve()`, the loader that writes `data/parsed/`, and the database-reviewer agent.
+1. Plan Step 3c: the Postgres `filings` and `chunks` tables, `db/schema.sql`, `resolve()`, the loader that writes `data/parsed/`, and the database-reviewer agent.
 
 ---
 

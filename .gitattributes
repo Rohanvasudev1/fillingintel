@@ -1,0 +1,2 @@
+# Vendored binaries must not have line endings converted (hash-checked in tests).
+vendor/** -text

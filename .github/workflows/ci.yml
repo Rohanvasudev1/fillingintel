@@ -33,6 +33,8 @@ jobs:
       # Placeholder value satisfies the missing-env-var guard in edgar_client;
       # no real EDGAR requests are made in CI (pytest-socket blocks all external network).
       EDGAR_USER_AGENT: "FilingIntel/CI ci-placeholder@example.com"
+      # tiktoken reads cl100k_base from the vendored copy instead of downloading it.
+      TIKTOKEN_CACHE_DIR: ${{ github.workspace }}/vendor/tiktoken
 
     steps:
       - uses: actions/checkout@v4

@@ -65,5 +65,7 @@ Files changed; evidence (tests, eval results with commit); regressions; decision
 - Chunk IDs are deterministic ({accession_no}:{ordinal:04d}) and each chunk stores chunker_version. Chunker settings are frozen before Step 4 writes gold chunk IDs.
 - Postgres schema for Step 3: a filings table (metadata, full parsed text, financial_statements_section) and a chunks table, from db/schema.sql. resolve() takes substr of the filing text; chunk text is not stored separately.
 - ECC upgrade deferred until after Step 3, because it renames workflow commands.
+- The cl100k_base encoding file is vendored in vendor/tiktoken/ (named by tiktoken's cache key) and tests/conftest.py sets TIKTOKEN_CACHE_DIR to it, so tests and CI never download it. tests/test_tokenizer_offline.py checks its hash and tokenizes with the network blocked.
+- Chunk coverage means every non-whitespace character of every section is in at least one chunk; whitespace between chunks and at section edges may be left out.
 - CI makes no network calls; pytest-socket allows localhost only. Parser and chunker tests use the gzipped real filings in tests/fixtures/, rebuilt from data/raw by scripts/build_fixtures.py.
 - docs/design/filingintel-demo.html is a layout reference only. Its tickers, question categories and numbers are placeholders; RUNBOOK is the source of truth.
