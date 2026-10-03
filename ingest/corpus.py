@@ -20,6 +20,7 @@ from typing import Protocol
 
 import httpx
 
+from ingest.chunker import MAX_CHUNK_TOKENS, TOKENIZER, chunk_filing
 from ingest.edgar_client import EdgarClient
 from ingest.models import FilingMeta, ParsedFiling
 from ingest.parser import (
@@ -76,6 +77,16 @@ class TableCounts:
 
 
 @dataclass(frozen=True)
+class ChunkCounts:
+    """Chunks the chunker makes from one filing."""
+
+    total: int
+    with_tables: int
+    oversized: int  # over MAX_CHUNK_TOKENS; all must contain a table
+    max_tokens: int
+
+
+@dataclass(frozen=True)
 class FilingReport:
     """Everything the corpus report prints about one filing."""
 
@@ -83,6 +94,7 @@ class FilingReport:
     sections: tuple[SectionRow, ...]
     missing_required: tuple[str, ...]
     tables: TableCounts
+    chunks: ChunkCounts
 
 
 # ── Manifest ──────────────────────────────────────────────────────────────────
@@ -143,6 +155,17 @@ def count_tables(filing: ParsedFiling) -> TableCounts:
     )
 
 
+def count_chunks(filing: ParsedFiling) -> ChunkCounts:
+    """Summarise the chunks of *filing*."""
+    chunks = chunk_filing(filing)
+    return ChunkCounts(
+        total=len(chunks),
+        with_tables=sum(c.contains_table for c in chunks),
+        oversized=sum(c.token_count > MAX_CHUNK_TOKENS for c in chunks),
+        max_tokens=max((c.token_count for c in chunks), default=0),
+    )
+
+
 # ── Per-filing report ─────────────────────────────────────────────────────────
 
 def _section_rows(
@@ -167,7 +190,7 @@ def _section_rows(
 
 
 def build_report(html: str, meta: FilingMeta) -> FilingReport:
-    """Parse one filing and summarise sections, methods, lengths and tables."""
+    """Parse one filing and summarise sections, methods, lengths, tables and chunks."""
     filing, methods = parse_filing_with_methods(html, meta)
     required = REQUIRED_SECTIONS_10K if "10-K" in meta.form_type else REQUIRED_SECTIONS_10Q
     rows = _section_rows(filing, methods, required)
@@ -176,6 +199,7 @@ def build_report(html: str, meta: FilingMeta) -> FilingReport:
         sections=rows,
         missing_required=tuple(filing.missing_sections),
         tables=count_tables(filing),
+        chunks=count_chunks(filing),
     )
 
 
@@ -226,8 +250,12 @@ def format_report(reports: list[FilingReport], header: tuple[str, ...] = ()) -> 
                     f"| {r.meta.accession_no} | {r.meta.form_type} | {s.key} | {s.method} "
                     f"| {s.length:,} | {'yes' if s.required else 'no'} |"
                 )
-    out += [
-        "",
+    out += ["", *_table_lines(reports), "", *_chunk_lines(reports)]
+    return "\n".join(out) + "\n"
+
+
+def _table_lines(reports: list[FilingReport]) -> list[str]:
+    out = [
         "## Tables: edgartools tables reconciled with table spans in the parsed text",
         "",
         "| Accession | Form | edgartools tables | Rendered empty | Sharing a span "
@@ -243,7 +271,25 @@ def format_report(reports: list[FilingReport], header: tuple[str, ...] = ()) -> 
             f"| {c.span_count} | {c.not_in_text} | {c.outside_spans} "
             f"| {t.unclosed_rows} | {t.glued_headers} | {t.crossing_tables} |"
         )
-    return "\n".join(out) + "\n"
+    return out
+
+
+def _chunk_lines(reports: list[FilingReport]) -> list[str]:
+    out = [
+        f"## Chunks ({TOKENIZER} tokens; limit {MAX_CHUNK_TOKENS}; "
+        "only table chunks may exceed it)",
+        "",
+        "| Accession | Form | Chunks | With tables "
+        f"| Over {MAX_CHUNK_TOKENS} tokens | Max tokens |",
+        "|---|---|---|---|---|---|",
+    ]
+    for r in reports:
+        c = r.chunks
+        out.append(
+            f"| {r.meta.accession_no} | {r.meta.form_type} | {c.total} | {c.with_tables} "
+            f"| {c.oversized} | {c.max_tokens} |"
+        )
+    return out
 
 
 def method_counts(reports: list[FilingReport]) -> dict[str, int]:

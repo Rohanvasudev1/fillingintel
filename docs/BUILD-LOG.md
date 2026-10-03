@@ -314,6 +314,97 @@ Model: Claude Opus 5.5 (claude-opus-5-5) for planning, implementation and review
 
 ---
 
+## 2026-10-03 — Step 3b: chunker ✅ (committed locally, not pushed; three decisions pending)
+
+Model: Claude Opus 5.5. Fixed point de340b7. I ran the whole workflow while the user was away, after a planning session in which they answered four questions.
+
+**Decisions taken with the user before they left** (recorded in `.claude/plans/step-3.md`, "3b detailed plan")
+- 3b-1: prose that edgartools glued onto a table row stays in the table block.
+- 3b-2: overlap is text only. It never reaches back past a table, so a chunk after a table starts at the table's end. A table chunk may take up to 100 tokens of the text before it, usually its caption.
+- 3b-3: each chunk has `contains_table`.
+- 3b-4: commit locally, don't push.
+
+**What was built**
+- `ingest/chunker.py`:
+  - `chunk_filing(filing)` returns frozen `Chunk` records holding the RUNBOOK fields plus `ordinal`, `token_count`, `tokenizer` (cl100k_base), `chunker_version` ("1") and `contains_table`.
+  - Chunk IDs are `{accession_no}:{ordinal:04d}`.
+- **Units.** Each section span is cut into units: whole table spans, and blank-line paragraphs between them.
+  - A paragraph over 800 tokens splits at sentence ends. The sentence pattern handles edgartools' escaped `\.`.
+  - A sentence over 800 tokens splits into runs of whole words, sized by exact token count.
+  - A single word over 800 tokens is cut by characters.
+- **Packing.** Units pack greedily while the chunk's exact token count stays at 800 or under.
+  - A new chunk starts up to 100 tokens back, at a sentence or unit start.
+  - A text chunk's overlap shrinks to keep the chunk within the limit.
+  - The earliest valid overlap start is found by binary search, because both limits loosen as the start moves later.
+- The corpus report gains per-filing chunk counts: total, with tables, over 800 tokens and maximum tokens.
+- `tests/chunk_checks.py` holds the acceptance checks, shared by the fixture and local corpus tests. It recounts tokens with tiktoken directly.
+- The checks:
+  - offsets and token counts round-trip;
+  - IDs are unique, in order and strictly increasing;
+  - each chunk lies in exactly one section span;
+  - no table is split, and `contains_table` is exact;
+  - chunks start at a section start or after whitespace;
+  - only table chunks exceed 800 tokens;
+  - sections are covered;
+  - overlap is 100 tokens or less and never includes a table.
+
+**Evidence** (working tree on de340b7, committed as the 3b commit)
+- Tests: 695 passed, 1 skipped. Coverage: `chunker.py` 99%. ruff is clean, and pyright (via uvx) reports 0 errors.
+- The 30 cached filings (the 24-filing manifest plus 6) produce:
+
+  | Measure | Value |
+  |---|---|
+  | Chunks | 2,566 |
+  | Chunks with a table | 1,415 |
+  | Chunks over 800 tokens | 111, all table chunks |
+  | Largest chunk | 1,825 tokens, an INTC 10-Q statement table |
+  | Median chunk | 723 tokens (p10 354, p90 796) |
+  | Chunks under 50 tokens | 64, mostly one-line items such as "Item 1B. None" |
+
+- Overlap: 1,957 of 2,249 transitions within a section overlap, with a median of 78 tokens and a maximum of 100. The other 292 mostly follow a table.
+- All chunk checks pass on every cached filing. Parse plus chunk takes about 21s for 30 filings.
+- Not run: `spikes/corpus_report.txt` with the new chunk table. It needs the network, so the user runs `python -m ingest.corpus`.
+
+**Review catches**
+- **python-review, HIGH, fixed.** Word runs were sized by an additive token estimate that assumed single spaces. Tab-separated words reached 1,040 tokens, and one 20k-character word reached 2,500 tokens, and nothing caught it. The tests came first: tab-separated words, and one ~4,000-token word. Runs are now sized by exact count, with a binary search.
+- **python-review, MEDIUM, fixed.**
+  - Overlap could not start inside the previous chunk's last unit.
+  - Trying every overlap start was quadratic (11.7s on a 2 MB synthetic section); it now uses binary search.
+  - There were no tests for `\.)` or "U.S.".
+- **python-review, LOW, fixed.**
+  - Four weak tests were tightened: sentence-start overlap, glued prose, strictly increasing starts, and `contains_table` false when there is no table.
+  - A whitespace-start check was added.
+- **step-review, Standards.**
+  - Fixed: names (`section_tables`, `ChunkCounts.total`) and the check's error message.
+  - Not changed, all judgement calls:
+    - the two small binary searches;
+    - `_Unit` and `_Span` having the same shape;
+    - the chunk_id format kept as a string until 3c's `resolve()` needs to parse it;
+    - `corpus.py` running both the parser and the chunker.
+- **step-review, Spec.**
+  - Fixed: a determinism test on a real fixture.
+  - Accepted: scope beyond the plan (cutting a word over the limit by characters, the stricter whitespace-start check). Abbreviations over-split sentence starts, so an overlap can begin mid-sentence (after "U.S. "); this is documented in `sentence_starts`.
+  - Two findings need the user; see Decisions needed.
+
+**Decisions needed** (each with a recommendation)
+1. **CI makes a network call (Standards review, HARD).**
+   - tiktoken downloads `cl100k_base` (1.68 MB) when `ingest.chunker` is imported. pytest-socket blocks the network only while tests run, not while modules are imported, so CI would pass but call openaipublic.blob.core.windows.net on every fresh runner. I reproduced this with an empty `TIKTOKEN_CACHE_DIR`.
+   - This breaks the CLAUDE.md decision "CI makes no network calls". The fix changes CI or adds a file, so it needs the user.
+   - Options: (a) commit the encoding file, for example `tokenizers/cl100k_base.tiktoken`, and set `TIKTOKEN_CACHE_DIR` in CI and the tests; (b) add a CI cache step, which still downloads on a cache miss.
+   - Recommendation: (a).
+   - **Don't push 3b until this is settled.**
+2. **Coverage wording (Spec review).**
+   - The original 3b plan says "every character of every section is in at least one chunk". The detailed 3b section, which I wrote, says "every non-whitespace character", and the check implements that.
+   - The difference is whitespace only: blank lines between chunks where there's no overlap, and whitespace at section edges.
+   - The user never agreed to that wording explicitly. Recommendation: accept "non-whitespace". `resolve()` returns exact offsets either way.
+3. **Corpus report.** The user runs `uv run --env-file .env python -m ingest.corpus` to add the chunk table for the 24 filings, then commits the report.
+
+**Next session starts with**
+1. The three decisions above. After decision 1, push and check CI with `gh run list`.
+2. Plan Step 3c: the Postgres `filings` and `chunks` tables, `db/schema.sql`, `resolve()`, the loader that writes `data/parsed/`, and the database-reviewer agent.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.

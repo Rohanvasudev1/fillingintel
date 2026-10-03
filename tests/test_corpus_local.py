@@ -12,9 +12,11 @@ from pathlib import Path
 
 import pytest
 
+from ingest.chunker import chunk_filing
 from ingest.corpus import MIN_SECTION_CHARS
 from ingest.models import FilingMeta
 from ingest.parser import REQUIRED_SECTIONS_10K, REQUIRED_SECTIONS_10Q, parse_filing
+from tests.chunk_checks import assert_all_chunk_checks
 from tests.table_checks import (
     assert_edgartools_tables_reconcile,
     assert_every_table_line_is_in_a_span,
@@ -157,3 +159,7 @@ def test_no_span_starts_at_a_separator_row(filing):
 
 def test_edgartools_tables_reconcile_with_spans(filing):
     assert_edgartools_tables_reconcile(filing)
+
+
+def test_chunks_pass_all_chunk_checks(filing):
+    assert_all_chunk_checks(filing, chunk_filing(filing))

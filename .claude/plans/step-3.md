@@ -4,7 +4,7 @@ Status: approved 2026-10-03. The user accepted all six recommendations.
 
 Fixed point for /step-review: set per sub-step when it starts.
 - 3a: e88cc45
-- 3b: (not started)
+- 3b: de340b7
 - 3c: (not started)
 
 ## Spec (docs/RUNBOOK.md, Step 3)
@@ -37,6 +37,43 @@ Fixed point for /step-review: set per sub-step when it starts.
   - No table is split.
   - Only table chunks exceed 800 tokens.
   - Every character of every section is in at least one chunk.
+
+## 3b detailed plan (agreed 2026-10-03, before the user left)
+
+Measured on the 30 cached filings: 1.55M tokens. 104 tables are over 800 tokens, none over 2,000 (largest 1,825). No paragraph is over 800 tokens (largest 728).
+
+Module `ingest/chunker.py`, pure Python, no database:
+- `Chunk`, a frozen model: `chunk_id`, `cik`, `accession_no`, `form_type`, `fiscal_period`, `section`, `char_start`, `char_end`, `ordinal`, `token_count`, `tokenizer`, `chunker_version`, `contains_table`.
+- `chunk_filing(filing) -> tuple[Chunk, ...]` chunks every section, the preamble included, in document order.
+
+Rules:
+1. **Blocks.** Each section span is cut into blocks.
+   - Table spans from `find_table_spans` are one block each, glitch prose included (user decision 3b-1).
+   - The text between tables splits into paragraphs at blank lines.
+   - Block offsets are trimmed of surrounding whitespace.
+2. **Fallback splitting.** A paragraph over 800 tokens is split at sentence ends. Edgartools escapes periods as `\.`, so sentence ends must handle that. A sentence over 800 tokens is split at whitespace.
+3. **Packing.** Blocks are packed greedily into a chunk while the chunk's exact token count, the text from its first block to its last, stays at 800 or under. A table that doesn't fit starts a new chunk, and a table over 800 tokens is a chunk by itself.
+4. **Overlap** (user decision 3b-2).
+   - A new chunk starts up to 100 tokens back, at a sentence or paragraph start in the text blocks before it.
+   - Overlap never comes from a table, so a chunk after a table starts at the table's end.
+   - For a paragraph chunk, overlap shrinks to keep the chunk at 800 or under.
+   - A table chunk may take up to 100 tokens of overlap (usually its caption) even when that makes it oversized.
+5. **Boundaries.** No chunk crosses a section span. Multi-span items are chunked span by span, keeping their label.
+6. **IDs and versions.**
+   - `chunk_id = {accession_no}:{ordinal:04d}`, with `ordinal` counted across the whole filing.
+   - `tokenizer = "cl100k_base"` and `chunker_version = "1"`.
+   - `contains_table` is true when the chunk holds any table block (user decision 3b-3).
+
+Acceptance, on the 6 fixtures (unit tests) and on all cached filings (local tests):
+- `text[char_start:char_end]` is the chunk text, and `token_count` equals tiktoken's count of it.
+- No chunk crosses a section span. No table span is split across chunks.
+- Only chunks with `contains_table` exceed 800 tokens.
+- Every non-whitespace character of every section is in at least one chunk.
+- Overlap between consecutive chunks is 100 tokens or less and never starts inside a table.
+- Chunk IDs are unique, ordered and the same on a rerun.
+- The corpus report gains per-filing chunk counts: chunks, chunks with tables, oversized chunks and maximum tokens.
+
+Autonomy (user decision 3b-4): run the whole workflow, commit locally after the reviews and verification pass, don't push, then stop and report.
 
 ## 3c: Postgres and resolve()
 - A `filings` table holds metadata, the full parsed text and `financial_statements_section`, which is `part_iv_item_15` when Item 8 is only a pointer.

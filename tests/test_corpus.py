@@ -4,6 +4,7 @@ from datetime import date
 import httpx
 import pytest
 
+from ingest.chunker import MAX_CHUNK_TOKENS, chunk_filing
 from ingest.corpus import (
     build_report,
     build_reports,
@@ -132,6 +133,20 @@ class TestTableCounts:
             "| Spans without a table | Table spans | Not in text | Outside spans "
             "| Unclosed rows | Glued headers | Crossing a section |"
         ) in text
+
+
+class TestChunkCounts:
+    def test_counts_come_from_the_chunker(self, nvda_10q_html, nvda_10q_meta):
+        rep = build_report(nvda_10q_html, nvda_10q_meta)
+        chunks = chunk_filing(parse_filing(nvda_10q_html, nvda_10q_meta))
+        assert rep.chunks.total == len(chunks)
+        assert rep.chunks.with_tables == sum(c.contains_table for c in chunks)
+        assert rep.chunks.oversized == sum(c.token_count > MAX_CHUNK_TOKENS for c in chunks)
+        assert rep.chunks.max_tokens == max(c.token_count for c in chunks)
+
+    def test_report_has_chunk_columns(self, nvda_10q_html, nvda_10q_meta):
+        text = format_report([build_report(nvda_10q_html, nvda_10q_meta)])
+        assert "| Accession | Form | Chunks | With tables | Over 800 tokens | Max tokens |" in text
 
 
 # ── parse_filing_with_methods ─────────────────────────────────────────────────
