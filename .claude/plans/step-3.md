@@ -3,7 +3,7 @@
 Status: approved 2026-10-03. The user accepted all six recommendations.
 
 Fixed point for /step-review: set per sub-step when it starts.
-- 3a: (not started)
+- 3a: e88cc45
 - 3b: (not started)
 - 3c: (not started)
 

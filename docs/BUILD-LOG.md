@@ -222,6 +222,97 @@ Current decisions live in `CLAUDE.md` under Decisions. This log records how and 
 
 ---
 
+## 2026-10-03 — Step 3a: table spans ✅
+
+Model: Claude Opus 5.5 (claude-opus-5-5) for planning, implementation and reviews. Fixed point e88cc45.
+
+**Setup and decisions (commit e88cc45)**
+- The Step 3 plan is in `.claude/plans/step-3.md`. The user accepted all six recommendations, which are now in CLAUDE.md Decisions: three sub-steps; tables located by position in the text; tiktoken cl100k_base; the preamble is chunked; deterministic chunk IDs with chunker_version; and the `filings` and `chunks` tables.
+- The Matt Pocock `code-review` skill was replaced by a project skill, `step-review`, which reads its spec from the plan file, the RUNBOOK and OPEN-DECISIONS rather than an issue tracker. CLAUDE.md now says to apply the unslop skill to all prose.
+- Deferred to after Step 3: the ECC upgrade (it renames the workflow commands) and its context-budget command, which ECC 1.4.1 lacks. As a stand-in, I measured the always-loaded instruction files at about 4.3k tokens.
+- An ECC hook blocks new `.md` files outside a short allowlist. The user approved one bypass, for the skill file. Plans live in `.claude/plans/`, which the hook allows.
+
+**What was built**
+- `ingest/tables.py`:
+  - `find_table_spans(filing)` returns a frozen `TableSpan` for each table: exact offsets, its section label and index, the row count, unclosed rows and a glued-header flag.
+  - `tables_crossing_sections(filing)` scans the whole text for tables that a section boundary cuts.
+  - `reconcile_tables(filing)` places each table edgartools renders in the text and counts the outcomes.
+- **Row rules.**
+  - A row starts at a line beginning with `|` and ends at the first line ending with `|`, because cells can hold line breaks (Intel's "Exhibit\n\n\nNumber").
+  - A row that reaches another row, the end of the section or 20 lines before it closes counts as unclosed and ends at its own line.
+  - A blank line ends a table.
+- `ParsedTable.markdown` now holds edgartools' own rendering of each table, which is the exact text in the filing, using its per-table renderer `MarkdownRenderer._render_table`. That method is private, and no public equivalent exists in 5.59. Tables that render empty are kept, so the list matches edgartools' count.
+- Removed:
+  - `ParsedTable.section_key`, by decision 4;
+  - the hand-written `_table_to_markdown` and its two unit tests;
+  - the Step 2b label-matching table accounting (`classify_tables`, "inserted"/"indeterminate") and its four tests.
+- The corpus report now prints the reconciliation per filing, with the identity in the report header.
+- `tests/table_checks.py` holds the acceptance checks shared by the fixture tests and the local corpus tests.
+
+**Evidence** (working tree on e88cc45, committed as the 3a commit; edgartools 5.59.1)
+- Tests: 634 passed, 1 skipped, the documented NVDA pointer case.
+- Coverage: `ingest/tables.py` 98%, `corpus.py` 97%, `parser.py` 99%.
+- ruff is clean. pyright (run through uvx) reports 0 errors on the production modules.
+- Over the 30 cached filings in `data/raw`, the 24-filing manifest plus 6 from the year in progress:
+
+  | Measure | Count |
+  |---|---|
+  | edgartools tables | 2,793 |
+  | Table spans | 2,717 |
+  | Rendered empty (no content columns) | 59 |
+  | Sharing a span with the table before (no blank line between) | 24 |
+  | Spans with no edgartools table starting in them (INTC one-cell title rows such as `\| Consolidated Condensed Statements of Operations \|`) | 7 |
+  | Renderings not found in the text | 0 |
+  | Renderings starting outside every span | 0 |
+  | Tables crossing a section boundary | 0 |
+  | Unclosed rows | 6 |
+  | Glued headers | 6 |
+
+  The counts reconcile exactly: 2,793 − 59 − 24 + 7 = 2,717. Tests check the identity, and the two zeros, on every fixture and cached filing.
+- The user ran `python -m ingest.corpus` over the 24-filing manifest, producing `spikes/corpus_report.txt` (header: commit e88cc45+dirty, which is this change before its commit).
+  - Every filing has 0 renderings not in the text, 0 starting outside a span and 0 tables crossing a section.
+  - Totals: 2,338 edgartools tables, 47 rendered empty, 15 sharing a span and 5 spans without a table, giving 2,281 table spans (2,338 − 47 − 15 + 5).
+  - There are 6 unclosed rows, in the NVDA, AMD FY2024 and INTC 10-Ks, and 4 glued headers, in INTC 10-Qs.
+  - All 24 filings have their required sections. The method counts are edgartools 20, heading 34 and cross_reference_index 18, unchanged from Step 2b, so the parser change moved no section.
+
+**Bugs found (both are edgartools rendering glitches; tests now pin each one)**
+- **An unclosed row merged two tables.**
+  - In the NVDA FY2026 10-K, an income-tax table row runs into a prose sentence on the same line.
+  - The first row rule kept reading until a later line ended with `|`. That was the next table's header, so two tables and the sentence between them became one span.
+  - A pinned test ("NVDA has an unclosed row") found it. The regression test was written together with the fix, not before it.
+- **Header rows were glued to prose.**
+  - In 6 INTC 10-Qs, edgartools prints a table's header row at the end of the paragraph before the table, so those spans started at the `| --- |` separator row.
+  - The reconciliation found it: 6 renderings started outside every span. Tests came first, and they failed on exactly those 6 filings and the fixture.
+  - Fix: a span that starts with a separator row starts instead at the header row. That row begins at the n-th `|` from the end of the previous line, where n is the separator's pipe count.
+- One of my own test expectations was wrong: the INTC 10-Q exhibit table starts one row above the multi-line header, at `| | | Incorporated by Reference |`. I checked it against the filing and corrected the test.
+
+**Review catches**
+- **python-review.** No CRITICAL or HIGH findings. MEDIUM fixes:
+  - an earlier `|` in the prose could pull a glued-header span too far back, now fixed by counting cells, test first;
+  - `SEPARATOR_ROW` was copied into the tests, and is now imported;
+  - a magic `rows=2`;
+  - the row scan could peek past the section end.
+  - Two findings were not fixed: `model_config` stays a dict to match the repo, and CRLF input is noted as unsupported, because edgartools writes LF only.
+- **step-review, Standards.**
+  - Fixed: field names (`edgartools_tables`, `span_count`, `crossing_tables`), `ge=0` on span counts, and the duplicated test bodies, now in `tests/table_checks.py` and `span_containing`.
+  - Not fixed, both judgement calls: `count_tables` stays in `corpus.py`, because it is report formatting. Bare `(start, end)` tuples remain in `tables_crossing_sections`.
+- **step-review, Spec.**
+  - Fixed: the plan asks for the gap to be explained, and the report only showed counts. The reconciliation now explains it per filing.
+  - Fixed: removing the "inserted" accounting left nothing checking that edgartools' tables reach the text. The reconciliation checks that, using edgartools' own renderings, which is evidence independent of the span scanner.
+  - Open: the regenerated 24-filing report.
+  - Noted for 3b: an unclosed row's span includes the prose glued onto its line (the NVDA sentence ending "...as follows:"). The chunker will treat that prose as table text.
+
+**Limitations**
+- The 7 spans with no edgartools table are explained by type (one-cell title rows), not table by table. The ordered search can match a repeated title to an earlier copy of it.
+- Unclosed and glued-header spans contain some prose (6 + 6 cases over 30 filings).
+- The reconciliation depends on a private edgartools method. The tests fail loudly if it changes.
+
+**Next session starts with**
+1. Plan Step 3b (the chunker) as an addition to `.claude/plans/step-3.md`, and wait for approval. Its fixed point is the 3a commit.
+2. In that plan, decide how a chunk treats the prose inside unclosed or glued-header spans (12 spans over 30 filings), and whether to accept the private edgartools renderer that the reconciliation relies on.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.

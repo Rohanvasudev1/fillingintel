@@ -7,12 +7,12 @@ import pytest
 from ingest.corpus import (
     build_report,
     build_reports,
-    classify_tables,
     format_report,
     select_manifest,
 )
-from ingest.models import FilingMeta, ParsedTable
+from ingest.models import FilingMeta
 from ingest.parser import parse_filing, parse_filing_with_methods
+from ingest.tables import find_table_spans, reconcile_tables
 
 VALID_METHODS = {"edgartools", "heading", "cross_reference_index", "preamble"}
 
@@ -112,39 +112,26 @@ class TestSelectManifest:
         assert filings == before
 
 
-# ── classify_tables ───────────────────────────────────────────────────────────
+# ── table counts ──────────────────────────────────────────────────────────────
 
-class TestClassifyTables:
-    def test_table_whose_row_labels_are_in_text_is_inserted(self):
-        tbl = ParsedTable(
-            index=0,
-            markdown="| Net income | 1 |\n| Operating income | 2 |",
-            section_key=None,
-        )
-        text = "intro\n| Net income | $ | 1 |\n| Operating income | 2 |\n"
-        counts = classify_tables([tbl], text)
-        assert (counts.detected, counts.inserted) == (1, 1)
+class TestTableCounts:
+    def test_counts_come_from_spans_and_reconciliation(self, nvda_10q_html, nvda_10q_meta):
+        rep = build_report(nvda_10q_html, nvda_10q_meta)
+        filing = parse_filing(nvda_10q_html, nvda_10q_meta)
+        spans = find_table_spans(filing)
+        assert rep.tables.reconciliation == reconcile_tables(filing)
+        assert rep.tables.reconciliation.span_count == len(spans)
+        assert rep.tables.unclosed_rows == sum(s.unclosed_rows for s in spans)
+        assert rep.tables.glued_headers == sum(s.header_glued for s in spans)
+        assert rep.tables.crossing_tables == 0
 
-    def test_table_absent_from_text_is_not_inserted(self):
-        tbl = ParsedTable(
-            index=0,
-            markdown="| Net income | 1 |\n| Operating income | 2 |",
-            section_key=None,
-        )
-        counts = classify_tables([tbl], "nothing relevant here")
-        assert (counts.detected, counts.inserted, counts.not_inserted) == (1, 0, 1)
-
-    def test_numeric_only_table_is_indeterminate(self):
-        tbl = ParsedTable(index=0, markdown="| 1 | 2 |\n| 3 | 4 |", section_key=None)
-        counts = classify_tables([tbl], "| 1 | 2 |")
-        assert counts.indeterminate == 1
-        assert counts.inserted == 0
-
-    def test_counts_partition_detected(self, nvda_10q_filing):
-        c = classify_tables(nvda_10q_filing.tables, nvda_10q_filing.text)
-        assert c.detected == len(nvda_10q_filing.tables)
-        assert c.inserted + c.not_inserted + c.indeterminate == c.detected
-        assert c.inserted > 0
+    def test_report_has_table_reconciliation_columns(self, nvda_10q_html, nvda_10q_meta):
+        text = format_report([build_report(nvda_10q_html, nvda_10q_meta)])
+        assert (
+            "| Accession | Form | edgartools tables | Rendered empty | Sharing a span "
+            "| Spans without a table | Table spans | Not in text | Outside spans "
+            "| Unclosed rows | Glued headers | Crossing a section |"
+        ) in text
 
 
 # ── parse_filing_with_methods ─────────────────────────────────────────────────

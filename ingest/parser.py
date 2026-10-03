@@ -34,6 +34,9 @@ import logging
 import re
 
 from edgar.documents import parse_html  # type: ignore[import-untyped]
+from edgar.documents.renderers.markdown import (  # type: ignore[import-untyped]
+    MarkdownRenderer,
+)
 
 from ingest.models import FilingMeta, ParsedFiling, ParsedSection, ParsedTable
 
@@ -107,25 +110,6 @@ def _sort_key(key: str, order: list[str]) -> tuple[int, str]:
         return (order.index(key), key)
     except ValueError:
         return (len(order), key)
-
-
-def _table_to_markdown(table: object) -> str:
-    """Convert an edgartools table node to a pipe-delimited markdown string."""
-    rows = list(table.rows) if hasattr(table, "rows") else []  # type: ignore[attr-defined]
-    if not rows:
-        return str(table)
-    lines: list[str] = []
-    for row in rows:
-        cells = list(row.cells) if hasattr(row, "cells") else []
-        cell_texts: list[str] = [
-            (getattr(cell, "content", None) or "")
-            .replace("|", "\\|")
-            .replace("\n", " ")
-            .strip()
-            for cell in cells
-        ]
-        lines.append("| " + " | ".join(cell_texts) + " |")
-    return "\n".join(lines)
 
 
 def _item_num_from_key(key: str) -> str | None:
@@ -604,13 +588,18 @@ def _assemble_sections(
 
 
 def _convert_tables(doc: object) -> list[ParsedTable]:
-    """Flat list of non-empty tables; ``section_key`` stays ``None`` until Step 3."""
+    """Every edgartools table, rendered exactly as edgartools writes it into the markdown.
+
+    A table with no content columns renders as ``""`` and is kept, so the list
+    matches edgartools' own table count.  ``_render_table`` is edgartools'
+    per-table renderer; it has no public equivalent in 5.59 (pinned below 6.0),
+    and tests/test_parser.py checks the renderings appear verbatim in the text.
+    """
+    renderer = MarkdownRenderer()
     raw_tables: list[object] = getattr(doc, "tables", [])
-    converted = [(i, _table_to_markdown(tbl)) for i, tbl in enumerate(raw_tables)]
     return [
-        ParsedTable(index=i, markdown=tbl_md, section_key=None)
-        for i, tbl_md in converted
-        if tbl_md.strip()
+        ParsedTable(index=i, markdown=renderer._render_table(tbl).strip())  # type: ignore[arg-type]
+        for i, tbl in enumerate(raw_tables)
     ]
 
 
@@ -628,7 +617,7 @@ def parse_filing_with_methods(
     not a fallback.
 
     Offsets are exact by construction, not search.  Tables are embedded inline
-    in the section text; ``ParsedTable.section_key`` is ``None`` until Step 3.
+    in the section text; ``ingest.tables`` locates them there.
     """
     doc = parse_html(html)
     md: str = doc.to_markdown()  # type: ignore[attr-defined]

@@ -17,7 +17,6 @@ from ingest.parser import (
     SECTION_ORDER_10K,
     SECTION_ORDER_10Q,
     _sort_key,
-    _table_to_markdown,
 )
 
 # ── Unit: canonical sort order ────────────────────────────────────────────────
@@ -45,48 +44,19 @@ class TestSectionOrder:
         assert "part_ii_item_1a" in SECTION_ORDER_10Q
 
 
-# ── Unit: table markdown ──────────────────────────────────────────────────────
+# ── Tables as edgartools renders them ─────────────────────────────────────────
 
 
-class TestTableToMarkdown:
-    def test_table_markdown_format(self):
-        class FakeCell:
-            def __init__(self, content):
-                self.content = content
+class TestParsedTables:
+    def test_tables_are_edgartools_renderings_found_in_the_text(self, nvda_10k_filing):
+        rendered = [t.markdown for t in nvda_10k_filing.tables if t.markdown]
+        assert rendered
+        assert all(md in nvda_10k_filing.text for md in rendered)
 
-        class FakeRow:
-            def __init__(self, *contents):
-                self.cells = [FakeCell(c) for c in contents]
-
-        class FakeTable:
-            def __init__(self):
-                self.rows = [
-                    FakeRow("Revenue", "2024", "2023"),
-                    FakeRow("$100M", "$90M", "$80M"),
-                ]
-
-        md = _table_to_markdown(FakeTable())
-        lines = md.strip().splitlines()
-        assert len(lines) == 2
-        assert lines[0].startswith("|")
-        assert "Revenue" in lines[0]
-        assert "$100M" in lines[1]
-
-    def test_table_markdown_pipes_in_cell_content_escaped(self):
-        class FakeCell:
-            def __init__(self, content):
-                self.content = content
-
-        class FakeRow:
-            def __init__(self, *contents):
-                self.cells = [FakeCell(c) for c in contents]
-
-        class FakeTable:
-            def __init__(self):
-                self.rows = [FakeRow("A|B")]
-
-        md = _table_to_markdown(FakeTable())
-        assert "A\\|B" in md
+    def test_tables_edgartools_renders_empty_are_kept(self, amd_10q_filing):
+        """AMD's 10-Q has 4 layout tables with no content columns; they stay in the count."""
+        assert sum(1 for t in amd_10q_filing.tables if not t.markdown) == 4
+        assert [t.index for t in amd_10q_filing.tables] == list(range(len(amd_10q_filing.tables)))
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -159,10 +129,6 @@ class TestNvda10K:
         assert item7 is not None
         text = nvda_10k_filing.text[item7.char_start:item7.char_end]
         assert "|" in text, "part_ii_item_7 must contain table markdown"
-
-    def test_table_section_key_none(self, nvda_10k_filing):
-        for tbl in nvda_10k_filing.tables:
-            assert tbl.section_key is None
 
     def test_no_fallback_needed(self, nvda_10k_filing):
         """NVDA 10-K: all sections via edgartools, none via fallback."""

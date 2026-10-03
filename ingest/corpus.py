@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import argparse
 import logging
-import re
 import subprocess
 from dataclasses import dataclass
 from importlib.metadata import version
@@ -22,12 +21,19 @@ from typing import Protocol
 import httpx
 
 from ingest.edgar_client import EdgarClient
-from ingest.models import FilingMeta, ParsedFiling, ParsedTable
+from ingest.models import FilingMeta, ParsedFiling
 from ingest.parser import (
     ANCHOR_TOLERANCE,
     REQUIRED_SECTIONS_10K,
     REQUIRED_SECTIONS_10Q,
     parse_filing_with_methods,
+)
+from ingest.tables import (
+    MAX_ROW_LINES,
+    TableReconciliation,
+    find_table_spans,
+    reconcile_tables,
+    tables_crossing_sections,
 )
 
 logger = logging.getLogger(__name__)
@@ -36,9 +42,6 @@ CIKS: dict[str, str] = {"NVDA": "1045810", "AMD": "2488", "INTC": "50863"}
 N_FISCAL_YEARS = 2
 QUARTERS = (1, 2, 3)  # 10-Qs filed per fiscal year; the fourth quarter is in the 10-K
 MIN_SECTION_CHARS = 2000
-# A table counts as inserted when this share of its labelled rows appear in the text.
-_ROW_MATCH_RATIO = 0.8
-_MIN_LABEL_CHARS = 6
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_RAW_DIR = REPO_ROOT / "data" / "raw"
 DEFAULT_REPORT_PATH = REPO_ROOT / "spikes" / "corpus_report.txt"
@@ -64,12 +67,12 @@ class SectionRow:
 
 @dataclass(frozen=True)
 class TableCounts:
-    """Tables detected in a filing, split by whether they reached the section text."""
+    """Table spans in the parsed text, reconciled with edgartools' table list."""
 
-    detected: int
-    inserted: int
-    not_inserted: int
-    indeterminate: int
+    reconciliation: TableReconciliation
+    unclosed_rows: int
+    glued_headers: int
+    crossing_tables: int  # tables cut by a section boundary; must be 0
 
 
 @dataclass(frozen=True)
@@ -129,40 +132,14 @@ def select_manifest(
 
 # ── Table accounting ──────────────────────────────────────────────────────────
 
-def _row_labels(markdown: str) -> list[str]:
-    """First non-empty cell of each table row, keeping only text-like labels."""
-    labels: list[str] = []
-    for line in markdown.splitlines():
-        cells = [c.strip() for c in re.split(r"(?<!\\)\|", line.strip().strip("|"))]
-        first = next((c for c in cells if c), "")
-        if len(first) >= _MIN_LABEL_CHARS and any(ch.isalpha() for ch in first):
-            labels.append(first.replace("\\|", "|"))
-    return labels
-
-
-def classify_tables(tables: list[ParsedTable], text: str) -> TableCounts:
-    """Count detected tables that appear in *text* (the concatenated sections).
-
-    ``ParsedTable.markdown`` is not byte-identical to the table as rendered
-    inside the section text, so presence is judged by row labels.  Tables with
-    no text-like row label (purely numeric) are reported as indeterminate.
-    """
-    inserted = not_inserted = indeterminate = 0
-    for tbl in tables:
-        labels = _row_labels(tbl.markdown)
-        if not labels:
-            indeterminate += 1
-            continue
-        found = sum(1 for lbl in labels if lbl in text)
-        if found / len(labels) >= _ROW_MATCH_RATIO:
-            inserted += 1
-        else:
-            not_inserted += 1
+def count_tables(filing: ParsedFiling) -> TableCounts:
+    """Table spans in *filing* and how they line up with edgartools' table list."""
+    spans = find_table_spans(filing)
     return TableCounts(
-        detected=len(tables),
-        inserted=inserted,
-        not_inserted=not_inserted,
-        indeterminate=indeterminate,
+        reconciliation=reconcile_tables(filing),
+        unclosed_rows=sum(s.unclosed_rows for s in spans),
+        glued_headers=sum(s.header_glued for s in spans),
+        crossing_tables=len(tables_crossing_sections(filing)),
     )
 
 
@@ -198,7 +175,7 @@ def build_report(html: str, meta: FilingMeta) -> FilingReport:
         meta=meta,
         sections=rows,
         missing_required=tuple(filing.missing_sections),
-        tables=classify_tables(filing.tables, filing.text),
+        tables=count_tables(filing),
     )
 
 
@@ -251,16 +228,20 @@ def format_report(reports: list[FilingReport], header: tuple[str, ...] = ()) -> 
                 )
     out += [
         "",
-        "## Tables: detected vs present in section text",
+        "## Tables: edgartools tables reconciled with table spans in the parsed text",
         "",
-        "| Accession | Form | Detected | Inserted | Not inserted | Indeterminate |",
-        "|---|---|---|---|---|---|",
+        "| Accession | Form | edgartools tables | Rendered empty | Sharing a span "
+        "| Spans without a table | Table spans | Not in text | Outside spans "
+        "| Unclosed rows | Glued headers | Crossing a section |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in reports:
-        t = r.tables
+        t, c = r.tables, r.tables.reconciliation
         out.append(
-            f"| {r.meta.accession_no} | {r.meta.form_type} | {t.detected} | {t.inserted} "
-            f"| {t.not_inserted} | {t.indeterminate} |"
+            f"| {r.meta.accession_no} | {r.meta.form_type} | {c.edgartools_tables} "
+            f"| {c.rendered_empty} | {c.sharing_a_span} | {c.spans_without_table} "
+            f"| {c.span_count} | {c.not_in_text} | {c.outside_spans} "
+            f"| {t.unclosed_rows} | {t.glued_headers} | {t.crossing_tables} |"
         )
     return "\n".join(out) + "\n"
 
@@ -304,10 +285,12 @@ def run_header(n_filings: int) -> tuple[str, ...]:
         f"each a 10-K plus its three 10-Qs aligned by fiscal_period ({n_filings} filings)",
         f"- thresholds: short section < {MIN_SECTION_CHARS:,} chars; "
         f"anchor tolerance {ANCHOR_TOLERANCE} chars",
-        f"- table counts: a table is 'inserted' when >={_ROW_MATCH_RATIO:.0%} of its row "
-        "labels occur "
-        "anywhere in the filing's section text (an upper bound; shared labels such as "
-        "'Net income' can over-count)",
+        "- table spans: runs of '|' rows in the parsed text, found per section "
+        f"(a row may span up to {MAX_ROW_LINES} lines); 'crossing' counts tables a section "
+        "boundary cuts and must be 0",
+        "- reconciliation: table spans = edgartools tables - rendered empty - sharing a span "
+        "- not in text - outside spans + spans without a table; 'not in text' and "
+        "'outside spans' must be 0",
     )
 
 

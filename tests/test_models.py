@@ -169,11 +169,10 @@ class TestParsedTable:
         t = ParsedTable(index=0, markdown="| a | b |\n| 1 | 2 |")
         assert t.index == 0
         assert t.markdown == "| a | b |\n| 1 | 2 |"
-        assert t.section_key is None
 
-    def test_section_key_can_be_set(self):
-        t = ParsedTable(index=3, markdown="| x |", section_key="part_ii_item_8")
-        assert t.section_key == "part_ii_item_8"
+    def test_has_no_section_key(self):
+        """Tables are placed by position in the text (Step 3a), not by a key on ParsedTable."""
+        assert "section_key" not in ParsedTable.model_fields
 
     def test_immutable(self):
         t = ParsedTable(index=0, markdown="| a |")

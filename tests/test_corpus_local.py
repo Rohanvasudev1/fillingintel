@@ -15,6 +15,12 @@ import pytest
 from ingest.corpus import MIN_SECTION_CHARS
 from ingest.models import FilingMeta
 from ingest.parser import REQUIRED_SECTIONS_10K, REQUIRED_SECTIONS_10Q, parse_filing
+from tests.table_checks import (
+    assert_edgartools_tables_reconcile,
+    assert_every_table_line_is_in_a_span,
+    assert_no_span_starts_at_a_separator_row,
+    assert_no_table_crosses_a_section,
+)
 
 RAW_DIR = Path(__file__).resolve().parent.parent / "data" / "raw"
 FILES = sorted(RAW_DIR.glob("*.html")) if RAW_DIR.is_dir() else []
@@ -134,3 +140,20 @@ def test_sections_are_in_document_order_and_disjoint(filing):
     ordered = sorted(filing.sections, key=lambda s: s.char_start)
     for a, b in zip(ordered, ordered[1:]):
         assert a.char_end <= b.char_start
+
+
+
+def test_no_table_crosses_a_section_boundary(filing):
+    assert_no_table_crosses_a_section(filing)
+
+
+def test_every_table_line_is_inside_a_span(filing):
+    assert_every_table_line_is_in_a_span(filing)
+
+
+def test_no_span_starts_at_a_separator_row(filing):
+    assert_no_span_starts_at_a_separator_row(filing)
+
+
+def test_edgartools_tables_reconcile_with_spans(filing):
+    assert_edgartools_tables_reconcile(filing)

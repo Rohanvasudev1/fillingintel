@@ -67,13 +67,16 @@ class ParsedSection(BaseModel):
 
 
 class ParsedTable(BaseModel):
-    """A table extracted from a filing's HTML, serialised as pipe-delimited markdown."""
+    """A table edgartools found in a filing's HTML, serialised as pipe-delimited markdown.
+
+    Used only to count tables in the corpus report.  Table positions come from
+    the parsed text (``ingest.tables``), not from this list.
+    """
 
     model_config = {"frozen": True}
 
     index: int  # position in edgartools doc.tables
     markdown: str  # pipe-delimited row representation
-    section_key: str | None = None  # assigned in Step 3; None in Step 2b
 
 
 class ParsedFiling(BaseModel):
