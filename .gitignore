@@ -26,3 +26,6 @@ venv/
 
 # macOS
 .DS_Store
+
+# Agent draft slices: intermediate files, merged into eval/agent_drafted_set.jsonl
+eval/drafts/

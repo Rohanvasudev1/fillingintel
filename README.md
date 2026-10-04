@@ -4,7 +4,7 @@ Citation-grounded question answering over SEC filings. Ask what NVDA, AMD or INT
 
 The project compares four retrieval strategies (vector search, graph neighbourhood search, Cypher traversal and community summaries) on one hand-written set of ~120 questions, and publishes where each one wins and loses.
 
-**Status:** in progress. Ingest, chunking and `resolve(chunk_id)` are built and verified on 24 filings (RUNBOOK Step 3). The eval set is next. No benchmark results yet; they'll appear here once they come from real runs.
+**Status:** in progress. Ingest, chunking and `resolve(chunk_id)` are built and verified on 24 filings (RUNBOOK Steps 2–3). Step 4 tooling is in place, with 140 agent-drafted candidate questions labelled as such and awaiting human review. The human-written or human-verified eval set is not complete yet. No benchmark results yet; they'll appear here once they come from real runs.
 
 ## Docs
 

@@ -489,6 +489,101 @@ Model: Claude Opus 5.5. Fixed point fdc87fc. Planned with the user, who answered
 
 ---
 
+## 2026-10-04 — Step 4: eval tooling and an agent-drafted candidate set ✅ (the stop condition needs the user)
+
+Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed point ed8ec01. The user asked for Step 4 to run unattended, including "a subagent set to create my own set". Plan: `.claude/plans/step-4.md`.
+
+**Invariant 1 and the RUNBOOK**
+- The RUNBOOK says the eval set is "written by Rohan, not by a coding agent", and invariant 1 forbade agent-written questions. The user's explicit instruction was followed in the form OPEN-DECISIONS had proposed:
+  - agent drafts go only in `eval/agent_drafted_set.jsonl`, labelled `agent_drafted`, and are reported separately;
+  - a draft counts as human only after the user accepts it with `python -m eval.review`.
+- Invariant 1 is reworded to match. The RUNBOOK has an amendment note. The stop condition is unchanged: 120 human-written or human-verified records.
+
+**FinRank** (searched 2026-10-04; github.com/datanxt/FinRank and arXiv 2608.07400)
+- 1,185 human-written records over 22 companies in pharmaceuticals, oil & gas and automotive. No NVDA, AMD or INTC, so it can't be our question set. License CC BY-NC 4.0.
+- Its schema ideas are borrowed:
+  - topic, difficulty, reasoning and evidence-scope labels;
+  - hard negatives labelled by relation;
+  - a hash of each gold passage's text.
+- An external check against its 5,230-passage corpus is proposed for Steps 5–6.
+
+**What was built** (`eval/`, test-first)
+- `schema.py`: the frozen `EvalRecord` (extra fields forbidden).
+  - Classes: lookup, local, multi_hop, global, decline and unanswerable.
+  - Gold chunks are pinned by SHA-256. Each answerable question has 1–2 hard negatives labelled `same_company_other_period`, `same_company_same_filing` or `peer_company`.
+  - Provenance is `human_written`, `human_verified` or `agent_drafted`; a `human_verified` record needs `derived_from`.
+  - `draft_key` (a hash of the question and gold chunks) and a 30% `test` split by question hash. Writes are atomic.
+- `corpus_index.py`: every chunk, from `data/parsed` through the same chunker. Offsets are cached, keyed by the parsed files' hashes and the chunker version. Searches all words as prefixes.
+- `validate.py`: checks that
+  - the provenance fits the file;
+  - the author fits the provenance;
+  - the class fits the evidence scope;
+  - the split matches the question hash;
+  - gold chunks resolve, with unchanged text;
+  - ticker and period labels equal the gold chunks';
+  - hard-negative relations hold, with at least one per answerable question;
+  - IDs and questions are not repeated.
+
+  `--kind` overrides the file-name rule. `--db` re-checks through `resolve()` in Postgres. In the human set, each `human_verified` record needs an accept in the review log.
+- `coverage.py`, `search.py` (with `--show`), and `merge_drafts.py`. The merge drops repeated questions, renumbers, recomputes splits, and writes only a valid set.
+- `review.py` with `review_log.py`. The user accepts or rejects each draft. Decisions are keyed by `draft_key`, so they survive a re-merge. The tool refuses non-interactive input, so a script can't mint `human_verified` records. CLAUDE.md now forbids agents from running it or writing the human set or the log.
+- Drafting: 8 subagents worked from `.claude/plans/drafting-brief.md`, one slice each.
+  - Six stopped on the first run: one stalled, and five hit the session rate limit. They were relaunched in batches of three and told to write their files as they went.
+  - The slices sit in `eval/drafts/` (gitignored). The merged file records each slice in its `author` field.
+
+**Evidence** (working tree on ed8ec01, committed as the Step 4 commit)
+- `eval/agent_drafted_set.jsonl` holds 140 records, all `agent_drafted`. Class counts match the targets exactly: lookup 40, local 35, multi_hop 30, global 15, decline 10, unanswerable 10.
+  - Tickers: NVDA 68, AMD 64, INTC 59 (a record counts once per ticker it covers).
+  - Split: dev 93, test 47.
+  - Difficulty: easy 19, medium 83, hard 38.
+- `eval.validate` finds 0 problems offline and 0 with `--db`. Through Postgres `resolve()`, all 199 gold chunks match their pinned hashes and all 160 hard negatives resolve.
+- The Spec reviewer spot-checked 5 drafts against their chunks, and every gold answer was supported. All 30 multi_hop records use 2 or more filings; all 15 global records span all three companies.
+- Tests: 822 passed, 1 skipped, with the database. Coverage on `eval/` is 94%. ruff is clean, and pyright reports 0 errors.
+
+**Review catches**
+- **python-review, HIGH, all fixed test-first:**
+  - `human_verified` wasn't tied to any review. It now needs `derived_from` and an accept in the log.
+  - The review log was keyed by draft ID, which a re-merge renumbers. It's now keyed by `draft_key`.
+  - Review could corrupt the human set: duplicate IDs, a crash between the two writes, or one bad log line. New IDs now follow the highest existing ID, decisions are rebuilt from the log plus `derived_from`, and bad log lines are skipped with a warning.
+  - Cache writes used a fixed temporary file name, a race between parallel searches, and a malformed cache could crash a search. Each write now uses a unique temporary file, and a malformed cache counts as a miss.
+- **python-review, MEDIUM/LOW, fixed:**
+  - decline and unanswerable records with hard negatives;
+  - repeated hard negatives;
+  - unchecked split, class-vs-scope and author-vs-provenance rules;
+  - a bare `assert` in search;
+  - clean CLI errors;
+  - pyright errors from Optional values.
+- **Spec review:**
+  - The plan's `--db` mode was missing; it's now built and tested.
+  - Nothing enforced the minimum of one hard negative; the validator now does.
+  - The human set was chosen only by file name; `--kind` now overrides that.
+  - The plan named `eval.show`; it was built as `eval.search --show`, and the plan is updated.
+  - The highest risk: `echo a | eval.review` could mint `human_verified` records. It now needs an interactive terminal, and CLAUDE.md forbids agents from running it.
+- **Standards review:**
+  - Silently skipped errors are now logged.
+  - The merge and coverage commands fail cleanly.
+  - `SKIP` and `QUIT` are named constants.
+  - There's one shared `normalise_question`.
+  - Hard-negative relations have explicit branches.
+  - Not changed, all judgement calls: the seven-parameter `review()`, and the class lists kept in three places.
+
+**Parsing issues the drafters found** (not fixed; they need a parser look)
+- Intel's FY2025 10-K headcount figure and capex table couldn't be found in any chunk. That may be content lost in parsing; among the 47 tables edgartools renders empty in the 24-filing manifest is a candidate.
+- In an NVIDIA Q3 FY2026 10-Q table, both column headers read "Oct 27, 2024". It looks like edgartools combining header rows wrongly.
+- Later filings repeat earlier figures in comparison columns, so some hard negatives also contain the gold value. The drafters flagged these in each record's notes.
+
+**What the user still has to do** (the stop condition)
+1. Review the drafts in batches: `uv run python -m eval.review --reviewer "<name>"`. Then write the human questions needed to reach 120 in `eval/eval_set.jsonl`.
+2. The friend test: someone tries five dev multi-hop questions with Ctrl-F.
+3. The grilling session on `.claude/plans/step-4-grilling.md`: the hypotheses in `.claude/plans/research-plan-draft.md`, and moving the plan to `docs/` past the ECC hook.
+
+**Next session starts with**
+1. If the user has reviewed drafts, run `uv run python -m eval.validate eval/eval_set.jsonl --db` and the coverage report on the human set.
+2. The grilling session, then `docs/RESEARCH-PLAN.md` fixed and dated before any benchmark run.
+3. Step 5 (vector baseline and eval harness) only after the human set reaches 120 and the research plan is approved. First, the deferred ECC upgrade.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.

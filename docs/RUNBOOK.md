@@ -105,6 +105,23 @@ A coding agent may build tooling that helps (a script that validates the JSONL s
 
 **Stop condition:** `eval/eval_set.jsonl` with 120 labelled entries, committed. Have a friend try to answer five of the multi-hop ones with ctrl-F; if they can, those questions are too easy.
 
+#### Step 4 — amendment (2026-10-04)
+
+At the user's request, subagents drafted a candidate set, `eval/agent_drafted_set.jsonl`.
+- Every record is labelled `agent_drafted` and is never counted as human.
+- The user reviews drafts with `python -m eval.review`. Accepted ones are copied into `eval/eval_set.jsonl` as `human_verified`, with the user as author.
+- Results on agent-drafted records are reported separately from the human set. CLAUDE.md invariant 1 was reworded to match.
+- The stop condition above is unchanged: it needs 120 human-written or human-verified entries.
+
+Tooling (`eval/`):
+- `validate`: schema, gold chunks resolve, and gold text unchanged; `--db` checks the same through `resolve()` in Postgres;
+- `coverage`;
+- `search` (with `--show`);
+- `review`, which only the user runs, interactively;
+- `merge_drafts`.
+
+The plan, and how FinRank was considered, are in `.claude/plans/step-4.md`.
+
 ### Step 5. Vector baseline + eval harness
 
 Now build the boring RAG. Embed chunks, store in pgvector, retrieve top-k with metadata filtering by company and period, generate an answer with enforced citations.

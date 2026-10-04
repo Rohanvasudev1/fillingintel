@@ -9,13 +9,11 @@ Decisions raised but not yet made, grouped by the step where each must be settle
 - Optional: pstack /arena for design comparisons at Steps 7 and 9.
 
 ## Step 4 — eval set and research design
-- FinRank as the main human-written question set, if its license allows research use. Own set shrinks to ~60 cross-period and cross-company questions.
-- 1–2 hand-picked hard negatives per question; report a wrong-evidence rate.
-- Reword invariant 1: questions are human-written or human-verified and labelled as such; synthetic questions kept in a separate set and reported separately; agents never edit gold answers.
-- Optional: AI-drafted lookup questions verified by hand; synthetic-vs-human ranking comparison as a paper result.
-- Write docs/RESEARCH-PLAN.md with dated hypotheses before any benchmark run.
+- Approve `docs/RESEARCH-PLAN.md`: the draft is in `.claude/plans/research-plan-draft.md`. An ECC hook blocks new .md files in docs/, so moving it needs the user's go-ahead. Settle it in a grilling session, using the decision list in `.claude/plans/step-4-grilling.md`.
+- Review the agent drafts (`python -m eval.review`) and write the remaining human questions until `eval/eval_set.jsonl` holds 120 records.
 
 ## Steps 5–6 — eval harness
+- Proposal (not built): an external check of the vector arm on FinRank's pooled corpus (5,230 passages, CC BY-NC 4.0, github.com/datanxt/FinRank), against its published Recall@10 baselines. It adds a data source, so it needs the user's approval.
 - Calibrate LLM judges against ~60 hand-scored answers (Cohen's kappa); pin judge model versions; average 3 runs.
 - Bootstrap confidence intervals on every results cell; paired comparisons between arms.
 

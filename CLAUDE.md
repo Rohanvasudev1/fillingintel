@@ -5,7 +5,7 @@ Design detail: docs/ARCHITECTURE.md (read when a task touches it). Milestones: d
 
 ## Invariants
 The project's credibility rests on an honest benchmark. If an invariant blocks you, stop and tell me.
-1. The eval set is human-authored. Never create, edit or relabel questions or gold answers. Flag suspected errors instead.
+1. The eval set (`eval/eval_set.jsonl`) holds only human-written or human-verified records, each labelled with its provenance and author. Agent-drafted questions (allowed since 2026-10-04 at the user's request) live only in `eval/agent_drafted_set.jsonl`, labelled `agent_drafted`, and their results are always reported separately. A draft becomes `human_verified` only through the user's review (`python -m eval.review`). Agents never edit or relabel records in the human set, never write `eval/eval_set.jsonl` or `eval/review_log.jsonl`, and never run `python -m eval.review`, which also refuses non-interactive input: flag suspected errors instead.
 2. Report only benchmark numbers produced by running the harness, with the commit and config. Label any placeholder.
 3. Every claim in an answer cites a real chunk ID. Uncited sentences are dropped.
 4. Every graph edge stores the source chunk it came from. Edges without one are rejected at load.
@@ -41,6 +41,7 @@ Ask before: adding a dependency, changing a schema, changing the eval harness or
 - Tests with the database: uv run --env-file .env pytest
 - Corpus (network; writes spikes/corpus_report.txt and data/parsed/): uv run --env-file .env python -m ingest.corpus
 - Load and verify (offline; writes spikes/load_report.txt): uv run --env-file .env python -m ingest.load --verify
+- Eval set (Step 4): uv run python -m eval.search <words> [--ticker] [--period] [--section] or --show <chunk_id>; eval.validate <file> [--kind] [--db]; eval.coverage <file>; eval.review --reviewer "<name>" (the user only); eval.merge_drafts
 - (add when they exist: eval-fast, eval-full)
 
 ## Report format
@@ -72,6 +73,12 @@ Files changed; evidence (tests, eval results with commit); regressions; decision
 - Step 3c pipeline: `python -m ingest.corpus` (network) writes data/parsed/{accession_no}.json; `python -m ingest.load [--verify]` (offline) chunks and loads Postgres from those files and writes spikes/load_report.txt. Database tests run in a throwaway schema per session and skip without DATABASE_URL; a guard test fails in CI if it is unset.
 - Postgres schema (db/schema.sql) as approved, plus CHECKs on the chunk_id format, chunks.form_type and text_sha256 = sha256(parsed_text). apply_schema() fails with SchemaMismatch if live columns differ from the code. No sections table yet. Also accepted: the chunk_id CHECK pads with greatest(4, length) so ordinals over 9,999 are not truncated, and CHECKs on the accession_no pattern, filings.form_type, ordinal >= 0 and token_count >= 0.
 - Provenance: git_state() reports the commit plus +dirty for tracked changes or untracked files under ingest/, db/, tests/ or scripts/.
+- Eval set (Step 4, plan: .claude/plans/step-4.md):
+  - Records follow eval/schema.py, with gold chunk text pinned by SHA-256.
+  - Classes: lookup, local, multi_hop, global, plus decline and unanswerable (about 10 each).
+  - 1–2 hard negatives per answerable question, labelled same_company_other_period, same_company_same_filing or peer_company. A wrong-evidence rate is reported per arm.
+  - About 30% of records are held out as split "test", by a hash of the question text, and not looked at until the final benchmark.
+- FinRank (CC BY-NC 4.0; pharmaceuticals, oil & gas and automotive) is not used as our question set, because it has no NVDA, AMD or INTC evidence. Its schema ideas are borrowed. Using its corpus as an external check is a proposal in OPEN-DECISIONS.
 - Chunk coverage means every non-whitespace character of every section is in at least one chunk; whitespace between chunks and at section edges may be left out.
 - CI makes no network calls; pytest-socket allows localhost only. Parser and chunker tests use the gzipped real filings in tests/fixtures/, rebuilt from data/raw by scripts/build_fixtures.py.
 - docs/design/filingintel-demo.html is a layout reference only. Its tickers, question categories and numbers are placeholders; RUNBOOK is the source of truth.
