@@ -112,6 +112,7 @@ At the user's request, subagents drafted a candidate set, `eval/agent_drafted_se
 - The user reviews drafts with `python -m eval.review`. Accepted ones are copied into `eval/eval_set.jsonl` as `human_verified`, with the user as author.
 - Results on agent-drafted records are reported separately from the human set. CLAUDE.md invariant 1 was reworded to match.
 - The stop condition above is unchanged: it needs 120 human-written or human-verified entries.
+- **Superseded by the user's decision (2026-10-04, later the same day).** A first review accepted all 140 drafts in under two minutes. That's too fast to have checked them, so the user deleted the human set and the review log. The user then chose to run the benchmark on the 140 agent-drafted questions as they are, labelled and reported as agent-drafted. Step 4 is closed on that basis: the human-set stop condition is replaced, not met. The friend Ctrl-F test still applies to five dev multi-hop drafts.
 
 Tooling (`eval/`):
 - `validate`: schema, gold chunks resolve, and gold text unchanged; `--db` checks the same through `resolve()` in Postgres;

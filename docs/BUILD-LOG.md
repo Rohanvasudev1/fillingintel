@@ -572,8 +572,8 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
 - In an NVIDIA Q3 FY2026 10-Q table, both column headers read "Oct 27, 2024". It looks like edgartools combining header rows wrongly.
 - Later filings repeat earlier figures in comparison columns, so some hard negatives also contain the gold value. The drafters flagged these in each record's notes.
 
-**What the user still has to do** (the stop condition)
-1. Review the drafts in batches: `uv run python -m eval.review --reviewer "<name>"`. Then write the human questions needed to reach 120 in `eval/eval_set.jsonl`.
+**What the user still has to do**
+1. Superseded the same day; see the follow-up entry below.
 2. The friend test: someone tries five dev multi-hop questions with Ctrl-F.
 3. The grilling session on `.claude/plans/step-4-grilling.md`: the hypotheses in `.claude/plans/research-plan-draft.md`, and moving the plan to `docs/` past the ECC hook.
 
@@ -581,6 +581,23 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
 1. If the user has reviewed drafts, run `uv run python -m eval.validate eval/eval_set.jsonl --db` and the coverage report on the human set.
 2. The grilling session, then `docs/RESEARCH-PLAN.md` fixed and dated before any benchmark run.
 3. Step 5 (vector baseline and eval harness) only after the human set reaches 120 and the research plan is approved. First, the deferred ECC upgrade.
+
+---
+
+## 2026-10-04 — Step 4 closed on the agent-drafted set (user decision)
+
+- **What happened.** The user ran `python -m eval.review`. All 140 drafts were accepted in 1 minute 44 seconds (from the review log's timestamps), under a second each, so they weren't checked against their gold text. Keeping them would have labelled 140 unchecked records `human_verified` under the user's name.
+- **Options given.** The assistant raised this and offered two options: review again properly, or use the drafts as `agent_drafted`. Agents may not write or delete the human set or the review log, so the user removed `eval/eval_set.jsonl` and `eval/review_log.jsonl` themselves. Neither was ever committed.
+- **The decision.** The user chose to run the benchmark on the 140 agent-drafted questions without human review. It is recorded in CLAUDE.md Decisions, the RUNBOOK Step 4 amendment, OPEN-DECISIONS, the research-plan draft (eval set and threats to validity) and the README.
+- **Consequences.**
+  - The RUNBOOK stop condition (120 human entries) is replaced, not met.
+  - Every result must say "agent-drafted questions".
+  - The drafts' unchecked reviewer notes are listed as a threat to validity.
+
+**Next session starts with**
+1. The grilling session on `.claude/plans/step-4-grilling.md`. Item 3 there is now settled. Item 4 (review cadence) is moot unless the user reviews later. Approving the hypotheses is still open.
+2. The friend Ctrl-F test on five dev multi-hop drafts (optional).
+3. The deferred ECC upgrade, then Step 5 (vector baseline and eval harness), with `docs/RESEARCH-PLAN.md` fixed and dated before any benchmark run.
 
 ---
 

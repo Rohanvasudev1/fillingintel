@@ -7,7 +7,7 @@ On SEC 10-K and 10-Q filings for three semiconductor companies, when does graph-
 
 ## Setup fixed before measuring
 - **Corpus:** the 24-filing manifest (Step 2b), chunked by chunker_version 1 (Step 3). Chunk IDs are frozen for the benchmark.
-- **Eval set:** `eval/eval_set.jsonl`, human-written or human-verified, about 120 records. Agent-drafted records that the user hasn't verified are reported only as a separate, labelled set.
+- **Eval set:** the user decided on 2026-10-04 to use the 140 agent-drafted questions in `eval/agent_drafted_set.jsonl`, without human review: 40 lookup, 35 local, 30 multi_hop and 15 global, plus 10 decline and 10 unanswerable. Every table and claim names them as agent-drafted. If human-written or human-verified records are added later, they get their own column.
 - **Split:** about 30% `test` by hash. All tuning (prompts, k, the router) uses `dev` only, and `test` is scored once, for the final table.
 - **Arms:** `vector` (the control), `graph_local`, `graph_traversal`, `graph_global`, and the router.
 - **Metrics per arm and class:**
@@ -27,10 +27,13 @@ On SEC 10-K and 10-Q filings for three semiconductor companies, when does graph-
 6. **H6, the router is useful but imperfect.** The router picks the arm matching the gold class on at least 80% of `dev` questions, and declines every `decline` question.
 
 ## Things that would change the plan
-- If the human set ends up far from the class targets, report per-class sample sizes and widen intervals rather than pooling.
+- Report per-class sample sizes (some classes have only 10–15 questions) and widen intervals rather than pooling.
 - If judge calibration (Cohen's kappa against hand scores) comes out below 0.6, report only the retrieval metrics for faithfulness and leave the judged columns out.
 
 ## Threats to validity, stated up front
 - Only three companies, all in one sector. The findings may not transfer to other industries.
-- The question author also designed the system, which is partly mitigated by the held-out `test` split.
-- Agent-drafted questions may be easier, or differently phrased, than human ones. That's why they're reported separately.
+- The questions were drafted by agents working in the same project that built the system, which is partly mitigated by the held-out `test` split.
+- **The questions are agent-drafted and not human-reviewed.**
+  - Subagents wrote both the questions and the gold answers, after reading the same chunks a retriever will search. That may favour retrieval-friendly phrasing and easy evidence.
+  - Some drafts carry reviewer notes that were never checked: figures that don't reconcile across filings, and a table header that may be a parser artefact.
+  - Results should be read as "on agent-written questions" and not generalised to analyst questions.

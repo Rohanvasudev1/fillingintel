@@ -10,7 +10,8 @@ Decisions raised but not yet made, grouped by the step where each must be settle
 
 ## Step 4 — eval set and research design
 - Approve `docs/RESEARCH-PLAN.md`: the draft is in `.claude/plans/research-plan-draft.md`. An ECC hook blocks new .md files in docs/, so moving it needs the user's go-ahead. Settle it in a grilling session, using the decision list in `.claude/plans/step-4-grilling.md`.
-- Review the agent drafts (`python -m eval.review`) and write the remaining human questions until `eval/eval_set.jsonl` holds 120 records.
+- Optional, at any point: review agent drafts with `python -m eval.review`, or write human questions. Any human records are reported in their own column next to the agent-drafted results.
+- The friend Ctrl-F test on five dev multi-hop drafts.
 
 ## Steps 5–6 — eval harness
 - Proposal (not built): an external check of the vector arm on FinRank's pooled corpus (5,230 passages, CC BY-NC 4.0, github.com/datanxt/FinRank), against its published Recall@10 baselines. It adds a data source, so it needs the user's approval.
