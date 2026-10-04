@@ -3,7 +3,6 @@
 Decisions raised but not yet made, grouped by the step where each must be settled. When one is resolved, record it in CLAUDE.md Decisions and delete it here.
 
 ## After Step 3
-- Upgrade ECC to the current ecc@ecc plugin (single install method); update command names in CLAUDE.md. Run its context-budget check (not in ECC 1.4.1). Afterwards, add `docs/` to the hook that blocks new .md files (agreed 2026-10-04; an edit to the 1.4.1 plugin cache would be overwritten by the upgrade).
 - Switch model: strongest available for planning and reviews, Sonnet-tier for implementation. Step 3 planning ran on Opus 5.5.
 - Optional: pstack /arena for design comparisons at Steps 7 and 9.
 

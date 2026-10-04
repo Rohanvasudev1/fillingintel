@@ -21,16 +21,16 @@ EDGAR: descriptive User-Agent with contact details, rate limiting, cached downlo
 Python 3.11+ (uv), FastAPI, LangGraph, Postgres + pgvector, Neo4j Community, Ragas, DeepEval, Phoenix, GitHub Actions, Streamlit. Decisions below are final unless I reopen them.
 
 ## Workflow
-ECC commands in this install use the /everything-claude-code: prefix.
-1. Plan with /everything-claude-code:plan and wait for approval. For major design decisions (ontology, entity resolution, research plan), run a grilling session with me first.
-2. Write tests first (tdd-workflow skill) for deterministic logic, and show them failing.
-3. Implement the minimal change.
-4. Review code quality with /everything-claude-code:python-review, plus the database-reviewer agent for SQL or Cypher. Fix the findings.
-5. Review spec compliance with /step-review (project skill adapted from Matt Pocock's code-review) against .claude/plans/step-<N>.md, the current RUNBOOK step and docs/OPEN-DECISIONS.md. Write any instructions I gave in chat into the plan file before the review. Fix every spec-compliance finding, or report why it can't be fixed. Never resolve a finding by weakening an acceptance check.
-6. Verify with the verification-loop skill and the relevant eval slice.
-7. Append a dated entry to docs/BUILD-LOG.md, ending with a "Next session starts with" note. Stop and report.
+Matt Pocock's skills (plugin `mattpocock-skills`, official marketplace) run the workflow since 2026-10-04. Run `/ask-matt` when unsure which flow fits a task. Each RUNBOOK step follows Matt's main flow:
+1. `/grill-with-docs` with me. It records the vocabulary in CONTEXT.md and hard-to-reverse decisions as ADRs in docs/adr/. Add a one-line pointer to each new ADR under Decisions below.
+2. `/to-spec` into `.scratch/step-<N>/spec.md`, then `/to-tickets` into `.scratch/step-<N>/issues/`. Write any instructions I gave in chat into the spec. Wait for my approval before implementing. Keep steps 1–2 in one context window.
+3. `/implement` one ticket at a time, clearing context between tickets. It drives `/tdd`: for deterministic logic, show each test failing before writing the code.
+4. `/code-review` before each commit. The Spec axis checks the ticket, the step spec, the RUNBOOK step and docs/OPEN-DECISIONS.md. For SQL or Cypher, the Standards axis also checks injection safety, indexes and constraints. Fix every finding, or report why it can't be fixed. Never resolve a finding by weakening an acceptance check.
+5. Verify: `uv run ruff check .`, `uv run --env-file .env pytest`, and the relevant eval slice.
+6. Append a dated entry to docs/BUILD-LOG.md, ending with a "Next session starts with" note. Stop and report.
+Hard bugs go through `/diagnosing-bugs`. Use `/research` before writing integration code for edgartools, LangGraph, Ragas, DeepEval or graph drivers; its notes go in docs/research/.
 Apply the unslop skill to all prose: replies, docs, BUILD-LOG entries and commit messages.
-Use search-first before writing integration code for edgartools, LangGraph, Ragas, DeepEval or graph drivers.
+Records stay as before: RUNBOOK defines the steps, BUILD-LOG gets an entry per session, OPEN-DECISIONS holds unsettled questions, and Decisions below holds settled ones. The plans in .claude/plans/ (Steps 3–4) are history; .claude/skills/step-review is kept but no longer used.
 Test fixtures are real downloaded filings (gzipped), never hand-written HTML.
 Ask before: adding a dependency, changing a schema, changing the eval harness or CI, or anything outside the current milestone.
 
@@ -43,6 +43,17 @@ Ask before: adding a dependency, changing a schema, changing the eval harness or
 - Load and verify (offline; writes spikes/load_report.txt): uv run --env-file .env python -m ingest.load --verify
 - Eval set (Step 4): uv run python -m eval.search <words> [--ticker] [--period] [--section] or --show <chunk_id>; eval.validate <file> [--kind] [--db]; eval.coverage <file>; eval.review --reviewer "<name>" (the user only); eval.merge_drafts
 - (add when they exist: eval-fast, eval-full)
+
+## Agent skills
+
+### Issue tracker
+Local markdown under `.scratch/<feature>/`, committed to git. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+The five default roles (needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+Single-context: CONTEXT.md and docs/adr/ at the repo root. See `docs/agents/domain.md`.
 
 ## Report format
 Files changed; evidence (tests, eval results with commit); regressions; decisions needed, each with a recommendation; proposed next step.
@@ -68,8 +79,7 @@ Files changed; evidence (tests, eval results with commit); regressions; decision
 - The preamble is chunked with section 'preamble'. Step 5 decides whether to embed it.
 - Chunk IDs are deterministic ({accession_no}:{ordinal:04d}) and each chunk stores chunker_version. Chunker settings are frozen before Step 4 writes gold chunk IDs.
 - Postgres schema for Step 3: a filings table (metadata, full parsed text, financial_statements_section) and a chunks table, from db/schema.sql. resolve() takes substr of the filing text; chunk text is not stored separately.
-- ECC upgrade deferred until after Step 3, because it renames workflow commands.
-- The `grilling` skill (called by `grill-me`) is vendored in .claude/skills/grilling/ from github.com/mattpocock/skills at commit 85f83d3 (MIT).
+- ECC removed on 2026-10-04 (user decision): ECC 2.2.3 added about 45k tokens to every session and bundled an npx MCP server. Matt Pocock's skills plugin replaces it (about 1.6k tokens). Old skill copies are backed up in ~/.claude/backup-ecc-1.4.1/.
 - The cl100k_base encoding file is vendored in vendor/tiktoken/ (named by tiktoken's cache key) and tests/conftest.py sets TIKTOKEN_CACHE_DIR to it, so tests and CI never download it. tests/test_tokenizer_offline.py checks its hash and tokenizes with the network blocked.
 - Step 3c pipeline: `python -m ingest.corpus` (network) writes data/parsed/{accession_no}.json; `python -m ingest.load [--verify]` (offline) chunks and loads Postgres from those files and writes spikes/load_report.txt. Database tests run in a throwaway schema per session and skip without DATABASE_URL; a guard test fails in CI if it is unset.
 - Postgres schema (db/schema.sql) as approved, plus CHECKs on the chunk_id format, chunks.form_type and text_sha256 = sha256(parsed_text). apply_schema() fails with SchemaMismatch if live columns differ from the code. No sections table yet. Also accepted: the chunk_id CHECK pads with greatest(4, length) so ordinals over 9,999 are not truncated, and CHECKs on the accession_no pattern, filings.form_type, ordinal >= 0 and token_count >= 0.

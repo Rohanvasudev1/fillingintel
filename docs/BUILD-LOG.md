@@ -616,10 +616,35 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
 - **Setup.** The user chose to install Matt Pocock's `grilling` skill (the one `grill-me` calls) instead of removing `grill-me`, to do the ECC upgrade before Step 5, and to switch models in the app.
 - Recorded in CLAUDE.md Decisions, OPEN-DECISIONS, the RUNBOOK Step 4 amendment and the outcome section of `.claude/plans/step-4-grilling.md`.
 
+**Next session starts with**: superseded by the entry below.
+
+---
+
+## 2026-10-04 — ECC removed; Matt Pocock's skills run the workflow
+
+- **Why the ECC upgrade stopped.** ECC 2.2.3 was installed as `ecc@ecc` with the minimal hook profile. `claude plugin details` then showed two problems:
+  - it adds about 44,800 tokens to every session (387 skills, 68 agents);
+  - it bundles a `chrome-devtools` MCP server that runs `npx -y chrome-devtools-mcp@1.10.1`.
+- **What was done instead.** The user chose to remove ECC and adopt Matt Pocock's skills for the whole workflow.
+  - Both ECC plugins and their marketplaces were uninstalled.
+  - The 58 leftover 1.x skill copies were moved, not deleted, to `~/.claude/backup-ecc-1.4.1/skills/`.
+  - `mattpocock-skills` was installed from the official marketplace (v1.2.3, MIT, 25 skills). It adds about 1,600 tokens per session, has no hooks and no MCP servers.
+- **The repo copies of `grill-me` and `grilling` were removed**, because the plugin provides both and Matt's docs warn that two install routes duplicate every skill.
+- **The workflow (CLAUDE.md).** Each RUNBOOK step goes `/grill-with-docs` → `/to-spec` → `/to-tickets` → `/implement` (which drives `/tdd` and ends with `/code-review`), then ruff, pytest and the eval slice, then a BUILD-LOG entry.
+  - `/ask-matt` routes tasks that don't fit.
+  - Hard bugs go through `/diagnosing-bugs`, and `/research` replaces search-first.
+- **Setup (Matt's `setup-matt-pocock-skills`, applied by hand).**
+  - The issue tracker is local markdown under `.scratch/`, committed.
+  - Triage labels are the defaults.
+  - Domain docs are single-context (CONTEXT.md and docs/adr/, created when first needed).
+  - Config is in `docs/agents/`.
+- **Records are kept as before.** RUNBOOK, BUILD-LOG, OPEN-DECISIONS and CLAUDE.md Decisions are unchanged in role. New ADRs get a one-line pointer in Decisions. `.claude/plans/` and `.claude/skills/step-review` stay as history.
+- **The .md hook question is moot.** It was part of ECC, so there's no hook blocking new docs any more.
+
 **Next session starts with**
-1. The ECC upgrade: update command names in CLAUDE.md, then add `docs/` to the .md hook allowlist.
+1. Restart the session so the plugin changes load. Check that `/ask-matt` and `/grill-with-docs` are listed and that no `everything-claude-code` or `ecc` skills remain.
 2. The model switch, in the app's model picker (the user's setting).
-3. Step 5 (vector baseline and eval harness), against `docs/RESEARCH-PLAN.md`.
+3. Step 5 (vector baseline and eval harness) via `/grill-with-docs`, against `docs/RESEARCH-PLAN.md`.
 
 ---
 
