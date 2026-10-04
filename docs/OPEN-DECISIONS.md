@@ -3,18 +3,15 @@
 Decisions raised but not yet made, grouped by the step where each must be settled. When one is resolved, record it in CLAUDE.md Decisions and delete it here.
 
 ## After Step 3
-- Upgrade ECC to the current ecc@ecc plugin (single install method); update command names in CLAUDE.md. Run its context-budget check (not in ECC 1.4.1).
+- Upgrade ECC to the current ecc@ecc plugin (single install method); update command names in CLAUDE.md. Run its context-budget check (not in ECC 1.4.1). Afterwards, add `docs/` to the hook that blocks new .md files (agreed 2026-10-04; an edit to the 1.4.1 plugin cache would be overwritten by the upgrade).
 - Switch model: strongest available for planning and reviews, Sonnet-tier for implementation. Step 3 planning ran on Opus 5.5.
-- Install the `grilling` skill that `grill-me` calls, or remove `grill-me`.
 - Optional: pstack /arena for design comparisons at Steps 7 and 9.
 
 ## Step 4 — eval set and research design
-- Approve `docs/RESEARCH-PLAN.md`: the draft is in `.claude/plans/research-plan-draft.md`. An ECC hook blocks new .md files in docs/, so moving it needs the user's go-ahead. Settle it in a grilling session, using the decision list in `.claude/plans/step-4-grilling.md`.
 - Optional, at any point: review agent drafts with `python -m eval.review`, or write human questions. Any human records are reported in their own column next to the agent-drafted results.
-- The friend Ctrl-F test on five dev multi-hop drafts.
+- Optional, before the final benchmark: the friend Ctrl-F test on five dev multi-hop drafts (skipped on 2026-10-04).
 
 ## Steps 5–6 — eval harness
-- Proposal (not built): an external check of the vector arm on FinRank's pooled corpus (5,230 passages, CC BY-NC 4.0, github.com/datanxt/FinRank), against its published Recall@10 baselines. It adds a data source, so it needs the user's approval.
 - Calibrate LLM judges against ~60 hand-scored answers (Cohen's kappa); pin judge model versions; average 3 runs.
 - Bootstrap confidence intervals on every results cell; paired comparisons between arms.
 

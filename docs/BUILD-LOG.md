@@ -601,6 +601,28 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
 
 ---
 
+## 2026-10-04 — Step 4 grilling session: research plan approved
+
+- **The research plan is fixed.** It moved from `.claude/plans/research-plan-draft.md` to `docs/RESEARCH-PLAN.md`, dated and approved before any benchmark run. The thresholds stay as drafted.
+- **The sample-size problem, found before approval.** The `test` split holds only 4 cross-company multi-hop questions and 5 global ones. With so few, a 0.10 difference can't produce an interval that excludes 0, so H2 and H4 would have come out inconclusive whatever happened. The user chose:
+  - H2 covers all 7 `multi_hop` test questions, with cross-company as a secondary breakdown;
+  - any class with fewer than 10 `test` questions is reported as "directional", and counts as confirmed only when its interval excludes 0.
+- **H6 now has a fixed class-to-arm map**, so router accuracy can't be fitted to the results afterwards.
+- **Other decisions.**
+  - The 20 decline and unanswerable questions sit outside the RUNBOOK's 120.
+  - The FinRank corpus check is approved as an appendix result after the vector baseline.
+  - The friend Ctrl-F test was skipped and is listed as a threat to validity.
+- **The ECC hook.** The hook that blocks new .md files is in the ECC 1.4.1 plugin cache, and the planned upgrade would overwrite an edit there. The file moved with `git mv` instead, and `docs/` gets added to the allowlist after the upgrade.
+- **Setup.** The user chose to install Matt Pocock's `grilling` skill (the one `grill-me` calls) instead of removing `grill-me`, to do the ECC upgrade before Step 5, and to switch models in the app.
+- Recorded in CLAUDE.md Decisions, OPEN-DECISIONS, the RUNBOOK Step 4 amendment and the outcome section of `.claude/plans/step-4-grilling.md`.
+
+**Next session starts with**
+1. The ECC upgrade: update command names in CLAUDE.md, then add `docs/` to the .md hook allowlist.
+2. The model switch, in the app's model picker (the user's setting).
+3. Step 5 (vector baseline and eval harness), against `docs/RESEARCH-PLAN.md`.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.

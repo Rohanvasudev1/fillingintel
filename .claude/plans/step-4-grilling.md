@@ -10,3 +10,11 @@ These are the questions to settle with the user. Each has the assistant's recomm
 6. **Class counts.** The RUNBOOK targets 40/35/30/15, and the plan adds about 10 `decline` and about 10 `unanswerable`. Recommendation: keep the RUNBOOK's 120 for the four main classes, and treat the 20 edge cases as extra, outside the 120.
 7. **The FinRank external check** (Steps 5–6 proposal). Recommendation: yes, after the vector baseline, as an appendix result.
 8. **Setup items** (OPEN-DECISIONS "After Step 3"): the ECC upgrade, the model switch, and the `grilling` skill. Recommendation: upgrade ECC before Step 5. Switch the model in app settings: Opus for planning and reviews, Sonnet for implementation. Remove `grill-me` if the `grilling` skill stays uninstalled.
+
+## Outcome (2026-10-04 grilling session)
+1. Approved, with three changes: H2 covers all `multi_hop` questions, with cross-company as a secondary breakdown; classes with fewer than 10 `test` questions are reported as "directional"; H6 carries a fixed class-to-arm map. Thresholds kept as drafted.
+2. Moved with `git mv` to `docs/RESEARCH-PLAN.md`. The hook lives in the ECC 1.4.1 plugin cache, so the `docs/` allowlist change waits until after the ECC upgrade.
+5. Skipped for now; optional before the final benchmark.
+6. 120 in the four main classes, plus 20 extra.
+7. Yes, as an appendix after the vector baseline.
+8. See the BUILD-LOG entry for this date.
