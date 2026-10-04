@@ -1,0 +1,110 @@
+STEP 2b PRE-INVESTIGATION REPORT
+========================================================================
+
+[Fetching NVDA 10-K 0001045810-26-000021]
+  sections (24): ['part_i_item_1', 'part_i_item_1a', 'part_i_item_1b', 'part_i_item_1c', 'part_i_item_2', 'part_i_item_3', 'part_i_item_4', 'part_ii_item_5', 'part_ii_item_6', 'part_ii_item_7', 'part_ii_item_7a', 'part_ii_item_8', 'part_ii_item_9', 'part_ii_item_9a', 'part_ii_item_9b', 'part_ii_item_9c', 'part_iii_item_10', 'part_iii_item_11', 'part_iii_item_12', 'part_iii_item_13', 'part_iii_item_14', 'part_iv_item_15', 'part_iv_item_16', 'part_iv_signatures']
+
+[Fetching NVDA 10-Q 0001045810-26-000075]
+  sections (6): ['part_i_item_1', 'part_i_item_2', 'part_i_item_3', 'part_i_item_4', 'part_ii_item_5', 'part_ii_item_6']
+
+[Fetching AMD 10-K 0000002488-26-000018]
+  sections (24): ['part_i_item_1', 'part_i_item_1a', 'part_i_item_1b', 'part_i_item_1c', 'part_i_item_2', 'part_i_item_3', 'part_i_item_4', 'part_ii_item_5', 'part_ii_item_6', 'part_ii_item_7', 'part_ii_item_7a', 'part_ii_item_8', 'part_ii_item_9', 'part_ii_item_9a', 'part_ii_item_9b', 'part_ii_item_9c', 'part_iii_item_10', 'part_iii_item_11', 'part_iii_item_12', 'part_iii_item_13', 'part_iii_item_14', 'part_iv_item_15', 'part_iv_item_16', 'part_iv_signatures']
+
+[Fetching AMD 10-Q 0000002488-26-000123]
+  sections (7): ['part_i_item_1', 'part_i_item_2', 'part_i_item_3', 'part_i_item_4', 'part_i_item_8', 'part_ii_item_5', 'part_ii_item_6']
+
+[Fetching INTC 10-K 0000050863-26-000011]
+  sections (10): ['part_i_item_1a', 'part_i_item_1c', 'part_i_item_2', 'part_i_item_3', 'part_ii_item_5', 'part_ii_item_7a', 'part_ii_item_8', 'part_ii_item_9a', 'part_iii_item_10', 'part_iv_item_15']
+
+[Fetching INTC 10-Q 0000050863-26-000157]
+  sections (4): ['part_i_item_1', 'part_i_item_3', 'part_i_item_4', 'part_ii_item_6']
+
+========================================================================
+Q1: INTC 10-Q — why is Part I Item 2 (MD&A) missing?
+========================================================================
+  edgartools sections: ['part_i_item_1', 'part_i_item_3', 'part_i_item_4', 'part_ii_item_6']
+
+  --- Raw HTML probe: 'item 2' ---
+  raw HTML snippet (±1200 chars, tags stripped):
+  style="color:#262626;font-family:'Arial',sans-serif;font-size:9pt;font-weight:700;line-height:120%">Item 2. Management's Discussion and Analysis of Financial Condition and Results of Operations Results of operations Pages 30 <span style
+
+  --- Raw HTML probe: "management's discussion" ---
+  raw HTML snippet (±600 chars, tags stripped):
+  tyle="color:#0068b5;font-family:'Arial',sans-serif;font-size:10pt;font-weight:400;line-height:120%">Management's Discussion and Analysis (MD&amp;A) <span style="color:#262626;font-family:'Arial'
+
+  --- part_i_item_1 section text (first 400 chars) ---
+  Table of Contents Consolidated Condensed Statements of Operations Three Months Ended Six Months Ended (In Millions, Except Per Share Amounts; Unaudited) Jun 27, 2026 Jun 28, 2025 Jun 27, 2026 Jun 28, 2025 Net revenue $ 16,128 $ 12,859 $ 29,705 $ 25,526 Cost of sales 9,619 9,317 17,849 17,312 Gross profit 6,509 3,542 11,856 8,214 Research and development 3,368 3,684 6,743 7,324 Marketing, general, 
+
+========================================================================
+Q2: NVDA/AMD 10-Q — is Part II Item 1A heading present in raw HTML?
+========================================================================
+
+  --- NVDA 10-Q (0001045810-26-000075) ---
+  Probe: 'item 1a'
+  raw HTML snippet (±600 chars, tags stripped):
+  eight:400;line-height:100%;text-decoration:underline" href="#i8725ad8044894bb48e26a97380d776ff_301">Item 1A. Risk Factors <a style="color:#0000ff;font-family:'NVIDIA Sans',sans-serif;font-size:9pt;font-weig
+  Probe: 'risk factor'
+  raw HTML snippet (±400 chars, tags stripped):
+  "color:#000000;font-family:'NVIDIA Sans',sans-serif;font-size:9pt;font-weight:400;line-height:100%">Risk Factors <a style="color:#0000ff;font-family:'NVIDIA Sans',sans-serif;font-size:9pt;font-weight:400;line-height:100%;text-deco
+  edgartools sections: ['part_i_item_1', 'part_i_item_2', 'part_i_item_3', 'part_i_item_4', 'part_ii_item_5', 'part_ii_item_6']
+  part_ii_item_1a present: False
+  any item_1a keys: []
+
+  --- AMD 10-Q (0000002488-26-000123) ---
+  Probe: 'item 1a'
+  raw HTML snippet (±600 chars, tags stripped):
+  tyle="color:#000000;font-family:'Arial',sans-serif;font-size:10pt;font-weight:700;line-height:120%">ITEM 1A. RISK FACTORS The risks and uncertainties described below are not the only ones we face. If any of the following risks actually occurs, our business, financial condition or results of operations could be materially adversely affected. In addition, you should consider the interrelationship and compounding effects of two or more risks occurring simultaneously. <div style="margin-bottom:6pt
+  Probe: 'risk factor'
+  raw HTML snippet (±400 chars, tags stripped):
+  ont-weight:400;line-height:100%;text-decoration:none" href="#ife556d7738824547bcae3cf4cd842975_145">Risk Factors <a style="color:#0e32e1;font-family:'Arial',sans-serif;font-size:10pt;font-weight:400;line-height:100%;text-decoration:none" href="#ife556
+  edgartools sections: ['part_i_item_1', 'part_i_item_2', 'part_i_item_3', 'part_i_item_4', 'part_i_item_8', 'part_ii_item_5', 'part_ii_item_6']
+  part_ii_item_1a present: False
+  any item_1a keys: []
+
+========================================================================
+Q3: INTC 10-K Items 1A, 7, 8 — first/last 200 chars
+========================================================================
+  edgartools sections (10): ['part_i_item_1a', 'part_i_item_1c', 'part_i_item_2', 'part_i_item_3', 'part_ii_item_5', 'part_ii_item_7a', 'part_ii_item_8', 'part_ii_item_9a', 'part_iii_item_10', 'part_iv_item_15']
+
+  --- part_i_item_1a ---
+  FIRST 200: The following summarizes what we believe to be the material factors that make an investment in our securities speculative or risky. When any one or more of the following risks materialize from time to
+  LAST  200:  restrictions could harm our business and results of operations by increasing our expenses or requiring us to alter manufacturing and assembly and test processes. Risk Factors 51 Other Key Information
+
+  --- part_ii_item_7 ---
+  FIRST 200: [EMPTY]
+  LAST  200: (section < 200 chars)
+
+  --- part_ii_item_8 ---
+  FIRST 200: Financial Statements and Supplemental Details We have defined certain terms and abbreviations used throughout our Form 10-K in "Key Terms" within this section. Index to Consolidated Financial Statemen
+  LAST  200:  common stock under the 2006 ESPP totaled $31 million. We expect to recognize those costs over a period of approximately two months. Financial Statements Notes to Consolidated Financial Statements 101
+
+  Note: INTC 10-K returned only 10 sections. Missing vs NVDA/AMD 24-section set:
+  Missing from INTC 10-K: ['part_i_item_1', 'part_i_item_1b', 'part_i_item_4', 'part_ii_item_6', 'part_ii_item_7', 'part_ii_item_9', 'part_ii_item_9b', 'part_ii_item_9c', 'part_iii_item_11', 'part_iii_item_12', 'part_iii_item_13', 'part_iii_item_14', 'part_iv_item_16', 'part_iv_signatures']
+
+  Probe 'incorporated by reference' found: ...:#262626;font-family:'Arial',sans-serif;font-size:8.5pt;font-weight:700;line-height:120%">DOCUMENTS INCORPORATED BY REFERENCE Portions of the re...
+
+========================================================================
+Q4: Tables — one example per ticker (from section text)
+========================================================================
+
+  --- NVDA (0001045810-26-000021 / part_ii_item_8) ---
+  Total tables in doc: 64
+  Table #0 type: TableNode
+  str() first 400 chars: TableNode(id='463a9f4c-cba6-41d9-ac19-a8847819c8cb', type=<NodeType.TABLE: 5>, content=None, metadata={'relationships_extracted': True, 'has_tail_whitespace': True}, style=Style(font_size=None, font_weight=None, font_style=None, font_family=None, text_align=None, text_decoration=None, color=None, background_color=None, margin_top=None, margin_bottom=6.665, margin_left=None, margin_right=None, padd
+  .rows (first 2): [Row(cells=[Cell(content='', colspan=1, rowspan=1, is_header=False, align=None), Cell(content='', colspan=1, rowspan=1, is_header=False, align=None), Cell(content='', colspan=1, rowspan=1, is_header=False, align=None), Cell(content='', colspan=1, rowspan=1, is_header=False, align=None), Cell(content='', colspan=1, rowspan=1, is_header=False, align=None), Cell(content='', colspan=1, rowspan=1, is_header=False, align=None)], is_header=False)]
+
+  --- AMD (0000002488-26-000018 / part_ii_item_8) ---
+  Total tables in doc: 69
+  Table #0 type: TableNode
+  str() first 400 chars: TableNode(id='93db01da-5980-4d24-8796-19be664b3220', type=<NodeType.TABLE: 5>, content=None, metadata={'relationships_extracted': True, 'has_tail_whitespace': True}, style=Style(font_size=None, font_weight=None, font_style=None, font_family=None, text_align=None, text_decoration=None, color=None, background_color=None, margin_top=None, margin_bottom=6.665, margin_left=None, margin_right=None, padd
+  .rows (first 2): [Row(cells=[Cell(content='', colspan=1, rowspan=1, is_header=False, align=None), Cell(content='', colspan=1, rowspan=1, is_header=False, align=None), Cell(content='', colspan=1, rowspan=1, is_header=False, align=None), Cell(content='', colspan=1, rowspan=1, is_header=False, align=None), Cell(content='', colspan=1, rowspan=1, is_header=False, align=None), Cell(content='', colspan=1, rowspan=1, is_header=False, align=None)], is_header=False), Row(cells=[Cell(content='', colspan=3, rowspan=1, is_header=False, align=None), Cell(content='OR', colspan=3, rowspan=1, is_header=False, align='center')], is_header=False)]
+
+  --- INTC (0000050863-26-000011 / part_ii_item_8) ---
+  Total tables in doc: 287
+  Table #0 type: TableNode
+  str() first 400 chars: TableNode(id='ab0c47ad-44f0-4611-be53-6740a14af807', type=<NodeType.TABLE: 5>, content=None, metadata={'relationships_extracted': True, 'has_tail_whitespace': True}, style=Style(font_size=None, font_weight=None, font_style=None, font_family=None, text_align=None, text_decoration=None, color=None, background_color=None, margin_top=None, margin_bottom=6.665, margin_left=None, margin_right=None, padd
+  .rows (first 2): [Row(cells=[Cell(content='', colspan=1, rowspan=1, is_header=False, align=None), Cell(content='', colspan=1, rowspan=1, is_header=False, align=None), Cell(content='', colspan=1, rowspan=1, is_header=False, align=None)], is_header=False), Row(cells=[Cell(content='', colspan=3, rowspan=1, is_header=False, align=None)], is_header=False)]
+
+========================================================================
+END OF INVESTIGATION
+========================================================================

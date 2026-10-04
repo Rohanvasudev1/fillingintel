@@ -29,3 +29,7 @@ venv/
 
 # Agent draft slices: intermediate files, merged into eval/agent_drafted_set.jsonl
 eval/drafts/
+
+# coverage.py data
+.coverage
+.coverage.*
