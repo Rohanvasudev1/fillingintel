@@ -25,7 +25,7 @@ Matt Pocock's skills (plugin `mattpocock-skills`, official marketplace) run the 
 1. `/grill-with-docs` with me. It records the vocabulary in CONTEXT.md and hard-to-reverse decisions as ADRs in docs/adr/. Add a one-line pointer to each new ADR under Decisions below.
 2. `/to-spec` into `.scratch/step-<N>/spec.md`, then `/to-tickets` into `.scratch/step-<N>/issues/`. Write any instructions I gave in chat into the spec. Wait for my approval before implementing. Keep steps 1–2 in one context window.
 3. `/implement` one ticket at a time, clearing context between tickets. It drives `/tdd`: for deterministic logic, show each test failing before writing the code.
-4. `/code-review` before each commit. The Spec axis checks the ticket, the step spec, the RUNBOOK step and docs/OPEN-DECISIONS.md. For SQL or Cypher, the Standards axis also checks injection safety, indexes and constraints. Fix every finding, or report why it can't be fixed. Never resolve a finding by weakening an acceptance check.
+4. Matt's code review before each commit: invoke `mattpocock-skills:code-review` by that full name, including when `/implement` says `/code-review`. Never use Claude Code's built-in `/code-review`, which has the same short name but reviews only for bugs, with no Standards or Spec axis. The Spec axis checks the ticket, the step spec, the RUNBOOK step and docs/OPEN-DECISIONS.md. For SQL or Cypher, the Standards axis also checks injection safety, indexes and constraints. Fix every finding, or report why it can't be fixed. Never resolve a finding by weakening an acceptance check.
 5. Verify: `uv run ruff check .`, `uv run --env-file .env pytest`, and the relevant eval slice.
 6. Append a dated entry to docs/BUILD-LOG.md, ending with a "Next session starts with" note. Stop and report.
 Hard bugs go through `/diagnosing-bugs`. Use `/research` before writing integration code for edgartools, LangGraph, Ragas, DeepEval or graph drivers; its notes go in docs/research/.
@@ -72,11 +72,11 @@ Files changed; evidence (tests, eval results with commit); regressions; decision
 - Corpus manifest: the two most recent complete fiscal years per ticker, each a 10-K plus the three 10-Qs with the same fiscal_period year (24 filings). A year is complete once its 10-K is filed.
 - Financial statements: when Item 8 is only a pointer (NVIDIA: "set forth in" Item 15), part_iv_item_15 holds the statements. A required section under 2,000 chars is a failure unless it is this verified pointer case.
 - Fiscal period: derive_fiscal_period(), confirmed against XBRL dei tags on all 6 spike filings.
-- Embedding model: chosen in Step 5. Step 3 creates no vector column.
+- Embedding model: voyage-4-large, chosen in Step 5. See ADR-0002.
 - Step 3 runs as three sub-steps, one session each: 3a table spans, 3b chunker, 3c Postgres load and resolve(). Plan: .claude/plans/step-3.md.
 - Tables are located by their position in the parsed text (runs of `|` lines), not by matching edgartools tables by label. The chunk path does not use ParsedTable.section_key or doc.tables.
-- Chunk tokens are counted with tiktoken cl100k_base until Step 5 picks the embedding model. Each chunk stores its tokenizer name.
-- The preamble is chunked with section 'preamble'. Step 5 decides whether to embed it.
+- The chunker counts tokens with tiktoken cl100k_base, and each chunk stores its tokenizer name. chunk_embeddings also stores the token count Voyage reports.
+- The preamble is chunked with section 'preamble' and embedded like any other chunk (ADR-0002).
 - Chunk IDs are deterministic ({accession_no}:{ordinal:04d}) and each chunk stores chunker_version. Chunker settings are frozen before Step 4 writes gold chunk IDs.
 - Postgres schema for Step 3: a filings table (metadata, full parsed text, financial_statements_section) and a chunks table, from db/schema.sql. resolve() takes substr of the filing text; chunk text is not stored separately.
 - ECC removed on 2026-10-04 (user decision): ECC 2.2.3 added about 45k tokens to every session and bundled an npx MCP server. Matt Pocock's skills plugin replaces it (about 1.6k tokens). Old skill copies are backed up in ~/.claude/backup-ecc-1.4.1/.
@@ -94,4 +94,21 @@ Files changed; evidence (tests, eval results with commit); regressions; decision
 - Research plan: docs/RESEARCH-PLAN.md, approved 2026-10-04. Its hypotheses, thresholds and class-to-arm map are fixed; changes need a dated amendment in that file. Classes with fewer than 10 test questions are reported as "directional". The 20 decline and unanswerable questions sit outside the RUNBOOK's 120.
 - Chunk coverage means every non-whitespace character of every section is in at least one chunk; whitespace between chunks and at section edges may be left out.
 - CI makes no network calls; pytest-socket allows localhost only. Parser and chunker tests use the gzipped real filings in tests/fixtures/, rebuilt from data/raw by scripts/build_fixtures.py.
+- ADR-0001 (docs/adr/0001-question-filters-from-question-text.md): the parser reads company, period and form filters from the question text, never from eval labels.
+- ADR-0002 (docs/adr/0002-chunk-embeddings-table-exact-search.md): voyage-4-large embeddings go in a separate chunk_embeddings table. Search is exact, truncation is off, and the preamble is embedded.
+- Step 5 models and scope (grilling, 2026-10-04):
+  - Step 5 scores `dev` only. Scoring `test` needs an explicit `--final`.
+  - claude-sonnet-5-5 writes answers at temperature 0 and claude-opus-5-5 judges them. Config pins both IDs and each run records them. Judged metrics carry the label "uncalibrated" until judge calibration.
+  - Approved dependencies: anthropic, ragas and deepeval. Voyage calls go through httpx. LangGraph waits for Step 13. /research on the Ragas and DeepEval Claude adapters comes first.
+- Step 5 harness (grilling, 2026-10-04):
+  - eval.run checks VOYAGE_API_KEY and ANTHROPIC_API_KEY at start. pytest stays offline and replays recorded API responses.
+  - `python -m ingest.embed` needs the network and embeds the chunks. A disk cache keyed by model and text hash holds query embeddings.
+  - The vector arm retrieves the top 10 and passes all 10 to the answer model. Metrics are scored at 5 and 10.
+  - Each answer sentence cites `[chunk_id]`. A deterministic step drops and counts sentences with no citation or with a citation outside the retrieved chunks. Citation validity has a deterministic structural part and a judged support part.
+  - The answer prompt declines advice and says when the filings lack the evidence. A judge scores both behaviours, and they get their own rows until the router exists in Step 13.
+  - Context recall, precision and the wrong-evidence rate come from chunk IDs, with no LLM. Ragas gives faithfulness and relevancy. DeepEval faithfulness is a second opinion, and /research confirms its role.
+  - The answer model runs once per question. Each judge runs 3 times, and the report shows the mean and spread. Bootstrap 95% intervals use a fixed seed.
+  - Each run writes benchmarks/runs/{date}-{arm}-{split}-{commit}.json with a provenance header, cells keyed by arm and class, and per-question records. Cost comes from a dated price table in config. Only the baseline run goes into git.
+  - The control arm gives multi-company questions a plain top 10. A per-company quota would be a separate, labelled ablation.
+  - The answer prompt lives in prompts/answer/v1.md. Any edit creates a new version. The run header records the prompt version and hash, and the Ragas and DeepEval versions.
 - docs/design/filingintel-demo.html is a layout reference only. Its tickers, question categories and numbers are placeholders; RUNBOOK is the source of truth.
