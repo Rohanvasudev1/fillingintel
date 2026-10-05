@@ -762,7 +762,7 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
   - Not changed: the Anthropic and Voyage clients share a shape (`from_env`, context manager), and so do the two caches' read checks. Merging them would couple two vendor clients for a few lines each. `ArmResult` keeps its flat fields, which tickets 03 and 04 already use. Costs stay plain dicts because they are written to JSON as-is.
   - Spec findings fixed: a retrieval latency stage (embed plus search, fresh query embeddings only), an arm-level not-found test, and a note that the cache key includes `max_tokens`.
   - Spec finding rejected: the reviewer read Opus 5.5's $0.20 cache read as a mistake. The pricing page gives 0.05x for Opus 5.5.
-- **Decision for the user.** The fixed decline and not-found sentences carry no citation. Invariant 3 says uncited sentences are dropped. The decline sentence makes no claim about the filings. The not-found sentence makes a claim about what was retrieved, not about the filings' content. Recommendation: accept both as system statements and add a CLAUDE.md Decisions line saying so, so the exception is on record.
+- **Decision for the user.** The fixed decline and not-found sentences carry no citation. Invariant 3 says uncited sentences are dropped. The decline sentence makes no claim about the filings. The not-found sentence makes a claim about what was retrieved, not about the filings' content. Recommendation: accept both as system statements and add a CLAUDE.md Decisions line saying so, so the exception is on record. Settled 2026-10-05, as recommended; recorded in CLAUDE.md Decisions.
 
 - **Later the same day.** The user added an API key (a plain key; workload identity federation was considered and left for Step 6, in case CI ever calls the API live) and recorded real responses.
   - q0072: answered, 2 sentences, both kept, giving 22% and 14% as in the gold answer. 12,378 input and 158 output tokens, $0.026, 3.7 s.
@@ -772,8 +772,7 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
   - Four tests had hard-coded the placeholders' numbers. They now take their expected values from the recording; each checks the same behaviour as before. 1009 passed, 1 skipped.
 
 **Next session starts with**
-1. Settle the invariant 3 decision above.
-2. `/implement .scratch/step-5/issues/06-wrong-evidence-and-statistics.md`.
+1. `/implement .scratch/step-5/issues/06-wrong-evidence-and-statistics.md`.
 
 ---
 
