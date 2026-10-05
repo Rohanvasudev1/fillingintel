@@ -94,7 +94,8 @@ Files changed; evidence (tests, eval results with commit); regressions; decision
 - Research plan: docs/RESEARCH-PLAN.md, approved 2026-10-04. Its hypotheses, thresholds and class-to-arm map are fixed; changes need a dated amendment in that file. Classes with fewer than 10 test questions are reported as "directional". The 20 decline and unanswerable questions sit outside the RUNBOOK's 120.
 - Chunk coverage means every non-whitespace character of every section is in at least one chunk; whitespace between chunks and at section edges may be left out.
 - CI makes no network calls; pytest-socket allows localhost only. Parser and chunker tests use the gzipped real filings in tests/fixtures/, rebuilt from data/raw by scripts/build_fixtures.py.
-- ADR-0001 (docs/adr/0001-question-filters-from-question-text.md): the parser reads company, period and form filters from the question text, never from eval labels.
+- tests/fixtures/corpus_filings.json holds the 24 corpus filings' metadata only (no text), generated from data/parsed by scripts/build_fixtures.py, so the question filter tests run in CI. A test checks it against data/parsed when present. It is derived data, not a hand-written fixture.
+- ADR-0001 (docs/adr/0001-question-filters-from-question-text.md): the parser reads company, period and form filters from the question text, never from eval labels. Refinements of 2026-10-05: periods outside the corpus are ignored, a fourth quarter or a shared-word period list sets no period, and an empty selection means no filter.
 - ADR-0002 (docs/adr/0002-chunk-embeddings-table-exact-search.md): voyage-4-large embeddings go in a separate chunk_embeddings table. Search is exact, truncation is off, and the preamble is embedded.
 - Step 5 models and scope (grilling, 2026-10-04):
   - Step 5 scores `dev` only. Scoring `test` needs an explicit `--final`.
