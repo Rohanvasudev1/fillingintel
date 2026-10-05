@@ -114,4 +114,7 @@ Files changed; evidence (tests, eval results with commit); regressions; decision
   - Each run writes benchmarks/runs/{date}-{arm}-{split}-{commit}.json with a provenance header, cells keyed by arm and class, and per-question records. Cost comes from a dated price table in config. Only the baseline run goes into git.
   - The control arm gives multi-company questions a plain top 10. A per-company quota would be a separate, labelled ablation.
   - The answer prompt lives in prompts/answer/v1.md. Any edit creates a new version. The run header records the prompt version and hash, and the Ragas version.
+- Step 5 embeddings (ticket 02, user decision 2026-10-05):
+  - `python -m ingest.embed` sends one chunk per Voyage request, so each row stores the token count Voyage reports for that chunk.
+  - `chunk_embeddings` references `chunks` with ON DELETE CASCADE. Rerunning `ingest.load` drops the vectors of reloaded filings, and the next `ingest.embed` re-embeds them. A later change may make `load_filing` skip unchanged filings.
 - docs/design/filingintel-demo.html is a layout reference only. Its tickers, question categories and numbers are placeholders; RUNBOOK is the source of truth.

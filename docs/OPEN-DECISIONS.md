@@ -13,8 +13,6 @@ Decisions raised but not yet made, grouped by the step where each must be settle
 ## Steps 5–6 — eval harness
 - Calibrate LLM judges against ~60 hand-scored answers (Cohen's kappa); pin judge model versions; average 3 runs.
 - Bootstrap confidence intervals on every results cell; paired comparisons between arms.
-- Embeddings on reload (raised 2026-10-05, ticket 02). Rerunning `ingest.load` deletes and reinserts each filing's chunks, and `ON DELETE CASCADE` drops their vectors, so the next `ingest.embed` re-embeds the whole corpus. Recommendation: keep the cascade, and later make `load_filing` skip a filing whose text hash and chunk offsets are unchanged. The alternative, `ON DELETE RESTRICT` with an explicit delete, only moves the same step elsewhere.
-- Embed batch size 1 (raised 2026-10-05, ticket 02). The spec says "batches"; one chunk per request is the only way to store the token count Voyage reports for each chunk. Recommendation: accept it. The alternative is multi-text batches with only the batch total stored, which needs a schema change.
 
 ## Step 7 — ontology
 - Add Supplier and Competitor node types so cross-company questions are answerable by traversal.
