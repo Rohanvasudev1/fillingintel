@@ -13,11 +13,13 @@ import os
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
+from functools import partial
 from pathlib import Path
 from statistics import fmean
 from typing import get_args
 
-from eval import answer_report, filter_report, operational
+from eval import answer_report, bootstrap, filter_report, operational, wrong_evidence
+from eval.bootstrap import RngFor, interval_rng, is_directional, mean_interval
 from eval.metrics import DEFINITIONS, METRIC_KS, precision_at_k, recall_at_k
 from eval.question_sets import QuestionSet
 from eval.schema import Class, EvalRecord
@@ -51,30 +53,57 @@ def score(record: EvalRecord, result: ArmResult) -> dict[str, float]:
     }
 
 
-def _retrieval_metrics(scored: Sequence[Mapping[str, float]]) -> dict[str, object]:
+def hard_negative_hits(outcome: Outcome) -> tuple[wrong_evidence.WrongEvidenceHit, ...]:
+    """The hard negatives that ranked above a gold chunk or were cited, for one question."""
+    result = outcome.result
+    return wrong_evidence.wrong_evidence_hits(
+        outcome.record,
+        [r.chunk_id for r in result.retrieved],
+        wrong_evidence.cited_in(result.answer),
+    )
+
+
+def _retrieval_metrics(
+    scored: Sequence[Mapping[str, float]], rng_for: RngFor
+) -> dict[str, object]:
     if not any(scored):
-        return {"metrics": {}, "note": NO_GOLD_NOTE}
-    return {"metrics": {m: fmean(s[m] for s in scored) for m in scored[0]}}
-
-
-def _cell(outcomes: Sequence[Outcome]) -> dict[str, object]:
-    results = [o.result for o in outcomes]
+        return {"metrics": {}, "intervals": {}, "note": NO_GOLD_NOTE}
+    names = list(scored[0])
     return {
-        "n": len(outcomes),
-        **_retrieval_metrics([score(o.record, o.result) for o in outcomes]),
-        "answers": answer_report.answer_cell([r.answer for r in results]),
-        "latency_ms": operational.latency_cell(results),
-        "cost_usd": operational.cost_cell(results),
+        "metrics": {m: fmean(s[m] for s in scored) for m in names},
+        "intervals": {m: mean_interval([s[m] for s in scored], rng_for(m)) for m in names},
     }
 
 
-def build_cells(outcomes: Sequence[Outcome], arm: str) -> dict[str, dict[str, dict[str, object]]]:
-    """``cells[question_set][arm][class]``: count and mean metrics, classes in schema order."""
+def _cell(outcomes: Sequence[Outcome], rng_for: RngFor) -> dict[str, object]:
+    results = [o.result for o in outcomes]
+    return {
+        "n": len(outcomes),
+        "directional": is_directional(len(outcomes)),
+        **_retrieval_metrics([score(o.record, o.result) for o in outcomes], rng_for),
+        "wrong_evidence": wrong_evidence.wrong_evidence_cell(
+            [(o.record, hard_negative_hits(o)) for o in outcomes], rng_for),
+        "answers": answer_report.answer_cell([r.answer for r in results], rng_for),
+        "latency_ms": operational.latency_cell(results, rng_for),
+        "cost_usd": operational.cost_cell(results, rng_for),
+    }
+
+
+def build_cells(
+    outcomes: Sequence[Outcome], arm: str, seed: int
+) -> dict[str, dict[str, dict[str, object]]]:
+    """``cells[question_set][arm][class]``: counts, metrics and intervals, classes in schema order.
+
+    Each interval's generator is seeded by *seed* and the interval's set, arm, class and metric.
+    """
     cells: dict[str, dict[str, dict[str, object]]] = {}
     for set_name in dict.fromkeys(o.question_set for o in outcomes):
         in_set = [o for o in outcomes if o.question_set == set_name]
         by_class = {
-            cls: _cell([o for o in in_set if o.record.class_ == cls])
+            cls: _cell(
+                [o for o in in_set if o.record.class_ == cls],
+                partial(interval_rng, seed, set_name, arm, cls),
+            )
             for cls in CLASS_ORDER
             if any(o.record.class_ == cls for o in in_set)
         }
@@ -104,6 +133,10 @@ def question_record(outcome: Outcome) -> dict[str, object]:
         "embed_tokens": result.embed_tokens,
         "cost_usd": operational.question_cost(result),
         "metrics": score(record, result),
+        "wrong_evidence": (
+            [wrong_evidence.hit_record(h) for h in hard_negative_hits(outcome)]
+            if wrong_evidence.has_hard_negatives(record) else None
+        ),
         "answer": answer_report.answer_record(result.answer),
     }
 
@@ -132,6 +165,8 @@ def build_header(
         "split": run.split,
         "final": run.final,
         "seed": run.seed,
+        "bootstrap": {"resamples": bootstrap.BOOTSTRAP_RESAMPLES,
+                      "confidence": bootstrap.CONFIDENCE},
         "models": dict(config.models),
         "efforts": dict(config.efforts),
         "answer_prompt": {
@@ -154,8 +189,9 @@ def build_header(
             }
             for s in question_sets
         ],
-        "metric_definitions": (DEFINITIONS | filter_report.DEFINITIONS
-                               | answer_report.DEFINITIONS | operational.DEFINITIONS),
+        "metric_definitions": (DEFINITIONS | wrong_evidence.DEFINITIONS
+                               | filter_report.DEFINITIONS | answer_report.DEFINITIONS
+                               | operational.DEFINITIONS | bootstrap.DEFINITIONS),
     }
 
 

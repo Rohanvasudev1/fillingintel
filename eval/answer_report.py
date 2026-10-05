@@ -10,6 +10,7 @@ from collections import Counter
 from collections.abc import Sequence
 from dataclasses import asdict
 
+from eval.bootstrap import RngFor, ratio_interval
 from retrieve.answer import Answer
 
 DEFINITIONS = {
@@ -50,8 +51,11 @@ def answer_record(answer: Answer) -> dict[str, object]:
     }
 
 
-def answer_cell(answers: Sequence[Answer]) -> dict[str, object]:
-    """Status counts, dropped sentences and structural citation validity over *answers*."""
+def answer_cell(answers: Sequence[Answer], rng_for: RngFor) -> dict[str, object]:
+    """Status counts, dropped sentences and structural citation validity over *answers*.
+
+    The two ratios get bootstrap intervals; *rng_for* gives the generator for a metric name.
+    """
     checks = [a.citation_check for a in answers]
     sentences = sum(c.sentences for c in checks)
     dropped = [d.reason for c in checks for d in c.dropped]
@@ -69,4 +73,11 @@ def answer_cell(answers: Sequence[Answer]) -> dict[str, object]:
         "refused": sum(a.status == "refused" for a in answers),
         "truncated": sum(a.stop_reason == "max_tokens" for a in answers),
         "replayed_from_cache": sum(a.from_cache for a in answers),
+        "intervals": {
+            "dropped_share": ratio_interval(
+                [(len(c.dropped), c.sentences) for c in checks], rng_for("dropped_share")),
+            "structural_citation_validity": ratio_interval(
+                [(c.citations_retrieved, c.citations) for c in checks],
+                rng_for("structural_citation_validity")),
+        },
     }

@@ -34,7 +34,7 @@ from retrieve.arm import Arm, ArmError, ArmSpec
 from retrieve.arms import ARMS
 
 RUNS_DIR = REPO_ROOT / "benchmarks" / "runs"
-SEED = 20261005  # recorded in every header; the bootstrap (ticket 06) draws from it
+SEED = 20261005  # recorded in every header; seeds every bootstrap interval
 PROGRESS_EVERY = 10
 EXIT_USAGE = 2
 EXIT_RUN_ERROR = 3
@@ -112,7 +112,7 @@ def main(
     filters = build_filter_report(outcomes)
     document = {
         "header": build_header(run, config, sets),
-        "cells": build_cells(outcomes, args.arm),
+        "cells": build_cells(outcomes, args.arm, SEED),
         "filter_report": filters,
         "questions": [question_record(o) for o in outcomes],
     }

@@ -8,10 +8,11 @@ table in the header, so a replayed answer still shows what it cost to produce.
 """
 from __future__ import annotations
 
-import math
 from collections.abc import Sequence
+from functools import partial
 from statistics import fmean
 
+from eval.bootstrap import RngFor, bootstrap_interval, mean_interval, percentile
 from retrieve.arm import ArmResult
 
 PERCENTILES = (("p50", 0.50), ("p95", 0.95))
@@ -29,32 +30,29 @@ DEFINITIONS = {
 }
 
 
-def percentile(values: Sequence[float], q: float) -> float:
-    """The *q* quantile (0 to 1) of *values*, interpolating linearly between closest ranks."""
+def _stats(values: Sequence[float], stage: str, rng_for: RngFor) -> dict[str, object]:
     if not values:
-        raise ValueError("no values")
-    if not 0.0 <= q <= 1.0:
-        raise ValueError(f"q must be between 0 and 1, got {q}")
-    ordered = sorted(values)
-    position = (len(ordered) - 1) * q
-    low, high = math.floor(position), math.ceil(position)
-    return ordered[low] + (ordered[high] - ordered[low]) * (position - low)
+        return ({"n": 0} | {name: None for name, _ in PERCENTILES}
+                | {"intervals": {name: None for name, _ in PERCENTILES}})
+    return (
+        {"n": len(values)}
+        | {name: percentile(values, q) for name, q in PERCENTILES}
+        | {"intervals": {
+            name: bootstrap_interval(values, partial(percentile, q=q),
+                                     rng_for(f"latency_ms.{stage}.{name}"))
+            for name, q in PERCENTILES
+        }}
+    )
 
 
-def _stats(values: Sequence[float]) -> dict[str, float | int | None]:
-    if not values:
-        return {"n": 0} | {name: None for name, _ in PERCENTILES}
-    return {"n": len(values)} | {name: percentile(values, q) for name, q in PERCENTILES}
-
-
-def latency_cell(results: Sequence[ArmResult]) -> dict[str, dict[str, float | int | None]]:
-    """p50 and p95 latency per stage over *results*."""
+def latency_cell(results: Sequence[ArmResult], rng_for: RngFor) -> dict[str, dict[str, object]]:
+    """p50 and p95 latency per stage over *results*, each with a bootstrap interval."""
     fresh = [r for r in results if not r.query_cached]
     return {
-        "retrieval": _stats([r.retrieval_ms for r in fresh]),
-        "embed": _stats([r.embed_ms for r in fresh]),
-        "search": _stats([r.search_ms for r in results]),
-        "generation": _stats([r.answer.generation_ms for r in results]),
+        "retrieval": _stats([r.retrieval_ms for r in fresh], "retrieval", rng_for),
+        "embed": _stats([r.embed_ms for r in fresh], "embed", rng_for),
+        "search": _stats([r.search_ms for r in results], "search", rng_for),
+        "generation": _stats([r.answer.generation_ms for r in results], "generation", rng_for),
     }
 
 
@@ -67,12 +65,18 @@ def question_cost(result: ArmResult) -> dict[str, float]:
     }
 
 
-def cost_cell(results: Sequence[ArmResult]) -> dict[str, float]:
-    """Mean USD per question per stage, and the cell's total."""
+_PER_QUERY = {"per_query_embedding": "embedding", "per_query_generation": "generation",
+              "per_query_total": "total"}
+
+
+def cost_cell(results: Sequence[ArmResult], rng_for: RngFor) -> dict[str, object]:
+    """Mean USD per question per stage with bootstrap intervals, and the cell's total."""
     costs = [question_cost(r) for r in results]
     return {
-        "per_query_embedding": fmean(c["embedding"] for c in costs),
-        "per_query_generation": fmean(c["generation"] for c in costs),
-        "per_query_total": fmean(c["total"] for c in costs),
+        **{name: fmean(c[stage] for c in costs) for name, stage in _PER_QUERY.items()},
         "total": sum(c["total"] for c in costs),
+        "intervals": {
+            name: mean_interval([c[stage] for c in costs], rng_for(f"cost_usd.{name}"))
+            for name, stage in _PER_QUERY.items()
+        },
     }

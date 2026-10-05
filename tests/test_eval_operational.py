@@ -1,7 +1,7 @@
 """Percentiles for the latency report (Step 5 ticket 05)."""
 import pytest
 
-from eval.operational import percentile
+from eval.bootstrap import percentile
 
 
 def test_percentiles_interpolate_between_the_closest_ranks():

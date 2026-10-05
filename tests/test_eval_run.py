@@ -30,13 +30,15 @@ REPO = Path(__file__).resolve().parents[1]
 _ALL = {r.id: r for r in load_records(REPO / "eval" / "agent_drafted_set.jsonl")}
 DEV_IDS = ["q0072", "q0073", "q0113", "q0028", "q0004", "q0011"]  # lookup x2, multi_hop, global,
 TEST_ID = "q0001"                                                  # decline, unanswerable
+TEN_DEV_LOOKUPS = ["q0072", "q0073", "q0074", "q0077", "q0079", "q0080", "q0081", "q0083",
+                   "q0084", "q0085"]
 TODAY = date(2026, 10, 5)
 KEY_ENV = "FAKE_ARM_KEY"
 FILINGS = corpus_filings()
 NVDA_FY2025_10K = "0001045810-25-000023"  # q0072's gold is in NVIDIA's FY2026 10-K
 EMBED_MODEL, ANSWER_MODEL = "voyage-4-large", "claude-sonnet-5-5"
 EMBED_TOKENS = 10
-NOT_RETRIEVED = "0000050863-25-000010:0005"
+NOT_RETRIEVED = _ALL["q0073"].hard_negatives[0].chunk_id  # q0073 cites it unretrieved
 RECORDED = load("answered_q0072")["response"]
 GENERATION_COST = anthropic_cost(ANSWER_MODEL, parse_reply(RECORDED).usage)
 
@@ -430,7 +432,9 @@ def test_cells_report_structural_citation_validity_and_dropped_sentences(eval_di
 def test_cells_report_p50_and_p95_latency_per_stage(eval_dir, tmp_path, env):
     _, _, runs, run = _setup(eval_dir, tmp_path)
     run()
-    latency = _result(runs)["cells"]["agent_drafted"]["fake"]["lookup"]["latency_ms"]
+    latency = {stage: {k: v for k, v in stats.items() if k != "intervals"}
+               for stage, stats in
+               _result(runs)["cells"]["agent_drafted"]["fake"]["lookup"]["latency_ms"].items()}
     # generation 1000 and 3000 ms: p50 2000, p95 1000 + 0.95 * 2000 = 2900
     assert latency["generation"] == pytest.approx({"n": 2, "p50": 2000.0, "p95": 2900.0})
     assert latency["search"] == pytest.approx({"n": 2, "p50": 10.0, "p95": 10.0})
@@ -442,7 +446,8 @@ def test_cells_report_p50_and_p95_latency_per_stage(eval_dir, tmp_path, env):
 def test_cells_report_mean_cost_per_query(eval_dir, tmp_path, env):
     _, _, runs, run = _setup(eval_dir, tmp_path)
     run()
-    cost = _result(runs)["cells"]["agent_drafted"]["fake"]["lookup"]["cost_usd"]
+    cost = dict(_result(runs)["cells"]["agent_drafted"]["fake"]["lookup"]["cost_usd"])
+    cost.pop("intervals")  # checked in test_latency_and_cost_carry_bootstrap_intervals
     embed_cost = embedding_cost(EMBED_MODEL, EMBED_TOKENS)
     assert cost == pytest.approx({
         "per_query_embedding": embed_cost,
@@ -450,3 +455,119 @@ def test_cells_report_mean_cost_per_query(eval_dir, tmp_path, env):
         "per_query_total": embed_cost + GENERATION_COST,
         "total": 2 * (embed_cost + GENERATION_COST),
     })
+
+
+def test_cells_report_the_wrong_evidence_rate_overall_and_per_hard_negative_label(
+    eval_dir, tmp_path, env
+):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run()
+    cells = _result(runs)["cells"]["agent_drafted"]["fake"]
+    # lookup: q0072's negative is neither retrieved nor cited; q0073 cites its negative
+    lookup = cells["lookup"]["wrong_evidence"]
+    assert (lookup["n"], lookup["wrong"], lookup["rate"]) == (2, 1, 0.5)
+    assert lookup["interval"] == pytest.approx({"low": 0.0, "high": 1.0, "resamples": 10_000})
+    (label,) = lookup["by_relation"]
+    assert label == "same_company_other_period"
+    fields = ("n", "wrong", "rate", "share_of_wrong")
+    assert {k: lookup["by_relation"][label][k] for k in fields} == {
+        "n": 2, "wrong": 1, "rate": 0.5, "share_of_wrong": 1.0}
+    # multi_hop: q0113's first negative ranks first, above both gold chunks, and is cited
+    multi_hop = cells["multi_hop"]["wrong_evidence"]
+    assert (multi_hop["n"], multi_hop["wrong"], multi_hop["rate"]) == (1, 1, 1.0)
+    # global: q0028's two negatives (one per label) are neither retrieved nor cited
+    global_ = cells["global"]["wrong_evidence"]
+    assert (global_["n"], global_["wrong"], global_["rate"]) == (1, 0, 0.0)
+    assert {k: v["wrong"] for k, v in global_["by_relation"].items()} == {
+        "same_company_other_period": 0, "same_company_same_filing": 0}
+    # no wrong questions, so no label has a share of them
+    assert global_["by_relation"]["same_company_other_period"]["share_of_wrong"] is None
+    assert cells["decline"]["wrong_evidence"] == {
+        "n": 0, "wrong": 0, "rate": None, "interval": None, "by_relation": {}}
+
+
+def test_each_question_record_lists_its_wrong_evidence(eval_dir, tmp_path, env):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run()
+    records = {q["id"]: q for q in _result(runs)["questions"]}
+    negative = _ALL["q0113"].hard_negatives[0].chunk_id
+    assert records["q0113"]["wrong_evidence"] == [{
+        "chunk_id": negative, "relation": "same_company_other_period", "rank": 1,
+        "above_gold": True, "cited": True,
+    }]
+    assert records["q0073"]["wrong_evidence"] == [{
+        "chunk_id": NOT_RETRIEVED, "relation": "same_company_other_period", "rank": None,
+        "above_gold": False, "cited": True,
+    }]
+    assert records["q0072"]["wrong_evidence"] == []
+    assert records["q0004"]["wrong_evidence"] is None  # decline: no hard negatives
+
+
+def test_every_cell_metric_carries_a_bootstrap_interval(eval_dir, tmp_path, env):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run()
+    cells = _result(runs)["cells"]["agent_drafted"]["fake"]
+    # lookup: per-question values are q0072's and q0073's, so each interval spans the two
+    intervals = cells["lookup"]["intervals"]
+    assert {m: (i["low"], i["high"]) for m, i in intervals.items()} == pytest.approx({
+        "recall@5": (0.0, 1.0), "precision@5": (0.0, 0.2),
+        "recall@10": (0.0, 1.0), "precision@10": (0.0, 0.1),
+    })
+    # one question: a zero-width interval at its value
+    assert cells["multi_hop"]["intervals"]["recall@5"] == pytest.approx(
+        {"low": 0.5, "high": 0.5, "resamples": 10_000})
+    # answer ratios resample (numerator, denominator) per question: q0072 dropped 0 of 2
+    # sentences and cited 2 of 2 retrieved; q0073 dropped 2 of 3 and cited 1 of 2
+    answers = cells["lookup"]["answers"]["intervals"]
+    assert (answers["dropped_share"]["low"], answers["dropped_share"]["high"]) == pytest.approx(
+        (0.0, 4 / 6))
+    validity = answers["structural_citation_validity"]
+    assert (validity["low"], validity["high"]) == pytest.approx((0.5, 1.0))
+    assert cells["decline"]["intervals"] == {}
+    assert cells["decline"]["answers"]["intervals"]["structural_citation_validity"] is None
+
+
+def test_intervals_are_reproducible_under_the_recorded_seed(eval_dir, tmp_path, env):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run()
+    run()
+    first, second = (json.loads(p.read_text()) for p in sorted(runs.glob("*.json")))
+    assert first["header"]["seed"] == second["header"]["seed"]
+    assert first["header"]["bootstrap"] == {"resamples": 10_000, "confidence": 0.95}
+    assert first["cells"] == second["cells"]
+
+
+def test_classes_under_ten_scored_records_are_labelled_directional(tmp_path, env):
+    directory = tmp_path / "eval"
+    dump_records([_ALL[i] for i in [*TEN_DEV_LOOKUPS, "q0113", "q0004"]],
+                 directory / "agent_drafted_set.jsonl")
+    (directory / "eval_set.jsonl").write_text("", encoding="utf-8")
+    _, _, runs, run = _setup(directory, tmp_path)
+    run()
+    cells = _result(runs)["cells"]["agent_drafted"]["fake"]
+    assert {cls: (c["n"], c["directional"]) for cls, c in cells.items()} == {
+        "lookup": (10, False), "multi_hop": (1, True), "decline": (1, True)}
+
+
+def test_the_header_defines_wrong_evidence_and_the_intervals(eval_dir, tmp_path, env):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run()
+    definitions = _result(runs)["header"]["metric_definitions"]
+    assert {"wrong_evidence", "interval", "directional"} <= set(definitions)
+
+
+def test_latency_and_cost_carry_bootstrap_intervals(eval_dir, tmp_path, env):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run()
+    cell = _result(runs)["cells"]["agent_drafted"]["fake"]["lookup"]
+    # generation 1000 and 3000 ms: resamples give p50 and p95 of 1000 (both 1000),
+    # 3000 (both 3000) or between, so both intervals run from 1000 to 3000
+    generation = cell["latency_ms"]["generation"]["intervals"]
+    assert {q: (i["low"], i["high"]) for q, i in generation.items()} == pytest.approx(
+        {"p50": (1000.0, 3000.0), "p95": (1000.0, 3000.0)})
+    # only one question made its query embedding in this run: zero width
+    assert cell["latency_ms"]["embed"]["intervals"]["p95"]["low"] == pytest.approx(40.0)
+    # both questions cost the same, so every cost interval has zero width
+    total = embedding_cost(EMBED_MODEL, EMBED_TOKENS) + GENERATION_COST
+    interval = cell["cost_usd"]["intervals"]["per_query_total"]
+    assert (interval["low"], interval["high"]) == pytest.approx((total, total))
