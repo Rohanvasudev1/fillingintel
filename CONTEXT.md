@@ -64,3 +64,13 @@ _Avoid_: baseline, when meaning the arm rather than a result
 **Question filter**:
 The company, period and form-type constraints an arm derives from the question text alone, never from an eval record's labels.
 _Avoid_: metadata filter, gold filter
+
+## Checks
+
+**Quality gate**:
+The CI check on every pull request that fails the build when the control arm's retrieval scores fall below the committed gate baseline. It scores retrieval only, offline; answer and judge scores are checked by hand.
+_Avoid_: eval gate, regression test
+
+**Gate baseline**:
+The committed retrieval scores the quality gate compares against. It changes only by a deliberate update in a pull request, never to get a failing one through.
+_Avoid_: baseline, when meaning the baseline run of the eval harness

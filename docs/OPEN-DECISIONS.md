@@ -14,6 +14,9 @@ Decisions raised but not yet made, grouped by the step where each must be settle
 - Calibrate LLM judges against ~60 hand-scored answers (Cohen's kappa); pin judge model versions; average 3 runs.
 - Bootstrap confidence intervals on every results cell; paired comparisons between arms.
 
+## After the first graph arm
+- `benchmarks/results.md`: ARCHITECTURE.md says CI regenerates it. Deferred at the Step 6 grilling (2026-10-06): decide whether a local command or CI writes it once there is more than one arm to compare.
+
 ## Step 7 — ontology
 - Add Supplier and Competitor node types so cross-company questions are answerable by traversal.
 
