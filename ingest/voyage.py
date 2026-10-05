@@ -12,6 +12,7 @@ exception message or a returned value.
 """
 from __future__ import annotations
 
+import logging
 import math
 import os
 import time
@@ -33,6 +34,7 @@ _RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
 _ERROR_BODY_CHARS = 300
 
 InputType = Literal["query", "document"]
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -168,7 +170,10 @@ class VoyageClient:
                 return outcome
             if attempt == MAX_ATTEMPTS:
                 raise VoyageError(f"gave up after {MAX_ATTEMPTS} attempts; last: {outcome.problem}")
-            self._sleep(outcome.wait if outcome.wait is not None else delay)
+            wait = outcome.wait if outcome.wait is not None else delay
+            logger.warning("attempt %d of %d failed (%s); retrying in %.0f s",
+                           attempt, MAX_ATTEMPTS, outcome.problem, wait)
+            self._sleep(wait)
             delay *= 2
         raise AssertionError("unreachable")
 

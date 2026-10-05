@@ -159,6 +159,23 @@ def test_retry_after_from_the_server_sets_the_wait():
     assert waits == [7.0, 4.0]  # server's 7 s, then the doubled default on an unreadable header
 
 
+def test_each_retry_is_logged_with_its_reason_and_wait(caplog):
+    recorded = json.loads(RECORDED.read_text())
+    responses = iter([
+        httpx.Response(429, headers={"Retry-After": "7"}, json={"detail": "TPM limit"}),
+        httpx.Response(200, json=recorded),
+    ])
+    client = VoyageClient(
+        api_key=FAKE_KEY,
+        http=httpx.Client(transport=httpx.MockTransport(lambda _r: next(responses))),
+        sleep=lambda _seconds: None,
+    )
+    with caplog.at_level("WARNING", logger="ingest.voyage"):
+        client.embed_document("x", MODEL)
+    assert "HTTP 429" in caplog.text and "TPM limit" in caplog.text and "7" in caplog.text
+    assert FAKE_KEY not in caplog.text
+
+
 def test_client_closes_its_connection_pool_on_exit():
     http = httpx.Client(transport=httpx.MockTransport(Replay()))
     with VoyageClient(api_key=FAKE_KEY, http=http):
