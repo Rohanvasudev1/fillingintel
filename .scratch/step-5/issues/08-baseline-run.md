@@ -7,9 +7,9 @@
 **Status:** ready-for-human
 
 - [x] Cost estimate from current Voyage and Anthropic prices, approved by the user before the run (2026-10-05: about $28–42 per full run, $55–85 for the baseline plus the repeat)
-- [ ] Cost estimate redone with the judge chosen in ticket 10 and approved by the user before the run (the 2026-10-05 estimate assumed the Opus judge)
+- [x] Cost estimate redone with the judge chosen in ticket 10 and approved by the user before the run (the 2026-10-05 estimate assumed the Opus judge). Approved 2026-10-05: about $3.20 for the baseline and $3.50 for the uncached repeat, $5–10 with margin, from the spot check's measured $0.030 per answer and $0.0073 per question for 3 luna `medium` judge runs
 - [x] 2,144 rows in chunk_embeddings (checked 2026-10-05)
-- [ ] filter-excluded-gold is 0 on dev
+- [ ] filter-excluded-gold is 0 on dev (`test_the_filter_excludes_no_dev_gold_chunk` passes, 2026-10-05; still to confirm in the run's own filter report)
 - [ ] One uncached repeat run of the dev questions, with the score change between the two runs recorded
 - [ ] The baseline results file is committed with its commit and config
 - [ ] BUILD-LOG entry records the multi-hop number as the "before", labelled "agent-drafted questions" and "uncalibrated" where judged
