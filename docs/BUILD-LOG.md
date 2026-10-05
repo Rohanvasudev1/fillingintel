@@ -916,6 +916,46 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
 **Next session starts with**
 1. `/implement .scratch/step-5/issues/08-baseline-run.md` with `gpt-6-luna` at `medium` and the 10,000 cap.
 
+## 2026-10-05 — Step 5 ticket 08: the vector baseline (the "before")
+
+- **What ran.** The user ran `python -m ingest.embed` (0 embedded, 2,144 current, $0), then `python -m eval.run --arm vector --split dev`, then the same command with `--uncached`. Both runs are at commit 96e8c69: Sonnet answers at effort `high`, the gpt-6-luna judge at `medium` with a 10,000-token output cap, 3 judge runs, bootstrap seed 20261005.
+  - The baseline file `benchmarks/runs/2026-10-05-vector-dev-96e8c69.json` is committed (forced past the `benchmarks/runs/*` ignore rule, the only run in git).
+  - The repeat file `2026-10-05-vector-dev-96e8c69-2.json` stays local.
+- **Gate.** Filter-excluded-gold is 0 over the 93 dev questions, in the run's own filter report and in `test_the_filter_excludes_no_dev_gold_chunk`. Filter exact match is 0.81 (companies 0.99, periods 0.82).
+- **The first attempt stopped on a rate limit (fixed, 96e8c69).** Eight concurrent judge jobs went over gpt-6-luna's 200,000 tokens per minute. One request used up the SDK's six 429 retries, and the run stopped with no results file. The user chose to lower `JUDGE_WORKERS` from 8 to 4. Two barrier tests pin it: 4 jobs can meet at once, 5 never can. The "never five" test failed with the count at 8. Concurrency is in no cache key, so the rerun replayed the 93 answers and 742 judge replies the first attempt had cached. The uncached repeat at 4 workers got no 429s.
+- **Baseline** (commit 96e8c69; agent-drafted questions; judged scores uncalibrated; 95% bootstrap intervals in brackets):
+
+  | class | n | recall@5 | recall@10 | wrong evidence | faithfulness | relevancy | citation support | dropped share |
+  |---|---|---|---|---|---|---|---|---|
+  | lookup | 27 | 0.89 | 1.00 | 0/27 | 0.99 | 0.87 | 0.94 | 0.05 |
+  | local | 22 | 0.93 | 0.98 | 0/22 | 0.98 | 0.74 | 0.97 | 0.06 |
+  | multi_hop | 23 | 0.62 | **0.72** [0.54, 0.87] | 3/23 | 0.94 | 0.79 | 0.97 | 0.14 |
+  | global | 10 | 0.59 | 0.80 [0.63, 0.95] | 2/10 | 0.79 | 0.78 | 0.97 | 0.14 |
+  | decline (directional) | 6 | – | – | – | all 6 declined, decline correct 1.00 | | | 0 |
+  | unanswerable (directional) | 5 | – | – | – | all 5 not_found, not-found correct 1.00 | | | 0.32 |
+
+  Structural citation validity is 1.00 in every class: every cited chunk ID was among the retrieved chunks. No answer was truncated or refused, and no judge run failed.
+- **The "before".** Multi-hop recall@10 is **0.72** [0.54, 0.87] on 23 agent-drafted dev questions. The plain vector top 10 finds every gold chunk on lookups, but on multi-hop questions it misses about a quarter of the gold chunks. In 3 of 23 multi-hop questions a hard negative outranks a gold chunk or is cited. The interval is wide because n is 23.
+- **Run-to-run change (uncached repeat minus baseline).**
+  - Retrieval, wrong evidence, statuses and the filter report are identical. Retrieval is deterministic, and every answer took the same status.
+  - Judged means (uncalibrated) move by at most 0.031 per class: global faithfulness 0.787 → 0.756, local relevancy 0.744 → 0.768, multi-hop faithfulness 0.944 → 0.957, multi-hop citation support 0.975 → 0.963. Every other move is under 0.015.
+  - Dropped share moves by up to 0.032 (global 0.137 → 0.169, lookup 0.054 → 0.022), because Sonnet writes different sentences each time.
+  - So a judged difference under about 0.03 between arms is within run-to-run noise for one run each. Retrieval differences are not subject to this noise.
+- **Cost.** About $6.80 in all, inside the approved $5–10.
+  - Baseline: about $3.25. Answers $2.84 nominal, of which the 10 spot-check answers ($0.30) replayed. Judge $0.70 for 1,509 calls, split across the failed attempt and the rerun with nothing paid twice.
+  - Repeat: $3.52 (answers $2.83, judge $0.69).
+  - Reasoning tokens: 278,169 of 666,983 judge output tokens.
+  - Per query: about $0.03 for the answer and $0.007 for three judge runs.
+- **Evidence.** 1156 passed, 1 skipped (the documented NVIDIA pointer section), with the database. `ruff` is clean.
+- **Review (`mattpocock-skills:code-review`, on the worker change).**
+  - Standards: the first concurrency test asserted a timing-dependent peak. It was replaced by the two barrier tests. The comment now keeps the 429-retry note and drops the dated incident, which lives here instead.
+  - Spec: no findings. Concurrency changes no score, cache key or header field, and the spec asks for no worker count in the header.
+- **Step 5 stop condition met.** `eval.run --arm vector` produces a scored results file, and the multi-hop "before" is written down.
+
+**Next session starts with**
+1. Step 6 (CI quality gate): `/grill-with-docs` on the ~40-question CI subset, the regression thresholds against this baseline, and Phoenix tracing.
+2. Open leads carried over: INTC FY2025 10-K headcount and capex table missing from chunks; NVDA Q3 FY2026 table header duplicated; judge calibration against hand scores before any judged number loses "uncalibrated".
+
 ---
 
 ## Findings worth telling
