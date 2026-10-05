@@ -680,6 +680,40 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
 
 ---
 
+## 2026-10-05 — Step 5 ticket 03: a retrieval-only scored run
+
+- **Built (6be335b).** `python -m eval.run --arm vector` embeds each question with input type `query` and caches the vector on disk, keyed by model and text hash (`data/cache/query_embeddings/`). It retrieves the top 10 chunks by exact cosine similarity with no filter, scores recall and precision at 5 and 10 from chunk IDs, and writes `benchmarks/runs/{date}-{arm}-{split}-{commit}.json`. Git ignores that directory.
+  - One arm interface (`retrieve/arm.py`) and a registry (`retrieve/arms.py`). The harness passes only the question text to the arm (ADR-0001).
+  - `dev` is the default split. `test` needs `--final`, and `--final` without `test` is refused. Missing env vars stop the run before the arm opens.
+  - `eval_set.jsonl` is read only when it has records, and its results go in their own column. Each file must hold only records of its own provenance, or the run stops.
+  - The vector arm refuses to start if any chunk lacks a current vector. Postgres recomputes the text hash for this check.
+  - Latency is recorded as query embedding plus search, with a cache-hit flag. Otherwise cached reruns would report near-zero embedding time and skew p95 (Spec review finding).
+  - `git_state()` now also treats untracked files in `eval/`, `retrieve/` and `prompts/` as dirty. Without this, a run that used a new uncommitted harness module would claim a clean commit.
+- **Definitions.** recall@k = gold chunks in the top k / gold chunks. precision@k = gold chunks in the top k / k, even when fewer than k come back. Both definitions are written into each results header.
+- **First run, retrieval only (agent-drafted questions, dev, commit 6be335b, voyage-4-large, k = 10, chunker_version 1, no filter, eval set SHA-256 cd536eea22d5…).**
+
+  | class | n | recall@5 | precision@5 | recall@10 | precision@10 |
+  |---|---|---|---|---|---|
+  | lookup | 27 | 0.704 | 0.141 | 0.889 | 0.089 |
+  | local | 22 | 0.795 | 0.182 | 0.932 | 0.109 |
+  | multi_hop | 23 | 0.478 | 0.200 | 0.616 | 0.130 |
+  | global | 10 | 0.325 | 0.200 | 0.483 | 0.150 |
+  | decline | 6 | — | — | — | — |
+  | unanswerable | 5 | — | — | — | — |
+
+  This run has no filter and no answers, and the numbers have no intervals yet, so it is not the baseline. Multi-hop recall@10 is 0.62 against 0.89 to 0.93 on lookup and local. Search takes about 8 ms (p50). The first uncached run took 33 s for 93 questions, mostly Voyage calls; a rerun makes none.
+- **Evidence.** 878 passed, 1 skipped (the old pointer skip). `ruff` is clean. New tests: `test_eval_metrics.py` (hand-computed values on q0113 and q0028), `test_query_cache.py`, `test_vector_arm.py` (test schema, vectors at known angles), `test_eval_run.py` (fake arm) and two provenance tests on a throwaway git repo. Each new test was seen failing first.
+- **Review (`mattpocock-skills:code-review`).**
+  - Standards findings fixed: an unhandled write error after the run (now exit 3 with a message), a copied SHA-256 helper, the arm name written twice, the eval file read twice (the hash and the records now come from one read), a mutation-style loop in `score`, and an inline import in a test.
+  - Not changed: the corpus check stays in `VectorArm.__init__`, because failing before the first question is the point. `_run_arm` keeps a local list because it logs progress as it goes. `results_path` keeps its parameters because the date isn't part of `RunInfo`.
+  - Spec findings: the latency split above was done. The join to `chunks` is left for ticket 04, which needs it for the filter. The vector arm requires `VOYAGE_API_KEY` and `DATABASE_URL`; ticket 05 must add `ANTHROPIC_API_KEY` to its `required_env`, as the Step 5 harness decision says.
+- **Decision for the user.** The CLAUDE.md line on `git_state()` still lists only `ingest/`, `db/`, `tests/` and `scripts/`. Recommendation: update it to include `eval/`, `retrieve/` and `prompts/`, as the code now does.
+
+**Next session starts with**
+1. `/implement .scratch/step-5/issues/04-question-filter.md`.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.
