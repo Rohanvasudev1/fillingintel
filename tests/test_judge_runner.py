@@ -1,9 +1,11 @@
 """The judge runner's ordering and failure handling, and the judged report's edge cases."""
 import random
+from dataclasses import replace
 from types import MappingProxyType
 
 import pytest
 
+from eval.judging.openai_backend import OpenAIUsage
 from eval.judging.report import judged_cell, question_judged
 from eval.judging.runner import JudgedQuestion, JudgeRunError, _GuardedJudges, judge_all
 from eval.judging.scoring import JudgeConfig, RunScores
@@ -55,3 +57,14 @@ def test_a_missing_run_is_reported_as_no_value_not_a_crash():
     cell = judged_cell([partial], 3, lambda name: random.Random(name))
     assert cell["metrics"]["faithfulness"]["run_means"] == [0.5, None, 0.7]
     assert cell["cost_usd"] == pytest.approx({"total": 0.02, "per_query": 0.02})
+
+
+def test_usage_totals_report_reasoning_tokens_separately():
+    usage = OpenAIUsage(input_tokens=1000, cached_input_tokens=200, cache_write_tokens=0,
+                        output_tokens=300, reasoning_tokens=250)
+    runs = tuple(replace(_scores(run, 0.5), usage=usage) for run in (1, 2, 3))
+    expected = {"input_tokens": 3000, "cached_input_tokens": 600, "cache_write_tokens": 0,
+                "output_tokens": 900, "reasoning_tokens": 750}
+    assert question_judged(JudgedQuestion(runs), runs=3)["usage"] == expected
+    cell = judged_cell([JudgedQuestion(runs)] * 2, 3, lambda name: random.Random(name))
+    assert cell["usage"] == {k: 2 * v for k, v in expected.items()}

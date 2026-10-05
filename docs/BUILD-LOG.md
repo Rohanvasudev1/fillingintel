@@ -842,6 +842,41 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
 **Next session starts with**
 1. `/implement .scratch/step-5/issues/08-baseline-run.md`.
 
+
+## 2026-10-05 — Step 5 ticket 09: the judge moves to gpt-6-luna
+
+- **What changed.** Every judged metric now scores through `gpt-6-luna` on OpenAI's Responses API. The Opus judge class, its tests, its fixtures and the Opus price row are deleted; the Sonnet answer model is untouched. New modules:
+  - `eval/judging/openai_backend.py`: `OpenAIResponsesModel` (behind the existing response cache), the reply parser and token usage;
+  - `eval/judging/openai_judge.py`: `OpenAIJudge`, a Ragas `InstructorBaseRagasLLM` subclass.
+- **The request.** A strict `json_schema` text format built by the SDK's strict transform, `reasoning.effort` `medium`, `max_output_tokens` 25,000, `store=false`, and no `temperature`, `top_p` or `seed`. Schema fields keep their declared order, so reasons come before verdicts.
+- **Failures.**
+  - A refusal, an `incomplete` reply or JSON that fails the schema raises `JudgeReplyError`, recorded against that one metric.
+  - A `failed` or unfinished response, an API or network error, or a cache error stops the run.
+  - Authentication errors never quote the API's message, because it echoes part of the key.
+- **Keys.** `eval.run` checks `OPENAI_API_KEY` at start and refuses to start while `OPENAI_BASE_URL` is set; `from_env` refuses it too and pins the address to `https://api.openai.com/v1`. `.env.example` lists an empty `OPENAI_API_KEY`.
+- **Cache keys.** OpenAI judge keys hash `"provider": "openai"` with the request. The Anthropic answer key is unchanged: a test pins its pre-change hash, and the recorded answer fixtures still replay.
+- **Cost and usage.** `openai_cost` bills cached input at the cached rate and reasoning as output. The price table has dated rows for `gpt-6-luna` ($0.10 / $0.01 cached / $0.125 cache write / $0.50 per MTok) and `gpt-6-sol` ($2.00 / $0.20 / $2.50 / $10.00), read from OpenAI's pricing page on 2026-10-05. Judge tokens are reported per question, per cell and for the whole run (`judge_usage` in the results file), with reasoning tokens apart. The header records provider, model, effort, output cap and the openai SDK version.
+- **Dependency.** `openai==3.3.0` is a direct dependency (user-approved). The lock gained two lines and changed no versions.
+- **First live call.** `scripts/capture_judge_responses.py` recorded judge run 1 on the three recorded answers (8 luna calls, about $0.002 in all). openai 3.3.0 works with `gpt-6-luna`. On q0072, luna used 472 reasoning tokens of 1,142 output tokens across six calls, far below the 25,000 cap; the two verdict calls used 0 and 27. Scores: q0072 faithfulness 0.8, relevancy 0.955, citation support 1.0 (Opus: 1.0, 0.971, 1.0); q0005 decline correct; q0011 not-found correct. Luna marked one of five statements unsupported where Opus accepted all five. That is one question, not a finding; ticket 10's spot check is the comparison.
+- **Problems met.**
+  - The first capture failed to replay: `model_dump` writes the request format's `schema` field as `schema_`, so the stored body no longer validated. The backend now stores `to_dict()`, which keeps the API's names, and a test checks the round trip.
+  - Docker Desktop could not start (a second copy was running from the mounted installer image during an update). Postgres was down, so the capture script now reuses the committed `inputs.json` and queries Postgres only when it is missing. The script also scans the recorded files for key and organisation ID patterns and fails if one appears.
+  - The first OpenAI key in `.env` was rejected (HTTP 401); the user replaced it.
+- **Evidence.** 1120 passed, 1 skipped (the documented NVIDIA pointer section), with the database. `ruff` is clean. New or rewritten tests:
+  - `test_judge_openai.py` (19): request shape, field order, cache keys, reply errors, failed status, a pinned strict schema;
+  - `test_openai_backend.py` (13): body round trip, API and auth errors, key and base-URL handling, reply parsing, `openai_cost`, price rows, `import openai` with sockets blocked;
+  - `test_judge_replay.py`: replays the recorded luna and Voyage responses offline;
+  - harness tests in `test_eval_run.py` for the base-URL refusal, the header and the run-wide usage.
+  - The request-shape tests first failed on the missing module. To show they test something, each was rerun against a deliberately broken request (a `temperature`, `store=true`, sorted schema keys, no provider in the key), and each failed.
+- **Review (`mattpocock-skills:code-review`).**
+  - Standards findings fixed: a golden test and a comment for the private SDK import `openai.lib._pydantic`; "Messages API" docstrings in `retrieve/answer_model.py` and `retrieve/response_cache.py` now name both providers; the pricing protocol renamed to `OpenAIReportedUsage` so it no longer shares the dataclass's name; model mismatch logged at warning, as for Anthropic; `total_usage` written as a plain sum.
+  - Standards findings not changed: `OpenAIResponsesModel` repeats the client lifecycle, timing and error wrapping of `AnthropicAnswerModel`. Sharing them means editing the answer model, which this ticket keeps untouched. Worth a small refactor later. The base-URL refusal sits in both `eval.run` and `from_env`, kept as defence in depth.
+  - Spec findings fixed: a run-wide usage total; a `failed` or `cancelled` response now stops the run instead of counting against one metric; CLAUDE.md now says pyproject pins the SDK and config records its version.
+- **Corrected ticket 07 cost.** The ticket 07 entry above says about $10 to $15 per dev run with Opus. The recorded Opus responses show about $0.10 per judge run on an answerable question, so about $0.30 per question over three runs and about $25 per graded dev run (docs/research/openai-luna-judge.md, section 1.4). With luna at the recorded usage, a dev run's judging comes to about $0.52 (82 answerable × 3 runs × $0.0021, plus the decline and unanswerable runs).
+
+**Next session starts with**
+1. `/implement .scratch/step-5/issues/10-judge-spot-check.md`. Ticket 08 (the baseline) waits for its result.
+
 ---
 
 ## Findings worth telling

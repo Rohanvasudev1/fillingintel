@@ -29,7 +29,7 @@ socket.getaddrinfo = _blocked
 import os
 assert os.environ["RAGAS_DO_NOT_TRACK"] == "false"  # inherited; the package must override it
 
-from eval.judging.scoring import ClaudeJudges, JudgeInput
+from eval.judging.scoring import JudgeInput
 from ragas._analytics import do_not_track
 from tests.test_judge_scoring import ANSWERED, QUESTION, SOURCES, _judges, _replies
 from tests.judge_fakes import ScriptedBackend

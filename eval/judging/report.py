@@ -11,10 +11,12 @@ carries the label "uncalibrated" until judge calibration is done.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import asdict
 from statistics import fmean
 
 from eval.bootstrap import RngFor, mean_interval
-from eval.judging.claude import JUDGE_RUNS
+from eval.judging.openai_backend import total_usage
+from eval.judging.openai_judge import JUDGE_RUNS
 from eval.judging.runner import JudgedQuestion
 from eval.judging.scoring import RELEVANCY_STRICTNESS, UNCALIBRATED, RunScores
 
@@ -44,9 +46,14 @@ DEFINITIONS = {
         "judge / kept sentences; skipped when no sentence was kept"
     ),
     "judged_cost_usd": (
-        "what judging cost (Opus judge calls plus Voyage embeddings for answer relevancy), "
+        "what judging cost (OpenAI judge calls plus Voyage embeddings for answer relevancy), "
         "over all runs; an evaluation cost, kept out of the operational cost_usd, which is "
         "what answering a question costs"
+    ),
+    "judge_usage": (
+        "judge tokens over all runs as OpenAI reported them, replayed calls included: "
+        "input_tokens includes cached_input_tokens and cache_write_tokens; output_tokens "
+        "includes reasoning_tokens, which are shown separately and billed as output"
     ),
     "decline_correct": "decline records: 1 if the judge finds the answer declined to advise",
     "not_found_correct": (
@@ -85,6 +92,10 @@ def _totals(runs: Sequence[RunScores]) -> dict[str, float | int]:
             "replayed": sum(r.replayed for r in runs)}
 
 
+def _usage(runs: Sequence[RunScores]) -> dict[str, int]:
+    return asdict(total_usage(r.usage for r in runs))
+
+
 def _summary(values: Sequence[float | None]) -> dict[str, object]:
     return {"runs": list(values), "mean": _mean(values), "spread": _spread(values)}
 
@@ -94,6 +105,12 @@ def _errors(judged: JudgedQuestion) -> list[dict[str, object]]:
             for r in judged.runs for metric, error in r.errors.items()]
 
 
+def run_judge_usage(judged: Sequence[JudgedQuestion]) -> dict[str, float | int]:
+    """Judge calls, cost and tokens over the whole run, reasoning tokens shown apart."""
+    runs = [r for j in judged for r in j.runs]
+    return {**_totals(runs), **_usage(runs)}
+
+
 def question_judged(judged: JudgedQuestion, runs: int) -> dict[str, object]:
     """One question's judge runs, their mean and spread per metric, errors and cost."""
     return {
@@ -101,6 +118,7 @@ def question_judged(judged: JudgedQuestion, runs: int) -> dict[str, object]:
         "metrics": {m: _summary(_values(judged, m, runs)) for m in _metric_names([judged])},
         "errors": _errors(judged),
         **_totals(judged.runs),
+        "usage": _usage(judged.runs),
     }
 
 
@@ -122,7 +140,8 @@ def _metric_cell(judged: Sequence[JudgedQuestion], metric: str, runs: int,
 def judged_cell(judged: Sequence[JudgedQuestion], runs: int,
                 rng_for: RngFor) -> dict[str, object]:
     """The cell's judged metrics, labelled uncalibrated, with the judges' errors and cost."""
-    totals = _totals([r for j in judged for r in j.runs])
+    all_runs = [r for j in judged for r in j.runs]
+    totals = _totals(all_runs)
     return {
         "label": UNCALIBRATED,
         "runs": runs,
@@ -130,6 +149,7 @@ def judged_cell(judged: Sequence[JudgedQuestion], runs: int,
         "errors": sum(len(r.errors) for j in judged for r in j.runs),
         "calls": totals["calls"],
         "replayed": totals["replayed"],
+        "usage": _usage(all_runs),
         "cost_usd": {"total": totals["cost_usd"],
                      "per_query": totals["cost_usd"] / len(judged) if judged else None},
     }

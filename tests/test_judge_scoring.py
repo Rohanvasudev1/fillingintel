@@ -8,14 +8,16 @@ import math
 
 import pytest
 
-from eval.judging.claude import JUDGE_MODEL
-from eval.judging.scoring import ClaudeJudges, JudgeInput, metrics_for
+from eval.judging.openai_backend import parse_openai_reply, total_usage
+from eval.judging.openai_judge import JUDGE_MODEL
+from eval.judging.scoring import JudgeInput, RagasJudges, metrics_for
 from retrieve.answer import write_answer
-from retrieve.answer_model import ApiResponse, parse_reply
+from retrieve.answer_model import ApiResponse
 from retrieve.answer_prompt import SourceChunk, load_prompt
-from retrieve.pricing import anthropic_cost, embedding_cost
+from retrieve.pricing import embedding_cost, openai_cost
 from tests.anthropic_fixtures import load, with_text
-from tests.judge_fakes import RECORDED, FixedEmbedder, ScriptedBackend, schema_title
+from tests.judge_fakes import FixedEmbedder, ScriptedBackend, prompt_of, schema_title
+from tests.openai_fixtures import RECORDED, with_refusal
 
 FIXTURE = load("answered_q0072")
 QUESTION = FIXTURE["question"]
@@ -30,7 +32,7 @@ EMBED_TOKENS = 5
 
 class _Replay:
     def __init__(self, text: str):
-        self._response = ApiResponse(with_text(RECORDED, text), 1.0)
+        self._response = ApiResponse(with_text(FIXTURE["response"], text), 1.0)
 
     def complete(self, request) -> ApiResponse:
         return self._response
@@ -67,7 +69,7 @@ def _replies(**overrides) -> dict:
 
 def _judges(backend, vectors=None):
     vectors = vectors or {QUESTION: (1.0, 0.0), GENERATED: (0.6, 0.8)}
-    return ClaudeJudges(backend, FixedEmbedder(vectors, tokens=EMBED_TOKENS))
+    return RagasJudges(backend, FixedEmbedder(vectors, tokens=EMBED_TOKENS))
 
 
 def _item(answer=ANSWERED, class_="lookup") -> JudgeInput:
@@ -95,7 +97,7 @@ def test_hand_computed_scores_for_an_answered_question():
 def test_faithfulness_judges_the_kept_sentences_without_citation_markers_against_every_chunk():
     backend = ScriptedBackend(_replies())
     _judges(backend).judge(_item(), run=1)
-    prompts = {schema_title(r): r.params()["messages"][0]["content"] for r in backend.requests}
+    prompts = {schema_title(r): prompt_of(r) for r in backend.requests}
     statement_prompt = prompts["StatementGeneratorOutput"]
     assert "Customer A was 22%. Customer B was 14%." in statement_prompt
     assert A not in statement_prompt
@@ -119,7 +121,7 @@ def test_citation_support_shows_each_sentence_with_the_text_of_its_cited_chunks(
     backend = ScriptedBackend(_replies())
     _judges(backend).judge(_item(), run=1)
     (request,) = [r for r in backend.requests if schema_title(r) == "CitationSupportOutput"]
-    prompt = request.params()["messages"][0]["content"]
+    prompt = prompt_of(request)
     assert f"1. Customer A was 22% [{A}]." in prompt
     assert f'<excerpt id="{B}">\nCustomer B was 14% of revenue.\n</excerpt>' in prompt
 
@@ -134,10 +136,11 @@ def test_verdicts_that_do_not_number_every_sentence_are_a_recorded_error():
 
 
 def test_a_judge_refusal_is_recorded_against_each_metric_not_raised():
-    scores = _judges(ScriptedBackend(_replies(), stop_reason="refusal")).judge(_item(), run=1)
+    backend = ScriptedBackend(_replies(), body=with_refusal(RECORDED))
+    scores = _judges(backend).judge(_item(), run=1)
     assert set(scores.scores.values()) == {None}
     assert set(scores.errors) == {"faithfulness", "answer_relevancy", "citation_support"}
-    assert all("refusal" in e for e in scores.errors.values())
+    assert all("refused" in e for e in scores.errors.values())
 
 
 def test_an_answer_with_no_kept_sentences_is_not_scored_for_faithfulness_or_support():
@@ -168,7 +171,7 @@ def test_decline_and_unanswerable_records_get_a_behaviour_verdict(class_, metric
     scores = _judges(backend).judge(_item(declined, class_), run=1)
     assert scores.scores == {metric: 1.0}
     (request,) = backend.requests
-    prompt = request.params()["messages"][0]["content"]
+    prompt = prompt_of(request)
     assert expected in prompt
     assert declined.text in prompt and QUESTION in prompt
 
@@ -182,7 +185,9 @@ def test_an_incorrect_behaviour_scores_zero():
 def test_cost_counts_every_judge_call_and_the_relevancy_embeddings():
     scores = _judges(ScriptedBackend(_replies())).judge(_item(), run=1)
     # 2 faithfulness + 3 relevancy + 1 citation support calls; 4 embeddings
-    per_call = anthropic_cost(JUDGE_MODEL, parse_reply(RECORDED).usage)
+    usage = parse_openai_reply(RECORDED).usage
     assert scores.calls == 6
     assert scores.cost_usd == pytest.approx(
-        6 * per_call + embedding_cost("voyage-4-large", 4 * EMBED_TOKENS))
+        6 * openai_cost(JUDGE_MODEL, usage) + embedding_cost("voyage-4-large", 4 * EMBED_TOKENS))
+    assert scores.usage == total_usage([usage] * 6)
+    assert scores.usage.reasoning_tokens == 6 * usage.reasoning_tokens

@@ -29,15 +29,18 @@ from typing import Protocol
 from ragas.metrics.collections import AnswerRelevancy, Faithfulness
 
 from eval.judging import prompts
-from eval.judging.claude import (
-    JUDGE_EFFORT,
-    JUDGE_MAX_TOKENS,
-    JUDGE_MODEL,
-    JUDGE_RUNS,
-    ClaudeJudge,
-    JudgeReplyError,
-)
 from eval.judging.embedder import VoyageRagasEmbedding
+from eval.judging.openai_backend import NO_USAGE, OpenAIUsage, total_usage
+from eval.judging.openai_judge import (
+    JUDGE_EFFORT,
+    JUDGE_MAX_OUTPUT_TOKENS,
+    JUDGE_MODEL,
+    JUDGE_PROVIDER,
+    JUDGE_RUNS,
+    OPENAI_SDK_VERSION,
+    JudgeReplyError,
+    OpenAIJudge,
+)
 from eval.schema import Class
 from ingest.voyage import DEFAULT_MODEL, QueryEmbedder
 from retrieve.answer import Answer
@@ -78,16 +81,19 @@ class RunScores:
     cost_usd: float
     calls: int
     replayed: int  # calls answered from the response cache
+    usage: OpenAIUsage = NO_USAGE  # judge tokens over this run's calls, cached ones included
 
 
 @dataclass(frozen=True)
 class JudgeConfig:
     """What the results header records about the judges."""
 
+    provider: str = JUDGE_PROVIDER
     model: str = JUDGE_MODEL
     effort: Effort = JUDGE_EFFORT
-    max_tokens: int = JUDGE_MAX_TOKENS
+    max_output_tokens: int = JUDGE_MAX_OUTPUT_TOKENS
     runs: int = JUDGE_RUNS
+    openai_version: str = OPENAI_SDK_VERSION
     label: str = UNCALIBRATED
     ragas_version: str = field(default_factory=lambda: version("ragas"))
     relevancy_embedding: str = DEFAULT_MODEL
@@ -104,8 +110,9 @@ class Judge(Protocol):
     def judge(self, item: JudgeInput, run: int) -> RunScores: ...
 
 
-class ClaudeJudges:
-    """The real judges: ``claude-opus-5-5`` through the response cache, Voyage for relevancy."""
+class RagasJudges:
+    """The real judges: the configured OpenAI model through the response cache, Voyage for
+    relevancy."""
 
     def __init__(self, backend: AnswerModel, embedder: QueryEmbedder,
                  config: JudgeConfig | None = None):
@@ -114,8 +121,8 @@ class ClaudeJudges:
         self.config = config if config is not None else JudgeConfig()
 
     def judge(self, item: JudgeInput, run: int) -> RunScores:
-        llm = ClaudeJudge(self._backend, run, self.config.model, self.config.effort,
-                          self.config.max_tokens)
+        llm = OpenAIJudge(self._backend, run, self.config.model, self.config.effort,
+                          self.config.max_output_tokens)
         embeddings = VoyageRagasEmbedding(self._embedder, self.config.relevancy_embedding)
         scorers = _scorers(item, llm, embeddings, self.config.relevancy_strictness)
         scores: dict[str, float | None] = {}
@@ -132,6 +139,7 @@ class ClaudeJudges:
             cost_usd=llm.cost_usd + embedding_cost(embeddings.model, embeddings.tokens),
             calls=len(llm.calls),
             replayed=llm.replayed,
+            usage=total_usage(c.usage for c in llm.calls),
         )
 
 
@@ -139,7 +147,7 @@ def _defined(value: float) -> float | None:
     return None if math.isnan(value) else float(value)
 
 
-def _scorers(item: JudgeInput, llm: ClaudeJudge, embeddings: VoyageRagasEmbedding,
+def _scorers(item: JudgeInput, llm: OpenAIJudge, embeddings: VoyageRagasEmbedding,
              strictness: int) -> dict[str, Callable[[], float | None]]:
     check = item.answer.citation_check
 

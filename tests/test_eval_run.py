@@ -16,7 +16,8 @@ from types import MappingProxyType
 
 import pytest
 
-from eval.judging.runner import JudgeRunError, JudgeSpec
+from eval.judging.openai_backend import OpenAIUsage
+from eval.judging.runner import JUDGES, JudgeRunError, JudgeSpec
 from eval.judging.scoring import JudgeConfig, JudgeInput, RunScores, metrics_for
 from eval.run import EXIT_RUN_ERROR, EXIT_USAGE, main
 from eval.schema import EvalRecord, dump_records, load_records
@@ -140,7 +141,10 @@ class FakeArm:
 
 
 JUDGE_KEY_ENV = "FAKE_JUDGE_KEY"
+JUDGE_URL_ENV = "FAKE_JUDGE_BASE_URL"  # stands in for OPENAI_BASE_URL
 JUDGE_COST = 0.01  # per question and run
+JUDGE_USAGE = OpenAIUsage(input_tokens=100, cached_input_tokens=10, cache_write_tokens=0,
+                          output_tokens=40, reasoning_tokens=25)  # per question and run
 # Each answer metric scores base + 0.1 * (run - 1); decline and not-found verdicts are fixed.
 JUDGE_BASE = {"q0072": 0.6, "q0073": 0.2}
 BEHAVIOUR_RUNS = {"q0004": (1.0, 1.0, 0.0), "q0011": (1.0, 1.0, 1.0)}
@@ -169,7 +173,7 @@ class FakeJudge:
             scores["citation_support"] = None
             errors["citation_support"] = "judge stopped with refusal"
         return RunScores(run, MappingProxyType(scores), MappingProxyType(errors),
-                         JUDGE_COST, calls=3, replayed=1 if run == 1 else 0)
+                         JUDGE_COST, calls=3, replayed=1 if run == 1 else 0, usage=JUDGE_USAGE)
 
 
 @pytest.fixture
@@ -184,6 +188,7 @@ def eval_dir(tmp_path):
 def env(monkeypatch):
     monkeypatch.setenv(KEY_ENV, "secret-value-not-real")
     monkeypatch.setenv(JUDGE_KEY_ENV, "judge-secret-not-real")
+    monkeypatch.delenv(JUDGE_URL_ENV, raising=False)
 
 
 def _judge_spec(judge: FakeJudge, opened: list[Path] | None = None) -> JudgeSpec:
@@ -192,7 +197,8 @@ def _judge_spec(judge: FakeJudge, opened: list[Path] | None = None) -> JudgeSpec
             opened.append(response_cache)
         return nullcontext(judge)
 
-    return JudgeSpec(required_env=(JUDGE_KEY_ENV,), open=open_judge)
+    return JudgeSpec(required_env=(JUDGE_KEY_ENV,), open=open_judge,
+                     forbidden_env=(JUDGE_URL_ENV,))
 
 
 def _setup(eval_dir, tmp_path, error=None, filters=None, judge_error=None):
@@ -294,14 +300,14 @@ def test_header_records_provenance_and_the_agent_drafted_label(eval_dir, tmp_pat
     assert re.fullmatch(r"[0-9a-f]{7,}(\+dirty)?|unknown", header["commit"])
     assert header["arm"] == "fake"
     assert header["models"] == {"embedding": EMBED_MODEL, "answer": ANSWER_MODEL,
-                                "judge": "claude-opus-5-5"}
+                                "judge": "gpt-6-luna"}
     assert header["efforts"] == {"answer": "high", "judge": "medium"}
     prompt = load_prompt("v1")
     assert header["answer_prompt"] == {"version": "v1", "sha256": prompt.sha256,
                                        "path": "prompts/answer/v1.md"}
     assert header["answer_max_tokens"] == 16_000
     assert header["prices"]["date"] == "2026-10-05"
-    assert set(header["prices"]["models"]) == {EMBED_MODEL, ANSWER_MODEL, "claude-opus-5-5"}
+    assert set(header["prices"]["models"]) == {EMBED_MODEL, ANSWER_MODEL, "gpt-6-luna"}
     assert header["k"] == 10
     assert header["metric_ks"] == [5, 10]
     assert header["chunker_version"] == "1"
@@ -720,7 +726,10 @@ def test_the_header_records_the_judge_ragas_version_and_judged_definitions(
     run()
     header = _result(runs)["header"]
     judging = header["judging"]
-    assert judging["model"] == "claude-opus-5-5" and judging["effort"] == "medium"
+    assert judging["model"] == "gpt-6-luna" and judging["effort"] == "medium"
+    assert judging["provider"] == "openai"
+    assert judging["max_output_tokens"] == 25_000
+    assert judging["openai_version"] == "3.3.0"
     assert judging["ragas_version"] == "0.4.3"
     assert judging["label"] == "uncalibrated"
     assert judging["runs"] == 3
@@ -732,6 +741,23 @@ def test_the_header_records_the_judge_ragas_version_and_judged_definitions(
     assert "uncalibrated" in definitions["judged"]
 
 
+def test_the_results_file_totals_judge_usage_over_the_run_with_reasoning_apart(
+    eval_dir, tmp_path, env
+):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run()
+    document = _result(runs)
+    judged_runs = 3 * len(document["questions"])
+    assert document["judge_usage"] == {
+        "calls": 3 * judged_runs,
+        "replayed": len(document["questions"]),  # run 1 of each question replays one call
+        "cost_usd": pytest.approx(JUDGE_COST * judged_runs),
+        "input_tokens": 100 * judged_runs, "cached_input_tokens": 10 * judged_runs,
+        "cache_write_tokens": 0, "output_tokens": 40 * judged_runs,
+        "reasoning_tokens": 25 * judged_runs,
+    }
+
+
 def test_a_missing_judge_key_stops_the_run_before_the_arm_opens(
     eval_dir, tmp_path, env, monkeypatch, capsys
 ):
@@ -740,6 +766,23 @@ def test_a_missing_judge_key_stops_the_run_before_the_arm_opens(
     assert run() == EXIT_USAGE
     assert JUDGE_KEY_ENV in capsys.readouterr().err
     assert opened == [] and not runs.exists()
+
+
+def test_a_set_judge_base_url_stops_the_run_before_the_arm_opens(
+    eval_dir, tmp_path, env, monkeypatch, capsys
+):
+    monkeypatch.setenv(JUDGE_URL_ENV, "https://example.invalid/v1")
+    _, opened, runs, run = _setup(eval_dir, tmp_path)
+    assert run() == EXIT_USAGE
+    err = capsys.readouterr().err
+    assert JUDGE_URL_ENV in err and "example.invalid" not in err
+    assert "judge-secret" not in err
+    assert opened == [] and not runs.exists()
+
+
+def test_the_real_judges_need_the_openai_and_voyage_keys_and_refuse_a_base_url():
+    assert JUDGES.required_env == ("OPENAI_API_KEY", "VOYAGE_API_KEY")
+    assert JUDGES.forbidden_env == ("OPENAI_BASE_URL",)
 
 
 def test_a_judge_failure_stops_the_run_without_a_results_file(eval_dir, tmp_path, env, capsys):

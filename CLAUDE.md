@@ -99,13 +99,14 @@ Files changed; evidence (tests, eval results with commit); regressions; decision
 - ADR-0002 (docs/adr/0002-chunk-embeddings-table-exact-search.md): voyage-4-large embeddings go in a separate chunk_embeddings table. Search is exact, truncation is off, and the preamble is embedded.
 - Step 5 models and scope (grilling, 2026-10-04):
   - Step 5 scores `dev` only. Scoring `test` needs an explicit `--final`.
-  - claude-sonnet-5-5 writes answers at effort `high` and claude-opus-5-5 judges at effort `medium`. Both models reject non-default temperature, top_p and top_k, so sampling stays at the defaults (docs/research/ragas-deepeval-claude-judge.md). Config pins both IDs and efforts, and each run records them. Judged metrics carry the label "uncalibrated" until judge calibration.
+  - claude-sonnet-5-5 writes answers at effort `high`; it rejects non-default temperature, top_p and top_k, so sampling stays at the defaults (docs/research/ragas-deepeval-claude-judge.md). Judged metrics carry the label "uncalibrated" until judge calibration.
+  - Judge (user decision 2026-10-05, Step 5 spec amendment): gpt-6-luna at effort `medium` through OpenAI's Responses API, with a strict json_schema format, store=false, max_output_tokens 25,000 and no sampling settings (docs/research/openai-luna-judge.md). The ticket 10 spot check against gpt-6-sol may change the effort or fall back to gpt-6-sol, as a config change. The Opus judge path is deleted. Config pins provider, model, effort and output cap, pyproject pins the openai SDK, and each run records all five. `openai==3.3.0` is a direct dependency.
   - A cache keyed by model, effort and prompt hash stores every API response, so reruns reproduce answers. Ticket 08 adds one uncached repeat dev run to report run-to-run variance.
-  - Approved dependencies: anthropic and ragas==0.4.3. Voyage calls go through httpx. LangGraph waits for Step 13.
+  - Approved dependencies: anthropic, ragas==0.4.3 and (2026-10-05) openai==3.3.0. Voyage calls go through httpx. LangGraph waits for Step 13.
   - DeepEval dropped (user decision, 2026-10-05): it reads .env at import, registers a pytest plugin, passes unsupported claims by default and costs 3 to 4 judge calls per answer. Judge calibration is the second opinion instead.
-  - Ragas runs through a project judge class on Claude's structured outputs, because its documented Anthropic route sends sampling parameters Opus 5.5 rejects. RAGAS_DO_NOT_TRACK=true, and a test imports ragas with the network blocked.
+  - Ragas runs through a project judge class (eval/judging/openai_judge.py) on OpenAI's strict structured outputs, because Ragas's documented routes send sampling parameters and, for OpenAI, misread model versions. RAGAS_DO_NOT_TRACK=true, and a test imports ragas with the network blocked.
 - Step 5 harness (grilling, 2026-10-04):
-  - eval.run checks VOYAGE_API_KEY and ANTHROPIC_API_KEY at start. pytest stays offline and replays recorded API responses.
+  - eval.run checks VOYAGE_API_KEY, ANTHROPIC_API_KEY and OPENAI_API_KEY at start, and refuses to start when OPENAI_BASE_URL is set. pytest stays offline and replays recorded API responses.
   - `python -m ingest.embed` needs the network and embeds the chunks. A disk cache keyed by model and text hash holds query embeddings.
   - The vector arm retrieves the top 10 and passes all 10 to the answer model. Metrics are scored at 5 and 10.
   - Each answer sentence cites `[chunk_id]`. A deterministic step drops and counts sentences with no citation or with a citation outside the retrieved chunks. Citation validity has a deterministic structural part and a judged support part.

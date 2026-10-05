@@ -1,7 +1,8 @@
 """Run one arm over the eval set and write a scored results file (Step 5).
 
-Usage (the vector arm needs ``VOYAGE_API_KEY``, ``ANTHROPIC_API_KEY``,
-``DATABASE_URL`` and, for questions not yet in the caches, the network)::
+Usage (the vector arm needs ``VOYAGE_API_KEY``, ``ANTHROPIC_API_KEY`` and
+``DATABASE_URL``; the judges need ``OPENAI_API_KEY`` with ``OPENAI_BASE_URL``
+unset; questions not yet in the caches need the network)::
 
     uv run --env-file .env python -m eval.run --arm vector
 
@@ -30,7 +31,8 @@ from pathlib import Path
 from typing import Any
 
 from eval.filter_report import build_filter_report
-from eval.judging.runner import CLAUDE_JUDGES, JudgeRunError, JudgeSpec, judge_all
+from eval.judging.report import run_judge_usage
+from eval.judging.runner import JUDGES, JudgeRunError, JudgeSpec, judge_all
 from eval.judging.scoring import Judge, JudgeConfig, JudgeInput
 from eval.question_sets import EVAL_DIR, QuestionSet, QuestionSetError, load_question_sets
 from eval.results import (
@@ -68,7 +70,8 @@ def _parse_args(argv: list[str] | None, arm_names: Sequence[str]) -> argparse.Na
     return parser.parse_args(argv)
 
 
-def _usage_problem(args: argparse.Namespace, required_env: Sequence[str]) -> str | None:
+def _usage_problem(args: argparse.Namespace, required_env: Sequence[str],
+                   forbidden_env: Sequence[str] = ()) -> str | None:
     if args.split == "test" and not args.final:
         return "the test split is held out; scoring it needs --final (final benchmark only)"
     if args.final and args.split != "test":
@@ -77,6 +80,9 @@ def _usage_problem(args: argparse.Namespace, required_env: Sequence[str]) -> str
     if missing:
         return (f"{', '.join(missing)} not set (run with: uv run --env-file .env "
                 f"python -m eval.run ...)")
+    present = [name for name in dict.fromkeys(forbidden_env) if os.environ.get(name)]
+    if present:
+        return f"{', '.join(present)} is set; unset it so API keys go only to the vendors' hosts"
     return None
 
 
@@ -125,6 +131,7 @@ def _document(run: RunInfo, config: ArmConfig, sets: Sequence[QuestionSet],
         "cells": build_cells(outcomes, run.arm, run.seed, judge_config.runs),
         "filter_report": build_filter_report(outcomes),
         "questions": [question_record(o) for o in outcomes],
+        "judge_usage": run_judge_usage([o.judged for o in outcomes if o.judged is not None]),
     }
 
 
@@ -132,7 +139,7 @@ def main(
     argv: list[str] | None = None,
     *,
     arms: Mapping[str, ArmSpec] = ARMS,
-    judges: JudgeSpec = CLAUDE_JUDGES,
+    judges: JudgeSpec = JUDGES,
     eval_dir: Path = EVAL_DIR,
     runs_dir: Path = RUNS_DIR,
     today: date | None = None,
@@ -145,7 +152,8 @@ def main(
     logging.basicConfig(level=logging.INFO)
     logging.getLogger("httpx").setLevel(logging.WARNING)
     spec = arms[args.arm]
-    problem = _usage_problem(args, [*spec.required_env, *judges.required_env])
+    problem = _usage_problem(args, [*spec.required_env, *judges.required_env],
+                             judges.forbidden_env)
     if problem:
         print(problem, file=sys.stderr)
         return EXIT_USAGE

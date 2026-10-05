@@ -15,11 +15,12 @@ from contextlib import AbstractContextManager, ExitStack, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
-from eval.judging.scoring import ClaudeJudges, Judge, JudgeInput, RunScores
+from eval.judging.openai_backend import API_KEY_ENV as OPENAI_KEY_ENV
+from eval.judging.openai_backend import BASE_URL_ENV, OpenAIResponsesModel
+from eval.judging.scoring import Judge, JudgeInput, RagasJudges, RunScores
 from ingest.voyage import API_KEY_ENV as VOYAGE_KEY_ENV
 from ingest.voyage import VoyageClient, VoyageError
-from retrieve.answer_model import API_KEY_ENV as ANTHROPIC_KEY_ENV
-from retrieve.answer_model import AnswerModelError, AnthropicAnswerModel
+from retrieve.answer_model import AnswerModelError
 from retrieve.query_cache import CachedQueryEmbedder, CacheError
 from retrieve.response_cache import CachedAnswerModel
 
@@ -42,10 +43,11 @@ class JudgedQuestion:
 
 @dataclass(frozen=True)
 class JudgeSpec:
-    """How the harness opens the judges, and the environment variables they need."""
+    """How the harness opens the judges, and the environment variables they need or refuse."""
 
     required_env: tuple[str, ...]
     open: Callable[[Path], AbstractContextManager[Judge]]  # takes the response cache folder
+    forbidden_env: tuple[str, ...] = ()  # must be unset, or the run does not start
 
 
 def judge_all(judge: Judge, items: Sequence[JudgeInput],
@@ -72,7 +74,7 @@ def judge_all(judge: Judge, items: Sequence[JudgeInput],
 class _GuardedJudges:
     """Turns an API, Voyage or cache failure into ``JudgeRunError``."""
 
-    def __init__(self, inner: ClaudeJudges):
+    def __init__(self, inner: RagasJudges):
         self._inner = inner
         self.config = inner.config
 
@@ -88,17 +90,17 @@ class _GuardedJudges:
 
 
 @contextmanager
-def open_claude_judges(response_cache: Path) -> Iterator[Judge]:
-    """``claude-opus-5-5`` and Voyage, each behind its disk cache."""
+def open_judges(response_cache: Path) -> Iterator[Judge]:
+    """The OpenAI judge model and Voyage, each behind its disk cache."""
     with ExitStack() as stack:
         try:
-            claude = stack.enter_context(AnthropicAnswerModel.from_env())
+            backend = stack.enter_context(OpenAIResponsesModel.from_env())
             voyage = stack.enter_context(VoyageClient.from_env())
         except (AnswerModelError, VoyageError) as exc:
             raise JudgeRunError(f"cannot start the judges: {exc}") from exc
-        yield _GuardedJudges(ClaudeJudges(CachedAnswerModel(claude, response_cache),
-                                            CachedQueryEmbedder(voyage)))
+        yield _GuardedJudges(RagasJudges(CachedAnswerModel(backend, response_cache),
+                                           CachedQueryEmbedder(voyage)))
 
 
-CLAUDE_JUDGES = JudgeSpec(required_env=(ANTHROPIC_KEY_ENV, VOYAGE_KEY_ENV),
-                          open=open_claude_judges)
+JUDGES = JudgeSpec(required_env=(OPENAI_KEY_ENV, VOYAGE_KEY_ENV), open=open_judges,
+                   forbidden_env=(BASE_URL_ENV,))

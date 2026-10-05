@@ -1,9 +1,10 @@
-"""A disk cache of Messages API responses, keyed by model, effort and prompt hash (Step 5).
+"""A disk cache of model API responses, keyed by model, effort and prompt hash (Step 5).
 
-It holds answer responses and judge responses alike; a judge request's key also
-covers its run number, so the three judge runs stay independent (``eval.judging``).
+It holds Anthropic answer responses and OpenAI judge responses alike; a judge
+request's key also names the provider and covers its run number, so the three
+judge runs stay independent (``eval.judging``).
 
-Claude 5.5 models accept no sampling settings, so reruns reproduce answers by
+The models get no sampling settings, so reruns reproduce answers by
 replaying stored responses: a rerun makes no new answer calls.  Each response is
 one file, ``{cache_dir}/{model}/{effort}/{request SHA-256}.json``, holding the
 response body and how long the original call took, so latency statistics stay

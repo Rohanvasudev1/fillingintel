@@ -74,13 +74,14 @@ class AnswerRequest:
 
 @dataclass(frozen=True)
 class ApiResponse:
-    body: Mapping[str, Any]  # the Messages API response, as JSON
+    body: Mapping[str, Any]  # the API response as JSON: Anthropic Messages or OpenAI Responses
     api_ms: float  # how long the API call took when it was made
     from_cache: bool = False
 
 
 class ModelRequest(Protocol):
-    """A Messages API request: an answer request, or a judge request (``eval.judging``)."""
+    """A model request: an Anthropic answer request, or an OpenAI judge request
+    (``eval.judging``)."""
 
     @property
     def model(self) -> str: ...
