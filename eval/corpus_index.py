@@ -17,13 +17,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ingest.chunker import CHUNKER_VERSION, chunk_filing
-from ingest.corpus import CIKS
+from ingest.corpus import TICKER_BY_CIK
 from ingest.parsed_files import PARSED_SUFFIX, ParsedRecord, read_parsed, read_parsed_dir
 
 logger = logging.getLogger(__name__)
 
 CACHE_NAME = ".chunk_index.cache"  # not *.json: read_parsed_dir globs those
-_TICKER_BY_CIK = {cik: ticker for ticker, cik in CIKS.items()}
 _WORD = re.compile(r"[a-z0-9]+")
 _SNIPPET_CHARS = 160
 
@@ -134,7 +133,7 @@ class ChunkIndex:
 
 
 def _chunk_infos(record: ParsedRecord) -> dict[str, ChunkInfo]:
-    ticker = _TICKER_BY_CIK.get(record.meta.cik, record.meta.cik)
+    ticker = TICKER_BY_CIK.get(record.meta.cik, record.meta.cik)
     return {
         c.chunk_id: ChunkInfo(
             accession_no=c.accession_no,

@@ -18,6 +18,7 @@ from collections.abc import Mapping, Sequence
 from datetime import UTC, date, datetime
 from pathlib import Path
 
+from eval.filter_report import build_filter_report
 from eval.question_sets import EVAL_DIR, QuestionSet, QuestionSetError, load_question_sets
 from eval.results import (
     Outcome,
@@ -108,9 +109,11 @@ def main(
 
     run = RunInfo(now.isoformat(timespec="seconds"), commit, args.arm, args.split,
                   args.final, SEED)
+    filters = build_filter_report(outcomes)
     document = {
         "header": build_header(run, config, sets),
         "cells": build_cells(outcomes, args.arm),
+        "filter_report": filters,
         "questions": [question_record(o) for o in outcomes],
     }
     try:
@@ -119,7 +122,8 @@ def main(
     except OSError as exc:
         print(f"could not write results to {runs_dir}: {exc}", file=sys.stderr)
         return EXIT_RUN_ERROR
-    print(f"{len(outcomes)} questions scored; wrote {path}")
+    excluded = sum(int(r["filter_excluded_gold"]) for r in filters.values())
+    print(f"{len(outcomes)} questions scored; filter-excluded gold: {excluded}; wrote {path}")
     return 0
 
 

@@ -1,7 +1,8 @@
 """Score an arm's outcomes and build the results file (Step 5).
 
-The file has three parts: a provenance header, ``cells`` keyed by question set,
-arm and class, and one record per question.  Records without gold chunks
+The file has four parts: a provenance header, ``cells`` keyed by question set,
+arm and class, the question filter's report against the labels, and one record
+per question.  Records without gold chunks
 (decline, unanswerable) get their own cells with a count and no retrieval
 metrics.
 """
@@ -16,6 +17,7 @@ from pathlib import Path
 from statistics import fmean
 from typing import get_args
 
+from eval import filter_report
 from eval.metrics import DEFINITIONS, METRIC_KS, precision_at_k, recall_at_k
 from eval.question_sets import QuestionSet
 from eval.schema import Class, EvalRecord
@@ -78,7 +80,11 @@ def question_record(outcome: Outcome) -> dict[str, object]:
         "class": record.class_,
         "question": record.question,
         "gold_chunk_ids": record.gold_chunk_ids,
+        "filter": result.question_filter.as_dict(),
+        "filter_matches_labels": filter_report.exact_match(result.question_filter, record),
+        "filter_excluded_gold": filter_report.excluded_gold(result.question_filter, record),
         "retrieved": [{"chunk_id": r.chunk_id, "score": r.score} for r in result.retrieved],
+        "companies_without_chunks": list(result.companies_without_chunks),
         "retrieval_ms": result.retrieval_ms,
         "embed_ms": result.embed_ms,
         "search_ms": result.search_ms,
@@ -125,7 +131,7 @@ def build_header(
             }
             for s in question_sets
         ],
-        "metric_definitions": DEFINITIONS,
+        "metric_definitions": DEFINITIONS | filter_report.DEFINITIONS,
     }
 
 

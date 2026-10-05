@@ -91,6 +91,11 @@ def make_chunk_id(accession_no: str, ordinal: int) -> str:
     return f"{accession_no}:{ordinal:04d}"
 
 
+def accession_of(chunk_id: str) -> str:
+    """The accession number in a chunk ID made by ``make_chunk_id``."""
+    return chunk_id.rsplit(":", 1)[0]
+
+
 def count_tokens(text: str) -> int:
     """Number of cl100k_base tokens in *text*."""
     return len(_ENCODING.encode(text))

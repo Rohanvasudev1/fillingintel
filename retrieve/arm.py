@@ -1,8 +1,9 @@
 """The one interface every arm implements, so the harness runs any arm by name.
 
 An arm receives the question text and nothing else from the eval record
-(ADR-0001), so it can never see a record's labels.  Later tickets extend
-``ArmResult`` with the filter, the answer and its citations.
+(ADR-0001), so it can never see a record's labels.  Every arm reads its filter
+with the shared parser in ``retrieve.question_filter``.  Later tickets extend
+``ArmResult`` with the answer and its citations.
 """
 from __future__ import annotations
 
@@ -10,6 +11,8 @@ from collections.abc import Callable, Mapping
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from typing import Protocol
+
+from retrieve.question_filter import QuestionFilter
 
 
 class ArmError(RuntimeError):
@@ -27,6 +30,8 @@ class ArmResult:
     """What one arm returned for one question."""
 
     retrieved: tuple[RetrievedChunk, ...]  # best first
+    question_filter: QuestionFilter
+    companies_without_chunks: tuple[str, ...]  # named companies no retrieved chunk came from
     embed_ms: float  # query embedding, from the API or the disk cache
     search_ms: float
     query_cached: bool  # cached embeddings take ~0 ms, so latency stats must tell them apart

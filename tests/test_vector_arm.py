@@ -1,9 +1,10 @@
-"""The vector arm against the throwaway test schema (Step 5, ticket 03).
+"""The vector arm against the throwaway test schema (Step 5, tickets 03 and 04).
 
 Every chunk in the schema gets a unit vector at angle ``i * STEP`` in the plane
 of the first two dimensions, ``i`` being its position in chunk-ID order.  The
 fake query vector points along the first dimension, so cosine similarity is
-``cos(i * STEP)``: the top 10 must be the first 10 chunks by ID, in that order.
+``cos(i * STEP)``: the top 10 must be the first 10 chunks by ID, in that order,
+among the chunks the question filter lets through.
 """
 import math
 
@@ -14,11 +15,13 @@ from ingest.store import chunks_for_embedding, load_filing, save_embedding
 from ingest.voyage import Embedding, VoyageError
 from retrieve.arm import ArmError
 from retrieve.vector import TOP_K, VectorArm
+from tests.conftest import FIXTURE_NAMES
 
 MODEL = "voyage-4-large"
 DIMS = 1024
 STEP = 0.001  # radians; stays below pi/2 for fewer than 1,500 chunks, so the order is strict
-QUESTION = "What was AMD's revenue in fiscal 2025?"
+QUESTION = "What are the main supply chain risks?"  # names nothing, so no filter
+FILTER_FIXTURES = ("nvda_10k", "nvda_10q", "intc_10k")
 
 
 def _unit(angle: float) -> tuple[float, ...]:
@@ -41,10 +44,12 @@ class FakeQueryEmbedder:
 
 @pytest.fixture
 def embedded(db_conn, fixture_records):
-    """Two fixture filings loaded and every chunk in the schema embedded; returns IDs in order."""
+    """NVIDIA's two fixture filings and Intel's 10-K loaded, and every chunk in the
+    schema embedded; returns chunk IDs in order."""
     db_conn.execute("DELETE FROM chunk_embeddings")
     db_conn.commit()
-    for record in fixture_records[:2]:
+    for name in FILTER_FIXTURES:
+        record = fixture_records[FIXTURE_NAMES.index(name)]
         load_filing(db_conn, record, chunk_filing(record.filing))
     chunks = chunks_for_embedding(db_conn, MODEL)
     assert len(chunks) < math.pi / 2 / STEP
@@ -63,13 +68,32 @@ def test_top_ten_come_back_in_similarity_order_with_cosine_scores(db_conn, embed
     assert embedder.calls == [(QUESTION, MODEL)]
 
 
-def test_retrieval_is_unfiltered(db_conn, embedded):
+def test_a_question_naming_nothing_is_unfiltered(db_conn, embedded):
     # A query vector at the last chunk's angle puts that chunk first; its neighbours
     # come from whichever filing they belong to.
     last = len(embedded) - 1
     result = VectorArm(db_conn, FakeQueryEmbedder(_unit(last * STEP)), MODEL).run(QUESTION)
     expected = [embedded[last - i] for i in range(TOP_K)]
     assert [r.chunk_id for r in result.retrieved] == expected
+    assert result.question_filter.accession_nos is None
+
+
+def test_the_question_filter_narrows_retrieval(db_conn, embedded, nvda_10q_meta):
+    question = "What does NVIDIA's 10-Q say about export controls?"
+    result = VectorArm(db_conn, FakeQueryEmbedder(), MODEL).run(question)
+    in_10q = [c for c in embedded if c.startswith(nvda_10q_meta.accession_no + ":")]
+    assert [r.chunk_id for r in result.retrieved] == in_10q[:TOP_K]
+    assert result.question_filter.companies == ("NVDA",)
+    assert result.question_filter.forms == ("10-Q",)
+    assert result.question_filter.accession_nos == (nvda_10q_meta.accession_no,)
+
+
+def test_named_companies_with_no_retrieved_chunk_are_reported(db_conn, embedded, intc_10k_meta):
+    # Intel's accession number sorts before NVIDIA's, so at angle 0 the top 10 are all Intel's.
+    question = "How do NVIDIA and Intel describe their reliance on TSMC?"
+    result = VectorArm(db_conn, FakeQueryEmbedder(), MODEL).run(question)
+    assert all(r.chunk_id.startswith(intc_10k_meta.accession_no) for r in result.retrieved)
+    assert result.companies_without_chunks == ("NVDA",)
 
 
 def test_config_records_the_model_k_and_chunker_version(db_conn, embedded):

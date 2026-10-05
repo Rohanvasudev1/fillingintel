@@ -1,8 +1,8 @@
-"""``python -m eval.run`` with a fake arm (Step 5, ticket 03).
+"""``python -m eval.run`` with a fake arm (Step 5, tickets 03 and 04).
 
 The eval directory is a temporary copy of real agent-drafted records.  The fake
-arm returns a fixed ranking per question, so every cell value below is computed
-by hand.
+arm returns a fixed ranking per question and the real question filter over the
+real filing list, so every cell value below is computed by hand.
 """
 import hashlib
 import json
@@ -18,6 +18,8 @@ import pytest
 from eval.run import EXIT_RUN_ERROR, EXIT_USAGE, main
 from eval.schema import EvalRecord, dump_records, load_records
 from retrieve.arm import ArmConfig, ArmError, ArmResult, ArmSpec, RetrievedChunk
+from retrieve.question_filter import QuestionFilter, parse_question_filter
+from tests.corpus_filings import corpus_filings
 
 REPO = Path(__file__).resolve().parents[1]
 _ALL = {r.id: r for r in load_records(REPO / "eval" / "agent_drafted_set.jsonl")}
@@ -25,6 +27,8 @@ DEV_IDS = ["q0072", "q0073", "q0113", "q0028", "q0004", "q0011"]  # lookup x2, m
 TEST_ID = "q0001"                                                  # decline, unanswerable
 TODAY = date(2026, 10, 5)
 KEY_ENV = "FAKE_ARM_KEY"
+FILINGS = corpus_filings()
+NVDA_FY2025_10K = "0001045810-25-000023"  # q0072's gold is in NVIDIA's FY2026 10-K
 
 
 def _filler(n: int) -> list[str]:
@@ -50,23 +54,33 @@ def _ranking(record: EvalRecord) -> list[str]:
 class FakeArm:
     name = "fake"
 
-    def __init__(self, records: list[EvalRecord], error: Exception | None = None):
+    def __init__(
+        self,
+        records: list[EvalRecord],
+        error: Exception | None = None,
+        filters: dict[str, QuestionFilter] | None = None,
+    ):
         self.config = ArmConfig(
             models=MappingProxyType({"embedding": "fake-embed-1"}), k=10, chunker_version="1"
         )
         self._by_question = {r.question: r for r in records}
         self._error = error
+        self._filters = filters or {}  # record ID -> a filter to return instead of the parser's
         self.questions: list[str] = []
 
     def run(self, question: str) -> ArmResult:
         self.questions.append(question)
         if self._error is not None:
             raise self._error
-        ranking = _ranking(self._by_question[question])
+        record = self._by_question[question]
+        ranking = _ranking(record)
+        question_filter = self._filters.get(record.id) or parse_question_filter(question, FILINGS)
         return ArmResult(
             retrieved=tuple(
                 RetrievedChunk(cid, round(1 - i / 100, 2)) for i, cid in enumerate(ranking)
             ),
+            question_filter=question_filter,
+            companies_without_chunks=("INTC",) if record.id == "q0028" else (),
             embed_ms=2.5,
             search_ms=10.0,
             query_cached=True,
@@ -86,9 +100,9 @@ def env(monkeypatch):
     monkeypatch.setenv(KEY_ENV, "secret-value-not-real")
 
 
-def _setup(eval_dir, tmp_path, error=None):
+def _setup(eval_dir, tmp_path, error=None, filters=None):
     records = load_records(eval_dir / "agent_drafted_set.jsonl")
-    arm = FakeArm(records, error)
+    arm = FakeArm(records, error, filters)
     opened: list[bool] = []
 
     def open_arm():
@@ -204,6 +218,49 @@ def test_each_question_record_holds_retrieved_ids_scores_and_latency(eval_dir, t
     assert record["class"] == "multi_hop"
     assert record["gold_chunk_ids"] == _ALL["q0113"].gold_chunk_ids
     assert record["metrics"]["recall@10"] == 1.0
+
+
+def test_the_filter_report_gives_exact_match_and_filter_excluded_gold(eval_dir, tmp_path, env):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run()
+    report = _result(runs)["filter_report"]["agent_drafted"]
+    # Every dev question's companies match its labels; q0004 ("its 2025 earnings") names a
+    # bare year, so its periods do not.
+    assert report["n"] == 6
+    assert report["exact_match"] == pytest.approx(5 / 6)
+    assert report["companies_match"] == 1.0
+    assert report["periods_match"] == pytest.approx(5 / 6)
+    assert report["filter_excluded_gold"] == 0
+    assert report["questions_with_excluded_gold"] == []
+
+
+def test_gold_outside_the_filter_is_counted(eval_dir, tmp_path, env):
+    narrow = QuestionFilter(("NVDA",), ("FY2025",), ("10-K",), (NVDA_FY2025_10K,))
+    _, _, runs, run = _setup(eval_dir, tmp_path, filters={"q0072": narrow})
+    run()
+    result = _result(runs)
+    report = result["filter_report"]["agent_drafted"]
+    assert report["filter_excluded_gold"] == 1
+    assert report["questions_with_excluded_gold"] == ["q0072"]
+    record = next(q for q in result["questions"] if q["id"] == "q0072")
+    assert record["filter_excluded_gold"] == _ALL["q0072"].gold_chunk_ids
+
+
+def test_each_question_record_shows_its_filter_and_companies_without_chunks(
+    eval_dir, tmp_path, env
+):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run()
+    records = {q["id"]: q for q in _result(runs)["questions"]}
+    q0113 = records["q0113"]  # AMD's and Intel's fiscal 2025
+    assert q0113["filter"]["companies"] == ["AMD", "INTC"]
+    assert q0113["filter"]["periods"] == ["FY2025"]
+    assert q0113["filter"]["forms"] == []
+    assert len(q0113["filter"]["accession_nos"]) == 8
+    assert q0113["filter_matches_labels"] is True
+    assert q0113["filter_excluded_gold"] == []
+    assert records["q0028"]["companies_without_chunks"] == ["INTC"]
+    assert records["q0004"]["filter_matches_labels"] is False
 
 
 def test_results_file_is_named_by_date_arm_split_and_commit_and_never_overwritten(

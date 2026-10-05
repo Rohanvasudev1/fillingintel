@@ -6,6 +6,8 @@ and later rollbacks on the same connection cannot undo it.
 """
 from __future__ import annotations
 
+from collections.abc import Sequence
+from datetime import date
 from pathlib import Path
 from types import MappingProxyType
 from typing import LiteralString, NamedTuple, cast
@@ -103,6 +105,19 @@ WHERE e.model = %s
 ORDER BY e.embedding <=> q.v, e.chunk_id
 LIMIT %s
 """
+# The question filter (ADR-0001) as a bound text[] of accession numbers.
+_NEAREST_IN_FILINGS: LiteralString = """
+WITH q AS (SELECT %s::vector AS v)
+SELECT e.chunk_id, 1 - (e.embedding <=> q.v) AS score
+FROM chunk_embeddings e JOIN chunks c ON c.chunk_id = e.chunk_id, q
+WHERE e.model = %s AND c.accession_no = ANY(%s::text[])
+ORDER BY e.embedding <=> q.v, e.chunk_id
+LIMIT %s
+"""
+_LIST_FILINGS: LiteralString = (
+    "SELECT accession_no, cik, form_type, fiscal_period, report_date FROM filings"
+    " ORDER BY accession_no"
+)
 _EMBEDDING_GAPS = cast(
     LiteralString,
     "SELECT count(*) FILTER (WHERE e.chunk_id IS NULL),"
@@ -126,6 +141,14 @@ class ChunkForEmbedding(NamedTuple):
     token_count: int
     text: str
     stored_sha256: str | None  # None when the chunk has no vector for the model
+
+
+class FilingRow(NamedTuple):
+    accession_no: str
+    cik: str
+    form_type: str
+    fiscal_period: str
+    report_date: date
 
 
 class EmbeddingGaps(NamedTuple):
@@ -305,11 +328,26 @@ def chunker_versions(conn: psycopg.Connection) -> list[str]:
 
 
 def nearest_chunks(
-    conn: psycopg.Connection, model: str, vector: tuple[float, ...], k: int
+    conn: psycopg.Connection,
+    model: str,
+    vector: tuple[float, ...],
+    k: int,
+    accession_nos: Sequence[str] | None = None,
 ) -> list[tuple[str, float]]:
     """The *k* chunks whose *model* vectors are most cosine-similar to *vector*.
 
     Exact search, best first, ties broken by chunk ID.  Each pair is
-    ``(chunk_id, cosine similarity)``.
+    ``(chunk_id, cosine similarity)``.  With *accession_nos*, only chunks of
+    those filings are searched; ``None`` searches every chunk.
     """
-    return conn.execute(_NEAREST, (_vector_literal(vector), model, k)).fetchall()
+    if accession_nos is None:
+        return conn.execute(_NEAREST, (_vector_literal(vector), model, k)).fetchall()
+    if not accession_nos:
+        raise ValueError("accession_nos is empty; pass None to search every chunk")
+    params = (_vector_literal(vector), model, list(accession_nos), k)
+    return conn.execute(_NEAREST_IN_FILINGS, params).fetchall()
+
+
+def list_filings(conn: psycopg.Connection) -> list[FilingRow]:
+    """Each stored filing's metadata, by accession number."""
+    return [FilingRow(*row) for row in conn.execute(_LIST_FILINGS)]

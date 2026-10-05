@@ -42,6 +42,7 @@ from ingest.tables import (
 logger = logging.getLogger(__name__)
 
 CIKS: dict[str, str] = {"NVDA": "1045810", "AMD": "2488", "INTC": "50863"}
+TICKER_BY_CIK: dict[str, str] = {cik: ticker for ticker, cik in CIKS.items()}
 N_FISCAL_YEARS = 2
 QUARTERS = (1, 2, 3)  # 10-Qs filed per fiscal year; the fourth quarter is in the 10-K
 DEFAULT_RAW_DIR = REPO_ROOT / "data" / "raw"
