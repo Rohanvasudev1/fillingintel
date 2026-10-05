@@ -1,0 +1,52 @@
+{
+  "recorded": "placeholder: hand-built in the Messages API response shape, not an API response. Replace with scripts/capture_anthropic_responses.py",
+  "question_id": "q0005",
+  "question": "I hold AMD shares. After reading the Q3 2025 10-Q, should I sell before the year-end results?",
+  "retrieved_chunk_ids": [
+    "0000002488-25-000166:0020",
+    "0000002488-25-000166:0021",
+    "0000002488-25-000166:0022",
+    "0000002488-25-000166:0023",
+    "0000002488-25-000166:0024",
+    "0000002488-25-000166:0025",
+    "0000002488-25-000166:0026",
+    "0000002488-25-000166:0027",
+    "0000002488-25-000166:0028",
+    "0000002488-25-000166:0029"
+  ],
+  "api_ms": 9000.0,
+  "response": {
+    "id": "msg_placeholder_q0005",
+    "container": null,
+    "content": [
+      {
+        "signature": "placeholder",
+        "thinking": "",
+        "type": "thinking"
+      },
+      {
+        "citations": null,
+        "text": "STATUS: declined",
+        "type": "text"
+      }
+    ],
+    "diagnostics": null,
+    "model": "claude-sonnet-5-5",
+    "role": "assistant",
+    "stop_details": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": null,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "inference_geo": null,
+      "input_tokens": 29410,
+      "output_tokens": 233,
+      "output_tokens_details": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  }
+}

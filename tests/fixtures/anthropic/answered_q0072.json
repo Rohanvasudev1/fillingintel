@@ -1,0 +1,52 @@
+{
+  "recorded": "placeholder: hand-built in the Messages API response shape, not an API response. Replace with scripts/capture_anthropic_responses.py",
+  "question_id": "q0072",
+  "question": "In NVIDIA's fiscal year 2026, what share of total revenue came from its two largest direct customers?",
+  "retrieved_chunk_ids": [
+    "0001045810-26-000021:0062",
+    "0001045810-26-000021:0063",
+    "0001045810-26-000021:0064",
+    "0001045810-26-000021:0065",
+    "0001045810-26-000021:0066",
+    "0001045810-26-000021:0067",
+    "0001045810-26-000021:0068",
+    "0001045810-26-000021:0069",
+    "0001045810-26-000021:0070",
+    "0001045810-26-000021:0071"
+  ],
+  "api_ms": 9000.0,
+  "response": {
+    "id": "msg_placeholder_q0072",
+    "container": null,
+    "content": [
+      {
+        "signature": "placeholder",
+        "thinking": "",
+        "type": "thinking"
+      },
+      {
+        "citations": null,
+        "text": "STATUS: answered\nIn fiscal year 2026, sales to one direct customer represented 22% of NVIDIA's total revenue [0001045810-26-000021:0067]. Sales to a second direct customer represented 14% of total revenue [0001045810-26-000021:0067]. Together the two direct customers accounted for 36% of total revenue [0001045810-26-000021:0067].",
+        "type": "text"
+      }
+    ],
+    "diagnostics": null,
+    "model": "claude-sonnet-5-5",
+    "role": "assistant",
+    "stop_details": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": null,
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "inference_geo": null,
+      "input_tokens": 31840,
+      "output_tokens": 812,
+      "output_tokens_details": null,
+      "server_tool_use": null,
+      "service_tier": null
+    }
+  }
+}

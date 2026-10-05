@@ -9,6 +9,7 @@ dependencies = [
     "psycopg[binary]>=3.2",
     "tiktoken>=0.7",
     "edgartools>=5.59,<6.0",
+    "anthropic==1.11.0",
 ]
 
 [dependency-groups]

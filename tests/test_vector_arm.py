@@ -7,14 +7,22 @@ fake query vector points along the first dimension, so cosine similarity is
 among the chunks the question filter lets through.
 """
 import math
+import re
+from collections.abc import Callable
 
 import pytest
 
 from ingest.chunker import CHUNKER_VERSION, chunk_filing
-from ingest.store import chunks_for_embedding, load_filing, save_embedding
+from ingest.corpus import TICKER_BY_CIK
+from ingest.store import chunks_for_embedding, get_chunk, load_filing, resolve, save_embedding
 from ingest.voyage import Embedding, VoyageError
+from retrieve.answer import DECLINE_TEXT, NOT_FOUND_TEXT
+from retrieve.answer_model import AnswerModelError, AnswerRequest, ApiResponse
+from retrieve.answer_prompt import load_prompt
 from retrieve.arm import ArmError
+from retrieve.pricing import embedding_cost
 from retrieve.vector import TOP_K, VectorArm
+from tests.anthropic_fixtures import load, with_text
 from tests.conftest import FIXTURE_NAMES
 
 MODEL = "voyage-4-large"
@@ -42,6 +50,33 @@ class FakeQueryEmbedder:
         return Embedding(vector=self.vector, api_token_count=12, from_cache=self.cached)
 
 
+EXCERPT_ID = re.compile(r'<excerpt id="([^"]+)"')
+
+
+class ScriptedAnswerModel:
+    """Replays the recorded answer response with text written from the excerpt IDs it is sent."""
+
+    def __init__(
+        self,
+        script: Callable[[list[str]], str] = lambda ids: f"STATUS: answered\nIt rose [{ids[0]}].",
+        error: Exception | None = None,
+    ):
+        self._script = script
+        self._error = error
+        self.requests: list[AnswerRequest] = []
+
+    def complete(self, request: AnswerRequest) -> ApiResponse:
+        self.requests.append(request)
+        if self._error is not None:
+            raise self._error
+        text = self._script(EXCERPT_ID.findall(request.user))
+        return ApiResponse(with_text(load("answered_q0072")["response"], text), api_ms=4200.0)
+
+
+def _arm(conn, embedder, answer_model=None, **kwargs) -> VectorArm:
+    return VectorArm(conn, embedder, answer_model or ScriptedAnswerModel(), MODEL, **kwargs)
+
+
 @pytest.fixture
 def embedded(db_conn, fixture_records):
     """NVIDIA's two fixture filings and Intel's 10-K loaded, and every chunk in the
@@ -60,7 +95,7 @@ def embedded(db_conn, fixture_records):
 
 def test_top_ten_come_back_in_similarity_order_with_cosine_scores(db_conn, embedded):
     embedder = FakeQueryEmbedder()
-    result = VectorArm(db_conn, embedder, MODEL).run(QUESTION)
+    result = _arm(db_conn, embedder).run(QUESTION)
     assert [r.chunk_id for r in result.retrieved] == embedded[:TOP_K]
     assert [r.score for r in result.retrieved] == pytest.approx(
         [math.cos(i * STEP) for i in range(TOP_K)], abs=1e-6
@@ -72,7 +107,7 @@ def test_a_question_naming_nothing_is_unfiltered(db_conn, embedded):
     # A query vector at the last chunk's angle puts that chunk first; its neighbours
     # come from whichever filing they belong to.
     last = len(embedded) - 1
-    result = VectorArm(db_conn, FakeQueryEmbedder(_unit(last * STEP)), MODEL).run(QUESTION)
+    result = _arm(db_conn, FakeQueryEmbedder(_unit(last * STEP))).run(QUESTION)
     expected = [embedded[last - i] for i in range(TOP_K)]
     assert [r.chunk_id for r in result.retrieved] == expected
     assert result.question_filter.accession_nos is None
@@ -80,7 +115,7 @@ def test_a_question_naming_nothing_is_unfiltered(db_conn, embedded):
 
 def test_the_question_filter_narrows_retrieval(db_conn, embedded, nvda_10q_meta):
     question = "What does NVIDIA's 10-Q say about export controls?"
-    result = VectorArm(db_conn, FakeQueryEmbedder(), MODEL).run(question)
+    result = _arm(db_conn, FakeQueryEmbedder()).run(question)
     in_10q = [c for c in embedded if c.startswith(nvda_10q_meta.accession_no + ":")]
     assert [r.chunk_id for r in result.retrieved] == in_10q[:TOP_K]
     assert result.question_filter.companies == ("NVDA",)
@@ -91,22 +126,22 @@ def test_the_question_filter_narrows_retrieval(db_conn, embedded, nvda_10q_meta)
 def test_named_companies_with_no_retrieved_chunk_are_reported(db_conn, embedded, intc_10k_meta):
     # Intel's accession number sorts before NVIDIA's, so at angle 0 the top 10 are all Intel's.
     question = "How do NVIDIA and Intel describe their reliance on TSMC?"
-    result = VectorArm(db_conn, FakeQueryEmbedder(), MODEL).run(question)
+    result = _arm(db_conn, FakeQueryEmbedder()).run(question)
     assert all(r.chunk_id.startswith(intc_10k_meta.accession_no) for r in result.retrieved)
     assert result.companies_without_chunks == ("NVDA",)
 
 
 def test_config_records_the_model_k_and_chunker_version(db_conn, embedded):
-    arm = VectorArm(db_conn, FakeQueryEmbedder(), MODEL)
+    arm = _arm(db_conn, FakeQueryEmbedder())
     assert arm.name == "vector"
-    assert dict(arm.config.models) == {"embedding": MODEL}
+    assert dict(arm.config.models) == {"embedding": MODEL, "answer": "claude-sonnet-5-5"}
     assert arm.config.k == TOP_K == 10
     assert arm.config.chunker_version == CHUNKER_VERSION
 
 
 def test_latency_is_split_into_query_embedding_and_search(db_conn, embedded):
     ticks = iter([3.0, 3.1, 3.25])
-    arm = VectorArm(db_conn, FakeQueryEmbedder(), MODEL, clock=lambda: next(ticks))
+    arm = _arm(db_conn, FakeQueryEmbedder(), clock=lambda: next(ticks))
     result = arm.run(QUESTION)
     assert result.embed_ms == pytest.approx(100.0)
     assert result.search_ms == pytest.approx(150.0)
@@ -116,14 +151,14 @@ def test_latency_is_split_into_query_embedding_and_search(db_conn, embedded):
 
 def test_a_cached_query_embedding_is_flagged(db_conn, embedded):
     embedder = FakeQueryEmbedder(cached=True)
-    assert VectorArm(db_conn, embedder, MODEL).run(QUESTION).query_cached is True
+    assert _arm(db_conn, embedder).run(QUESTION).query_cached is True
 
 
 def test_a_chunk_without_a_vector_stops_the_arm_before_any_question(db_conn, embedded):
     db_conn.execute("DELETE FROM chunk_embeddings WHERE chunk_id = %s", (embedded[5],))
     db_conn.commit()
     with pytest.raises(ArmError, match="1 chunks have no voyage-4-large vector"):
-        VectorArm(db_conn, FakeQueryEmbedder(), MODEL)
+        _arm(db_conn, FakeQueryEmbedder())
 
 
 def test_a_stale_vector_stops_the_arm(db_conn, embedded):
@@ -132,10 +167,83 @@ def test_a_stale_vector_stops_the_arm(db_conn, embedded):
     )
     db_conn.commit()
     with pytest.raises(ArmError, match="1 chunks have a stale"):
-        VectorArm(db_conn, FakeQueryEmbedder(), MODEL)
+        _arm(db_conn, FakeQueryEmbedder())
 
 
 def test_an_embedding_failure_is_an_arm_error(db_conn, embedded):
-    arm = VectorArm(db_conn, FakeQueryEmbedder(error=VoyageError("HTTP 401")), MODEL)
+    arm = _arm(db_conn, FakeQueryEmbedder(error=VoyageError("HTTP 401")))
     with pytest.raises(ArmError, match="VoyageError"):
         arm.run(QUESTION)
+
+
+def test_the_answer_model_sees_all_ten_chunks_with_their_text_and_source(db_conn, embedded):
+    answer_model = ScriptedAnswerModel()
+    _arm(db_conn, FakeQueryEmbedder(), answer_model).run(QUESTION)
+    (request,) = answer_model.requests
+    assert EXCERPT_ID.findall(request.user) == embedded[:TOP_K]
+    first = get_chunk(db_conn, embedded[0])
+    assert (
+        f'<excerpt id="{first.chunk_id}" company="{TICKER_BY_CIK[first.cik]}" '
+        f'form="{first.form_type}" '
+        f'period="{first.fiscal_period}" section="{first.section}">\n'
+        f"{resolve(db_conn, first.chunk_id)}\n</excerpt>"
+    ) in request.user
+    assert request.user.endswith(f"Question: {QUESTION}")
+
+
+def test_citation_enforcement_drops_and_counts_the_right_sentences(db_conn, embedded):
+    outside = embedded[-1]  # never in the top 10 at angle 0
+
+    def script(ids: list[str]) -> str:
+        return (f"STATUS: answered\nSupply is concentrated [{ids[0]}]. Lead times are long. "
+                f"Costs rose [{ids[1]}][{outside}]. Demand is high [{ids[2]}].")
+
+    result = _arm(db_conn, FakeQueryEmbedder(), ScriptedAnswerModel(script)).run(
+        QUESTION
+    )
+    check = result.answer.citation_check
+    assert [d.reason for d in check.dropped] == ["no_citation", "citation_not_retrieved"]
+    assert result.answer.text == (f"Supply is concentrated [{embedded[0]}]. "
+                                  f"Demand is high [{embedded[2]}].")
+    assert (check.citations, check.citations_retrieved) == (4, 3)
+    assert result.answer.generation_ms == 4200.0
+
+
+def test_a_decline_passes_through_the_arm(db_conn, embedded):
+    arm = _arm(db_conn, FakeQueryEmbedder(), ScriptedAnswerModel(lambda _: "STATUS: declined"))
+    answer = arm.run("Should I buy NVIDIA stock?").answer
+    assert (answer.status, answer.text) == ("declined", DECLINE_TEXT)
+
+
+def test_config_records_the_answer_model_effort_and_prompt(db_conn, embedded):
+    config = _arm(db_conn, FakeQueryEmbedder()).config
+    assert config.models["answer"] == "claude-sonnet-5-5"
+    assert dict(config.efforts) == {"answer": "high"}
+    prompt = load_prompt("v1")
+    assert config.answer_prompt == prompt
+    assert config.answer_max_tokens == 16_000
+
+
+def test_query_embedding_tokens_and_cost_are_recorded(db_conn, embedded):
+    result = _arm(db_conn, FakeQueryEmbedder()).run(QUESTION)
+    assert result.embed_tokens == 12
+    assert result.embed_cost_usd == pytest.approx(embedding_cost(MODEL, 12))
+
+
+def test_an_answer_model_failure_is_an_arm_error(db_conn, embedded):
+    answer_model = ScriptedAnswerModel(error=AnswerModelError("HTTP 529"))
+    arm = _arm(db_conn, FakeQueryEmbedder(), answer_model)
+    with pytest.raises(ArmError, match="AnswerModelError"):
+        arm.run(QUESTION)
+
+
+def test_a_not_found_answer_passes_through_the_arm(db_conn, embedded):
+    script = ScriptedAnswerModel(lambda ids: f"STATUS: not_found\nSupply is tight [{ids[0]}].")
+    answer = _arm(db_conn, FakeQueryEmbedder(), script).run(QUESTION).answer
+    assert answer.status == "not_found"
+    assert answer.text == f"{NOT_FOUND_TEXT} Supply is tight [{embedded[0]}]."
+
+
+def test_an_unpriced_embedding_model_stops_the_arm_before_any_question(db_conn, embedded):
+    with pytest.raises(ArmError, match="no price"):
+        VectorArm(db_conn, FakeQueryEmbedder(), ScriptedAnswerModel(), "voyage-unpriced")

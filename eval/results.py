@@ -2,9 +2,9 @@
 
 The file has four parts: a provenance header, ``cells`` keyed by question set,
 arm and class, the question filter's report against the labels, and one record
-per question.  Records without gold chunks
-(decline, unanswerable) get their own cells with a count and no retrieval
-metrics.
+per question.  Each cell holds retrieval metrics, answer and citation counts,
+latency per stage and cost.  Records without gold chunks (decline,
+unanswerable) get their own cells, with no retrieval metrics.
 """
 from __future__ import annotations
 
@@ -17,11 +17,12 @@ from pathlib import Path
 from statistics import fmean
 from typing import get_args
 
-from eval import filter_report
+from eval import answer_report, filter_report, operational
 from eval.metrics import DEFINITIONS, METRIC_KS, precision_at_k, recall_at_k
 from eval.question_sets import QuestionSet
 from eval.schema import Class, EvalRecord
 from retrieve.arm import ArmConfig, ArmResult
+from retrieve.pricing import price_table
 
 CLASS_ORDER = get_args(Class)
 NO_GOLD_NOTE = "no gold chunks; retrieval metrics do not apply"
@@ -50,11 +51,21 @@ def score(record: EvalRecord, result: ArmResult) -> dict[str, float]:
     }
 
 
-def _cell(scored: Sequence[Mapping[str, float]]) -> dict[str, object]:
+def _retrieval_metrics(scored: Sequence[Mapping[str, float]]) -> dict[str, object]:
     if not any(scored):
-        return {"n": len(scored), "metrics": {}, "note": NO_GOLD_NOTE}
-    names = list(scored[0])
-    return {"n": len(scored), "metrics": {m: fmean(s[m] for s in scored) for m in names}}
+        return {"metrics": {}, "note": NO_GOLD_NOTE}
+    return {"metrics": {m: fmean(s[m] for s in scored) for m in scored[0]}}
+
+
+def _cell(outcomes: Sequence[Outcome]) -> dict[str, object]:
+    results = [o.result for o in outcomes]
+    return {
+        "n": len(outcomes),
+        **_retrieval_metrics([score(o.record, o.result) for o in outcomes]),
+        "answers": answer_report.answer_cell([r.answer for r in results]),
+        "latency_ms": operational.latency_cell(results),
+        "cost_usd": operational.cost_cell(results),
+    }
 
 
 def build_cells(outcomes: Sequence[Outcome], arm: str) -> dict[str, dict[str, dict[str, object]]]:
@@ -63,7 +74,7 @@ def build_cells(outcomes: Sequence[Outcome], arm: str) -> dict[str, dict[str, di
     for set_name in dict.fromkeys(o.question_set for o in outcomes):
         in_set = [o for o in outcomes if o.question_set == set_name]
         by_class = {
-            cls: _cell([score(o.record, o.result) for o in in_set if o.record.class_ == cls])
+            cls: _cell([o for o in in_set if o.record.class_ == cls])
             for cls in CLASS_ORDER
             if any(o.record.class_ == cls for o in in_set)
         }
@@ -89,7 +100,11 @@ def question_record(outcome: Outcome) -> dict[str, object]:
         "embed_ms": result.embed_ms,
         "search_ms": result.search_ms,
         "query_cached": result.query_cached,
+        "generation_ms": result.answer.generation_ms,
+        "embed_tokens": result.embed_tokens,
+        "cost_usd": operational.question_cost(result),
         "metrics": score(record, result),
+        "answer": answer_report.answer_record(result.answer),
     }
 
 
@@ -118,6 +133,14 @@ def build_header(
         "final": run.final,
         "seed": run.seed,
         "models": dict(config.models),
+        "efforts": dict(config.efforts),
+        "answer_prompt": {
+            "version": config.answer_prompt.version,
+            "sha256": config.answer_prompt.sha256,
+            "path": config.answer_prompt.path,
+        },
+        "answer_max_tokens": config.answer_max_tokens,
+        "prices": price_table(config.models.values()),
         "k": config.k,
         "metric_ks": list(METRIC_KS),
         "chunker_version": config.chunker_version,
@@ -131,7 +154,8 @@ def build_header(
             }
             for s in question_sets
         ],
-        "metric_definitions": DEFINITIONS | filter_report.DEFINITIONS,
+        "metric_definitions": (DEFINITIONS | filter_report.DEFINITIONS
+                               | answer_report.DEFINITIONS | operational.DEFINITIONS),
     }
 
 

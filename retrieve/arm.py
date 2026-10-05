@@ -2,8 +2,7 @@
 
 An arm receives the question text and nothing else from the eval record
 (ADR-0001), so it can never see a record's labels.  Every arm reads its filter
-with the shared parser in ``retrieve.question_filter``.  Later tickets extend
-``ArmResult`` with the answer and its citations.
+with the shared parser in ``retrieve.question_filter``.
 """
 from __future__ import annotations
 
@@ -12,6 +11,8 @@ from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from typing import Protocol
 
+from retrieve.answer import Answer
+from retrieve.answer_prompt import AnswerPrompt
 from retrieve.question_filter import QuestionFilter
 
 
@@ -35,6 +36,9 @@ class ArmResult:
     embed_ms: float  # query embedding, from the API or the disk cache
     search_ms: float
     query_cached: bool  # cached embeddings take ~0 ms, so latency stats must tell them apart
+    embed_tokens: int  # as Voyage reported them, also for a cached embedding
+    embed_cost_usd: float
+    answer: Answer
 
     @property
     def retrieval_ms(self) -> float:
@@ -48,6 +52,9 @@ class ArmConfig:
     models: Mapping[str, str]  # role -> model ID, e.g. {"embedding": "voyage-4-large"}
     k: int
     chunker_version: str
+    efforts: Mapping[str, str]  # role -> effort, e.g. {"answer": "high"}
+    answer_prompt: AnswerPrompt
+    answer_max_tokens: int
 
 
 class Arm(Protocol):

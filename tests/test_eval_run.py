@@ -17,8 +17,13 @@ import pytest
 
 from eval.run import EXIT_RUN_ERROR, EXIT_USAGE, main
 from eval.schema import EvalRecord, dump_records, load_records
+from retrieve.answer import write_answer
+from retrieve.answer_model import AnswerRequest, ApiResponse, parse_reply
+from retrieve.answer_prompt import SourceChunk, load_prompt
 from retrieve.arm import ArmConfig, ArmError, ArmResult, ArmSpec, RetrievedChunk
+from retrieve.pricing import anthropic_cost, embedding_cost
 from retrieve.question_filter import QuestionFilter, parse_question_filter
+from tests.anthropic_fixtures import load, with_text
 from tests.corpus_filings import corpus_filings
 
 REPO = Path(__file__).resolve().parents[1]
@@ -29,6 +34,11 @@ TODAY = date(2026, 10, 5)
 KEY_ENV = "FAKE_ARM_KEY"
 FILINGS = corpus_filings()
 NVDA_FY2025_10K = "0001045810-25-000023"  # q0072's gold is in NVIDIA's FY2026 10-K
+EMBED_MODEL, ANSWER_MODEL = "voyage-4-large", "claude-sonnet-5-5"
+EMBED_TOKENS = 10
+NOT_RETRIEVED = "0000050863-25-000010:0005"
+RECORDED = load("answered_q0072")["response"]
+GENERATION_COST = anthropic_cost(ANSWER_MODEL, parse_reply(RECORDED).usage)
 
 
 def _filler(n: int) -> list[str]:
@@ -51,6 +61,30 @@ def _ranking(record: EvalRecord) -> list[str]:
     return _filler(10)
 
 
+def _reply(record_id: str, retrieved: list[str]) -> str:
+    """The fake answer model's reply to each record, given its retrieved chunk IDs."""
+    r = retrieved
+    replies = {
+        "q0072": f"STATUS: answered\nA rose [{r[0]}]. B fell [{r[1]}].",  # 2 of 2 kept
+        "q0073": f"STATUS: answered\nA rose [{r[0]}]. B fell. C grew [{NOT_RETRIEVED}].",
+        "q0113": f"STATUS: answered\nA rose [{r[0]}][{r[1]}].",
+        "q0028": f"STATUS: not_found\nA rose [{r[2]}].",
+        "q0004": "STATUS: declined",
+    }
+    return replies.get(record_id, "STATUS: not_found")
+
+
+GENERATION_MS = {"q0072": 1000.0, "q0073": 3000.0}  # others 500
+
+
+class ReplayModel:
+    def __init__(self, text: str, api_ms: float, from_cache: bool):
+        self._response = ApiResponse(with_text(RECORDED, text), api_ms, from_cache)
+
+    def complete(self, request: AnswerRequest) -> ApiResponse:
+        return self._response
+
+
 class FakeArm:
     name = "fake"
 
@@ -61,7 +95,12 @@ class FakeArm:
         filters: dict[str, QuestionFilter] | None = None,
     ):
         self.config = ArmConfig(
-            models=MappingProxyType({"embedding": "fake-embed-1"}), k=10, chunker_version="1"
+            models=MappingProxyType({"embedding": EMBED_MODEL, "answer": ANSWER_MODEL}),
+            k=10,
+            chunker_version="1",
+            efforts=MappingProxyType({"answer": "high"}),
+            answer_prompt=load_prompt("v1"),
+            answer_max_tokens=16_000,
         )
         self._by_question = {r.question: r for r in records}
         self._error = error
@@ -75,15 +114,21 @@ class FakeArm:
         record = self._by_question[question]
         ranking = _ranking(record)
         question_filter = self._filters.get(record.id) or parse_question_filter(question, FILINGS)
+        chunks = [SourceChunk(cid, "NVDA", "10-K", "FY2026", "item_7", "text") for cid in ranking]
+        model = ReplayModel(_reply(record.id, ranking), GENERATION_MS.get(record.id, 500.0),
+                            from_cache=record.id == "q0113")
         return ArmResult(
             retrieved=tuple(
                 RetrievedChunk(cid, round(1 - i / 100, 2)) for i, cid in enumerate(ranking)
             ),
             question_filter=question_filter,
             companies_without_chunks=("INTC",) if record.id == "q0028" else (),
-            embed_ms=2.5,
+            embed_ms=40.0 if record.id == "q0073" else 2.5,
             search_ms=10.0,
-            query_cached=True,
+            query_cached=record.id != "q0073",
+            embed_tokens=EMBED_TOKENS,
+            embed_cost_usd=embedding_cost(EMBED_MODEL, EMBED_TOKENS),
+            answer=write_answer(question, chunks, model, load_prompt("v1")),
         )
 
 
@@ -192,7 +237,14 @@ def test_header_records_provenance_and_the_agent_drafted_label(eval_dir, tmp_pat
     assert header["label"] == "agent-drafted questions"
     assert re.fullmatch(r"[0-9a-f]{7,}(\+dirty)?|unknown", header["commit"])
     assert header["arm"] == "fake"
-    assert header["models"] == {"embedding": "fake-embed-1"}
+    assert header["models"] == {"embedding": EMBED_MODEL, "answer": ANSWER_MODEL}
+    assert header["efforts"] == {"answer": "high"}
+    prompt = load_prompt("v1")
+    assert header["answer_prompt"] == {"version": "v1", "sha256": prompt.sha256,
+                                       "path": "prompts/answer/v1.md"}
+    assert header["answer_max_tokens"] == 16_000
+    assert header["prices"]["date"] == "2026-10-05"
+    assert set(header["prices"]["models"]) == {EMBED_MODEL, ANSWER_MODEL}
     assert header["k"] == 10
     assert header["metric_ks"] == [5, 10]
     assert header["chunker_version"] == "1"
@@ -318,3 +370,83 @@ def test_git_ignores_the_runs_directory():
     path = "benchmarks/runs/2026-10-05-vector-dev-abc1234.json"
     check = subprocess.run(["git", "check-ignore", "-q", path], cwd=REPO)
     assert check.returncode == 0
+
+
+def test_each_question_record_holds_the_answer_its_citations_and_dropped_sentences(
+    eval_dir, tmp_path, env
+):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run()
+    records = {q["id"]: q for q in _result(runs)["questions"]}
+    answer = records["q0073"]["answer"]
+    retrieved = [r["chunk_id"] for r in records["q0073"]["retrieved"]]
+    assert answer["status"] == "answered"
+    assert answer["text"] == f"A rose [{retrieved[0]}]."
+    assert answer["raw_text"].startswith("STATUS: answered\n")
+    assert answer["kept"] == [{"text": f"A rose [{retrieved[0]}].", "citations": [retrieved[0]]}]
+    assert answer["dropped"] == [
+        {"text": "B fell.", "citations": [], "reason": "no_citation"},
+        {"text": f"C grew [{NOT_RETRIEVED}].", "citations": [NOT_RETRIEVED],
+         "reason": "citation_not_retrieved"},
+    ]
+    assert (answer["sentences"], answer["citations"], answer["citations_retrieved"]) == (3, 2, 1)
+    assert answer["model"] == ANSWER_MODEL and answer["stop_reason"] == "end_turn"
+    assert answer["usage"]["input_tokens"] > 0
+    assert records["q0004"]["answer"]["status"] == "declined"
+    assert records["q0113"]["answer"]["from_cache"] is True
+
+
+def test_each_question_record_holds_latency_and_cost_per_stage(eval_dir, tmp_path, env):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run()
+    record = next(q for q in _result(runs)["questions"] if q["id"] == "q0072")
+    assert record["generation_ms"] == 1000.0
+    assert record["embed_tokens"] == EMBED_TOKENS
+    embed_cost = embedding_cost(EMBED_MODEL, EMBED_TOKENS)
+    assert record["cost_usd"] == pytest.approx({
+        "embedding": embed_cost, "generation": GENERATION_COST,
+        "total": embed_cost + GENERATION_COST,
+    })
+
+
+def test_cells_report_structural_citation_validity_and_dropped_sentences(eval_dir, tmp_path, env):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run()
+    cells = _result(runs)["cells"]["agent_drafted"]["fake"]
+    lookup = cells["lookup"]["answers"]  # q0072: 2 kept, 2/2 cited; q0073: 1 kept, 1/2 cited
+    assert lookup["status"] == {"answered": 2}
+    assert (lookup["sentences"], lookup["dropped"]) == (5, 2)
+    assert lookup["dropped_by_reason"] == {"no_citation": 1, "citation_not_retrieved": 1}
+    assert lookup["dropped_share"] == pytest.approx(0.4)
+    assert (lookup["citations"], lookup["citations_retrieved"]) == (4, 3)
+    assert lookup["structural_citation_validity"] == pytest.approx(0.75)
+    assert lookup["refused"] == 0 and lookup["truncated"] == 0
+    decline = cells["decline"]["answers"]
+    assert decline["status"] == {"declined": 1}
+    assert decline["structural_citation_validity"] is None  # nothing was cited
+    assert cells["global"]["answers"]["status"] == {"not_found": 1}
+
+
+def test_cells_report_p50_and_p95_latency_per_stage(eval_dir, tmp_path, env):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run()
+    latency = _result(runs)["cells"]["agent_drafted"]["fake"]["lookup"]["latency_ms"]
+    # generation 1000 and 3000 ms: p50 2000, p95 1000 + 0.95 * 2000 = 2900
+    assert latency["generation"] == pytest.approx({"n": 2, "p50": 2000.0, "p95": 2900.0})
+    assert latency["search"] == pytest.approx({"n": 2, "p50": 10.0, "p95": 10.0})
+    # only q0073's query embedding was made in this run; q0072's came from the cache
+    assert latency["embed"] == pytest.approx({"n": 1, "p50": 40.0, "p95": 40.0})
+    assert latency["retrieval"] == pytest.approx({"n": 1, "p50": 50.0, "p95": 50.0})
+
+
+def test_cells_report_mean_cost_per_query(eval_dir, tmp_path, env):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run()
+    cost = _result(runs)["cells"]["agent_drafted"]["fake"]["lookup"]["cost_usd"]
+    embed_cost = embedding_cost(EMBED_MODEL, EMBED_TOKENS)
+    assert cost == pytest.approx({
+        "per_query_embedding": embed_cost,
+        "per_query_generation": GENERATION_COST,
+        "per_query_total": embed_cost + GENERATION_COST,
+        "total": 2 * (embed_cost + GENERATION_COST),
+    })

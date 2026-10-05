@@ -9,10 +9,9 @@ from __future__ import annotations
 
 import json
 import math
-import os
-import tempfile
 from pathlib import Path
 
+from ingest.atomic_json import write_json_atomic
 from ingest.parsed_files import text_sha256
 from ingest.voyage import MODELS, Embedding, QueryEmbedder
 
@@ -68,15 +67,9 @@ def _read(path: Path, model: str, sha: str) -> Embedding:
 
 
 def _write(path: Path, model: str, sha: str, embedding: Embedding) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    body = {
+    write_json_atomic(path, {
         "model": model,
         "text_sha256": sha,
         "vector": list(embedding.vector),
         "api_token_count": embedding.api_token_count,
-    }
-    with tempfile.NamedTemporaryFile(
-        "w", encoding="utf-8", dir=path.parent, prefix=f".{path.name}.", delete=False
-    ) as fh:
-        json.dump(body, fh)
-    os.replace(fh.name, path)
+    })
