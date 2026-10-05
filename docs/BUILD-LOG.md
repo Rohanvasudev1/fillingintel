@@ -712,6 +712,36 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
 **Next session starts with**
 1. `/implement .scratch/step-5/issues/04-question-filter.md`.
 
+## 2026-10-05 — Step 5 ticket 04: the question filter
+
+- **Built.** `retrieve/question_filter.py` holds the ADR-0001 parser. `parse_question_filter(question, filings)` is a pure function of the question and the corpus filing list. It returns the companies named, the fiscal periods that selected a filing, the forms named, and the accession numbers retrieval may use (`None` means no filter).
+  - The parser resolves to accession numbers per company because the rules differ by company. Calendar quarters apply to AMD and Intel only, and "latest 10-K" means each company's own newest 10-K.
+  - The vector arm reads the filing list from Postgres once at start and filters in SQL with `c.accession_no = ANY(%s::text[])`, a bound parameter. An empty list is refused rather than searching everything.
+  - Each results file has a `filter_report` per question set: exact match against the labels (companies and periods), the two parts separately, filter-excluded gold, and the questions that lost gold. Each question record shows its filter, whether it matched the labels, any excluded gold, and the named companies no retrieved chunk came from (multi-company questions only).
+  - `tests/fixtures/corpus_filings.json` holds the 24 filings' metadata (no text), built from `data/parsed` by `scripts/build_fixtures.py`, so the parser tests run in CI. A test checks it against `data/parsed` when that folder exists.
+- **Rules added beyond ADR-0001's text, each following its "no filter when unsure" rule.** A period with no filing in the corpus (fiscal 2021, NVIDIA fiscal 2024) is ignored. A fourth quarter, which has no 10-Q, leaves its company with no period filter. A list sharing one year or quarter word ("fiscal 2024 and 2025", "Q1 and Q2 of fiscal 2025") sets no period. A filter that selects nothing is no filter.
+- **Dev run (agent-drafted questions, dev, commit 3418218+dirty, i.e. this change before its commit; voyage-4-large, k = 10, chunker_version 1, eval set SHA-256 cd536eea22d5…).** Filter-excluded gold is 0. Exact match is 0.806 (companies 0.989, periods 0.817). Every miss sets less than the labels: a bare year ("its 2025 earnings"), "each company" with no names, or a list.
+
+  | class | n | recall@5 | precision@5 | recall@10 | precision@10 | recall@10, ticket 03 (no filter) |
+  |---|---|---|---|---|---|---|
+  | lookup | 27 | 0.889 | 0.178 | 1.000 | 0.100 | 0.889 |
+  | local | 22 | 0.932 | 0.218 | 0.977 | 0.118 | 0.932 |
+  | multi_hop | 23 | 0.616 | 0.261 | 0.717 | 0.157 | 0.616 |
+  | global | 10 | 0.592 | 0.380 | 0.800 | 0.260 | 0.483 |
+
+  This is still retrieval only, with no intervals, so it is not the baseline. Three multi-company questions had a named company with no retrieved chunk: q0022 (NVIDIA), q0124 and q0125 (AMD).
+- **Evidence.** 943 passed, 1 skipped (the old pointer skip). `ruff` is clean. New tests: `test_question_filter.py` (60, one per ADR rule plus the dev excluded-gold check), three vector-arm tests on the test schema, three harness tests. Each was seen failing first.
+- **Review (`mattpocock-skills:code-review`).**
+  - Standards, no hard violations. Fixed: the CIK-to-ticker map copied three times (now `ingest.corpus.TICKER_BY_CIK`), chunk-ID parsing copied twice (now `ingest.chunker.accession_of`), positional row unpacking (now a `FilingRow` NamedTuple), exact match computed in two places (now `filter_report.exact_match`), the name `mine`, a bare 24 in a test, and in-loop rebinding in the parser. `_take` still blanks text in a loop over three patterns, because a fold would read worse.
+  - Spec findings fixed: shared-year lists and a fourth quarter beside another period both narrowed the filter and cut out evidence. Dev has no question worded either way, so the dev check could not catch them. Both now set no period, with tests.
+  - Spec findings not changed: "latest" applies to every company in scope, so "NVIDIA's latest 10-K and AMD's most recent 10-Q" also allows NVIDIA's latest 10-Q. It filters more loosely than the question, never more tightly. Companies without chunks is reported only when the question names two or more companies, as the ticket says. q0026 ("each company") names none, so it gets nothing. A label-based version would belong in the harness.
+- **Decisions for the user.**
+  1. Record the four extra filter rules above. Recommendation: a dated "Refinements" section in ADR-0001, since they extend its rules.
+  2. Add a CLAUDE.md Decisions line for the metadata fixture. Recommendation: one line saying `tests/fixtures/corpus_filings.json` is generated from `data/parsed` and holds metadata only, so the "real filings" fixture rule still holds.
+
+**Next session starts with**
+1. `/implement .scratch/step-5/issues/05-cited-answers.md`. Ticket 05 must add `ANTHROPIC_API_KEY` to the vector arm's `required_env`.
+
 ---
 
 ## Findings worth telling
