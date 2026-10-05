@@ -2,11 +2,12 @@
 
 **What to build:** the committed "before" number. The agent estimates the API cost from current prices, the user approves it, then the user runs `ingest.embed` and `eval.run --arm vector` on dev.
 
-**Blocked by:** 04, 06, 07
+**Blocked by:** 04, 06, 07, 10 (the judge switch to gpt-6-luna and its spot check)
 
 **Status:** ready-for-human
 
 - [x] Cost estimate from current Voyage and Anthropic prices, approved by the user before the run (2026-10-05: about $28–42 per full run, $55–85 for the baseline plus the repeat)
+- [ ] Cost estimate redone with the judge chosen in ticket 10 and approved by the user before the run (the 2026-10-05 estimate assumed the Opus judge)
 - [x] 2,144 rows in chunk_embeddings (checked 2026-10-05)
 - [ ] filter-excluded-gold is 0 on dev
 - [ ] One uncached repeat run of the dev questions, with the score change between the two runs recorded

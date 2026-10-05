@@ -83,7 +83,7 @@ Build the control arm and the harness that scores it.
 - **Vector arm.** It takes the question, the filter parser, the embedder, the answer model and a database connection. It retrieves the top 10 by exact cosine similarity over `chunk_embeddings` joined to `chunks`, within the filter, and reads chunk text through `resolve()`. It returns the filter used, the retrieved chunk IDs with scores, the final answer, its citations, the dropped sentences, latency per stage and token usage.
 - **Citation enforcement.** A deterministic step splits the answer into sentences. A sentence survives only if it cites at least one `[chunk_id]` and every ID it cites is among the retrieved chunks. The output keeps and counts the dropped sentences.
 - **Answer prompt.** A versioned prompt file, version 1. It demands a citation per sentence, declines buy/hold/sell questions and price targets, and says when the retrieved filings lack the evidence. Any edit creates a new version, and no one edits an existing version.
-- **Models.** `claude-sonnet-5-5` writes answers at effort `high` and `claude-opus-5-5` judges at effort `medium`. Both reject non-default sampling settings, so sampling stays at the defaults. Config pins IDs and efforts and each run records them. A response cache keyed by model, effort and prompt hash makes reruns reproducible.
+- **Models.** `claude-sonnet-5-5` writes answers at effort `high` and `claude-opus-5-5` judges at effort `medium` (judge superseded by the 2026-10-05 amendment below: `gpt-6-luna`). Both reject non-default sampling settings, so sampling stays at the defaults. Config pins IDs and efforts and each run records them. A response cache keyed by model, effort and prompt hash makes reruns reproducible.
 - **Harness command.** `python -m eval.run --arm <name> [--split dev|test] [--final]`. `dev` is the default, and the command refuses `test` without `--final`. It checks the API keys at start. It reads `eval/agent_drafted_set.jsonl`. It reads `eval/eval_set.jsonl` only if that file has records, and reports them in their own column.
 - **Metrics.**
   - From chunk IDs: context recall and precision at 5 and 10, the wrong-evidence rate overall and per hard-negative label, and structural citation validity.
@@ -124,3 +124,95 @@ Build the control arm and the harness that scores it.
 - **Stop condition, from the RUNBOOK.** `python -m eval.run --arm vector` produces a scored results file on dev. Write down the multi-hop number, which is the "before".
 - **Honesty labels.** Every result carries the label "agent-drafted questions" and every judged number "uncalibrated". The baseline run goes into git with its commit and config, per invariant 2.
 - **Known risk.** Hard negatives labelled `same_company_other_period` may contain the correct figure, because a later 10-K restates prior-year comparatives. If that inflates the wrong-evidence rate, flag it. Don't relabel records, per invariant 1.
+
+---
+
+## Amendment 2026-10-05: the judge moves to gpt-6-luna
+
+Status: ready-for-agent
+Sources: the grilling session of 2026-10-05 in chat, and docs/research/openai-luna-judge.md. This amendment replaces every mention of `claude-opus-5-5` as the judge above. Answers are still written by `claude-sonnet-5-5`. No ADR: the user asked for an amendment line only.
+
+### Problem Statement
+
+A graded dev run with `claude-opus-5-5` as the judge costs about $25 (recomputed from the recorded judge responses; the ticket 07 BUILD-LOG figure of $10 to $15 understated it). The baseline, the uncached repeat run and every later arm each pay that again. The user wants a cheaper judge before the baseline runs, without giving up a check that the cheaper judge scores like a strong one.
+
+### Solution
+
+- `gpt-6-luna` (OpenAI) becomes the judge for Ragas faithfulness, answer relevancy, citation support and decline/not-found correctness. Estimated cost per dev run is about $0.62, a lower bound until luna's reasoning-token use is measured.
+- The Opus judge path is deleted, not kept behind config.
+- Before the baseline, a spot check judges 10 fixed dev questions with `gpt-6-luna` at effort `medium` and `high` and with `gpt-6-sol` at effort `medium` as the reference judge. The pass rule is fixed now, before any result is seen:
+  - yes/no verdicts (citation support, decline correctness, not-found correctness): luna agrees with sol on at least 85% of verdicts;
+  - Ragas faithfulness and answer relevancy: the mean absolute gap between luna and sol is at most 0.10 per metric.
+- The cheaper luna effort that passes both rules judges the baseline. If neither passes, `gpt-6-sol` at `medium` judges it (about $12.40 per dev run).
+- The spot check is not calibration. Every judged number keeps the label "uncalibrated", and calibration against hand scores (Cohen's kappa of at least 0.6, RESEARCH-PLAN) is still required before the final benchmark.
+
+### User Stories
+
+1. As the researcher, I want the judge to be `gpt-6-luna`, so that a graded dev run costs under a dollar instead of about $25.
+2. As the researcher, I want the Opus judge code removed, so that there is one judge path to maintain and no expensive path can be selected by mistake.
+3. As the researcher, I want the judge model and effort pinned in config and recorded in every results header, so that a reader knows which model produced each judged number.
+4. As the researcher, I want the judge called through OpenAI's Responses API with a strict JSON schema, so that every reply parses into the reply models Ragas and the project's judges expect.
+5. As the researcher, I want no sampling settings sent to the judge, so that requests are not rejected and reruns rely on the response cache for reproducibility.
+6. As the researcher, I want `store=false` on every judge request, so that OpenAI keeps no stored copy of our prompts and replies beyond its abuse-monitoring window.
+7. As the researcher, I want reply fields to keep their declared order in the schema, so that the judge still writes its reason before its verdict.
+8. As the researcher, I want a refusal, an incomplete reply or JSON that fails the schema to raise the existing judge-reply error, so that the scorer records the failure against that one metric as it does today.
+9. As the researcher, I want an API, network or cache failure to stop the run with the existing judge-run error, so that no partial results file is written.
+10. As the researcher, I want every judge request to go through the existing response cache, with the provider in the cache key, so that reruns replay the same judge replies and OpenAI keys can never collide with Anthropic ones.
+11. As the researcher, I want the cached answers from `claude-sonnet-5-5` reused unchanged, so that switching the judge costs no new answer calls.
+12. As the researcher, I want the three judge runs per question kept, with mean and spread reported, so that run-to-run variance stays visible.
+13. As the researcher, I want an output-token cap of 25,000 at first, so that reasoning does not truncate verdicts before we know luna's real usage.
+14. As the researcher, I want the cap lowered only after the spot check shows real usage, recorded as a config change, so that cached replies are invalidated knowingly.
+15. As the researcher, I want an OpenAI cost function that bills cached input at the cached rate and reasoning tokens as output, so that reported judge cost matches OpenAI's billing.
+16. As the researcher, I want dated price-table rows for `gpt-6-luna` and `gpt-6-sol` with OpenAI's pricing URL, so that every cost figure can be traced.
+17. As the researcher, I want reasoning tokens reported separately in the run's usage totals, so that I can see how much of the judge cost is thinking.
+18. As the researcher, I want `eval.run` to check `OPENAI_API_KEY` at start, alongside the Anthropic and Voyage keys, so that a missing key fails before any answer is written.
+19. As the researcher, I want the OpenAI client to set its API address itself and to refuse to start when `OPENAI_BASE_URL` is set, so that the key can never be sent to another host.
+20. As the researcher, I want the key never printed in errors, logs or the client's repr, per invariant 7.
+21. As the researcher, I want `.env.example` to list an empty `OPENAI_API_KEY`, so that a new checkout shows every key the harness needs.
+22. As the researcher, I want `openai` pinned as a direct dependency at the version already locked, so that the lock file changes no versions.
+23. As the researcher, I want `import openai` to stay offline under pytest-socket, so that CI still makes no network calls.
+24. As the researcher, I want the judge tests to replay real recorded `gpt-6-luna` responses instead of the Opus ones, so that parsing and scoring are tested on genuine API output.
+25. As the researcher, I want the capture script pointed at `gpt-6-luna`, so that the fixtures can be re-recorded with one command.
+26. As the researcher, I want a spot-check command that judges 10 fixed dev questions with each configured judge, so that luna is compared with a stronger reference before the baseline.
+27. As the researcher, I want the 10 questions chosen deterministically from the dev split and spread across classes, so that the check is repeatable and not hand-picked.
+28. As the researcher, I want the pass thresholds written in code and in this spec before the check runs, so that the bar cannot move after the results are seen.
+29. As the researcher, I want the spot check to report verdict agreement and mean score gap per metric, per luna effort, with pass or fail, so that the choice of judge and effort follows from the numbers.
+30. As the researcher, I want the spot-check result and the chosen judge recorded in the BUILD-LOG with the commit, labelled "spot check, not calibration", so that no one reads it as validation.
+31. As the researcher, I want the fallback to `gpt-6-sol` to be a config change only, so that failing the spot check does not need new code.
+32. As the researcher, I want the BUILD-LOG to correct the ticket 07 cost estimate, so that the cost argument for the switch rests on accurate numbers.
+33. As the researcher, I want CLAUDE.md's Step 5 model decision updated to name the new judge, so that future sessions do not rebuild the Opus path.
+
+### Implementation Decisions
+
+- **One judge class for OpenAI.** It subclasses Ragas's `InstructorBaseRagasLLM` like the Claude judge it replaces, keeps the run number, repeat counter and call log, and calls the Responses API with a strict `json_schema` text format built by the openai SDK's strict-schema conversion, `reasoning.effort`, `max_output_tokens` and `store=false`. It sends no `temperature`, `top_p` or `seed`. Ragas's built-in OpenAI route is not used: it misreads the model version and sends sampling settings (research note, section 4).
+- **The `Judge` protocol, `JudgeSpec` and the runner stay as they are.** The Claude-specific judge set is renamed to a provider-neutral name and wired to the OpenAI backend and the Voyage embedder. The judge spec's required environment variables become the OpenAI and Voyage keys; `eval.run` still requires the Anthropic key for answers.
+- **An OpenAI backend** implements the existing answer-model protocol (`complete(request) -> ApiResponse`) so the response cache wraps it unchanged. A separate reply parser reads OpenAI's response shape into the existing token-usage and reply types, mapping `incomplete` status and refusals to unusable stops.
+- **Cache key.** OpenAI judge requests add `"provider": "openai"` to the hashed key. The Anthropic answer request key is unchanged, so cached answers and the Anthropic answer fixtures stay valid. The cache's `{model}/{effort}` folder layout is unchanged.
+- **Config.** Judge model `gpt-6-luna`, effort `medium` until the spot check decides, `max_output_tokens` 25,000, three runs. The results header records model, effort, cap, provider and the openai SDK version.
+- **Pricing.** An `openai_cost` function: OpenAI's input count includes cached tokens, so cached tokens are subtracted and billed at the cached rate; reasoning tokens are part of output. Price-table rows for `gpt-6-luna` and `gpt-6-sol`, dated, with the source URL.
+- **Spot check.** A pure comparison function takes two judges' per-question judged results on the same questions and returns, per metric, verdict agreement or mean absolute gap and a pass flag against the fixed thresholds. A small `eval.spotcheck` command selects 10 dev questions by hash across classes, reuses the cached answers, judges them with each configured judge and effort, and prints and writes the comparison. Its output file is not committed; the BUILD-LOG records the numbers and the commit.
+- **Deletion.** The Claude judge class, its tests, the Opus judge fixtures and the Opus price row (if no longer used) are removed. The Anthropic answer model is untouched.
+- **Dependency.** `openai==3.3.0` added as a direct dependency (user-approved 2026-10-05); it is already in the lock through ragas.
+
+### Testing Decisions
+
+- **Good tests check behaviour at a seam.** Same rule as above: real inputs, recorded API output, outputs a user would see. Test-first for every deterministic piece.
+- **Seam 1, the `Judge` seam with replay.** The existing replay test loads recorded `gpt-6-luna` responses (judge run 1 on the same three recorded answers) and checks the real Ragas and project scores offline. Unit tests cover the request shape (strict schema, `store=false`, effort, no sampling settings, provider in the cache key), the reply parser (refusal, incomplete, bad JSON raise the judge-reply error) and `openai_cost` against hand-computed values.
+- **Seam 2, the spot-check comparison.** Pure-function tests with hand-built judged results: perfect agreement, agreement exactly at 85% and just under, gaps at 0.10 and just over, missing scores, and mismatched question sets refused. The question selection is tested for determinism and class spread against the dev records.
+- **Seam 3, the `eval.run` harness.** Existing tests updated: the OpenAI key is required, a set `OPENAI_BASE_URL` stops the run, the header names the judge model and provider.
+- **Offline.** No test reaches the network; a test imports `openai` with sockets blocked. Recorded responses are stored with keys and organisation IDs removed.
+- **Prior art.** The current judge replay and judge class tests, the `eval.compare` tests and `tests/test_ragas_offline.py`.
+
+### Out of Scope
+
+- Keeping the Opus judge selectable.
+- Batch or Flex processing.
+- Calibration against hand scores.
+- Changing the answer model, the answer prompt or the judge prompts.
+- Changing judge prompts to suit luna; if luna fails the spot check, the fallback is `gpt-6-sol`, not prompt tuning.
+
+### Further Notes
+
+- **Instructions given in chat.** The user chose `gpt-6-luna` over `gpt-5.6-luna` because it is cheaper, asked to delete the Opus path because of its cost, asked for an amendment line rather than an ADR, accepted all eight technical defaults from the research note, and asked that the switch fit in one ticket if possible. All other answers were "as recommended".
+- **Unverified facts to confirm on the first live call:** that openai 3.3.0 works with `gpt-6-luna`, and luna's reasoning-token volume.
+- **Disk space.** The machine had 2.8 GB free on 2026-10-05. Recording fixtures and running the spot check need little, but check before the baseline.

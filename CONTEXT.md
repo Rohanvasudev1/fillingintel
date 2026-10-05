@@ -40,6 +40,17 @@ Whether an eval record is `dev`, used for tuning and interim scores, or `test`, 
 **Agent-drafted**:
 The provenance of an eval record that an agent wrote and no human reviewed. Every result on such records carries this label.
 
+**Judge**:
+The model that scores answers for faithfulness, relevancy, citation support and decline correctness. Its numbers carry the label "uncalibrated" until calibration.
+_Avoid_: grader, evaluator
+
+**Spot check**:
+A small comparison of one judge against a stronger reference judge, used to choose a judge model. It is not calibration.
+_Avoid_: validation
+
+**Calibration**:
+Measuring a judge's agreement with hand scores, as Cohen's kappa. Required before the final benchmark.
+
 ## Retrieval
 
 **Arm**:
