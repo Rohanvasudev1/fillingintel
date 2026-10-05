@@ -744,6 +744,33 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
 
 ---
 
+## 2026-10-05 — Step 5 ticket 05: cited answers (code done; needs an Anthropic key to run)
+
+- **Built.** The vector arm now writes an answer. All 10 retrieved chunks go to `claude-sonnet-5-5` at effort `high`, with prompt v1, and a deterministic step keeps only cited sentences.
+  - `prompts/answer/v1.md` holds the system text and the user template. Each chunk is shown with its ID, company, form, fiscal period and section. `retrieve/answer_prompt.py` pins v1's SHA-256 and refuses an edited v1, so a change has to become v2.
+  - The reply starts with a status line: `answered`, `declined` or `not_found`. A decline is shown as a fixed sentence; a not-found answer is a fixed sentence followed by any cited sentences that survived. A reply with no status line is enforced as an answer and labelled `no_status`, and an API refusal is labelled `refused`.
+  - `retrieve/citations.py` splits each line into sentences: a sentence ends at `.`, `!` or `?` followed by whitespace, and not after `Inc.`, `vs.` or initials such as `U.S.`. Citations straight after a full stop belong to the sentence before it. A sentence survives only if it cites a chunk and every chunk it cites was retrieved. Dropped sentences stay in the record with their reason (`no_citation` or `citation_not_retrieved`).
+  - `retrieve/answer_model.py` calls `messages.create` with model, `max_tokens` 16,000, system, one user message and `output_config.effort`, and nothing else. SDK 1.11 has no temperature, top_p or top_k parameters at all. No refusal fallback is configured, so no other model can write an answer.
+  - `retrieve/response_cache.py` stores every response under `data/cache/responses/{model}/{effort}/{request SHA-256}.json`, with the original call's latency. A rerun makes no answer calls. The key covers the whole request, so changing `max_tokens` also misses the cache.
+  - `retrieve/pricing.py` holds the price table, dated 2026-10-05: Sonnet 5.5 $2 / $10, Opus 5.5 $4 / $20 (cache reads $0.20, which is 0.05x on Opus 5.5), voyage-4-large $0.12, all per million tokens, from each vendor's pricing page. The arm refuses to start if a model it uses has no price.
+  - Results: each question record has the answer, the raw reply, kept and dropped sentences with their citations, status, stop reason, token usage, generation latency and cost by stage. Each cell adds status counts, dropped sentences by reason, structural citation validity (cited IDs that were retrieved / cited IDs, over the raw answer), p50/p95 latency for retrieval, embed, search and generation, and mean cost per query. The header adds efforts, the prompt version, hash and path, `max_tokens` and the price table.
+  - `ANTHROPIC_API_KEY` is in `.env.example` and in the vector arm's `required_env`. Without it, `python -m eval.run --arm vector` stops with exit 2 before opening anything (checked).
+- **Recorded responses are placeholders.** No Anthropic key is set, so `tests/fixtures/anthropic/` holds three hand-built bodies in the API shape, validated by the SDK's `Message` model and labelled in their `recorded` field and README. `scripts/capture_anthropic_responses.py` replaces them with real responses for q0072 (answer), q0005 (decline) and q0011 (not found). That ticket check stays open until it runs.
+- **Evidence.** 1009 passed, 1 skipped (the old pointer skip). `ruff` is clean. New tests: `test_citations.py` (12), `test_answer_prompt.py` (6), `test_answer_model.py` (19), `test_answer.py` (11), `test_eval_operational.py` (3), `test_atomic_json.py` (2), 8 in `test_vector_arm.py` and 4 in `test_eval_run.py`. Citations, prompt, answer model, answer, arm and harness tests were each seen failing first. The percentile edge cases and the atomic-write test were written after the code.
+- **Review (`mattpocock-skills:code-review`).**
+  - Standards findings fixed: an unpriced model, a chunk from an unknown filing or a failed cache write escaped the arm as something other than `ArmError`; sentence merging mutated a list (now a `reduce` over tuples); the atomic writer left a temp file on failure and lived in `parsed_files.py` (now `ingest/atomic_json.py`, tested); `write_answer` had unused model and effort parameters; `refused` was tested twice; `ArmConfig` had `None` defaults no arm uses; usage was built by hand instead of `asdict`; a test helper's argument was named `r`; the capture script had no write or empty-response checks.
+  - Not changed: the Anthropic and Voyage clients share a shape (`from_env`, context manager), and so do the two caches' read checks. Merging them would couple two vendor clients for a few lines each. `ArmResult` keeps its flat fields, which tickets 03 and 04 already use. Costs stay plain dicts because they are written to JSON as-is.
+  - Spec findings fixed: a retrieval latency stage (embed plus search, fresh query embeddings only), an arm-level not-found test, and a note that the cache key includes `max_tokens`.
+  - Spec finding rejected: the reviewer read Opus 5.5's $0.20 cache read as a mistake. The pricing page gives 0.05x for Opus 5.5.
+- **Decision for the user.** The fixed decline and not-found sentences carry no citation. Invariant 3 says uncited sentences are dropped. The decline sentence makes no claim about the filings. The not-found sentence makes a claim about what was retrieved, not about the filings' content. Recommendation: accept both as system statements and add a CLAUDE.md Decisions line saying so, so the exception is on record.
+
+**Next session starts with**
+1. Add `ANTHROPIC_API_KEY` to `.env`, then run `uv run --env-file .env python scripts/capture_anthropic_responses.py` to replace the placeholder responses, rerun the tests, and tick the last ticket 05 check.
+2. Settle the invariant 3 decision above.
+3. `/implement .scratch/step-5/issues/06-wrong-evidence-and-statistics.md`.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.
