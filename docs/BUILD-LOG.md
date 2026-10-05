@@ -796,11 +796,10 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
 - **Decision for the user.** What "ranks above a gold chunk" means when a question has several gold chunks.
   - Current reading: above at least one gold chunk, with an unretrieved gold chunk ranked last. On a multi_hop question that misses one gold chunk, any retrieved hard negative counts.
   - Stricter reading: above the best-ranked gold chunk. This counts only negatives the model sees before any gold chunk.
-  - Recommendation: keep the current reading. A confusable chunk retrieved while gold evidence is missing is the failure H3 is about. Each question record stores ranks, so the stricter rate can be recomputed from the results file and reported beside it if needed. Record the choice as a dated clarification in docs/RESEARCH-PLAN.md.
+  - Recommendation: keep the current reading. A confusable chunk retrieved while gold evidence is missing is the failure H3 is about. Each question record stores ranks, so the stricter rate can be recomputed from the results file and reported beside it if needed. Record the choice as a dated clarification in docs/RESEARCH-PLAN.md. Settled 2026-10-05, as recommended; recorded in docs/RESEARCH-PLAN.md Amendments and CLAUDE.md Decisions.
 
 **Next session starts with**
-1. The user's answer on the wrong-evidence reading.
-2. `/implement .scratch/step-5/issues/07-judged-metrics.md`.
+1. `/implement .scratch/step-5/issues/07-judged-metrics.md`.
 
 ---
 

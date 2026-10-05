@@ -47,3 +47,7 @@ On SEC 10-K and 10-Q filings for three semiconductor companies, when does graph-
   - Subagents wrote both the questions and the gold answers, after reading the same chunks a retriever will search. That may favour retrieval-friendly phrasing and easy evidence.
   - Some drafts carry reviewer notes that were never checked: figures that don't reconcile across filings, and a table header that may be a parser artefact.
   - Results should be read as "on agent-written questions" and not generalised to analyst questions.
+
+## Amendments
+
+- **2026-10-05, clarification before any benchmark run (user decision).** "A hard negative is retrieved above a gold chunk" means above at least one gold chunk. A gold chunk that was not retrieved ranks below every retrieved chunk, so on a question that misses a gold chunk, any retrieved hard negative counts. A hard negative cited anywhere in the raw answer, kept or dropped, also counts. Why: a confusable chunk retrieved while gold evidence is missing is the failure H3 is about. The stricter reading (above the best-ranked gold chunk) can be recomputed from the ranks in each question record. Hypotheses, thresholds and the class-to-arm map are unchanged.
