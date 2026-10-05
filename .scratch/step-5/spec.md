@@ -43,7 +43,7 @@ Build the control arm and the harness that scores it.
 25. As the researcher, I want the answer model to decline investment-advice questions, so that invariant 6 holds before the router exists.
 26. As the researcher, I want the answer model to say when the retrieved filings don't contain the answer, so that unanswerable questions get a fair score.
 27. As the researcher, I want the answer prompt stored as a versioned file whose edits create a new version, so that every result traces to the exact prompt.
-28. As the researcher, I want the answer model at temperature 0 with a pinned model ID, so that runs are as repeatable as the API allows.
+28. As the researcher, I want the answer model's ID and effort pinned and every API response cached, so that reruns reproduce answers even though the models accept no sampling settings.
 29. As the researcher, I want `python -m eval.run --arm vector` to score `dev` by default, so that `test` stays unseen until the final benchmark.
 30. As the researcher, I want scoring `test` to need an explicit `--final` flag, so that it can't happen by accident.
 31. As the researcher, I want the run to stop with a clear message when an API key is missing, so that a long run doesn't fail halfway.
@@ -53,7 +53,7 @@ Build the control arm and the harness that scores it.
 35. As the researcher, I want a deterministic structural citation check, that each cited ID exists and was retrieved, so that I can measure the citation guarantee.
 36. As the researcher, I want an LLM to judge whether each cited chunk supports its sentence, with the label "uncalibrated", so that no one overstates the support rate.
 37. As the researcher, I want faithfulness and answer relevancy from Ragas, so that the RUNBOOK's judged metrics exist.
-38. As the researcher, I want DeepEval faithfulness reported beside Ragas faithfulness, with large disagreements flagged, so that I can see one judge's quirks.
+38. As the researcher, I want one uncached repeat run of the dev questions in the baseline, so that I can see how much scores move between runs.
 39. As the researcher, I want a judge to check whether answers to decline and unanswerable records declined or said the evidence is absent, with these records in their own rows, so that they don't distort the four main classes.
 40. As the researcher, I want each judge to run 3 times, with the mean and spread reported, so that I can see judge noise.
 41. As the researcher, I want every judged number labelled "uncalibrated" until judge calibration is done, so that no one reads it as validated.
@@ -62,7 +62,7 @@ Build the control arm and the harness that scores it.
 44. As the researcher, I want p50 and p95 latency per arm and class, split into retrieval and generation, so that I can test H5 later.
 45. As the researcher, I want cost per query from the token counts each API reports and a dated price table, so that I can trace every cost figure.
 46. As the researcher, I want one results file per run, named by date, arm, split and commit, so that runs never overwrite each other.
-47. As the researcher, I want the results header to record the commit with `+dirty`, every model ID, the prompt version and hash, k, chunker_version, the eval set's SHA-256, the split, the seed, and the Ragas and DeepEval versions, so that I can trace any number to its cause, as invariant 2 requires.
+47. As the researcher, I want the results header to record the commit with `+dirty`, every model ID, the prompt version and hash, k, chunker_version, the eval set's SHA-256, the split, the seed, both models' effort levels and the Ragas version, so that I can trace any number to its cause, as invariant 2 requires.
 48. As the researcher, I want the header to label the run "agent-drafted questions", so that no result passes as human-written or human-verified.
 49. As the researcher, I want a per-question record of the filter, retrieved IDs, answer, citations, dropped sentences, latency and cost, so that failures can be read one by one.
 50. As the researcher, I want each multi-company question's record to show which named companies got no retrieved chunks, so that I can see what a plain top 10 costs.
@@ -79,21 +79,21 @@ Build the control arm and the harness that scores it.
 - **Schema change, approved.** A new `chunk_embeddings` table keyed on `(chunk_id, model)` references `chunks`. It holds the dimensions, a SHA-256 of the embedded text, the token count the API reported, the vector and a timestamp. It has no ANN index. `apply_schema()` checks its live columns as it does for the other tables. The `chunks` table doesn't change.
 - **Embed command.** A new network command, `python -m ingest.embed`, run by the user like `ingest.corpus`. It embeds missing or stale chunks in batches within Voyage's per-request limit. If any chunk exceeds the model's input limit, it fails before making any API call.
 - **Question filter parser.** One deterministic module shared by all arms. Input: question text. Output: a filter of companies, periods and form types, each possibly empty. Its rules are those in ADR-0001: hard filter, explicit period phrases only, calendar quarters for AMD and Intel only, "latest" bound to a form name, union for several companies or periods, no filter when unsure. To resolve "latest", the caller passes in the corpus's filing list, so the parser never queries the database.
-- **Interfaces for the network.** Three small interfaces: embedder, answer model and judge. The real versions are Voyage over `httpx`, the Anthropic SDK, and Ragas and DeepEval. Tests use fakes that replay recorded responses.
+- **Interfaces for the network.** Three small interfaces: embedder, answer model and judge. The real versions are Voyage over `httpx`, the Anthropic SDK, and Ragas with a project judge class. Tests use fakes that replay recorded responses.
 - **Vector arm.** It takes the question, the filter parser, the embedder, the answer model and a database connection. It retrieves the top 10 by exact cosine similarity over `chunk_embeddings` joined to `chunks`, within the filter, and reads chunk text through `resolve()`. It returns the filter used, the retrieved chunk IDs with scores, the final answer, its citations, the dropped sentences, latency per stage and token usage.
 - **Citation enforcement.** A deterministic step splits the answer into sentences. A sentence survives only if it cites at least one `[chunk_id]` and every ID it cites is among the retrieved chunks. The output keeps and counts the dropped sentences.
 - **Answer prompt.** A versioned prompt file, version 1. It demands a citation per sentence, declines buy/hold/sell questions and price targets, and says when the retrieved filings lack the evidence. Any edit creates a new version, and no one edits an existing version.
-- **Models.** `claude-sonnet-5-5` writes answers at temperature 0 and `claude-opus-5-5` judges them. Config pins both IDs and each run records them.
+- **Models.** `claude-sonnet-5-5` writes answers at effort `high` and `claude-opus-5-5` judges at effort `medium`. Both reject non-default sampling settings, so sampling stays at the defaults. Config pins IDs and efforts and each run records them. A response cache keyed by model, effort and prompt hash makes reruns reproducible.
 - **Harness command.** `python -m eval.run --arm <name> [--split dev|test] [--final]`. `dev` is the default, and the command refuses `test` without `--final`. It checks the API keys at start. It reads `eval/agent_drafted_set.jsonl`. It reads `eval/eval_set.jsonl` only if that file has records, and reports them in their own column.
 - **Metrics.**
   - From chunk IDs: context recall and precision at 5 and 10, the wrong-evidence rate overall and per hard-negative label, and structural citation validity.
-  - Judged: Ragas faithfulness and answer relevancy, DeepEval faithfulness as a second opinion, citation support, and decline/not-found correctness. Each judged metric runs 3 times. The report shows the mean and spread, with the label "uncalibrated".
+  - Judged: Ragas faithfulness and answer relevancy, citation support, and decline/not-found correctness. Each judged metric runs 3 times. The report shows the mean and spread, with the label "uncalibrated".
   - Operational: p50 and p95 latency per stage, and cost per query.
 - **Statistics.** Every cell gets a bootstrap 95% interval with a fixed, recorded seed. Classes with fewer than 10 records in the scored split get the label "directional".
 - **Filter parser report.** Each run reports exact match against the labels and filter-excluded-gold. The baseline run needs filter-excluded-gold to be 0 on dev.
 - **Results file.** Each run writes one JSON file named `{date}-{arm}-{split}-{commit}` in a benchmarks runs directory. It has a provenance header, cells keyed by arm and class, the filter parser report and per-question records. Git ignores the run directory except for the committed baseline.
 - **Configuration.** `VOYAGE_API_KEY` and `ANTHROPIC_API_KEY` come from the environment and appear empty in `.env.example`. The price table lives in config with its date. Logs and results never contain secrets.
-- **Dependencies, approved.** `anthropic`, `ragas` and `deepeval`. LangGraph waits for Step 13. Before the judge integration, `/research` finds out how Ragas and DeepEval use Claude as the judge. If that needs another package, ask the user first.
+- **Dependencies, approved.** `anthropic` and `ragas==0.4.3`. LangGraph waits for Step 13. The user dropped DeepEval on 2026-10-05 after the ticket 01 research. Ragas runs through a project judge class on Claude's structured outputs and an embedder wrapper around the Voyage client, with `RAGAS_DO_NOT_TRACK=true`.
 
 ## Testing Decisions
 

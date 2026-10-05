@@ -9,5 +9,6 @@
 - [ ] Cost estimate from current Voyage and Anthropic prices, approved by the user before the run
 - [ ] 2,144 rows in chunk_embeddings
 - [ ] filter-excluded-gold is 0 on dev
+- [ ] One uncached repeat run of the dev questions, with the score change between the two runs recorded
 - [ ] The baseline results file is committed with its commit and config
 - [ ] BUILD-LOG entry records the multi-hop number as the "before", labelled "agent-drafted questions" and "uncalibrated" where judged

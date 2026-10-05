@@ -133,6 +133,8 @@ Metrics via Ragas and DeepEval: context precision, context recall, faithfulness,
 
 Output a JSON results file keyed by `(arm, class)`.
 
+*Amendment, 2026-10-05:* the user dropped DeepEval after the ticket 01 research (docs/research/ragas-deepeval-claude-judge.md). Ragas alone gives the judged metrics, and judge calibration against hand scores is the second opinion. Context precision and recall come from chunk IDs, not an LLM.
+
 **Stop condition:** `python -m eval.run --arm vector` produces a scored results file. You now know how bad plain RAG is on multi-hop, with a number. Write that number down — it's your before.
 
 ### Step 6. CI quality gate

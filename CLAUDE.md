@@ -18,7 +18,7 @@ Three tickers (NVDA, AMD, INTC), 10-K and 10-Q only. For new tickers, data sourc
 EDGAR: descriptive User-Agent with contact details, rate limiting, cached downloads.
 
 ## Stack
-Python 3.11+ (uv), FastAPI, LangGraph, Postgres + pgvector, Neo4j Community, Ragas, DeepEval, Phoenix, GitHub Actions, Streamlit. Decisions below are final unless I reopen them.
+Python 3.11+ (uv), FastAPI, LangGraph, Postgres + pgvector, Neo4j Community, Ragas, Phoenix, GitHub Actions, Streamlit. Decisions below are final unless I reopen them.
 
 ## Workflow
 Matt Pocock's skills (plugin `mattpocock-skills`, official marketplace) run the workflow since 2026-10-04. Run `/ask-matt` when unsure which flow fits a task. Each RUNBOOK step follows Matt's main flow:
@@ -28,7 +28,7 @@ Matt Pocock's skills (plugin `mattpocock-skills`, official marketplace) run the 
 4. Matt's code review before each commit: invoke `mattpocock-skills:code-review` by that full name, including when `/implement` says `/code-review`. Never use Claude Code's built-in `/code-review`, which has the same short name but reviews only for bugs, with no Standards or Spec axis. The Spec axis checks the ticket, the step spec, the RUNBOOK step and docs/OPEN-DECISIONS.md. For SQL or Cypher, the Standards axis also checks injection safety, indexes and constraints. Fix every finding, or report why it can't be fixed. Never resolve a finding by weakening an acceptance check.
 5. Verify: `uv run ruff check .`, `uv run --env-file .env pytest`, and the relevant eval slice.
 6. Append a dated entry to docs/BUILD-LOG.md, ending with a "Next session starts with" note. Stop and report.
-Hard bugs go through `/diagnosing-bugs`. Use `/research` before writing integration code for edgartools, LangGraph, Ragas, DeepEval or graph drivers; its notes go in docs/research/.
+Hard bugs go through `/diagnosing-bugs`. Use `/research` before writing integration code for edgartools, LangGraph, Ragas or graph drivers; its notes go in docs/research/.
 Apply the unslop skill to all prose: replies, docs, BUILD-LOG entries and commit messages.
 Records stay as before: RUNBOOK defines the steps, BUILD-LOG gets an entry per session, OPEN-DECISIONS holds unsettled questions, and Decisions below holds settled ones. The plans in .claude/plans/ (Steps 3–4) are history; .claude/skills/step-review is kept but no longer used.
 Test fixtures are real downloaded filings (gzipped), never hand-written HTML.
@@ -98,17 +98,20 @@ Files changed; evidence (tests, eval results with commit); regressions; decision
 - ADR-0002 (docs/adr/0002-chunk-embeddings-table-exact-search.md): voyage-4-large embeddings go in a separate chunk_embeddings table. Search is exact, truncation is off, and the preamble is embedded.
 - Step 5 models and scope (grilling, 2026-10-04):
   - Step 5 scores `dev` only. Scoring `test` needs an explicit `--final`.
-  - claude-sonnet-5-5 writes answers at temperature 0 and claude-opus-5-5 judges them. Config pins both IDs and each run records them. Judged metrics carry the label "uncalibrated" until judge calibration.
-  - Approved dependencies: anthropic, ragas and deepeval. Voyage calls go through httpx. LangGraph waits for Step 13. /research on the Ragas and DeepEval Claude adapters comes first.
+  - claude-sonnet-5-5 writes answers at effort `high` and claude-opus-5-5 judges at effort `medium`. Both models reject non-default temperature, top_p and top_k, so sampling stays at the defaults (docs/research/ragas-deepeval-claude-judge.md). Config pins both IDs and efforts, and each run records them. Judged metrics carry the label "uncalibrated" until judge calibration.
+  - A cache keyed by model, effort and prompt hash stores every API response, so reruns reproduce answers. Ticket 08 adds one uncached repeat dev run to report run-to-run variance.
+  - Approved dependencies: anthropic and ragas==0.4.3. Voyage calls go through httpx. LangGraph waits for Step 13.
+  - DeepEval dropped (user decision, 2026-10-05): it reads .env at import, registers a pytest plugin, passes unsupported claims by default and costs 3 to 4 judge calls per answer. Judge calibration is the second opinion instead.
+  - Ragas runs through a project judge class on Claude's structured outputs, because its documented Anthropic route sends sampling parameters Opus 5.5 rejects. RAGAS_DO_NOT_TRACK=true, and a test imports ragas with the network blocked.
 - Step 5 harness (grilling, 2026-10-04):
   - eval.run checks VOYAGE_API_KEY and ANTHROPIC_API_KEY at start. pytest stays offline and replays recorded API responses.
   - `python -m ingest.embed` needs the network and embeds the chunks. A disk cache keyed by model and text hash holds query embeddings.
   - The vector arm retrieves the top 10 and passes all 10 to the answer model. Metrics are scored at 5 and 10.
   - Each answer sentence cites `[chunk_id]`. A deterministic step drops and counts sentences with no citation or with a citation outside the retrieved chunks. Citation validity has a deterministic structural part and a judged support part.
   - The answer prompt declines advice and says when the filings lack the evidence. A judge scores both behaviours, and they get their own rows until the router exists in Step 13.
-  - Context recall, precision and the wrong-evidence rate come from chunk IDs, with no LLM. Ragas gives faithfulness and relevancy. DeepEval faithfulness is a second opinion, and /research confirms its role.
+  - Context recall, precision and the wrong-evidence rate come from chunk IDs, with no LLM. Ragas gives faithfulness and relevancy.
   - The answer model runs once per question. Each judge runs 3 times, and the report shows the mean and spread. Bootstrap 95% intervals use a fixed seed.
   - Each run writes benchmarks/runs/{date}-{arm}-{split}-{commit}.json with a provenance header, cells keyed by arm and class, and per-question records. Cost comes from a dated price table in config. Only the baseline run goes into git.
   - The control arm gives multi-company questions a plain top 10. A per-company quota would be a separate, labelled ablation.
-  - The answer prompt lives in prompts/answer/v1.md. Any edit creates a new version. The run header records the prompt version and hash, and the Ragas and DeepEval versions.
+  - The answer prompt lives in prompts/answer/v1.md. Any edit creates a new version. The run header records the prompt version and hash, and the Ragas version.
 - docs/design/filingintel-demo.html is a layout reference only. Its tickers, question categories and numbers are placeholders; RUNBOOK is the source of truth.
