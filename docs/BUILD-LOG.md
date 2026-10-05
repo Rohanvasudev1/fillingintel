@@ -667,11 +667,11 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
 - **TDD note.** The store-side behaviour (one row per chunk, rerun skip, stale re-embed, oversized failure, the CLI) was test-first, each test seen failing. The client's request, retry and validation code was written in the first slice, before its tests. Those tests were then checked by mutation.
 - **Not run.** `python -m ingest.embed` itself, which needs the key and the network.
 
+- **Later the same day.** The user added the key and recorded a real Voyage response, which replaced the placeholder (1,024 dimensions, 25 tokens). `tests/test_embed.py` passes on it: 20 passed.
+
 **Next session starts with**
-1. Add `VOYAGE_API_KEY` to `.env`.
-2. `uv run --env-file .env python scripts/capture_voyage_response.py`, then delete the placeholder note in `tests/fixtures/voyage/README.md`, rerun `uv run --env-file .env pytest tests/test_embed.py`, and tick the last box in ticket 02.
-3. `uv run --env-file .env python -m ingest.embed` (about 2,144 requests).
-4. Settle the two ticket 02 items in OPEN-DECISIONS, then `/implement .scratch/step-5/issues/03-retrieval-only-scored-run.md`.
+1. `uv run --env-file .env python -m ingest.embed` (about 2,144 requests), if not run yet.
+2. Settle the two ticket 02 items in OPEN-DECISIONS, then `/implement .scratch/step-5/issues/03-retrieval-only-scored-run.md`.
 
 ---
 
