@@ -1,5 +1,6 @@
 """The judge runner's ordering and failure handling, and the judged report's edge cases."""
 import random
+import threading
 from dataclasses import replace
 from types import MappingProxyType
 
@@ -31,6 +32,38 @@ class _Failing:
 
     def judge(self, item, run):
         raise self._error
+
+
+class _MeetsAtBarrier:
+    """Each job waits for *parties* jobs to be running at once; records whether they met."""
+
+    config = JudgeConfig()
+
+    def __init__(self, parties: int, timeout: float):
+        self._barrier = threading.Barrier(parties, timeout=timeout)
+        self.met = False
+
+    def judge(self, item, run):
+        try:
+            self._barrier.wait()
+            self.met = True
+        except threading.BrokenBarrierError:
+            pass
+        return _scores(run, 0.5)
+
+
+# The default is pinned at 4 on purpose: 8 concurrent gpt-6-luna jobs went over the
+# account's 200,000 tokens per minute and exhausted the SDK's retries.
+def test_judge_all_runs_four_jobs_at_once_by_default():
+    judge = _MeetsAtBarrier(parties=4, timeout=10)
+    judge_all(judge, [0, 1, 2, 3])  # 3 runs each: 12 jobs, 3 meetings of 4
+    assert judge.met
+
+
+def test_judge_all_never_runs_five_jobs_at_once_by_default():
+    judge = _MeetsAtBarrier(parties=5, timeout=0.5)
+    judge_all(judge, list(range(4)))
+    assert not judge.met
 
 
 def test_judge_all_returns_every_run_in_question_and_run_order():

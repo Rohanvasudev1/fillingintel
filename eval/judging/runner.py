@@ -24,7 +24,9 @@ from retrieve.answer_model import AnswerModelError
 from retrieve.query_cache import CachedQueryEmbedder, CacheError
 from retrieve.response_cache import CachedAnswerModel
 
-JUDGE_WORKERS = 8  # concurrent judge jobs; the SDK backs off on 429
+# Concurrent judge jobs. 8 went over gpt-6-luna's tokens-per-minute limit and the SDK's
+# 429 retries ran out.
+JUDGE_WORKERS = 4
 PROGRESS_EVERY = 25
 
 logger = logging.getLogger(__name__)
