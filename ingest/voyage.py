@@ -65,12 +65,19 @@ class Embedding:
 
     vector: tuple[float, ...]
     api_token_count: int
+    from_cache: bool = False  # True when read from the query cache, not the API
 
 
 class Embedder(Protocol):
     """Embeds chunk text.  ``VoyageClient`` is the real one; tests replay recorded responses."""
 
     def embed_document(self, text: str, model: str) -> Embedding: ...
+
+
+class QueryEmbedder(Protocol):
+    """Embeds a question for retrieval, with ``input_type`` query."""
+
+    def embed_query(self, text: str, model: str) -> Embedding: ...
 
 
 class _Item(BaseModel):
@@ -154,6 +161,10 @@ class VoyageClient:
     def embed_document(self, text: str, model: str) -> Embedding:
         """Embed one chunk with ``input_type`` document and truncation off."""
         return self._embed(text, model, "document")
+
+    def embed_query(self, text: str, model: str) -> Embedding:
+        """Embed one question with ``input_type`` query and truncation off."""
+        return self._embed(text, model, "query")
 
     def _embed(self, text: str, model: str, input_type: InputType) -> Embedding:
         if model not in MODELS:

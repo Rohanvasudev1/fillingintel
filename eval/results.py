@@ -1,0 +1,149 @@
+"""Score an arm's outcomes and build the results file (Step 5).
+
+The file has three parts: a provenance header, ``cells`` keyed by question set,
+arm and class, and one record per question.  Records without gold chunks
+(decline, unanswerable) get their own cells with a count and no retrieval
+metrics.
+"""
+from __future__ import annotations
+
+import json
+import os
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
+from datetime import date
+from pathlib import Path
+from statistics import fmean
+from typing import get_args
+
+from eval.metrics import DEFINITIONS, METRIC_KS, precision_at_k, recall_at_k
+from eval.question_sets import QuestionSet
+from eval.schema import Class, EvalRecord
+from retrieve.arm import ArmConfig, ArmResult
+
+CLASS_ORDER = get_args(Class)
+NO_GOLD_NOTE = "no gold chunks; retrieval metrics do not apply"
+_MAX_RUNS_PER_NAME = 1000
+
+
+@dataclass(frozen=True)
+class Outcome:
+    """One question's record, the set it came from, and what the arm returned."""
+
+    question_set: str
+    record: EvalRecord
+    result: ArmResult
+
+
+def score(record: EvalRecord, result: ArmResult) -> dict[str, float]:
+    """Recall and precision at each of ``METRIC_KS``; empty for a record with no gold."""
+    if not record.gold_chunk_ids:
+        return {}
+    retrieved = [r.chunk_id for r in result.retrieved]
+    gold = record.gold_chunk_ids
+    return {
+        f"{name}@{k}": metric(retrieved, gold, k)
+        for k in METRIC_KS
+        for name, metric in (("recall", recall_at_k), ("precision", precision_at_k))
+    }
+
+
+def _cell(scored: Sequence[Mapping[str, float]]) -> dict[str, object]:
+    if not any(scored):
+        return {"n": len(scored), "metrics": {}, "note": NO_GOLD_NOTE}
+    names = list(scored[0])
+    return {"n": len(scored), "metrics": {m: fmean(s[m] for s in scored) for m in names}}
+
+
+def build_cells(outcomes: Sequence[Outcome], arm: str) -> dict[str, dict[str, dict[str, object]]]:
+    """``cells[question_set][arm][class]``: count and mean metrics, classes in schema order."""
+    cells: dict[str, dict[str, dict[str, object]]] = {}
+    for set_name in dict.fromkeys(o.question_set for o in outcomes):
+        in_set = [o for o in outcomes if o.question_set == set_name]
+        by_class = {
+            cls: _cell([score(o.record, o.result) for o in in_set if o.record.class_ == cls])
+            for cls in CLASS_ORDER
+            if any(o.record.class_ == cls for o in in_set)
+        }
+        cells[set_name] = {arm: by_class}
+    return cells
+
+
+def question_record(outcome: Outcome) -> dict[str, object]:
+    """Everything needed to read one question's failure on its own."""
+    record, result = outcome.record, outcome.result
+    return {
+        "id": record.id,
+        "question_set": outcome.question_set,
+        "class": record.class_,
+        "question": record.question,
+        "gold_chunk_ids": record.gold_chunk_ids,
+        "retrieved": [{"chunk_id": r.chunk_id, "score": r.score} for r in result.retrieved],
+        "retrieval_ms": result.retrieval_ms,
+        "embed_ms": result.embed_ms,
+        "search_ms": result.search_ms,
+        "query_cached": result.query_cached,
+        "metrics": score(record, result),
+    }
+
+
+@dataclass(frozen=True)
+class RunInfo:
+    """What the header records beyond the arm's own config."""
+
+    created_at: str
+    commit: str
+    arm: str
+    split: str
+    final: bool
+    seed: int
+
+
+def build_header(
+    run: RunInfo, config: ArmConfig, question_sets: Sequence[QuestionSet]
+) -> dict[str, object]:
+    """The provenance header (invariant 2).  The agent-drafted label is always first."""
+    return {
+        "label": question_sets[0].label,
+        "created_at": run.created_at,
+        "commit": run.commit,
+        "arm": run.arm,
+        "split": run.split,
+        "final": run.final,
+        "seed": run.seed,
+        "models": dict(config.models),
+        "k": config.k,
+        "metric_ks": list(METRIC_KS),
+        "chunker_version": config.chunker_version,
+        "question_sets": [
+            {
+                "name": s.name,
+                "label": s.label,
+                "path": s.file,
+                "sha256": s.sha256,
+                "records_in_split": sum(r.split == run.split for r in s.records),
+            }
+            for s in question_sets
+        ],
+        "metric_definitions": DEFINITIONS,
+    }
+
+
+def results_path(runs_dir: Path, day: date, arm: str, split: str, commit: str) -> Path:
+    """``{date}-{arm}-{split}-{commit}.json``, or with ``-2``, ``-3``... if that exists."""
+    stem = f"{day.isoformat()}-{arm}-{split}-{commit}"
+    for n in range(1, _MAX_RUNS_PER_NAME + 1):
+        path = runs_dir / (f"{stem}.json" if n == 1 else f"{stem}-{n}.json")
+        if not path.exists():
+            return path
+    raise FileExistsError(f"{_MAX_RUNS_PER_NAME} runs named {stem} already exist in {runs_dir}")
+
+
+def write_results(document: Mapping[str, object], path: Path) -> None:
+    """Write *document* as JSON; refuses to replace an existing file."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "x", encoding="utf-8") as fh:
+        json.dump(document, fh, indent=2)
+        fh.write("\n")
+        fh.flush()
+        os.fsync(fh.fileno())

@@ -94,6 +94,24 @@ _UPSERT_EMBEDDING = cast(
     + ", ".join(f"{col} = EXCLUDED.{col}" for col in _INSERTED_EMBEDDING_COLUMNS[2:])
     + ", embedded_at = now()",
 )
+# The query vector is bound once and cast to vector; exact search, no index (ADR-0002).
+_NEAREST: LiteralString = """
+WITH q AS (SELECT %s::vector AS v)
+SELECT e.chunk_id, 1 - (e.embedding <=> q.v) AS score
+FROM chunk_embeddings e, q
+WHERE e.model = %s
+ORDER BY e.embedding <=> q.v, e.chunk_id
+LIMIT %s
+"""
+_EMBEDDING_GAPS = cast(
+    LiteralString,
+    "SELECT count(*) FILTER (WHERE e.chunk_id IS NULL),"
+    " count(*) FILTER (WHERE e.chunk_id IS NOT NULL AND e.text_sha256 <>"
+    f" encode(sha256(convert_to({_CHUNK_TEXT}, 'UTF8')), 'hex'))"
+    " FROM chunks c JOIN filings f ON f.accession_no = c.accession_no"
+    " LEFT JOIN chunk_embeddings e ON e.chunk_id = c.chunk_id AND e.model = %s",
+)
+_CHUNKER_VERSIONS: LiteralString = "SELECT DISTINCT chunker_version FROM chunks ORDER BY 1"
 _LIVE_COLUMNS: LiteralString = """
 SELECT table_name, column_name FROM information_schema.columns
 WHERE table_schema = current_schema()
@@ -108,6 +126,13 @@ class ChunkForEmbedding(NamedTuple):
     token_count: int
     text: str
     stored_sha256: str | None  # None when the chunk has no vector for the model
+
+
+class EmbeddingGaps(NamedTuple):
+    """Chunks whose *model* vector is absent, or was made from different text."""
+
+    missing: int
+    stale: int
 
 
 class ChunkNotFound(KeyError):
@@ -259,8 +284,32 @@ def save_embedding(
 
     The vector goes in as pgvector's text form, so no pgvector package is needed.
     """
-    literal = "[" + ",".join(repr(x) for x in vector) + "]"
     conn.execute(_UPSERT_EMBEDDING, (
-        chunk_id, model, len(vector), text_sha256(text), api_token_count, literal,
+        chunk_id, model, len(vector), text_sha256(text), api_token_count, _vector_literal(vector),
     ))
     conn.commit()
+
+
+def _vector_literal(vector: tuple[float, ...]) -> str:
+    return "[" + ",".join(repr(x) for x in vector) + "]"
+
+
+def embedding_gaps(conn: psycopg.Connection, model: str) -> EmbeddingGaps:
+    """How many chunks lack a current *model* vector; the hash is recomputed in Postgres."""
+    return EmbeddingGaps(*conn.execute(_EMBEDDING_GAPS, (model,)).fetchone())
+
+
+def chunker_versions(conn: psycopg.Connection) -> list[str]:
+    """The distinct ``chunker_version`` values of the stored chunks, sorted."""
+    return [row[0] for row in conn.execute(_CHUNKER_VERSIONS)]
+
+
+def nearest_chunks(
+    conn: psycopg.Connection, model: str, vector: tuple[float, ...], k: int
+) -> list[tuple[str, float]]:
+    """The *k* chunks whose *model* vectors are most cosine-similar to *vector*.
+
+    Exact search, best first, ties broken by chunk ID.  Each pair is
+    ``(chunk_id, cosine similarity)``.
+    """
+    return conn.execute(_NEAREST, (_vector_literal(vector), model, k)).fetchall()

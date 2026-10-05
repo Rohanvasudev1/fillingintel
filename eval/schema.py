@@ -127,17 +127,22 @@ def split_for(question: str) -> str:
 
 def load_records(path: Path) -> list[EvalRecord]:
     """Read a JSONL eval file; errors name the line.  IDs must be unique."""
+    return parse_records(path.read_text(encoding="utf-8"), path.name)
+
+
+def parse_records(text: str, name: str) -> list[EvalRecord]:
+    """Parse JSONL eval records from *text*; errors name *name* and the line."""
     records: list[EvalRecord] = []
     seen: set[str] = set()
-    for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+    for number, line in enumerate(text.splitlines(), start=1):
         if not line.strip():
             continue
         try:
             record = EvalRecord.model_validate_json(line)
         except ValidationError as exc:
-            raise ValueError(f"{path.name} line {number}: {exc}") from exc
+            raise ValueError(f"{name} line {number}: {exc}") from exc
         if record.id in seen:
-            raise ValueError(f"{path.name} line {number}: duplicate id {record.id}")
+            raise ValueError(f"{name} line {number}: duplicate id {record.id}")
         seen.add(record.id)
         records.append(record)
     return records

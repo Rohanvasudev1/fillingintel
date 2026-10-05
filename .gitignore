@@ -33,3 +33,6 @@ eval/drafts/
 # coverage.py data
 .coverage
 .coverage.*
+
+# Eval runs; only the baseline run is committed (Step 5 ticket 08 adds its exception)
+benchmarks/runs/*

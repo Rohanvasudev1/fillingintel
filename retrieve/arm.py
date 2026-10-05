@@ -1,0 +1,65 @@
+"""The one interface every arm implements, so the harness runs any arm by name.
+
+An arm receives the question text and nothing else from the eval record
+(ADR-0001), so it can never see a record's labels.  Later tickets extend
+``ArmResult`` with the filter, the answer and its citations.
+"""
+from __future__ import annotations
+
+from collections.abc import Callable, Mapping
+from contextlib import AbstractContextManager
+from dataclasses import dataclass
+from typing import Protocol
+
+
+class ArmError(RuntimeError):
+    """An arm could not start or could not answer; the message is safe to print."""
+
+
+@dataclass(frozen=True)
+class RetrievedChunk:
+    chunk_id: str
+    score: float
+
+
+@dataclass(frozen=True)
+class ArmResult:
+    """What one arm returned for one question."""
+
+    retrieved: tuple[RetrievedChunk, ...]  # best first
+    embed_ms: float  # query embedding, from the API or the disk cache
+    search_ms: float
+    query_cached: bool  # cached embeddings take ~0 ms, so latency stats must tell them apart
+
+    @property
+    def retrieval_ms(self) -> float:
+        return self.embed_ms + self.search_ms
+
+
+@dataclass(frozen=True)
+class ArmConfig:
+    """What the results header records about an arm."""
+
+    models: Mapping[str, str]  # role -> model ID, e.g. {"embedding": "voyage-4-large"}
+    k: int
+    chunker_version: str
+
+
+class Arm(Protocol):
+    name: str
+    config: ArmConfig
+
+    def run(self, question: str) -> ArmResult: ...
+
+
+@dataclass(frozen=True)
+class ArmSpec:
+    """A registered arm: the environment variables it needs and how to open it.
+
+    ``open`` returns a context manager, so the arm owns and closes its own
+    connections.  The harness checks ``required_env`` before opening anything.
+    """
+
+    name: str
+    required_env: tuple[str, ...]
+    open: Callable[[], AbstractContextManager[Arm]]
