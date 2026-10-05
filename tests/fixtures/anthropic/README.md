@@ -9,10 +9,11 @@ Three answer-model responses for dev questions, one per answer status:
 Each file holds the question, the 10 retrieved chunk IDs and the response body. The
 `recorded` field says where the body came from.
 
-**Status, 2026-10-05: placeholders.** No `ANTHROPIC_API_KEY` was set, so the bodies were
-hand-built in the Messages API response shape and validated with the SDK's `Message`
-model. They are not API responses. To replace them with real responses, with
-`DATABASE_URL`, `VOYAGE_API_KEY` and `ANTHROPIC_API_KEY` in `.env`:
+**Status: real responses**, recorded on 2026-10-05 from `claude-sonnet-5-5` at effort `high`
+with prompt v1. The answer gives 22% and 14% for the two largest direct customers. The
+decline is the status line alone. The not-found reply's first sentence has no citation, so
+enforcement drops it. None of the three responses has a thinking block. To record them again,
+with `DATABASE_URL`, `VOYAGE_API_KEY` and `ANTHROPIC_API_KEY` in `.env`:
 
     uv run --env-file .env python scripts/capture_anthropic_responses.py
 

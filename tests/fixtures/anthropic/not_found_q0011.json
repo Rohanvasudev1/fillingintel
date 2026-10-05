@@ -1,32 +1,27 @@
 {
-  "recorded": "placeholder: hand-built in the Messages API response shape, not an API response. Replace with scripts/capture_anthropic_responses.py",
+  "recorded": "real API response, recorded by scripts/capture_anthropic_responses.py",
   "question_id": "q0011",
   "question": "How much revenue did NVIDIA earn from Microsoft in fiscal year 2026?",
   "retrieved_chunk_ids": [
-    "0001045810-26-000021:0062",
-    "0001045810-26-000021:0063",
-    "0001045810-26-000021:0064",
-    "0001045810-26-000021:0065",
-    "0001045810-26-000021:0066",
     "0001045810-26-000021:0067",
-    "0001045810-26-000021:0068",
-    "0001045810-26-000021:0069",
-    "0001045810-26-000021:0070",
-    "0001045810-26-000021:0071"
+    "0001045810-25-000116:0033",
+    "0001045810-26-000021:0125",
+    "0001045810-25-000230:0041",
+    "0001045810-26-000021:0124",
+    "0001045810-25-000209:0039",
+    "0001045810-25-000116:0025",
+    "0001045810-25-000230:0031",
+    "0001045810-25-000230:0030",
+    "0001045810-25-000116:0024"
   ],
-  "api_ms": 9000.0,
+  "api_ms": 3164.784042048268,
   "response": {
-    "id": "msg_placeholder_q0011",
+    "id": "msg_011Cfj319hPuNdESAJWF294n",
     "container": null,
     "content": [
       {
-        "signature": "placeholder",
-        "thinking": "",
-        "type": "thinking"
-      },
-      {
         "citations": null,
-        "text": "STATUS: not_found\nThe fiscal year 2026 10-K reports revenue concentration only for unnamed direct customers, as shares of total revenue [0001045810-26-000021:0067].",
+        "text": "STATUS: not_found\n\nThe excerpts do not name any customer, including Microsoft, so they give no revenue figure for Microsoft. They say that for fiscal year 2026, sales to one direct customer represented 22% of total revenue and sales to another direct customer represented 14% of total revenue, both primarily attributable to the Compute & Networking segment [0001045810-26-000021:0067]. Total revenue for fiscal year 2026 was $215,938 million [0001045810-26-000021:0125].",
         "type": "text"
       }
     ],
@@ -38,15 +33,20 @@
     "stop_sequence": null,
     "type": "message",
     "usage": {
-      "cache_creation": null,
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
       "cache_creation_input_tokens": 0,
       "cache_read_input_tokens": 0,
-      "inference_geo": null,
-      "input_tokens": 30977,
-      "output_tokens": 604,
-      "output_tokens_details": null,
+      "inference_geo": "global",
+      "input_tokens": 12674,
+      "output_tokens": 166,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
       "server_tool_use": null,
-      "service_tier": null
+      "service_tier": "standard"
     }
   }
 }

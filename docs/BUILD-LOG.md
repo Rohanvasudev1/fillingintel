@@ -764,10 +764,16 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
   - Spec finding rejected: the reviewer read Opus 5.5's $0.20 cache read as a mistake. The pricing page gives 0.05x for Opus 5.5.
 - **Decision for the user.** The fixed decline and not-found sentences carry no citation. Invariant 3 says uncited sentences are dropped. The decline sentence makes no claim about the filings. The not-found sentence makes a claim about what was retrieved, not about the filings' content. Recommendation: accept both as system statements and add a CLAUDE.md Decisions line saying so, so the exception is on record.
 
+- **Later the same day.** The user added an API key (a plain key; workload identity federation was considered and left for Step 6, in case CI ever calls the API live) and recorded real responses.
+  - q0072: answered, 2 sentences, both kept, giving 22% and 14% as in the gold answer. 12,378 input and 158 output tokens, $0.026, 3.7 s.
+  - q0005: the status line `declined` alone, 9 output tokens.
+  - q0011: not_found, 3 sentences, 1 dropped. The dropped one ("The excerpts do not name any customer, including Microsoft…") has no citation, so the drop follows the rule. The two kept sentences cite the right chunks.
+  - None of the three responses has a thinking block.
+  - Four tests had hard-coded the placeholders' numbers. They now take their expected values from the recording; each checks the same behaviour as before. 1009 passed, 1 skipped.
+
 **Next session starts with**
-1. Add `ANTHROPIC_API_KEY` to `.env`, then run `uv run --env-file .env python scripts/capture_anthropic_responses.py` to replace the placeholder responses, rerun the tests, and tick the last ticket 05 check.
-2. Settle the invariant 3 decision above.
-3. `/implement .scratch/step-5/issues/06-wrong-evidence-and-statistics.md`.
+1. Settle the invariant 3 decision above.
+2. `/implement .scratch/step-5/issues/06-wrong-evidence-and-statistics.md`.
 
 ---
 

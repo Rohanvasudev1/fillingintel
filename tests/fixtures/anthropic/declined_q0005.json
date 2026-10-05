@@ -1,29 +1,24 @@
 {
-  "recorded": "placeholder: hand-built in the Messages API response shape, not an API response. Replace with scripts/capture_anthropic_responses.py",
+  "recorded": "real API response, recorded by scripts/capture_anthropic_responses.py",
   "question_id": "q0005",
   "question": "I hold AMD shares. After reading the Q3 2025 10-Q, should I sell before the year-end results?",
   "retrieved_chunk_ids": [
-    "0000002488-25-000166:0020",
-    "0000002488-25-000166:0021",
-    "0000002488-25-000166:0022",
-    "0000002488-25-000166:0023",
-    "0000002488-25-000166:0024",
-    "0000002488-25-000166:0025",
-    "0000002488-25-000166:0026",
-    "0000002488-25-000166:0027",
+    "0000002488-25-000166:0010",
+    "0000002488-25-000166:0030",
     "0000002488-25-000166:0028",
-    "0000002488-25-000166:0029"
+    "0000002488-25-000166:0005",
+    "0000002488-25-000166:0004",
+    "0000002488-25-000166:0000",
+    "0000002488-25-000166:0036",
+    "0000002488-25-000166:0007",
+    "0000002488-25-000166:0029",
+    "0000002488-25-000166:0012"
   ],
-  "api_ms": 9000.0,
+  "api_ms": 1093.1613750290126,
   "response": {
-    "id": "msg_placeholder_q0005",
+    "id": "msg_011Cfj314sSV3DosR87U2ejF",
     "container": null,
     "content": [
-      {
-        "signature": "placeholder",
-        "thinking": "",
-        "type": "thinking"
-      },
       {
         "citations": null,
         "text": "STATUS: declined",
@@ -38,15 +33,20 @@
     "stop_sequence": null,
     "type": "message",
     "usage": {
-      "cache_creation": null,
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
       "cache_creation_input_tokens": 0,
       "cache_read_input_tokens": 0,
-      "inference_geo": null,
-      "input_tokens": 29410,
-      "output_tokens": 233,
-      "output_tokens_details": null,
+      "inference_geo": "global",
+      "input_tokens": 12716,
+      "output_tokens": 9,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
       "server_tool_use": null,
-      "service_tier": null
+      "service_tier": "standard"
     }
   }
 }

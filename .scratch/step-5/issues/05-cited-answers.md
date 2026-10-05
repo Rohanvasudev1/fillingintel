@@ -14,6 +14,6 @@
 - [x] Citation enforcement drops sentences with no citation or with a citation outside the retrieved chunks, keeps them in the record, and counts them
 - [x] Structural citation validity per cell
 - [x] Cost from the API's reported token counts and a dated price table in config. p50 and p95 latency per stage
-- [ ] Tests with a fake answer model replaying recorded responses, including a decline, a not-found answer and an answer with uncited sentences (tests done; the three responses are labelled placeholders until `scripts/capture_anthropic_responses.py` records real ones)
+- [x] Tests with a fake answer model replaying recorded responses, including a decline, a not-found answer and an answer with uncited sentences (real responses recorded 2026-10-05)
 - [x] Reviewed with `mattpocock-skills:code-review`, every finding fixed or explained
 - [x] `uv run ruff check .` and `uv run --env-file .env pytest` pass

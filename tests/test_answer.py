@@ -59,8 +59,9 @@ def test_a_fully_cited_answer_passes_through_with_its_counts_cost_and_latency():
     body = fixture["response"]["content"][-1]["text"]
     assert answer.status == "answered"
     assert answer.text == body.removeprefix("STATUS: answered\n")
-    assert len(answer.citation_check.kept) == 3 and answer.citation_check.dropped == ()
-    assert (answer.citation_check.citations, answer.citation_check.citations_retrieved) == (3, 3)
+    check = answer.citation_check
+    assert check.kept and check.dropped == ()
+    assert check.citations == check.citations_retrieved > 0
     assert answer.raw_text == body
     assert answer.cost_usd == pytest.approx(anthropic_cost(ANSWER_MODEL, answer.usage))
     assert answer.generation_ms == fixture["api_ms"]
@@ -97,10 +98,14 @@ def test_a_decline_passes_through_as_the_fixed_decline_text():
 def test_a_not_found_answer_keeps_its_cited_context_after_the_fixed_text():
     fixture = load("not_found_q0011")
     answer, _ = _answer(fixture)
-    (kept,) = answer.citation_check.kept
+    check = answer.citation_check
     assert answer.status == "not_found"
-    assert answer.text == f"{NOT_FOUND_TEXT} {kept.text}"
-    assert answer.citation_check.dropped == ()
+    assert len(check.kept) == 2
+    assert answer.text == f"{NOT_FOUND_TEXT} {check.text}"
+    # The recorded reply opens with an uncited sentence about what the excerpts lack.
+    assert [(d.reason, d.text.split(",")[0]) for d in check.dropped] == [
+        ("no_citation", "The excerpts do not name any customer")
+    ]
 
 
 def test_an_uncited_sentence_after_a_decline_is_dropped_and_counted():

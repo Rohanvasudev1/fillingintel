@@ -73,8 +73,10 @@ def test_every_recorded_response_parses(name):
 
 def test_only_text_blocks_make_the_reply_text():
     body = load(RECORDED[0])["response"]
-    assert body["content"][0]["type"] == "thinking"
-    assert parse_reply(body).text == body["content"][1]["text"]
+    thinking = {"type": "thinking", "thinking": "", "signature": "sig"}
+    with_thinking = {**body, "content": [thinking, *body["content"]]}
+    (text_block,) = [b for b in body["content"] if b["type"] == "text"]
+    assert parse_reply(with_thinking).text == text_block["text"]
 
 
 def test_a_refusal_keeps_its_stop_reason_and_category():
@@ -154,9 +156,10 @@ def test_a_damaged_cache_file_is_an_error_not_a_miss(tmp_path):
 
 
 def test_cost_comes_from_reported_tokens_and_the_dated_price_table():
+    reported = load(RECORDED[0])["response"]["usage"]
     usage = parse_reply(load(RECORDED[0])["response"]).usage
     assert anthropic_cost(ANSWER_MODEL, usage) == pytest.approx(
-        (31840 * 2.00 + 812 * 10.00) / 1_000_000
+        (reported["input_tokens"] * 2.00 + reported["output_tokens"] * 10.00) / 1_000_000
     )
     assert embedding_cost("voyage-4-large", 25) == pytest.approx(25 * 0.12 / 1_000_000)
     assert PRICE_TABLE_DATE == "2026-10-05"
