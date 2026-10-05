@@ -774,6 +774,34 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
 **Next session starts with**
 1. `/implement .scratch/step-5/issues/06-wrong-evidence-and-statistics.md`.
 
+## 2026-10-05 — Step 5 ticket 06: wrong evidence and statistics
+
+- **What changed.** Every results file now reports a wrong-evidence rate, and every cell metric has a bootstrap 95% interval. Cells with fewer than 10 scored questions are labelled `directional`.
+  - `eval/wrong_evidence.py`: a hard negative counts as wrong evidence when it ranks above at least one gold chunk, or when it is cited in any sentence of the raw answer, kept or dropped. A gold chunk that was not retrieved ranks below every retrieved chunk. Each cell gives the rate over questions with hard negatives, then per label: the rate over questions with a negative of that label, plus that label's share of the wrong questions (for H3). Each question record lists the hard negatives that triggered, with rank, `above_gold` and `cited`.
+  - `eval/bootstrap.py`: a percentile bootstrap with 10,000 resamples. Each interval's generator is seeded from the header seed plus the interval's set, arm, class and metric, so adding a cell or a metric leaves every other interval unchanged. Intervals cover recall and precision at 5 and 10, the wrong-evidence rates and label shares, dropped share, structural citation validity, p50 and p95 latency per stage, and mean cost per query. A ratio's interval resamples numerator and denominator together. The header records the seed, the resample count and the confidence level.
+  - `percentile` moved from `eval/operational.py` to `eval/bootstrap.py`, because `operational` now needs intervals and the two modules would otherwise import each other.
+- **Evidence.** 1034 passed, 1 skipped. `ruff` is clean. New tests: `test_wrong_evidence.py` (8) and `test_bootstrap.py` (10), on real records q0072, q0113, q0028 and q0004, plus 7 in `test_eval_run.py`. Each new test was seen failing before its code existed. In the fake run, q0073's unretrieved citation is now its own hard negative, so a cited-only case is covered; its sentence and citation counts are unchanged. Two older tests compared whole latency and cost dicts. They now leave out the new `intervals` key and check the same values as before. At dev scale the intervals add about 3 s to a run.
+- **Review (`mattpocock-skills:code-review`).**
+  - Standards findings fixed:
+    - the threshold 10 was written in two modules (it is now one constant, used in the definition text too);
+    - the generator type had no name (now `RngFor`);
+    - `wrong_evidence.wrong_evidence` repeated its module's name (now `wrong_evidence_hits`);
+    - two loops filled local lists (now comprehensions).
+  - Standards findings not changed:
+    - hits are computed twice per question, once for the cell and once for the record. The function is cheap and deterministic, and caching it would add state to `Outcome`.
+    - `hit_record` stays as a thin wrapper, matching `answer_record`, to keep one place that sets the output shape.
+  - Spec findings fixed:
+    - latency and cost had no intervals, though the spec asks for one "on every cell";
+    - H3 needs each label's share of the wrong questions, which is now reported.
+- **Decision for the user.** What "ranks above a gold chunk" means when a question has several gold chunks.
+  - Current reading: above at least one gold chunk, with an unretrieved gold chunk ranked last. On a multi_hop question that misses one gold chunk, any retrieved hard negative counts.
+  - Stricter reading: above the best-ranked gold chunk. This counts only negatives the model sees before any gold chunk.
+  - Recommendation: keep the current reading. A confusable chunk retrieved while gold evidence is missing is the failure H3 is about. Each question record stores ranks, so the stricter rate can be recomputed from the results file and reported beside it if needed. Record the choice as a dated clarification in docs/RESEARCH-PLAN.md.
+
+**Next session starts with**
+1. The user's answer on the wrong-evidence reading.
+2. `/implement .scratch/step-5/issues/07-judged-metrics.md`.
+
 ---
 
 ## Findings worth telling
