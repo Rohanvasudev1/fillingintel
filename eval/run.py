@@ -1,9 +1,12 @@
 """Run one arm over the eval set and write a scored results file (Step 5).
 
-Usage (the vector arm needs ``VOYAGE_API_KEY``, ``DATABASE_URL`` and, for
-questions not yet in the query cache, the network)::
+Usage (the vector arm needs ``VOYAGE_API_KEY``, ``ANTHROPIC_API_KEY``,
+``DATABASE_URL`` and, for questions not yet in the caches, the network)::
 
     uv run --env-file .env python -m eval.run --arm vector
+
+The arm answers every question first; then the judges (``eval.judging``) score
+each answer three times.  Both go through disk caches, so a rerun replays them.
 
 ``dev`` is the default split.  ``test`` is scored only with ``--final``, once,
 for the final benchmark.  Results go to ``benchmarks/runs/``, which git ignores.
@@ -15,10 +18,13 @@ import logging
 import os
 import sys
 from collections.abc import Mapping, Sequence
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from pathlib import Path
 
 from eval.filter_report import build_filter_report
+from eval.judging.runner import CLAUDE_JUDGES, JudgeRunError, JudgeSpec, judge_all
+from eval.judging.scoring import Judge, JudgeInput
 from eval.question_sets import EVAL_DIR, QuestionSet, QuestionSetError, load_question_sets
 from eval.results import (
     Outcome,
@@ -51,12 +57,12 @@ def _parse_args(argv: list[str] | None, arm_names: Sequence[str]) -> argparse.Na
     return parser.parse_args(argv)
 
 
-def _usage_problem(args: argparse.Namespace, spec: ArmSpec) -> str | None:
+def _usage_problem(args: argparse.Namespace, required_env: Sequence[str]) -> str | None:
     if args.split == "test" and not args.final:
         return "the test split is held out; scoring it needs --final (final benchmark only)"
     if args.final and args.split != "test":
         return "--final applies only to --split test"
-    missing = [name for name in spec.required_env if not os.environ.get(name)]
+    missing = [name for name in dict.fromkeys(required_env) if not os.environ.get(name)]
     if missing:
         return (f"{', '.join(missing)} not set (run with: uv run --env-file .env "
                 f"python -m eval.run ...)")
@@ -74,10 +80,20 @@ def _run_arm(arm: Arm, sets: Sequence[QuestionSet], split: str) -> list[Outcome]
     return outcomes
 
 
+def _judge(judge: Judge, outcomes: Sequence[Outcome]) -> list[Outcome]:
+    """*outcomes* with every judge run attached."""
+    items = [JudgeInput(o.record.question, o.record.class_, o.result.answer, o.result.sources)
+             for o in outcomes]
+    logger.info("judging %d answers, %d runs each", len(items), judge.config.runs)
+    judged = judge_all(judge, items)
+    return [replace(o, judged=j) for o, j in zip(outcomes, judged, strict=True)]
+
+
 def main(
     argv: list[str] | None = None,
     *,
     arms: Mapping[str, ArmSpec] = ARMS,
+    judges: JudgeSpec = CLAUDE_JUDGES,
     eval_dir: Path = EVAL_DIR,
     runs_dir: Path = RUNS_DIR,
     today: date | None = None,
@@ -87,7 +103,7 @@ def main(
     logging.basicConfig(level=logging.INFO)
     logging.getLogger("httpx").setLevel(logging.WARNING)
     spec = arms[args.arm]
-    problem = _usage_problem(args, spec)
+    problem = _usage_problem(args, [*spec.required_env, *judges.required_env])
     if problem:
         print(problem, file=sys.stderr)
         return EXIT_USAGE
@@ -103,7 +119,10 @@ def main(
         with spec.open() as arm:
             outcomes = _run_arm(arm, sets, args.split)
             config = arm.config
-    except ArmError as exc:
+        with judges.open() as judge:
+            outcomes = _judge(judge, outcomes)
+            judge_config = judge.config
+    except (ArmError, JudgeRunError) as exc:
         print(f"run stopped, no results written: {exc}", file=sys.stderr)
         return EXIT_RUN_ERROR
 
@@ -111,8 +130,8 @@ def main(
                   args.final, SEED)
     filters = build_filter_report(outcomes)
     document = {
-        "header": build_header(run, config, sets),
-        "cells": build_cells(outcomes, args.arm, SEED),
+        "header": build_header(run, config, sets, judge_config),
+        "cells": build_cells(outcomes, args.arm, SEED, judge_config.runs),
         "filter_report": filters,
         "questions": [question_record(o) for o in outcomes],
     }

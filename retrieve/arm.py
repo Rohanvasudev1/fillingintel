@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from retrieve.answer import Answer
-from retrieve.answer_prompt import AnswerPrompt
+from retrieve.answer_prompt import AnswerPrompt, SourceChunk
 from retrieve.question_filter import QuestionFilter
 
 
@@ -39,6 +39,7 @@ class ArmResult:
     embed_tokens: int  # as Voyage reported them, also for a cached embedding
     embed_cost_usd: float
     answer: Answer
+    sources: tuple[SourceChunk, ...]  # what the answer model saw, in retrieval order; for judges
 
     @property
     def retrieval_ms(self) -> float:

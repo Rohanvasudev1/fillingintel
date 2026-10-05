@@ -1,6 +1,6 @@
 """Citation enforcement: split an answer into sentences and keep only those whose
 every ``[chunk_id]`` was retrieved (Step 5 ticket 05, invariant 3)."""
-from retrieve.citations import enforce_citations, split_sentences
+from retrieve.citations import enforce_citations, split_sentences, strip_citations
 
 A = "0001045810-26-000075:0042"
 B = "0001045810-26-000075:0043"
@@ -91,3 +91,8 @@ def test_a_question_mark_or_exclamation_ends_a_sentence_too():
 def test_an_empty_answer_has_no_sentences():
     result = enforce_citations("  \n ", RETRIEVED)
     assert (result.kept, result.dropped, result.text, result.sentences) == ((), (), "", 0)
+
+
+def test_strip_citations_removes_chunk_id_brackets_and_keeps_other_brackets():
+    text = f"Revenue rose 114% [{A}][{B}]. Gross margin [non-GAAP] fell [{A}, {B}].\nOK."
+    assert strip_citations(text) == "Revenue rose 114%. Gross margin [non-GAAP] fell.\nOK."

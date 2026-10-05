@@ -121,6 +121,7 @@ class VectorArm:
             embed_tokens=retrieval.embed_tokens,
             embed_cost_usd=embedding_cost(self._model, retrieval.embed_tokens),
             answer=answer,
+            sources=chunks,
         )
 
     def _retrieve(self, question: str, accession_nos: Sequence[str] | None) -> _Retrieval:

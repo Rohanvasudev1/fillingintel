@@ -1,8 +1,9 @@
-"""``python -m eval.run`` with a fake arm (Step 5, tickets 03 and 04).
+"""``python -m eval.run`` with a fake arm and fake judges (Step 5, tickets 03 to 07).
 
 The eval directory is a temporary copy of real agent-drafted records.  The fake
 arm returns a fixed ranking per question and the real question filter over the
-real filing list, so every cell value below is computed by hand.
+real filing list, and the fake judge returns fixed scores per question and run,
+so every cell value below is computed by hand.
 """
 import hashlib
 import json
@@ -15,6 +16,8 @@ from types import MappingProxyType
 
 import pytest
 
+from eval.judging.runner import JudgeRunError, JudgeSpec
+from eval.judging.scoring import JudgeConfig, JudgeInput, RunScores, metrics_for
 from eval.run import EXIT_RUN_ERROR, EXIT_USAGE, main
 from eval.schema import EvalRecord, dump_records, load_records
 from retrieve.answer import write_answer
@@ -131,7 +134,41 @@ class FakeArm:
             embed_tokens=EMBED_TOKENS,
             embed_cost_usd=embedding_cost(EMBED_MODEL, EMBED_TOKENS),
             answer=write_answer(question, chunks, model, load_prompt("v1")),
+            sources=tuple(chunks),
         )
+
+
+JUDGE_KEY_ENV = "FAKE_JUDGE_KEY"
+JUDGE_COST = 0.01  # per question and run
+# Each answer metric scores base + 0.1 * (run - 1); decline and not-found verdicts are fixed.
+JUDGE_BASE = {"q0072": 0.6, "q0073": 0.2}
+BEHAVIOUR_RUNS = {"q0004": (1.0, 1.0, 0.0), "q0011": (1.0, 1.0, 1.0)}
+
+
+class FakeJudge:
+    def __init__(self, records: list[EvalRecord], error: Exception | None = None):
+        self.config = JudgeConfig()
+        self._ids = {r.question: r.id for r in records}
+        self._error = error
+        self.calls: list[tuple[str, int, JudgeInput]] = []
+
+    def judge(self, item: JudgeInput, run: int) -> RunScores:
+        record_id = self._ids[item.question]
+        self.calls.append((record_id, run, item))
+        if self._error is not None:
+            raise self._error
+        if record_id in BEHAVIOUR_RUNS:
+            (metric,) = metrics_for(item.class_)
+            scores = {metric: BEHAVIOUR_RUNS[record_id][run - 1]}
+        else:
+            value = round(JUDGE_BASE.get(record_id, 0.5) + 0.1 * (run - 1), 10)
+            scores = {m: value for m in metrics_for(item.class_)}
+        errors = {}
+        if record_id == "q0113" and run == 2:  # one unusable reply
+            scores["citation_support"] = None
+            errors["citation_support"] = "judge stopped with refusal"
+        return RunScores(run, MappingProxyType(scores), MappingProxyType(errors),
+                         JUDGE_COST, calls=3, replayed=1 if run == 1 else 0)
 
 
 @pytest.fixture
@@ -145,11 +182,17 @@ def eval_dir(tmp_path):
 @pytest.fixture
 def env(monkeypatch):
     monkeypatch.setenv(KEY_ENV, "secret-value-not-real")
+    monkeypatch.setenv(JUDGE_KEY_ENV, "judge-secret-not-real")
 
 
-def _setup(eval_dir, tmp_path, error=None, filters=None):
+def _judge_spec(judge: FakeJudge) -> JudgeSpec:
+    return JudgeSpec(required_env=(JUDGE_KEY_ENV,), open=lambda: nullcontext(judge))
+
+
+def _setup(eval_dir, tmp_path, error=None, filters=None, judge_error=None):
     records = load_records(eval_dir / "agent_drafted_set.jsonl")
     arm = FakeArm(records, error, filters)
+    judge = FakeJudge(records, judge_error)
     opened: list[bool] = []
 
     def open_arm():
@@ -160,9 +203,10 @@ def _setup(eval_dir, tmp_path, error=None, filters=None):
     runs = tmp_path / "runs"
 
     def run(*argv: str) -> int:
-        return main(["--arm", "fake", *argv], arms={"fake": spec},
+        return main(["--arm", "fake", *argv], arms={"fake": spec}, judges=_judge_spec(judge),
                     eval_dir=eval_dir, runs_dir=runs, today=TODAY)
 
+    run.judge = judge
     return arm, opened, runs, run
 
 
@@ -239,14 +283,15 @@ def test_header_records_provenance_and_the_agent_drafted_label(eval_dir, tmp_pat
     assert header["label"] == "agent-drafted questions"
     assert re.fullmatch(r"[0-9a-f]{7,}(\+dirty)?|unknown", header["commit"])
     assert header["arm"] == "fake"
-    assert header["models"] == {"embedding": EMBED_MODEL, "answer": ANSWER_MODEL}
-    assert header["efforts"] == {"answer": "high"}
+    assert header["models"] == {"embedding": EMBED_MODEL, "answer": ANSWER_MODEL,
+                                "judge": "claude-opus-5-5"}
+    assert header["efforts"] == {"answer": "high", "judge": "medium"}
     prompt = load_prompt("v1")
     assert header["answer_prompt"] == {"version": "v1", "sha256": prompt.sha256,
                                        "path": "prompts/answer/v1.md"}
     assert header["answer_max_tokens"] == 16_000
     assert header["prices"]["date"] == "2026-10-05"
-    assert set(header["prices"]["models"]) == {EMBED_MODEL, ANSWER_MODEL}
+    assert set(header["prices"]["models"]) == {EMBED_MODEL, ANSWER_MODEL, "claude-opus-5-5"}
     assert header["k"] == 10
     assert header["metric_ks"] == [5, 10]
     assert header["chunker_version"] == "1"
@@ -257,7 +302,8 @@ def test_header_records_provenance_and_the_agent_drafted_label(eval_dir, tmp_pat
         "name": "agent_drafted", "label": "agent-drafted questions",
         "path": "agent_drafted_set.jsonl", "sha256": expected_sha, "records_in_split": 6,
     }
-    assert "secret-value-not-real" not in json.dumps(_result(runs))
+    text = json.dumps(_result(runs))
+    assert "secret-value-not-real" not in text and "judge-secret-not-real" not in text
 
 
 def test_each_question_record_holds_retrieved_ids_scores_and_latency(eval_dir, tmp_path, env):
@@ -334,10 +380,11 @@ def test_human_records_are_reported_in_their_own_column(eval_dir, tmp_path, env)
     dump_records([human], eval_dir / "eval_set.jsonl")
     _, _, runs, run = _setup(eval_dir, tmp_path)
     # The fake arm only knows the agent-drafted questions; add the human one.
-    arm = FakeArm(load_records(eval_dir / "agent_drafted_set.jsonl") + [human])
+    records = load_records(eval_dir / "agent_drafted_set.jsonl") + [human]
+    arm = FakeArm(records)
     spec = ArmSpec(name="fake", required_env=(KEY_ENV,), open=lambda: nullcontext(arm))
-    assert main(["--arm", "fake"], arms={"fake": spec}, eval_dir=eval_dir,
-                runs_dir=runs, today=TODAY) == 0
+    assert main(["--arm", "fake"], arms={"fake": spec}, judges=_judge_spec(FakeJudge(records)),
+                eval_dir=eval_dir, runs_dir=runs, today=TODAY) == 0
     result = _result(runs)
     assert list(result["cells"]) == ["agent_drafted", "human"]
     assert result["cells"]["human"]["fake"]["lookup"]["n"] == 1
@@ -571,3 +618,122 @@ def test_latency_and_cost_carry_bootstrap_intervals(eval_dir, tmp_path, env):
     total = embedding_cost(EMBED_MODEL, EMBED_TOKENS) + GENERATION_COST
     interval = cell["cost_usd"]["intervals"]["per_query_total"]
     assert (interval["low"], interval["high"]) == pytest.approx((total, total))
+
+
+ANSWER_METRICS = ["faithfulness", "answer_relevancy", "citation_support"]
+
+
+def test_the_judge_scores_every_scored_question_three_times_from_what_the_arm_returned(
+    eval_dir, tmp_path, env
+):
+    _, _, _, run = _setup(eval_dir, tmp_path)
+    run()
+    calls = run.judge.calls
+    assert sorted((record_id, n) for record_id, n, _ in calls) == sorted(
+        (i, n) for i in DEV_IDS for n in (1, 2, 3))
+    item = next(item for record_id, _, item in calls if record_id == "q0072")
+    assert item.class_ == "lookup"
+    assert [s.chunk_id for s in item.sources] == _ranking(_ALL["q0072"])
+    assert item.answer.status == "answered"
+
+
+def test_judged_cells_show_the_mean_and_spread_labelled_uncalibrated(eval_dir, tmp_path, env):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run()
+    judged = _result(runs)["cells"]["agent_drafted"]["fake"]["lookup"]["judged"]
+    assert judged["label"] == "uncalibrated"
+    assert judged["runs"] == 3
+    assert list(judged["metrics"]) == ANSWER_METRICS
+    # q0072 scores .6, .7, .8 (mean .7) and q0073 .2, .3, .4 (mean .3)
+    faithfulness = judged["metrics"]["faithfulness"]
+    assert faithfulness["n"] == 2
+    assert faithfulness["mean"] == pytest.approx(0.5)
+    assert faithfulness["run_means"] == pytest.approx([0.4, 0.5, 0.6])
+    assert faithfulness["spread"] == pytest.approx(0.2)
+    interval = faithfulness["interval"]
+    assert (interval["low"], interval["high"]) == pytest.approx((0.3, 0.7))
+    assert judged["errors"] == 0
+    assert judged["cost_usd"] == pytest.approx({"total": 6 * JUDGE_COST,
+                                                "per_query": 3 * JUDGE_COST})
+    assert (judged["calls"], judged["replayed"]) == (18, 2)
+
+
+def test_decline_and_not_found_correctness_sit_in_their_own_rows(eval_dir, tmp_path, env):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run()
+    cells = _result(runs)["cells"]["agent_drafted"]["fake"]
+    decline = cells["decline"]["judged"]["metrics"]
+    assert list(decline) == ["decline_correct"]
+    assert decline["decline_correct"]["mean"] == pytest.approx(2 / 3)
+    assert decline["decline_correct"]["run_means"] == [1.0, 1.0, 0.0]
+    assert decline["decline_correct"]["spread"] == 1.0
+    unanswerable = cells["unanswerable"]["judged"]["metrics"]
+    assert list(unanswerable) == ["not_found_correct"]
+    assert unanswerable["not_found_correct"]["mean"] == 1.0
+    for cls in ("lookup", "multi_hop", "global"):
+        assert list(cells[cls]["judged"]["metrics"]) == ANSWER_METRICS
+
+
+def test_an_unusable_judge_reply_is_counted_and_left_out_of_that_run(eval_dir, tmp_path, env):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run()
+    result = _result(runs)
+    judged = result["cells"]["agent_drafted"]["fake"]["multi_hop"]["judged"]
+    support = judged["metrics"]["citation_support"]
+    assert support["run_means"] == [0.5, None, 0.7]
+    assert support["mean"] == pytest.approx(0.6)
+    assert support["spread"] == pytest.approx(0.2)
+    assert judged["errors"] == 1
+    record = next(q for q in result["questions"] if q["id"] == "q0113")["judged"]
+    assert record["errors"] == [{"run": 2, "metric": "citation_support",
+                                 "error": "judge stopped with refusal"}]
+
+
+def test_each_question_record_holds_every_judge_run(eval_dir, tmp_path, env):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run()
+    records = {q["id"]: q for q in _result(runs)["questions"]}
+    judged = records["q0072"]["judged"]
+    assert judged["label"] == "uncalibrated"
+    faithfulness = judged["metrics"]["faithfulness"]
+    assert faithfulness["runs"] == pytest.approx([0.6, 0.7, 0.8])
+    assert faithfulness["mean"] == pytest.approx(0.7)
+    assert faithfulness["spread"] == pytest.approx(0.2)
+    assert judged["cost_usd"] == pytest.approx(3 * JUDGE_COST)
+    assert records["q0004"]["judged"]["metrics"]["decline_correct"]["runs"] == [1.0, 1.0, 0.0]
+
+
+def test_the_header_records_the_judge_ragas_version_and_judged_definitions(
+    eval_dir, tmp_path, env
+):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run()
+    header = _result(runs)["header"]
+    judging = header["judging"]
+    assert judging["model"] == "claude-opus-5-5" and judging["effort"] == "medium"
+    assert judging["ragas_version"] == "0.4.3"
+    assert judging["label"] == "uncalibrated"
+    assert judging["runs"] == 3
+    assert judging["relevancy_embedding"] == "voyage-4-large"
+    assert set(judging["prompts"]) == {"citation_support", "behaviour"}
+    assert all(len(p["sha256"]) == 64 for p in judging["prompts"].values())
+    definitions = header["metric_definitions"]
+    assert {"judged", *ANSWER_METRICS, "decline_correct", "not_found_correct"} <= set(definitions)
+    assert "uncalibrated" in definitions["judged"]
+
+
+def test_a_missing_judge_key_stops_the_run_before_the_arm_opens(
+    eval_dir, tmp_path, env, monkeypatch, capsys
+):
+    monkeypatch.delenv(JUDGE_KEY_ENV)
+    _, opened, runs, run = _setup(eval_dir, tmp_path)
+    assert run() == EXIT_USAGE
+    assert JUDGE_KEY_ENV in capsys.readouterr().err
+    assert opened == [] and not runs.exists()
+
+
+def test_a_judge_failure_stops_the_run_without_a_results_file(eval_dir, tmp_path, env, capsys):
+    _, _, runs, run = _setup(eval_dir, tmp_path, judge_error=JudgeRunError("API unreachable"))
+    assert run() == EXIT_RUN_ERROR
+    assert "API unreachable" in capsys.readouterr().err
+    assert not runs.exists() or list(runs.glob("*.json")) == []

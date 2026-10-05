@@ -22,6 +22,7 @@ from typing import Literal
 
 CHUNK_ID = re.compile(r"\d{10}-\d{2}-\d{6}:\d{4,}")
 _BRACKET = re.compile(r"\[([^\[\]\n]*)\]")
+_BRACKET_WITH_SPACE = re.compile(r"[ \t]*\[([^\[\]\n]*)\]")
 _SENTENCE_END = re.compile(r"[.!?][\"'’”)]*(?:\s*\[[^\[\]\n]*\])*(?=\s|$)")
 _LAST_WORD = re.compile(r"(\S+)$")
 _INITIALS = re.compile(r"(?:[A-Za-z]\.)+[A-Za-z]")
@@ -75,6 +76,14 @@ def cited_ids(text: str) -> tuple[str, ...]:
     """Chunk IDs cited in square brackets in *text*, in order, each once."""
     found = (cid for m in _BRACKET.finditer(text) for cid in CHUNK_ID.findall(m.group(1)))
     return tuple(dict.fromkeys(found))
+
+
+def strip_citations(text: str) -> str:
+    """*text* without its chunk-ID citations, for judges that read the prose only."""
+    def _drop(match: re.Match[str]) -> str:
+        return "" if CHUNK_ID.search(match.group(1)) else match.group(0)
+
+    return _BRACKET_WITH_SPACE.sub(_drop, text)
 
 
 def _after_abbreviation(line: str, stop: int) -> bool:

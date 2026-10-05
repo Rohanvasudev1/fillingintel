@@ -79,8 +79,22 @@ class ApiResponse:
     from_cache: bool = False
 
 
+class ModelRequest(Protocol):
+    """A Messages API request: an answer request, or a judge request (``eval.judging``)."""
+
+    @property
+    def model(self) -> str: ...
+
+    @property
+    def effort(self) -> Effort: ...
+
+    def params(self) -> dict[str, object]: ...
+
+    def cache_key(self) -> str: ...
+
+
 class AnswerModel(Protocol):
-    def complete(self, request: AnswerRequest) -> ApiResponse: ...
+    def complete(self, request: ModelRequest) -> ApiResponse: ...
 
 
 @dataclass(frozen=True)
@@ -159,7 +173,7 @@ class AnthropicAnswerModel:
         """Close the SDK's connection pool."""
         self._client.close()
 
-    def complete(self, request: AnswerRequest) -> ApiResponse:
+    def complete(self, request: ModelRequest) -> ApiResponse:
         start = self._clock()
         try:
             message = self._client.messages.create(**request.params())

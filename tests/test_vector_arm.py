@@ -191,6 +191,12 @@ def test_the_answer_model_sees_all_ten_chunks_with_their_text_and_source(db_conn
     assert request.user.endswith(f"Question: {QUESTION}")
 
 
+def test_the_result_carries_the_chunks_the_answer_model_saw_for_the_judges(db_conn, embedded):
+    result = _arm(db_conn, FakeQueryEmbedder(), ScriptedAnswerModel()).run(QUESTION)
+    assert [s.chunk_id for s in result.sources] == embedded[:TOP_K]
+    assert result.sources[0].text == resolve(db_conn, embedded[0])
+
+
 def test_citation_enforcement_drops_and_counts_the_right_sentences(db_conn, embedded):
     outside = embedded[-1]  # never in the top 10 at angle 0
 

@@ -3,8 +3,9 @@
 The file has four parts: a provenance header, ``cells`` keyed by question set,
 arm and class, the question filter's report against the labels, and one record
 per question.  Each cell holds retrieval metrics, answer and citation counts,
-latency per stage and cost.  Records without gold chunks (decline,
-unanswerable) get their own cells, with no retrieval metrics.
+latency per stage, cost and the judged scores, labelled uncalibrated.  Records
+without gold chunks (decline, unanswerable) get their own cells, with no
+retrieval metrics; their judged scores are decline and not-found correctness.
 """
 from __future__ import annotations
 
@@ -20,6 +21,9 @@ from typing import get_args
 
 from eval import answer_report, bootstrap, filter_report, operational, wrong_evidence
 from eval.bootstrap import RngFor, interval_rng, is_directional, mean_interval
+from eval.judging import report as judged_report
+from eval.judging.runner import JudgedQuestion
+from eval.judging.scoring import JudgeConfig
 from eval.metrics import DEFINITIONS, METRIC_KS, precision_at_k, recall_at_k
 from eval.question_sets import QuestionSet
 from eval.schema import Class, EvalRecord
@@ -38,6 +42,7 @@ class Outcome:
     question_set: str
     record: EvalRecord
     result: ArmResult
+    judged: JudgedQuestion | None = None  # set once the judges have run
 
 
 def score(record: EvalRecord, result: ArmResult) -> dict[str, float]:
@@ -75,8 +80,9 @@ def _retrieval_metrics(
     }
 
 
-def _cell(outcomes: Sequence[Outcome], rng_for: RngFor) -> dict[str, object]:
+def _cell(outcomes: Sequence[Outcome], judge_runs: int, rng_for: RngFor) -> dict[str, object]:
     results = [o.result for o in outcomes]
+    judged = [o.judged for o in outcomes if o.judged is not None]
     return {
         "n": len(outcomes),
         "directional": is_directional(len(outcomes)),
@@ -86,11 +92,12 @@ def _cell(outcomes: Sequence[Outcome], rng_for: RngFor) -> dict[str, object]:
         "answers": answer_report.answer_cell([r.answer for r in results], rng_for),
         "latency_ms": operational.latency_cell(results, rng_for),
         "cost_usd": operational.cost_cell(results, rng_for),
+        "judged": judged_report.judged_cell(judged, judge_runs, rng_for),
     }
 
 
 def build_cells(
-    outcomes: Sequence[Outcome], arm: str, seed: int
+    outcomes: Sequence[Outcome], arm: str, seed: int, judge_runs: int
 ) -> dict[str, dict[str, dict[str, object]]]:
     """``cells[question_set][arm][class]``: counts, metrics and intervals, classes in schema order.
 
@@ -102,6 +109,7 @@ def build_cells(
         by_class = {
             cls: _cell(
                 [o for o in in_set if o.record.class_ == cls],
+                judge_runs,
                 partial(interval_rng, seed, set_name, arm, cls),
             )
             for cls in CLASS_ORDER
@@ -138,6 +146,8 @@ def question_record(outcome: Outcome) -> dict[str, object]:
             if wrong_evidence.has_hard_negatives(record) else None
         ),
         "answer": answer_report.answer_record(result.answer),
+        "judged": (judged_report.question_judged(outcome.judged, len(outcome.judged.runs))
+                   if outcome.judged is not None else None),
     }
 
 
@@ -154,9 +164,10 @@ class RunInfo:
 
 
 def build_header(
-    run: RunInfo, config: ArmConfig, question_sets: Sequence[QuestionSet]
+    run: RunInfo, config: ArmConfig, question_sets: Sequence[QuestionSet], judge: JudgeConfig
 ) -> dict[str, object]:
     """The provenance header (invariant 2).  The agent-drafted label is always first."""
+    models = {**config.models, "judge": judge.model}
     return {
         "label": question_sets[0].label,
         "created_at": run.created_at,
@@ -167,15 +178,16 @@ def build_header(
         "seed": run.seed,
         "bootstrap": {"resamples": bootstrap.BOOTSTRAP_RESAMPLES,
                       "confidence": bootstrap.CONFIDENCE},
-        "models": dict(config.models),
-        "efforts": dict(config.efforts),
+        "models": models,
+        "efforts": {**config.efforts, "judge": judge.effort},
         "answer_prompt": {
             "version": config.answer_prompt.version,
             "sha256": config.answer_prompt.sha256,
             "path": config.answer_prompt.path,
         },
         "answer_max_tokens": config.answer_max_tokens,
-        "prices": price_table(config.models.values()),
+        "prices": price_table(models.values()),
+        "judging": judge.as_header(),
         "k": config.k,
         "metric_ks": list(METRIC_KS),
         "chunker_version": config.chunker_version,
@@ -191,7 +203,8 @@ def build_header(
         ],
         "metric_definitions": (DEFINITIONS | wrong_evidence.DEFINITIONS
                                | filter_report.DEFINITIONS | answer_report.DEFINITIONS
-                               | operational.DEFINITIONS | bootstrap.DEFINITIONS),
+                               | operational.DEFINITIONS | bootstrap.DEFINITIONS
+                               | judged_report.DEFINITIONS),
     }
 
 

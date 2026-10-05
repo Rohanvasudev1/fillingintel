@@ -35,6 +35,8 @@ jobs:
       EDGAR_USER_AGENT: "FilingIntel/CI ci-placeholder@example.com"
       # tiktoken reads cl100k_base from the vendored copy instead of downloading it.
       TIKTOKEN_CACHE_DIR: ${{ github.workspace }}/vendor/tiktoken
+      # Ragas analytics off; eval.judging also forces this before importing ragas.
+      RAGAS_DO_NOT_TRACK: "true"
 
     steps:
       - uses: actions/checkout@v4

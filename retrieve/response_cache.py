@@ -1,5 +1,8 @@
 """A disk cache of Messages API responses, keyed by model, effort and prompt hash (Step 5).
 
+It holds answer responses and judge responses alike; a judge request's key also
+covers its run number, so the three judge runs stay independent (``eval.judging``).
+
 Claude 5.5 models accept no sampling settings, so reruns reproduce answers by
 replaying stored responses: a rerun makes no new answer calls.  Each response is
 one file, ``{cache_dir}/{model}/{effort}/{request SHA-256}.json``, holding the
@@ -17,7 +20,7 @@ from pathlib import Path
 
 from ingest.atomic_json import write_json_atomic
 from ingest.provenance import REPO_ROOT
-from retrieve.answer_model import AnswerModel, AnswerRequest, ApiResponse
+from retrieve.answer_model import AnswerModel, ApiResponse, ModelRequest
 from retrieve.query_cache import CacheError
 
 DEFAULT_CACHE_DIR = REPO_ROOT / "data" / "cache" / "responses"
@@ -31,7 +34,7 @@ class CachedAnswerModel:
         self._inner = inner
         self._dir = cache_dir
 
-    def complete(self, request: AnswerRequest) -> ApiResponse:
+    def complete(self, request: ModelRequest) -> ApiResponse:
         """The stored response to *request* (``from_cache`` set), or a fresh one, then stored."""
         key = request.cache_key()
         path = self._dir / request.model / request.effort / f"{key}.json"
@@ -48,7 +51,7 @@ class CachedAnswerModel:
         return response
 
 
-def _read(path: Path, request: AnswerRequest, key: str) -> ApiResponse:
+def _read(path: Path, request: ModelRequest, key: str) -> ApiResponse:
     try:
         stored = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
