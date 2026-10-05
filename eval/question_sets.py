@@ -8,6 +8,7 @@ refused, so no result can carry the wrong label.
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -17,6 +18,7 @@ EVAL_DIR = Path(__file__).resolve().parent
 AGENT_DRAFTED_FILE = "agent_drafted_set.jsonl"
 HUMAN_FILE = "eval_set.jsonl"
 AGENT_DRAFTED_LABEL = "agent-drafted questions"
+AGENT_DRAFTED_NAME = "agent_drafted"
 HUMAN_LABEL = "human-written or human-verified questions"
 
 
@@ -52,12 +54,17 @@ def _check_provenance(path: Path, records: tuple[EvalRecord, ...], human: bool) 
         )
 
 
+def agent_drafted_set(sets: Sequence[QuestionSet]) -> QuestionSet:
+    """The agent-drafted set among *sets*."""
+    return next(s for s in sets if s.name == AGENT_DRAFTED_NAME)
+
+
 def load_question_sets(eval_dir: Path = EVAL_DIR) -> tuple[QuestionSet, ...]:
     """The agent-drafted set, then the human set if ``eval_set.jsonl`` has records."""
     agent_path = eval_dir / AGENT_DRAFTED_FILE
     sha, records = _read(agent_path)
     _check_provenance(agent_path, records, human=False)
-    agent = QuestionSet("agent_drafted", AGENT_DRAFTED_LABEL, AGENT_DRAFTED_FILE, sha, records)
+    agent = QuestionSet(AGENT_DRAFTED_NAME, AGENT_DRAFTED_LABEL, AGENT_DRAFTED_FILE, sha, records)
     human_path = eval_dir / HUMAN_FILE
     if not human_path.exists():
         return (agent,)

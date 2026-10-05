@@ -13,6 +13,10 @@ records get not-found correctness, so those behaviours sit in their own rows.
   the score is supported sentences / kept sentences.  Skipped with none kept.
 - Decline and not-found correctness are 1 or 0 from the behaviour judge.
 
+Citation support and the behaviour metrics also keep their yes/no verdicts (one
+per kept sentence, or the one behaviour verdict), so two judges can be compared
+verdict by verdict (``eval.judging.spotcheck``).
+
 A reply the judge cannot use is recorded against its metric, and the other
 metrics still run.  Every judged number is uncalibrated until judge calibration.
 """
@@ -82,6 +86,8 @@ class RunScores:
     calls: int
     replayed: int  # calls answered from the response cache
     usage: OpenAIUsage = NO_USAGE  # judge tokens over this run's calls, cached ones included
+    # metric -> the yes/no verdicts behind its score, for the verdict metrics that produced one
+    verdicts: Mapping[str, tuple[bool, ...]] = field(default_factory=lambda: MappingProxyType({}))
 
 
 @dataclass(frozen=True)
@@ -127,11 +133,16 @@ class RagasJudges:
         scorers = _scorers(item, llm, embeddings, self.config.relevancy_strictness)
         scores: dict[str, float | None] = {}
         errors: dict[str, str] = {}
+        verdicts: dict[str, tuple[bool, ...]] = {}
         for name in metrics_for(item.class_):
             try:
-                scores[name] = scorers[name]()
+                scored = scorers[name]()
             except JudgeReplyError as exc:
                 scores[name], errors[name] = None, str(exc)
+                continue
+            scores[name] = scored.value
+            if scored.verdicts:
+                verdicts[name] = scored.verdicts
         return RunScores(
             run=run,
             scores=MappingProxyType(scores),
@@ -140,7 +151,14 @@ class RagasJudges:
             calls=len(llm.calls),
             replayed=llm.replayed,
             usage=total_usage(c.usage for c in llm.calls),
+            verdicts=MappingProxyType(verdicts),
         )
+
+
+@dataclass(frozen=True)
+class _Scored:
+    value: float | None
+    verdicts: tuple[bool, ...] = ()  # empty for the score metrics
 
 
 def _defined(value: float) -> float | None:
@@ -148,28 +166,29 @@ def _defined(value: float) -> float | None:
 
 
 def _scorers(item: JudgeInput, llm: OpenAIJudge, embeddings: VoyageRagasEmbedding,
-             strictness: int) -> dict[str, Callable[[], float | None]]:
+             strictness: int) -> dict[str, Callable[[], _Scored]]:
     check = item.answer.citation_check
 
-    def faithfulness() -> float | None:
+    def faithfulness() -> _Scored:
         kept = strip_citations(check.text)
         if not kept:
-            return None
+            return _Scored(None)
         result = asyncio.run(Faithfulness(llm=llm).ascore(
             user_input=item.question, response=kept,
             retrieved_contexts=[s.text for s in item.sources]))
-        return _defined(result.value)
+        return _Scored(_defined(result.value))
 
-    def answer_relevancy() -> float | None:
+    def answer_relevancy() -> _Scored:
         shown = strip_citations(item.answer.text)
         if not shown:
-            return None
+            return _Scored(None)
         metric = AnswerRelevancy(llm=llm, embeddings=embeddings, strictness=strictness)
-        return _defined(asyncio.run(metric.ascore(user_input=item.question, response=shown)).value)
+        return _Scored(_defined(
+            asyncio.run(metric.ascore(user_input=item.question, response=shown)).value))
 
-    def citation_support() -> float | None:
+    def citation_support() -> _Scored:
         if not check.kept:
-            return None
+            return _Scored(None)
         reply = llm.generate(
             prompts.citation_support_prompt(item.question, check.kept, item.sources),
             prompts.CitationSupportOutput)
@@ -178,13 +197,14 @@ def _scorers(item: JudgeInput, llm: OpenAIJudge, embeddings: VoyageRagasEmbeddin
             raise JudgeReplyError(
                 f"citation support verdicts numbered {numbers}, expected one per sentence "
                 f"1 to {len(check.kept)}")
-        return sum(v.supported for v in reply.verdicts) / len(reply.verdicts)
+        supported = tuple(v.supported for v in reply.verdicts)
+        return _Scored(sum(supported) / len(supported), supported)
 
-    def behaviour(kind: prompts.Behaviour) -> Callable[[], float]:
-        def score() -> float:
+    def behaviour(kind: prompts.Behaviour) -> Callable[[], _Scored]:
+        def score() -> _Scored:
             reply = llm.generate(prompts.behaviour_prompt(item.question, item.answer.text, kind),
                                  prompts.BehaviourVerdict)
-            return 1.0 if reply.correct else 0.0
+            return _Scored(1.0 if reply.correct else 0.0, (reply.correct,))
         return score
 
     return {

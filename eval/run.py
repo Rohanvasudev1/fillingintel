@@ -76,10 +76,17 @@ def _usage_problem(args: argparse.Namespace, required_env: Sequence[str],
         return "the test split is held out; scoring it needs --final (final benchmark only)"
     if args.final and args.split != "test":
         return "--final applies only to --split test"
+    return env_problem(required_env, forbidden_env, "eval.run ...")
+
+
+def env_problem(required_env: Sequence[str], forbidden_env: Sequence[str],
+                command: str) -> str | None:
+    """Why the environment cannot start *command*, or None: a required variable is unset
+    or a forbidden one is set."""
     missing = [name for name in dict.fromkeys(required_env) if not os.environ.get(name)]
     if missing:
         return (f"{', '.join(missing)} not set (run with: uv run --env-file .env "
-                f"python -m eval.run ...)")
+                f"python -m {command})")
     present = [name for name in dict.fromkeys(forbidden_env) if os.environ.get(name)]
     if present:
         return f"{', '.join(present)} is set; unset it so API keys go only to the vendors' hosts"

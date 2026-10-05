@@ -17,7 +17,7 @@ from pathlib import Path
 
 from eval.judging.openai_backend import API_KEY_ENV as OPENAI_KEY_ENV
 from eval.judging.openai_backend import BASE_URL_ENV, OpenAIResponsesModel
-from eval.judging.scoring import Judge, JudgeInput, RagasJudges, RunScores
+from eval.judging.scoring import Judge, JudgeConfig, JudgeInput, RagasJudges, RunScores
 from ingest.voyage import API_KEY_ENV as VOYAGE_KEY_ENV
 from ingest.voyage import VoyageClient, VoyageError
 from retrieve.answer_model import AnswerModelError
@@ -90,8 +90,9 @@ class _GuardedJudges:
 
 
 @contextmanager
-def open_judges(response_cache: Path) -> Iterator[Judge]:
-    """The OpenAI judge model and Voyage, each behind its disk cache."""
+def open_judges(response_cache: Path, config: JudgeConfig | None = None) -> Iterator[Judge]:
+    """The OpenAI judge model and Voyage, each behind its disk cache.  *config* picks the
+    judge model and effort; the default is the configured judge."""
     with ExitStack() as stack:
         try:
             backend = stack.enter_context(OpenAIResponsesModel.from_env())
@@ -99,7 +100,7 @@ def open_judges(response_cache: Path) -> Iterator[Judge]:
         except (AnswerModelError, VoyageError) as exc:
             raise JudgeRunError(f"cannot start the judges: {exc}") from exc
         yield _GuardedJudges(RagasJudges(CachedAnswerModel(backend, response_cache),
-                                           CachedQueryEmbedder(voyage)))
+                                           CachedQueryEmbedder(voyage), config))
 
 
 JUDGES = JudgeSpec(required_env=(OPENAI_KEY_ENV, VOYAGE_KEY_ENV), open=open_judges,

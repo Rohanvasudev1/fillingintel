@@ -216,3 +216,8 @@ A graded dev run with `claude-opus-5-5` as the judge costs about $25 (recomputed
 - **Instructions given in chat.** The user chose `gpt-6-luna` over `gpt-5.6-luna` because it is cheaper, asked to delete the Opus path because of its cost, asked for an amendment line rather than an ADR, accepted all eight technical defaults from the research note, and asked that the switch fit in one ticket if possible. All other answers were "as recommended".
 - **Unverified facts to confirm on the first live call:** that openai 3.3.0 works with `gpt-6-luna`, and luna's reasoning-token volume.
 - **Disk space.** The machine had 2.8 GB free on 2026-10-05. Recording fixtures and running the spot check need little, but check before the baseline.
+- **Spot-check rules settled before the run (ticket 10 review, user decisions 2026-10-05, all as recommended).**
+  - No cached answers existed, so the spot check writes the 10 Sonnet answers into the shared response cache, and the baseline replays them. "No new answer calls" now reads as "no answer is paid for twice".
+  - Each judge scores every question 3 times, as in a graded run. Agreement stays per metric, so the decline and not-found rows (one question each) get 3 verdicts, not 1.
+  - A metric also fails when more than 15% of its items have a value from only one judge. Items both judges skipped do not count.
+  - Citation-support agreement is counted per sentence verdict. Verdicts are paired by run number. Score gaps are taken between each judge's per-question mean over its runs.

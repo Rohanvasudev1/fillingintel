@@ -191,3 +191,20 @@ def test_cost_counts_every_judge_call_and_the_relevancy_embeddings():
         6 * openai_cost(JUDGE_MODEL, usage) + embedding_cost("voyage-4-large", 4 * EMBED_TOKENS))
     assert scores.usage == total_usage([usage] * 6)
     assert scores.usage.reasoning_tokens == 6 * usage.reasoning_tokens
+
+
+def test_each_run_keeps_the_yes_no_verdicts_behind_its_verdict_scores():
+    scores = _judges(ScriptedBackend(_replies())).judge(_item(), run=1)
+    assert scores.verdicts == {"citation_support": (True, False)}  # one per kept sentence
+    declined = _answer("STATUS: declined")
+    replies = _replies(BehaviourVerdict={"reason": "it answered", "correct": False})
+    behaviour = _judges(ScriptedBackend(replies)).judge(_item(declined, "decline"), run=1)
+    assert behaviour.verdicts == {"decline_correct": (False,)}
+
+
+def test_a_failed_verdict_metric_keeps_no_verdicts():
+    replies = _replies(CitationSupportOutput={"verdicts": [
+        {"sentence": 1, "reason": "stated", "supported": True}]})
+    scores = _judges(ScriptedBackend(replies)).judge(_item(), run=1)
+    assert scores.scores["citation_support"] is None
+    assert "citation_support" not in scores.verdicts
