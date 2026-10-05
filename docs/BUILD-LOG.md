@@ -648,6 +648,33 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
 
 ---
 
+## 2026-10-05 — Step 5 ticket 02: chunk embeddings in Postgres (code done; needs a Voyage key to run)
+
+- **What exists now.**
+  - `chunk_embeddings` (db/schema.sql): keyed on `(chunk_id, model)`, with `dimensions`, `text_sha256`, `api_token_count`, an untyped `vector` with a `vector_dims = dimensions` CHECK, and `embedded_at`. No ANN index. `apply_schema()` checks its live columns. `chunks` is unchanged.
+  - `ingest/voyage.py`: a Voyage client over httpx. It sends input type `document` with truncation off, reads the key from `VOYAGE_API_KEY`, validates every response (model, count, 1,024 finite dimensions, positive token count), and backs off on 429 and 5xx, honouring `Retry-After`.
+  - `ingest/embed.py` (`python -m ingest.embed`): embeds chunks with no current vector, one chunk per request, and commits after each. A rerun skips chunks whose stored text hash still matches.
+  - `store.chunks_for_embedding` and `store.save_embedding` hold the SQL.
+- **Deviations, each in the ticket's comments.**
+  - Batch size is 1, because Voyage reports token usage per request, not per input.
+  - The check before any call uses cl100k counts with a 2x margin under the 32k context (16,000). That margin is an assumption; the largest chunk is 1,801.
+  - The Voyage response in `tests/fixtures/voyage/` is a labelled placeholder: no key was set, so no real response could be recorded. `scripts/capture_voyage_response.py` replaces it.
+- **Evidence.** Tests: 842 passed, 1 skipped (the old documented-pointer skip), with 20 new in `tests/test_embed.py`. `ruff` is clean. Three hand-made mutations to the client (truncation on, no 429 retry, no dimension check) each failed a test, and so did ignoring `Retry-After`. The dev database took the schema: 2,144 chunks wait to be embedded.
+- **Review (`mattpocock-skills:code-review`).**
+  - Standards findings fixed: nesting in the retry loop, hardcoded values, mutable module maps (now a frozen `ModelSpec` and `MappingProxyType`), an HTTP client that was never closed, `Retry-After`, embedding SQL living outside `store.py`, rows unpacked by position, and the capture script copying the request.
+  - Not done: an index on `model`, because search is a sequential scan over about 2,000 rows (noted in the schema).
+  - Spec findings: the fixture test was loosened to allow extra fields in a real response; batch size, the margin and the cascade went to the ticket and OPEN-DECISIONS.
+- **TDD note.** The store-side behaviour (one row per chunk, rerun skip, stale re-embed, oversized failure, the CLI) was test-first, each test seen failing. The client's request, retry and validation code was written in the first slice, before its tests. Those tests were then checked by mutation.
+- **Not run.** `python -m ingest.embed` itself, which needs the key and the network.
+
+**Next session starts with**
+1. Add `VOYAGE_API_KEY` to `.env`.
+2. `uv run --env-file .env python scripts/capture_voyage_response.py`, then delete the placeholder note in `tests/fixtures/voyage/README.md`, rerun `uv run --env-file .env pytest tests/test_embed.py`, and tick the last box in ticket 02.
+3. `uv run --env-file .env python -m ingest.embed` (about 2,144 requests).
+4. Settle the two ticket 02 items in OPEN-DECISIONS, then `/implement .scratch/step-5/issues/03-retrieval-only-scored-run.md`.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.

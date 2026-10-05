@@ -45,3 +45,19 @@ CREATE TABLE IF NOT EXISTS chunks (
 CREATE INDEX IF NOT EXISTS chunks_filter_idx ON chunks (cik, fiscal_period, form_type);
 -- In the approved schema. UNIQUE (accession_no, ordinal) also serves lookups by accession.
 CREATE INDEX IF NOT EXISTS chunks_accession_idx ON chunks (accession_no);
+
+-- Step 5 (ADR-0002). One row per chunk and embedding model. The vector column has no
+-- fixed dimension so a second model fits without a migration; the CHECK ties it to
+-- `dimensions`. No ANN index: search is exact, a sequential scan over a few thousand
+-- rows, so no index on model either. Needs the pgvector extension in a schema
+-- on the search path (docker image and CI install it in public).
+CREATE TABLE IF NOT EXISTS chunk_embeddings (
+    chunk_id        text NOT NULL REFERENCES chunks (chunk_id) ON DELETE CASCADE,
+    model           text NOT NULL,
+    dimensions      integer NOT NULL CHECK (dimensions > 0),
+    text_sha256     text NOT NULL CHECK (text_sha256 ~ '^[0-9a-f]{64}$'),
+    api_token_count integer NOT NULL CHECK (api_token_count > 0),
+    embedding       vector NOT NULL CHECK (vector_dims(embedding) = dimensions),
+    embedded_at     timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (chunk_id, model)
+);
