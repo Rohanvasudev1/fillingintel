@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Protocol
 
 from retrieve.answer import Answer
@@ -69,10 +70,11 @@ class Arm(Protocol):
 class ArmSpec:
     """A registered arm: the environment variables it needs and how to open it.
 
-    ``open`` returns a context manager, so the arm owns and closes its own
+    ``open`` takes the folder of the response cache the arm's model calls go
+    through and returns a context manager, so the arm owns and closes its own
     connections.  The harness checks ``required_env`` before opening anything.
     """
 
     name: str
     required_env: tuple[str, ...]
-    open: Callable[[], AbstractContextManager[Arm]]
+    open: Callable[[Path], AbstractContextManager[Arm]]

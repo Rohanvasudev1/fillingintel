@@ -36,6 +36,7 @@ TEST_ID = "q0001"                                                  # decline, un
 TEN_DEV_LOOKUPS = ["q0072", "q0073", "q0074", "q0077", "q0079", "q0080", "q0081", "q0083",
                    "q0084", "q0085"]
 TODAY = date(2026, 10, 5)
+RESPONSE_CACHE = Path("/nonexistent/responses")  # the fakes never touch it
 KEY_ENV = "FAKE_ARM_KEY"
 FILINGS = corpus_filings()
 NVDA_FY2025_10K = "0001045810-25-000023"  # q0072's gold is in NVIDIA's FY2026 10-K
@@ -185,28 +186,37 @@ def env(monkeypatch):
     monkeypatch.setenv(JUDGE_KEY_ENV, "judge-secret-not-real")
 
 
-def _judge_spec(judge: FakeJudge) -> JudgeSpec:
-    return JudgeSpec(required_env=(JUDGE_KEY_ENV,), open=lambda: nullcontext(judge))
+def _judge_spec(judge: FakeJudge, opened: list[Path] | None = None) -> JudgeSpec:
+    def open_judge(response_cache: Path):
+        if opened is not None:
+            opened.append(response_cache)
+        return nullcontext(judge)
+
+    return JudgeSpec(required_env=(JUDGE_KEY_ENV,), open=open_judge)
 
 
 def _setup(eval_dir, tmp_path, error=None, filters=None, judge_error=None):
     records = load_records(eval_dir / "agent_drafted_set.jsonl")
     arm = FakeArm(records, error, filters)
     judge = FakeJudge(records, judge_error)
-    opened: list[bool] = []
+    opened: list[Path] = []
+    judge_opened: list[Path] = []
 
-    def open_arm():
-        opened.append(True)
+    def open_arm(response_cache: Path):
+        opened.append(response_cache)
         return nullcontext(arm)
 
     spec = ArmSpec(name="fake", required_env=(KEY_ENV,), open=open_arm)
     runs = tmp_path / "runs"
 
     def run(*argv: str) -> int:
-        return main(["--arm", "fake", *argv], arms={"fake": spec}, judges=_judge_spec(judge),
-                    eval_dir=eval_dir, runs_dir=runs, today=TODAY)
+        return main(["--arm", "fake", *argv], arms={"fake": spec},
+                    judges=_judge_spec(judge, judge_opened), eval_dir=eval_dir, runs_dir=runs,
+                    today=TODAY, response_cache=RESPONSE_CACHE,
+                    uncached_root=tmp_path / "uncached")
 
     run.judge = judge
+    run.judge_opened = judge_opened
     return arm, opened, runs, run
 
 
@@ -382,7 +392,7 @@ def test_human_records_are_reported_in_their_own_column(eval_dir, tmp_path, env)
     # The fake arm only knows the agent-drafted questions; add the human one.
     records = load_records(eval_dir / "agent_drafted_set.jsonl") + [human]
     arm = FakeArm(records)
-    spec = ArmSpec(name="fake", required_env=(KEY_ENV,), open=lambda: nullcontext(arm))
+    spec = ArmSpec(name="fake", required_env=(KEY_ENV,), open=lambda _cache: nullcontext(arm))
     assert main(["--arm", "fake"], arms={"fake": spec}, judges=_judge_spec(FakeJudge(records)),
                 eval_dir=eval_dir, runs_dir=runs, today=TODAY) == 0
     result = _result(runs)
@@ -737,3 +747,30 @@ def test_a_judge_failure_stops_the_run_without_a_results_file(eval_dir, tmp_path
     assert run() == EXIT_RUN_ERROR
     assert "API unreachable" in capsys.readouterr().err
     assert not runs.exists() or list(runs.glob("*.json")) == []
+
+
+def test_a_default_run_answers_and_judges_through_the_shared_response_cache(
+    eval_dir, tmp_path, env
+):
+    _, opened, runs, run = _setup(eval_dir, tmp_path)
+    assert run() == 0
+    assert opened == [RESPONSE_CACHE] and run.judge_opened == [RESPONSE_CACHE]
+    assert _result(runs)["header"]["response_cache"] == {"uncached": False,
+                                                         "dir": RESPONSE_CACHE.name}
+
+
+def test_uncached_answers_and_judges_through_one_new_empty_cache(eval_dir, tmp_path, env):
+    _, opened, runs, run = _setup(eval_dir, tmp_path)
+    assert run("--uncached") == 0
+    (fresh,) = opened
+    assert run.judge_opened == [fresh]
+    assert fresh.parent == tmp_path / "uncached" and fresh != RESPONSE_CACHE
+    assert fresh.is_dir() and list(fresh.iterdir()) == []  # nothing there to replay
+    assert _result(runs)["header"]["response_cache"] == {"uncached": True, "dir": fresh.name}
+
+
+def test_two_uncached_runs_never_share_a_cache(eval_dir, tmp_path, env):
+    _, opened, _, run = _setup(eval_dir, tmp_path)
+    assert run("--uncached") == 0
+    assert run("--uncached") == 0
+    assert len(set(opened)) == 2

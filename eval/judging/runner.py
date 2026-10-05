@@ -13,6 +13,7 @@ from collections.abc import Callable, Iterator, Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import AbstractContextManager, ExitStack, contextmanager
 from dataclasses import dataclass
+from pathlib import Path
 
 from eval.judging.scoring import ClaudeJudges, Judge, JudgeInput, RunScores
 from ingest.voyage import API_KEY_ENV as VOYAGE_KEY_ENV
@@ -44,7 +45,7 @@ class JudgeSpec:
     """How the harness opens the judges, and the environment variables they need."""
 
     required_env: tuple[str, ...]
-    open: Callable[[], AbstractContextManager[Judge]]
+    open: Callable[[Path], AbstractContextManager[Judge]]  # takes the response cache folder
 
 
 def judge_all(judge: Judge, items: Sequence[JudgeInput],
@@ -87,7 +88,7 @@ class _GuardedJudges:
 
 
 @contextmanager
-def open_claude_judges() -> Iterator[Judge]:
+def open_claude_judges(response_cache: Path) -> Iterator[Judge]:
     """``claude-opus-5-5`` and Voyage, each behind its disk cache."""
     with ExitStack() as stack:
         try:
@@ -95,7 +96,8 @@ def open_claude_judges() -> Iterator[Judge]:
             voyage = stack.enter_context(VoyageClient.from_env())
         except (AnswerModelError, VoyageError) as exc:
             raise JudgeRunError(f"cannot start the judges: {exc}") from exc
-        yield _GuardedJudges(ClaudeJudges(CachedAnswerModel(claude), CachedQueryEmbedder(voyage)))
+        yield _GuardedJudges(ClaudeJudges(CachedAnswerModel(claude, response_cache),
+                                            CachedQueryEmbedder(voyage)))
 
 
 CLAUDE_JUDGES = JudgeSpec(required_env=(ANTHROPIC_KEY_ENV, VOYAGE_KEY_ENV),

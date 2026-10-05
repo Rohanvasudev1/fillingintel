@@ -8,6 +8,11 @@ Usage (the vector arm needs ``VOYAGE_API_KEY``, ``ANTHROPIC_API_KEY``,
 The arm answers every question first; then the judges (``eval.judging``) score
 each answer three times.  Both go through disk caches, so a rerun replays them.
 
+``--uncached`` repeats a run with fresh answer and judge calls: they go through a
+new, empty response cache under ``data/cache/responses-uncached/``, so nothing is
+replayed and the shared cache is left as it was.  Query embeddings stay cached,
+so retrieval is the same and only the models' answers and verdicts can change.
+
 ``dev`` is the default split.  ``test`` is scored only with ``--final``, once,
 for the final benchmark.  Results go to ``benchmarks/runs/``, which git ignores.
 """
@@ -17,14 +22,16 @@ import argparse
 import logging
 import os
 import sys
+import tempfile
 from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from datetime import UTC, date, datetime
 from pathlib import Path
+from typing import Any
 
 from eval.filter_report import build_filter_report
 from eval.judging.runner import CLAUDE_JUDGES, JudgeRunError, JudgeSpec, judge_all
-from eval.judging.scoring import Judge, JudgeInput
+from eval.judging.scoring import Judge, JudgeConfig, JudgeInput
 from eval.question_sets import EVAL_DIR, QuestionSet, QuestionSetError, load_question_sets
 from eval.results import (
     Outcome,
@@ -36,10 +43,12 @@ from eval.results import (
     write_results,
 )
 from ingest.provenance import REPO_ROOT, git_state
-from retrieve.arm import Arm, ArmError, ArmSpec
+from retrieve.arm import Arm, ArmConfig, ArmError, ArmSpec
 from retrieve.arms import ARMS
+from retrieve.response_cache import DEFAULT_CACHE_DIR as DEFAULT_RESPONSE_CACHE
 
 RUNS_DIR = REPO_ROOT / "benchmarks" / "runs"
+UNCACHED_ROOT = REPO_ROOT / "data" / "cache" / "responses-uncached"
 SEED = 20261005  # recorded in every header; seeds every bootstrap interval
 PROGRESS_EVERY = 10
 EXIT_USAGE = 2
@@ -54,6 +63,8 @@ def _parse_args(argv: list[str] | None, arm_names: Sequence[str]) -> argparse.Na
     parser.add_argument("--split", default="dev", choices=("dev", "test"))
     parser.add_argument("--final", action="store_true",
                         help="required to score the test split, for the final benchmark only")
+    parser.add_argument("--uncached", action="store_true",
+                        help="make every answer and judge call afresh, through a new empty cache")
     return parser.parse_args(argv)
 
 
@@ -89,6 +100,34 @@ def _judge(judge: Judge, outcomes: Sequence[Outcome]) -> list[Outcome]:
     return [replace(o, judged=j) for o, j in zip(outcomes, judged, strict=True)]
 
 
+def _fresh_cache(root: Path, day: date) -> Path:
+    """A new, empty folder under *root* that no other run uses."""
+    root.mkdir(parents=True, exist_ok=True)
+    return Path(tempfile.mkdtemp(prefix=f"{day.isoformat()}-", dir=root))
+
+
+def _score(
+    spec: ArmSpec, judges: JudgeSpec, sets: Sequence[QuestionSet], split: str, cache_dir: Path
+) -> tuple[list[Outcome], ArmConfig, JudgeConfig]:
+    """Every *split* question answered by the arm, then judged; raises ArmError or JudgeRunError."""
+    with spec.open(cache_dir) as arm:
+        outcomes = _run_arm(arm, sets, split)
+        config = arm.config
+    with judges.open(cache_dir) as judge:
+        return _judge(judge, outcomes), config, judge.config
+
+
+def _document(run: RunInfo, config: ArmConfig, sets: Sequence[QuestionSet],
+              judge_config: JudgeConfig, outcomes: Sequence[Outcome]) -> dict[str, Any]:
+    """The results file's content: header, cells, filter report and per-question records."""
+    return {
+        "header": build_header(run, config, sets, judge_config),
+        "cells": build_cells(outcomes, run.arm, run.seed, judge_config.runs),
+        "filter_report": build_filter_report(outcomes),
+        "questions": [question_record(o) for o in outcomes],
+    }
+
+
 def main(
     argv: list[str] | None = None,
     *,
@@ -97,8 +136,11 @@ def main(
     eval_dir: Path = EVAL_DIR,
     runs_dir: Path = RUNS_DIR,
     today: date | None = None,
+    response_cache: Path = DEFAULT_RESPONSE_CACHE,
+    uncached_root: Path = UNCACHED_ROOT,
 ) -> int:
-    """CLI entry point.  Exit codes: 0 ok; 2 bad input; 3 the arm failed (no file written)."""
+    """CLI entry point.  Exit codes: 0 ok; 2 bad input; 3 the run could not finish or be
+    written (no results file)."""
     args = _parse_args(argv, list(arms))
     logging.basicConfig(level=logging.INFO)
     logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -115,33 +157,28 @@ def main(
 
     commit = git_state()
     now = datetime.now(UTC)
+    day = today or now.date()
     try:
-        with spec.open() as arm:
-            outcomes = _run_arm(arm, sets, args.split)
-            config = arm.config
-        with judges.open() as judge:
-            outcomes = _judge(judge, outcomes)
-            judge_config = judge.config
+        cache_dir = _fresh_cache(uncached_root, day) if args.uncached else response_cache
+    except OSError as exc:
+        print(f"could not create a new response cache in {uncached_root}: {exc}", file=sys.stderr)
+        return EXIT_RUN_ERROR
+    try:
+        outcomes, config, judge_config = _score(spec, judges, sets, args.split, cache_dir)
     except (ArmError, JudgeRunError) as exc:
         print(f"run stopped, no results written: {exc}", file=sys.stderr)
         return EXIT_RUN_ERROR
 
     run = RunInfo(now.isoformat(timespec="seconds"), commit, args.arm, args.split,
-                  args.final, SEED)
-    filters = build_filter_report(outcomes)
-    document = {
-        "header": build_header(run, config, sets, judge_config),
-        "cells": build_cells(outcomes, args.arm, SEED, judge_config.runs),
-        "filter_report": filters,
-        "questions": [question_record(o) for o in outcomes],
-    }
+                  args.final, SEED, args.uncached, cache_dir.name)
+    document = _document(run, config, sets, judge_config, outcomes)
     try:
-        path = results_path(runs_dir, today or now.date(), args.arm, args.split, commit)
+        path = results_path(runs_dir, day, args.arm, args.split, commit)
         write_results(document, path)
     except OSError as exc:
         print(f"could not write results to {runs_dir}: {exc}", file=sys.stderr)
         return EXIT_RUN_ERROR
-    excluded = sum(int(r["filter_excluded_gold"]) for r in filters.values())
+    excluded = sum(int(r["filter_excluded_gold"]) for r in document["filter_report"].values())
     print(f"{len(outcomes)} questions scored; filter-excluded gold: {excluded}; wrote {path}")
     return 0
 

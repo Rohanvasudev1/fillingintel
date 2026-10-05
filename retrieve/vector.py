@@ -14,6 +14,7 @@ import time
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
+from pathlib import Path
 from types import MappingProxyType
 
 import psycopg
@@ -200,14 +201,15 @@ def _corpus_filings(conn: psycopg.Connection) -> tuple[CorpusFiling, ...]:
 
 
 @contextmanager
-def open_vector_arm() -> Iterator[VectorArm]:
+def open_vector_arm(response_cache: Path) -> Iterator[VectorArm]:
     """The vector arm on ``DATABASE_URL``, with Voyage, Claude and their disk caches."""
     try:
         conn = psycopg.connect(os.environ["DATABASE_URL"])
     except psycopg.Error as exc:  # the message can quote the URL, so only the type is shown
         raise ArmError(f"could not connect to the database: {type(exc).__name__}") from exc
     with conn, VoyageClient.from_env() as voyage, AnthropicAnswerModel.from_env() as claude:
-        yield VectorArm(conn, CachedQueryEmbedder(voyage), CachedAnswerModel(claude))
+        yield VectorArm(conn, CachedQueryEmbedder(voyage),
+                        CachedAnswerModel(claude, response_cache))
 
 
 VECTOR = ArmSpec(

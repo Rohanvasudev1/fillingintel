@@ -161,6 +161,8 @@ class RunInfo:
     split: str
     final: bool
     seed: int
+    uncached: bool  # True: answers and judges came from fresh API calls, none replayed
+    response_cache_dir: str  # the response cache folder's name
 
 
 def build_header(
@@ -176,6 +178,7 @@ def build_header(
         "split": run.split,
         "final": run.final,
         "seed": run.seed,
+        "response_cache": {"uncached": run.uncached, "dir": run.response_cache_dir},
         "bootstrap": {"resamples": bootstrap.BOOTSTRAP_RESAMPLES,
                       "confidence": bootstrap.CONFIDENCE},
         "models": models,
