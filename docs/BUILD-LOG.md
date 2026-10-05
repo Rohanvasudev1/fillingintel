@@ -668,10 +668,15 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
 - **Not run.** `python -m ingest.embed` itself, which needs the key and the network.
 
 - **Later the same day.** The user added the key and recorded a real Voyage response, which replaced the placeholder (1,024 dimensions, 25 tokens). `tests/test_embed.py` passes on it: 20 passed.
+- **The corpus is embedded.** The first run crawled at about 3 chunks a minute: the Voyage account had no payment method, which keeps it on low rate limits. Retries printed nothing, so the run looked frozen; each retry is now logged (8047835). After the user added a payment method, the rerun finished: `embedded 1843, skipped 301 current, 1298189 API tokens`.
+- **Database checks after the run.**
+  - 2,144 chunks and 2,144 `voyage-4-large` rows, one per chunk, all 1,024 dimensions.
+  - 0 rows whose text hash differs from the chunk text; 102 preamble chunks embedded; every vector has norm 1.0.
+  - About 1.5M API tokens across all runs, inside the 200M free tokens.
+- **The 2x length margin, measured.** Voyage's count over the cl100k count is 1.06 on average and 1.27 at most (correlation 0.98). Voyage per-chunk counts run from 4 to 2,106.
 
 **Next session starts with**
-1. `uv run --env-file .env python -m ingest.embed` (about 2,144 requests), if not run yet.
-2. Settle the two ticket 02 items in OPEN-DECISIONS, then `/implement .scratch/step-5/issues/03-retrieval-only-scored-run.md`.
+1. Settle the two ticket 02 items in OPEN-DECISIONS, then `/implement .scratch/step-5/issues/03-retrieval-only-scored-run.md`.
 
 ---
 

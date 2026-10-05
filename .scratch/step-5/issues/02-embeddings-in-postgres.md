@@ -27,3 +27,5 @@
 - **Fake embedder.** The tests run the real `VoyageClient` over `httpx.MockTransport` replaying the response file, which exercises the HTTP code without a network.
 
 **2026-10-05 (agent).** The user added `VOYAGE_API_KEY` and ran the capture script. `tests/fixtures/voyage/document_response.json` is now a real `voyage-4-large` response (1024 dimensions, 25 tokens, no credentials), and `tests/test_embed.py` passes on it (20 passed). All boxes are ticked. `python -m ingest.embed` has not been run yet.
+
+**2026-10-05 (agent).** `python -m ingest.embed` finished: all 2,144 chunks have one `voyage-4-large` row, with 0 stale hashes. Voyage's token count runs at most 1.27x the cl100k count, so the 2x margin holds on this corpus. Ticket done.
