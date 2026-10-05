@@ -801,6 +801,47 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
 **Next session starts with**
 1. `/implement .scratch/step-5/issues/07-judged-metrics.md`.
 
+## 2026-10-05 — Step 5 ticket 07: judged metrics
+
+- **What changed.** The harness now runs LLM judges on every scored answer, three times each, after the arm has answered every question.
+  - `eval/judging/claude.py`: `ClaudeJudge` subclasses Ragas's `InstructorBaseRagasLLM`. It calls `claude-opus-5-5` at effort `medium` through `messages.create` with `output_config.format` (a JSON schema built by `anthropic.transform_schema`), with no sampling settings. It costs each call from the reported usage, including calls whose reply can't be used. The research note proposed `messages.parse`. `create` sends the same `output_config` (the SDK's `parse` merges effort and format the same way) and returns the raw body the response cache already stores.
+  - Every judge request goes through the existing response cache (`ModelRequest` protocol, shared with answer requests). The cache key covers the run number (1 to 3) and a repeat counter, so the three runs are independent and Ragas answer relevancy's three identical prompts get three answers.
+  - `eval/judging/embedder.py`: a `BaseRagasEmbedding` around the cached Voyage query embedder, for answer relevancy.
+  - `eval/judging/scoring.py`: the answerable classes get Ragas faithfulness (on the kept sentences, citation markers removed, against all retrieved chunks), Ragas answer relevancy (on the shown answer) and citation support (the project's judge, one verdict per kept sentence). Decline records get `decline_correct` and unanswerable records get `not_found_correct`, so those rows hold only those metrics. A reply the judge can't use (a refusal, a truncated reply, or JSON that doesn't match the schema) is recorded against its metric. Any other failure stops the run with no results file.
+  - `eval/judging/report.py`: each question gets the per-run values, mean and spread. Each cell gets the mean over questions, the mean within each run, the spread of the run means, a bootstrap interval, an error count and the judging cost, all labelled `uncalibrated`. Judging cost is kept out of the operational cost per query.
+  - The header records the judge model, effort, max tokens, runs, Ragas version, relevancy embedding and strictness, and the SHA-256 of both project judge prompts.
+  - `eval/judging/__init__.py` forces `RAGAS_DO_NOT_TRACK=true` before ragas is imported. CI sets it too.
+  - Judge jobs run on 8 threads. Each (question, run) job has its own judge object, so cache keys don't depend on job order.
+  - `ArmResult` now carries `sources`, the chunks the answer model saw, so the judges see the same text.
+- **Dependencies.** `ragas==0.4.3` (approved). ragas 0.4.3 imports `langchain_community.chat_models.vertexai`, which langchain-community 0.4.2 removed, so `pyproject.toml` caps it with `[tool.uv] constraint-dependencies = ["langchain-community<0.4.2"]` (user approved, 2026-10-05).
+- **Live check.** `scripts/capture_judge_responses.py` ran judge run 1 on the three recorded answers (8 Opus calls, about $0.12). Opus accepted effort `medium` together with `output_config.format`, and every reply parsed against the Ragas and project schemas. Scores: q0072 faithfulness 1.0, relevancy 0.971, citation support 1.0; q0005 decline correct; q0011 not-found correct. The first capture sorted the schema's keys, and Ragas's faithfulness verdicts came back with empty `reason` fields, because the model writes fields in schema order and `reason` no longer came first. The schema now keeps each model's declared order, and a recapture gave full reasons (492 output tokens, up from 65). The cache files are committed as test fixtures in `tests/fixtures/judge/`.
+- **Evidence.** 1079 passed, 1 skipped, offline. `ruff` is clean. New tests:
+  - `test_judge_claude.py` (12): request shape, cache keys per run and repeat, unusable replies;
+  - `test_judge_scoring.py` (14): real Ragas metrics against a scripted judge, every score hand-computed;
+  - `test_judge_replay.py` (4): the real judges replay the recorded Opus and Voyage responses with both backends refusing calls;
+  - `test_ragas_offline.py` (1): imports ragas and scores an answer in a fresh interpreter whose sockets fail, with an inherited `RAGAS_DO_NOT_TRACK=false` overridden;
+  - `test_judge_runner.py` (4);
+  - 8 harness tests in `test_eval_run.py`.
+- **Review (`mattpocock-skills:code-review`).**
+  - Standards findings fixed:
+    - judge failures other than API, Voyage and cache errors now stop the run cleanly instead of with a traceback;
+    - the report no longer assumes every question has all three runs;
+    - the definitions interpolate `JUDGE_RUNS` and `RELEVANCY_STRICTNESS`;
+    - `Effort` and `Class` types replace bare strings;
+    - the duplicated cost and call totals now come from one helper;
+    - in the capture script: types, an explicit encoding, and a clear message when `DATABASE_URL` is unset.
+  - Standards findings not changed:
+    - `ClaudeJudge` and the embedder keep per-run counters as attributes, because Ragas calls them through its own interface and reads only the parsed reply. Both objects are short-lived, and the counters are replaced with new copies, never changed in place.
+    - `AnswerModel` and `CachedAnswerModel` keep their names although they now also serve judge requests. Renaming them touches every Step 5 module for no change in behaviour.
+    - The package `__init__` setting an environment variable is the point of the module.
+    - Three runs of one question embedding the same text can each call Voyage. This can't happen in practice: the arm has already cached the question's embedding, and the generated questions differ between runs.
+  - Spec findings fixed: the definitions now separate judging cost from the operational cost per query.
+  - Spec findings raised with the user: the langchain-community cap, and faithfulness on the shown sentences rather than the raw answer. Both settled 2026-10-05, as recommended.
+- **Cost note for ticket 08.** About 18 Opus calls per answerable question and 3 per decline or unanswerable question. On the live check that was about $0.10 per answerable question across three runs, so roughly $10 to $15 for the dev split. Reruns replay from the cache.
+
+**Next session starts with**
+1. `/implement .scratch/step-5/issues/08-baseline-run.md`.
+
 ---
 
 ## Findings worth telling
@@ -812,3 +853,4 @@ Short versions of the stories from this build so far, for interviews and write-u
 - **The citation guarantee nearly broke.** Only 3 of 29 section offsets from the library round-tripped. Instead of patching this with text search, offsets are now correct by construction.
 - **"Present" is not "correct".** The first Step 2b result said all required sections were present on all 6 filings. Running 24 showed some were 69-character table-of-contents rows and one was the exhibit list. Acceptance checks need to test content, not existence.
 - **Reviewing the agent's tests, not just its code.** Several agent-written tests would have passed while proving nothing: a loose rate-limit threshold, a circular round-trip test, and fixtures written by the same agent as the parser. Catching these is part of the job.
+- **A schema's key order changed what the judge wrote.** Sorting a JSON schema's keys for a stable hash put the verdict ahead of its reason. The judge, which writes fields in schema order, then left every reason blank. Keeping the declared order brought the reasoning back. Small serialization choices can change what an LLM produces.
