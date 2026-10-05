@@ -49,7 +49,7 @@ def test_the_request_asks_luna_for_a_strict_schema_with_effort_and_no_sampling_s
     assert params["model"] == JUDGE_MODEL == "gpt-6-luna"
     assert params["reasoning"] == {"effort": JUDGE_EFFORT}
     assert JUDGE_EFFORT == "medium"
-    assert params["max_output_tokens"] == JUDGE_MAX_OUTPUT_TOKENS == 25_000
+    assert params["max_output_tokens"] == JUDGE_MAX_OUTPUT_TOKENS == 10_000
     assert params["store"] is False
     assert params["input"] == [{"role": "user", "content": "Is it supported?"}]
     text_format = params["text"]["format"]

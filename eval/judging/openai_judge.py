@@ -39,8 +39,8 @@ from retrieve.pricing import openai_cost
 
 JUDGE_PROVIDER = "openai"
 JUDGE_MODEL = "gpt-6-luna"
-JUDGE_EFFORT: Effort = "medium"  # until the ticket 10 spot check decides
-JUDGE_MAX_OUTPUT_TOKENS = 25_000  # reasoning plus JSON; OpenAI's suggested starting reserve
+JUDGE_EFFORT: Effort = "medium"  # chosen by the ticket 10 spot check against gpt-6-sol
+JUDGE_MAX_OUTPUT_TOKENS = 10_000  # reasoning plus JSON; ticket 10 spot check: max 2,877 at medium
 JUDGE_RUNS = 3
 OPENAI_SDK_VERSION = version("openai")
 

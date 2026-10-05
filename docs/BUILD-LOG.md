@@ -877,6 +877,45 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
 **Next session starts with**
 1. `/implement .scratch/step-5/issues/10-judge-spot-check.md`. Ticket 08 (the baseline) waits for its result.
 
+## 2026-10-05 — Step 5 ticket 10: judge spot check (spot check, not calibration)
+
+- **What changed.**
+  - `python -m eval.spotcheck` answers 10 dev questions, then judges them with `gpt-6-luna` at `medium` and `high` and with `gpt-6-sol` at `medium`, 3 runs each, and compares each luna effort with sol. The questions are 2 per answerable class plus 1 decline and 1 unanswerable, chosen by a salted hash of the question text.
+  - The comparison (`eval/judging/spotcheck.py`) is a pure function. Citation support, decline correctness and not-found correctness are compared as yes/no verdicts, one per sentence for citation support, so each judge run now keeps its verdicts (`RunScores.verdicts`). Verdicts are paired by run number. Faithfulness and answer relevancy use the gap between each judge's per-question mean.
+  - `open_judges` takes a judge config, `eval.run`'s environment check is shared as `env_problem`, and `agent_drafted_set()` picks the agent-drafted set by name.
+- **Pass rule, fixed before the run.** Per metric: verdict agreement of at least 85%; a mean absolute gap of at most 0.10; at most 15% of items scored by one judge only; something compared. The amendment fixed the first two. The user added the 15% cap and the 3 runs during review, before the run (spec amendment, "Spot-check rules settled before the run").
+- **Answers.** The response cache was empty, because the baseline has never run. The spot check therefore wrote 10 new Sonnet answers ($0.30) into the shared cache, and the baseline will replay them. The ticket's "no new answer calls" now reads as "no answer is paid for twice" (user decision).
+- **Result** (commit 6ac5e1f; 10 agent-drafted dev questions; 3 runs; judged scores uncalibrated; results file `benchmarks/runs/2026-10-05-spotcheck-dev-6ac5e1f.json`, not committed):
+
+  | metric | rule | luna medium | luna high |
+  |---|---|---|---|
+  | citation support | agreement ≥ 0.85 | 0.945 (183 verdicts) | 0.951 |
+  | decline correct | agreement ≥ 0.85 | 1.000 (3) | 1.000 |
+  | not-found correct | agreement ≥ 0.85 | 1.000 (3) | 1.000 |
+  | faithfulness | gap ≤ 0.10 | 0.068 (8 questions) | 0.059 |
+  | answer relevancy | gap ≤ 0.10 | 0.0996 | 0.107, fail |
+  | verdict | | **pass** | fail |
+
+  No metric had missing values. Luna `medium` passes, so it stays the judge, and the config's model and effort do not change.
+- **Caveats.**
+  - The relevancy gap passes by 0.0004, on 8 questions, so the result is narrow.
+  - `high` failing where `medium` passes is noise at this sample size. It is not evidence that more reasoning makes luna worse.
+  - Decline and not-found rest on one question each.
+  - None of this is calibration. Every judged number stays "uncalibrated" until it is checked against hand scores (Cohen's kappa ≥ 0.6, RESEARCH-PLAN).
+- **Cost.** $1.73 in all: answers $0.30; luna `medium` $0.073 and luna `high` $0.079 (150 calls each); sol $1.28 (150 calls). Sol would cost about $12 per graded dev run, which matches the amendment's $12.40 estimate. Reasoning tokens: luna `medium` 34,409 of 73,410 output tokens, `high` 61,099 of 99,802, sol 16,772 of 55,887.
+- **Output cap (config change, user decision).** Luna `medium`'s largest reply was 2,877 output tokens (median 233; `high` 5,352). `JUDGE_MAX_OUTPUT_TOKENS` went from 25,000 to 10,000. The cap is part of the cache key, so the 150 cached luna `medium` replies from this check will not replay, and the baseline re-judges those 10 questions (about $0.07). The judge replay test pins the cap the fixtures were recorded with (`RECORDED_CAP = 25_000`).
+- **Evidence.** 1154 passed, 1 skipped (the documented NVIDIA pointer section), with the database. `ruff` is clean. New tests:
+  - `test_spotcheck.py` (24): the thresholds, exact 85% and just under, a gap of exactly 0.10 and just over, the 15% missing cap, per-verdict and run-paired comparison, refusals of mismatched questions, runs and verdict counts, and the question choice checked against the real dev records;
+  - `test_spotcheck_cli.py` (8): answers once, every judge sees the same answers, the choice falls to `high`, then to sol, failures write no file;
+  - two in `test_judge_scoring.py` for the kept verdicts.
+  - Each failed before its code existed. Breaking the 85% and 0.10 boundaries on purpose made the boundary tests fail.
+- **Review (`mattpocock-skills:code-review`).**
+  - Standards: no hard violations. Fixed: the duplicated environment check, positional `judges[:-1]`, the `[0]` question-set index, the unpacked question-set fields in `_header`, a duplicated name format in a test fake, and threshold arithmetic now in exact fractions. Not changed: the candidates name `gpt-6-luna` literally rather than reading the judge config, because the spec fixes them and the config changes after the run. The spot check also takes an `open_judges` callable rather than a `JudgeSpec`, because `JudgeSpec.open` cannot take a judge config.
+  - Spec: the cached-answer gap, single-verdict behaviour rows and unbounded missing values went to the user, who settled them as above. A test now covers answers that were not cached.
+
+**Next session starts with**
+1. `/implement .scratch/step-5/issues/08-baseline-run.md` with `gpt-6-luna` at `medium` and the 10,000 cap.
+
 ---
 
 ## Findings worth telling

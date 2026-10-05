@@ -5,13 +5,17 @@ tests/fixtures/judge/ holds what scripts/capture_judge_responses.py recorded on
 and query caches the harness uses.  Here the caches point at those files and
 the backends refuse every call, so the scores below come from the real API
 replies, parsed and scored offline by Ragas and the project's judges.
+
+The output cap is part of each recorded cache key, so the judges here use the
+cap the recordings were made with, not the current config (lowered after the
+ticket 10 spot check).  Re-recording means updating ``RECORDED_CAP``.
 """
 import json
 from pathlib import Path
 
 import pytest
 
-from eval.judging.scoring import JudgeInput, RagasJudges
+from eval.judging.scoring import JudgeConfig, JudgeInput, RagasJudges
 from retrieve.answer import write_answer
 from retrieve.answer_model import ApiResponse
 from retrieve.answer_prompt import SourceChunk, load_prompt
@@ -21,6 +25,7 @@ from scripts.capture_judge_responses import SECRET_PATTERN
 from tests.anthropic_fixtures import load
 
 FIXTURES = Path(__file__).parent / "fixtures" / "judge"
+RECORDED_CAP = 25_000  # max_output_tokens when the fixtures were recorded, 2026-10-05
 SOURCES = json.loads((FIXTURES / "inputs.json").read_text(encoding="utf-8"))["sources"]
 
 
@@ -46,7 +51,8 @@ def _judge(name: str, class_: str):
     answer = write_answer(fixture["question"], chunks, _Replay(fixture["response"]),
                           load_prompt("v1"))
     judges = RagasJudges(CachedAnswerModel(_Offline(), FIXTURES / "responses"),
-                          CachedQueryEmbedder(_Offline(), FIXTURES / "embeddings"))
+                          CachedQueryEmbedder(_Offline(), FIXTURES / "embeddings"),
+                          JudgeConfig(max_output_tokens=RECORDED_CAP))
     return judges.judge(JudgeInput(fixture["question"], class_, answer, chunks), run=1)
 
 

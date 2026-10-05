@@ -728,7 +728,7 @@ def test_the_header_records_the_judge_ragas_version_and_judged_definitions(
     judging = header["judging"]
     assert judging["model"] == "gpt-6-luna" and judging["effort"] == "medium"
     assert judging["provider"] == "openai"
-    assert judging["max_output_tokens"] == 25_000
+    assert judging["max_output_tokens"] == 10_000
     assert judging["openai_version"] == "3.3.0"
     assert judging["ragas_version"] == "0.4.3"
     assert judging["label"] == "uncalibrated"
