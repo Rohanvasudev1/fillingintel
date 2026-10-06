@@ -42,6 +42,7 @@ Ask before: adding a dependency, changing a schema, changing the eval harness or
 - Corpus (network; writes spikes/corpus_report.txt and data/parsed/): uv run --env-file .env python -m ingest.corpus
 - Load and verify (offline; writes spikes/load_report.txt): uv run --env-file .env python -m ingest.load --verify
 - Eval set (Step 4): uv run python -m eval.search <words> [--ticker] [--period] [--section] or --show <chunk_id>; eval.validate <file> [--kind] [--db]; eval.coverage <file>; eval.review --reviewer "<name>" (the user only); eval.merge_drafts
+- Quality gate (offline, needs only DATABASE_URL; loads the snapshot into a throwaway schema): uv run --env-file .env python -m eval.gate. Exit 0 pass, 2 bad input, 3 could not run, 4 scores dropped. `--update-baseline` rewrites benchmarks/gate_baseline.json; never lower it without the user's yes.
 - (add when they exist: eval-fast, eval-full)
 
 ## Agent skills

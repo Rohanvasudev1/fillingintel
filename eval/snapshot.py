@@ -91,11 +91,14 @@ class Snapshot:
 
 # ── Questions ─────────────────────────────────────────────────────────────────
 
+def gated_records(records: Iterable[EvalRecord]) -> tuple[EvalRecord, ...]:
+    """The answerable ``dev`` records, in file order: the questions the quality gate runs."""
+    return tuple(r for r in records if r.split == GATED_SPLIT and r.class_ not in NO_GOLD_CLASSES)
+
+
 def gated_questions(records: Iterable[EvalRecord]) -> tuple[str, ...]:
-    """The text of each answerable ``dev`` question, in file order."""
-    return tuple(
-        r.question for r in records if r.split == GATED_SPLIT and r.class_ not in NO_GOLD_CLASSES
-    )
+    """The text of each gated question, in file order."""
+    return tuple(r.question for r in gated_records(records))
 
 
 class _NoNetwork:

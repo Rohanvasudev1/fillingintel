@@ -992,6 +992,43 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
 **Next session starts with**
 1. Step 6 ticket 03 (the `eval.gate` command). Tickets 01 and 02 are both in; read ticket 01's notes above as well.
 
+## 2026-10-06 — Step 6 ticket 03: quality gate command and first gate baseline
+
+- **What it does.** `python -m eval.gate` loads the committed snapshot into a new throwaway schema on `DATABASE_URL` and drops the schema afterwards, so it never reads or changes the tables already there. It runs `VectorArm.retrieve` with no answer model and the snapshot's query vectors on the 82 answerable `dev` agent-drafted questions. It then scores recall@5, recall@10 and the retrieval wrong-evidence rate (hard negatives ranked above a gold chunk, no citations) for lookup, local, multi_hop, global and pooled, and compares them with `benchmarks/gate_baseline.json`. Exit codes: 0 pass, 2 bad input, 3 could not run, 4 scores dropped. It needs no API key and makes no API call. A test removes every key, makes Voyage, Anthropic and OpenAI client construction raise, records every environment variable read, and runs the gate with the network blocked. No key is read.
+- **Code.** `eval/gate_scores.py` holds the scores, the comparison and the question set hash. `eval/gate_baseline.py` holds the baseline file: a Pydantic model, atomic indented writes, input mismatches, and the change list. `eval/gate.py` is the CLI. `eval/snapshot.py` gains `gated_records`, which the gate and the snapshot both use. `write_json_atomic` gains an `indent` argument, so a baseline update reads as a plain diff.
+- **Comparison.** Values are rounded to 9 decimal places before comparing; one question's worth is 1/82 at its smallest. The baseline stores full floats. Equal passes. Each drop prints as `DROPPED <class> <metric>: baseline …, current …, delta …`. The per-class table is labelled "agent-drafted questions" and is appended to `GITHUB_STEP_SUMMARY` only when that is set.
+- **Baseline inputs.** The file records the commit, snapshot SHA-256, question set hash, embedding model, k, and n per class. A mismatch in any of the last four is exit 2, checked before the database is opened. The question set hash covers the 82 gated records, not the whole eval file, so an edit to a decline or `test` record does not force a baseline rewrite. `--update-baseline` refuses to replace an invalid old file. It prints each moved number and flags a lowering with "LOWERED" and the invariant 5 reminder.
+- **First gate baseline** (agent-drafted questions, dev, k=10, voyage-4-large, snapshot `f4e06d4d…`, code commit 2de8eb7):
+
+  | class | n | recall@5 | recall@10 | wrong evidence |
+  |---|---|---|---|---|
+  | lookup | 27 | 0.889 | 1.000 | 0.000 |
+  | local | 22 | 0.932 | 0.977 | 0.000 |
+  | multi_hop | 23 | 0.616 | 0.717 | 0.130 |
+  | global | 10 | 0.592 | 0.800 | 0.200 |
+  | pooled | 82 | 0.788 | 0.890 | 0.061 |
+
+  `tests/test_gate_baseline_run.py` checks it against `2026-10-05-vector-dev-96e8c69.json`. Recall matches the run's cells exactly, as float equality, per class and pooled. The wrong-evidence rate matches the run's per-question hits whose `above_gold` is true. On this run the two rates happen to be equal in every class (multi_hop 3/23, global 2/10): no answer cited a hard negative that was not already ranked above gold. The first write recorded `f4d49bb+dirty` because the code was not yet committed. It was rewritten from a clean tree, and only the commit line changed. `python -m eval.gate` then passed locally.
+- **k = 1.** The gate records k in the baseline, and the spec makes a k mismatch bad input. A change to `TOP_K = 1` therefore fails with exit 2 ("k is 1, but the gate baseline was measured with 10"), not exit 4. The test also scores k = 1 and shows pooled recall@5 and recall@10 drop against the k = 10 baseline. The ticket 05 stop-condition PR will show a red check for an input mismatch, not for a measured drop. Its PR text should say so.
+- **Tests (test-first, each shown failing first).** 24 offline tests in `tests/test_gate_scores.py` cover scoring, comparison, rounding and the baseline file. 21 database tests in `tests/test_gate.py` cover:
+  - a pass against its own baseline and against the committed baseline;
+  - recall raised by one question's worth (multi_hop recall@10), and wrong evidence lowered by one question's worth (global);
+  - k = 1;
+  - each hash, model and k mismatch;
+  - identical numbers on two runs and on two separate snapshot loads;
+  - `--update-baseline` followed by a pass;
+  - the summary file;
+  - a missing, invalid or class-mismatched baseline, a damaged snapshot, an unset `DATABASE_URL`, and no `--split` option.
+
+  11 tests in `tests/test_gate_baseline_run.py` compare the first baseline with the committed run. The gate tests take about 2.5 minutes, because each run loads the snapshot (about 6 s) and the vector arm's start-up vector check takes about 4 s.
+- **Evidence.** `ruff` is clean. The full suite with the database (worktree at bb4d12d): 910 passed, 15 skipped. The skips are the documented NVIDIA pointer section and the tests that need `data/raw`, `data/parsed` or the local query cache, which a worktree does not have. This machine ran under heavy load (load average above 30), so the timings above are high.
+- **Review (`mattpocock-skills:code-review`).**
+  - Standards: two hard findings, both fixed. `--update-baseline` treated an invalid old file as missing, which would hide a lowering; it now stops with exit 2 before scoring. A failed write to `GITHUB_STEP_SUMMARY` raised a traceback; it now exits 3. Judgement calls, also fixed: the worse-direction rule existed twice and only one copy rounded, so it is now one shared `is_worse`. The display precision is one constant, `_Stop` was renamed `_GateExit`, and schema cleanup is skipped on a broken connection.
+  - Spec: no missing requirement in the code. `compare()` raising on a baseline with other classes is now exit 2. The k = 1 reading, the gate loading the snapshot itself, and the scope of the question set hash are recorded above for the user to confirm.
+
+**Next session starts with**
+1. Ticket 04 (the gate in CI). The gate loads the snapshot itself, so the CI job needs `DATABASE_URL`, the pgvector extension, `TIKTOKEN_CACHE_DIR` and `python -m eval.gate`, with no separate load step.
+
 ---
 
 ## Findings worth telling
