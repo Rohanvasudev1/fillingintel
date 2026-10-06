@@ -1031,6 +1031,28 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
 
 ---
 
+## 2026-10-06 — Step 6 ticket 04: quality gate in CI
+
+PR: https://github.com/Rohanvasudev1/fillingintel/pull/3 (branch `step-6/04-quality-gate-in-ci`).
+
+- **Workflow.** `.github/workflows/ci.yml` has a new `quality-gate` job beside `lint-and-test`, on the same `pgvector/pgvector:0.8.6-pg16` service. It creates the vector extension and runs `uv run python -m eval.gate`, which loads the snapshot itself. The job's env holds only `DATABASE_URL`, plus `TIKTOKEN_CACHE_DIR` and `RAGAS_DO_NOT_TRACK` in case a later import needs them. No API keys. Triggers are `pull_request` and `push` to `main`, with no `paths` filters. The PR's first push started each check once.
+- **Offline.** The gate makes no network calls because it reads its query vectors from the snapshot and builds no answer model. pytest-socket does not cover it, since it runs outside pytest, so this is true by design rather than enforced. `uv sync` downloads packages, as in `lint-and-test`.
+- **Evidence (b57a504, clean tree).**
+  - Local: `python -m eval.gate` passed (exit 0), with all 15 gated numbers equal to the baseline. `ruff` is clean. The full suite with the database gave 910 passed, 15 skipped. The env file was the main checkout's `.env`, because the worktree has none. These were rerun after a first round that ran before the final commit.
+  - CI on the PR (run 37452634695): `lint-and-test` passed in 4m33s and `quality-gate` in 48s. The gate's table in the log matches the local run to six decimals (pooled recall@10 0.890244, n=82, agent-drafted questions). Linux and macOS pgvector give the same numbers.
+  - The job summary could not be read from outside GitHub's UI (no API for step summaries). The gate writes its table to `GITHUB_STEP_SUMMARY`, and `tests/test_gate.py` covers that write. Seeing it on the run page is left to the user.
+- **Review (`mattpocock-skills:code-review`).** No hard Standards violations and no blocking Spec findings. Fixed: the gate job now uses the same `uv sync --group dev` as `lint-and-test` and sets the two offline env vars. Kept as is:
+  - The duplicated service and setup steps, which keep the two checks separate and clearly named for the ticket 05 ruleset.
+  - Exits 2 and 3, which write only to the log and not to the summary.
+  - On `pull_request`, checkout uses the merge commit, so the commit the gate reports is the merge SHA.
+- **Raised, not done.** The CI annotations warn that `actions/checkout@v4` and `astral-sh/setup-uv@v3` run on Node.js 20, which is deprecated, and that `ubuntu-latest` moves to Ubuntu 26 from 2026-10-19. Adding `permissions: contents: read` and `timeout-minutes` was proposed to the user. All three are beyond the spec.
+
+**Next session starts with**
+1. After the user merges PR #3, check that the `push` run on `main` is green and mark ticket 04 done.
+2. Ticket 05: the `main` ruleset (only after the user approves the settings change) and the k = 1 stop-condition PR. That PR fails with exit 2 (k mismatch), not exit 4.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.

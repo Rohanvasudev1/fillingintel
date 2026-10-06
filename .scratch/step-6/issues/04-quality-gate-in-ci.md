@@ -4,11 +4,11 @@
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** ready-for-human (PR #3 open, both checks green; waiting on the user's review and merge)
 
-- [ ] `ci.yml` has a `quality-gate` job, separate from `lint-and-test`, with no network access beyond the service container and no API keys.
-- [ ] Triggers are `pull_request` and `push` to `main` only; no `paths` or `paths-ignore` filters.
+- [x] `ci.yml` has a `quality-gate` job, separate from `lint-and-test`, with no network access beyond the service container and no API keys.
+- [x] Triggers are `pull_request` and `push` to `main` only; no `paths` or `paths-ignore` filters.
 - [ ] The gate's comparison table appears in the job summary on the PR.
-- [ ] The work is on its own branch, opened as a PR with the ticket's summary and test plan, and both `lint-and-test` and `quality-gate` are green on it.
+- [x] The work is on its own branch, opened as a PR with the ticket's summary and test plan, and both `lint-and-test` and `quality-gate` are green on it.
 - [ ] After review and verification, the PR is merged and the `push` run on `main` is green.
-- [ ] Asking the user before changing CI is satisfied by the approved spec; any change beyond the spec is raised first.
+- [x] Asking the user before changing CI is satisfied by the approved spec; any change beyond the spec is raised first.
