@@ -1,6 +1,7 @@
 """Shared fixtures for parser tests — loads gzipped HTML from tests/fixtures/."""
 import gzip
 import os
+from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
 
@@ -197,13 +198,13 @@ def fixture_records(request):
     ]
 
 
-@pytest.fixture(scope="session")
-def db_conn():
-    """A connection to ``DATABASE_URL`` with a throwaway schema on its search path.
+@contextmanager
+def throwaway_schema():
+    """A connection to ``DATABASE_URL`` whose search path starts with a new schema.
 
-    The schema is created for the test session and dropped afterwards, so tests
-    never touch development data.  Skips when ``DATABASE_URL`` is unset;
-    ``test_store.py`` has a guard that fails in CI if it is.
+    The schema gets the real tables and is dropped on exit, so tests never touch
+    development data.  Skips when ``DATABASE_URL`` is unset; ``test_store.py``
+    has a guard that fails in CI if it is.
     """
     import uuid
 
@@ -228,3 +229,10 @@ def db_conn():
             conn.rollback()
             conn.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))
             conn.commit()
+
+
+@pytest.fixture(scope="session")
+def db_conn():
+    """A connection with a throwaway schema on its search path, for the test session."""
+    with throwaway_schema() as conn:
+        yield conn
