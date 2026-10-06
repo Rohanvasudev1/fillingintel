@@ -37,7 +37,7 @@ Ask before: adding a dependency, changing a schema, changing the eval harness or
 ## Commands
 - Tests: uv run pytest
 - Lint: uv run ruff check .
-- Databases: docker compose up -d
+- Databases and Phoenix: docker compose up -d (Postgres, Neo4j and Phoenix, all bound to 127.0.0.1). Phoenix UI: http://localhost:6006
 - Tests with the database: uv run --env-file .env pytest
 - Corpus (network; writes spikes/corpus_report.txt and data/parsed/): uv run --env-file .env python -m ingest.corpus
 - Load and verify (offline; writes spikes/load_report.txt): uv run --env-file .env python -m ingest.load --verify
