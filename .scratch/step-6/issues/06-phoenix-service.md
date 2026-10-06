@@ -4,12 +4,12 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done (branch step-6/06-phoenix-service)
 
-- [ ] The Phoenix image tag is pinned exactly, like the other services.
-- [ ] Every published port in the compose file is bound to `127.0.0.1`.
-- [ ] The Phoenix healthcheck is confirmed working in the distroless image, or left out with a comment saying why.
-- [ ] After `docker compose up -d`, the Phoenix UI loads at `http://localhost:6006`, and a `docker compose down` then `up -d` keeps an existing trace (send one test span by hand to check).
-- [ ] The UI makes no requests to third-party hosts (checked in the browser's network log).
-- [ ] Existing database tests pass against the rebound Postgres: `uv run --env-file .env pytest`.
-- [ ] CLAUDE.md Commands mention that Phoenix runs with `docker compose up -d` and where its UI is.
+- [x] The Phoenix image tag is pinned exactly, like the other services.
+- [x] Every published port in the compose file is bound to `127.0.0.1`.
+- [x] The Phoenix healthcheck is confirmed working in the distroless image, or left out with a comment saying why.
+- [x] After `docker compose up -d`, the Phoenix UI loads at `http://localhost:6006`, and a `docker compose down` then `up -d` keeps an existing trace (send one test span by hand to check).
+- [x] The UI makes no requests to third-party hosts (checked in the browser's network log).
+- [x] Existing database tests pass against the rebound Postgres: `uv run --env-file .env pytest`.
+- [x] CLAUDE.md Commands mention that Phoenix runs with `docker compose up -d` and where its UI is.

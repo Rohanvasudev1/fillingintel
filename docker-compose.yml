@@ -41,7 +41,7 @@ services:
       - phoenix_data:/mnt/data
     # The image is distroless (no shell or curl), so the check runs Python.
     healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:6006/healthz', timeout=3)"]
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:6006/healthz', timeout=3)"]
       interval: 10s
       timeout: 5s
       retries: 5
