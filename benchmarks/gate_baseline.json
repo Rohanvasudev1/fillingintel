@@ -1,0 +1,42 @@
+{
+  "label": "agent-drafted questions",
+  "arm": "vector",
+  "split": "dev",
+  "commit": "f4d49bb+dirty",
+  "snapshot_sha256": "f4e06d4da622d3f27ffb9927cb013f4ba0bf3b85e7a254061158c18e70b70e6e",
+  "question_set_sha256": "efc1efac0f9c40428aeaeebdd63291912738e015db9b16492006ea9d319fb795",
+  "embedding_model": "voyage-4-large",
+  "k": 10,
+  "scores": {
+    "lookup": {
+      "n": 27,
+      "recall@5": 0.8888888888888888,
+      "recall@10": 1.0,
+      "wrong_evidence": 0.0
+    },
+    "local": {
+      "n": 22,
+      "recall@5": 0.9318181818181818,
+      "recall@10": 0.9772727272727273,
+      "wrong_evidence": 0.0
+    },
+    "multi_hop": {
+      "n": 23,
+      "recall@5": 0.6159420289855072,
+      "recall@10": 0.717391304347826,
+      "wrong_evidence": 0.13043478260869565
+    },
+    "global": {
+      "n": 10,
+      "recall@5": 0.5916666666666667,
+      "recall@10": 0.8,
+      "wrong_evidence": 0.2
+    },
+    "pooled": {
+      "n": 82,
+      "recall@5": 0.7876016260162602,
+      "recall@10": 0.8902439024390244,
+      "wrong_evidence": 0.06097560975609756
+    }
+  }
+}
