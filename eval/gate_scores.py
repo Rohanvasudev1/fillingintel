@@ -31,6 +31,7 @@ RECALL_METRICS = ("recall@5", "recall@10")
 WRONG_EVIDENCE = "wrong_evidence"
 GATED_METRICS = (*RECALL_METRICS, WRONG_EVIDENCE)
 DECIMALS = 9
+SHOWN_DECIMALS = 6  # in printed output only; comparison uses DECIMALS
 
 class ClassScores(BaseModel):
     """The gated numbers for one class, or pooled; JSON keys as in the results file."""
@@ -94,9 +95,13 @@ def score_questions(
     return {**by_class, POOLED: _class_scores(scored)}
 
 
-def _worse(metric: str, baseline: float, current: float | None) -> bool:
-    if current is None:
-        return True
+def is_worse(metric: str, baseline: float | None, current: float | None) -> bool:
+    """Whether *current* is worse than *baseline* for *metric*, after rounding to ``DECIMALS``.
+
+    Losing a number that was there is worse; gaining one is not.
+    """
+    if baseline is None or current is None:
+        return baseline is not None
     old, new = round(baseline, DECIMALS), round(current, DECIMALS)
     return new > old if metric == WRONG_EVIDENCE else new < old
 
@@ -112,7 +117,7 @@ def compare(
         for cls, scores in baseline.items()
         for metric in GATED_METRICS
         if (old := scores.metric(metric)) is not None
-        and _worse(metric, old, current[cls].metric(metric))
+        and is_worse(metric, old, current[cls].metric(metric))
     )
 
 

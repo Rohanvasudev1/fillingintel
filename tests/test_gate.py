@@ -262,3 +262,29 @@ def test_the_gate_loads_the_snapshot_itself_with_no_api_client_or_key(
     own = baseline_path.with_name("own.json")
     assert main(["--update-baseline"], baseline_path=own) == 0
     assert read_baseline(own).scores == shared
+
+
+def test_update_refuses_to_replace_an_invalid_baseline(gate, baseline_path):
+    baseline_path.write_text('{"k": 10}')
+    code, out = gate("--update-baseline", open_database=_no_database)
+    assert code == EXIT_USAGE
+    assert "gate baseline" in out
+    assert baseline_path.read_text() == '{"k": 10}'
+
+
+def test_an_unwritable_job_summary_means_the_gate_could_not_run(
+    gate, baseline_path, tmp_path, monkeypatch
+):
+    gate("--update-baseline")
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_path))  # a directory, not a file
+    code, out = gate()
+    assert code == EXIT_RUN_ERROR
+    assert "GITHUB_STEP_SUMMARY" in out
+
+
+def test_a_baseline_missing_a_class_is_bad_input(gate, baseline_path):
+    gate("--update-baseline")
+    _edit(baseline_path, lambda d: d["scores"].pop("global"))
+    code, out = gate()
+    assert code == EXIT_USAGE
+    assert "classes" in out

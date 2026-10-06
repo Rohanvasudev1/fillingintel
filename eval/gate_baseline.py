@@ -16,14 +16,13 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
-from eval.gate_scores import GATED_METRICS, WRONG_EVIDENCE, ClassScores
+from eval.gate_scores import GATED_METRICS, SHOWN_DECIMALS, ClassScores, is_worse
 from eval.question_sets import AGENT_DRAFTED_LABEL
 from ingest.atomic_json import write_json_atomic
 from ingest.provenance import REPO_ROOT
 
 BASELINE_PATH = REPO_ROOT / "benchmarks" / "gate_baseline.json"
 _INDENT = 2
-_SHOWN_DECIMALS = 6
 _INPUTS = ("snapshot_sha256", "question_set_sha256", "embedding_model", "k")
 
 
@@ -89,17 +88,11 @@ def baseline_mismatches(
 
 
 def _shown(value: float | None) -> str:
-    return "none" if value is None else f"{value:.{_SHOWN_DECIMALS}f}"
+    return "none" if value is None else f"{value:.{SHOWN_DECIMALS}f}"
 
 
 def _value(scores: ClassScores | None, name: str) -> float | None:
-    return None if scores is None else scores.model_dump(by_alias=True)[name]
-
-
-def _lowered(metric: str, old: float | None, new: float | None) -> bool:
-    if old is None or new is None:
-        return old is not None
-    return new > old if metric == WRONG_EVIDENCE else new < old
+    return None if scores is None else scores.metric(name)
 
 
 def baseline_changes(old: GateBaseline | None, new: GateBaseline) -> list[str]:
@@ -114,7 +107,7 @@ def baseline_changes(old: GateBaseline | None, new: GateBaseline) -> list[str]:
         for metric in GATED_METRICS:
             a, b = _value(before, metric), _value(after, metric)
             if a != b:
-                flag = " LOWERED" if _lowered(metric, a, b) else ""
+                flag = " LOWERED" if is_worse(metric, a, b) else ""
                 lines.append(f"{cls} {metric}: {_shown(a)} -> {_shown(b)}{flag}")
     lines += [f"{name}: {getattr(old, name)} -> {getattr(new, name)}"
               for name in ("commit", *_INPUTS) if getattr(old, name) != getattr(new, name)]

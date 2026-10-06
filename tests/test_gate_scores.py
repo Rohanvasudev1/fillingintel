@@ -206,3 +206,10 @@ def test_changes_name_each_moved_number_and_flag_a_lowering():
 
 def test_changes_from_no_baseline_say_so():
     assert baseline_changes(None, _baseline()) == ["no previous gate baseline"]
+
+
+def test_a_change_below_the_rounding_is_not_flagged_as_lowered():
+    tiny = 10 ** -(DECIMALS + 3)
+    noisy = {"lookup": _scores(**{"recall@5": 0.5 - tiny}).model_dump(by_alias=True),
+             POOLED: _scores().model_dump(by_alias=True)}
+    assert "LOWERED" not in "\n".join(baseline_changes(_baseline(), _baseline(scores=noisy)))

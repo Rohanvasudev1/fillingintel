@@ -40,6 +40,7 @@ from eval.gate_baseline import (
 )
 from eval.gate_scores import (
     GATED_METRICS,
+    SHOWN_DECIMALS,
     ClassScores,
     Drop,
     compare,
@@ -74,13 +75,20 @@ EXIT_USAGE = 2
 EXIT_RUN_ERROR = 3
 EXIT_DROPPED = 4
 SUMMARY_ENV = "GITHUB_STEP_SUMMARY"
-_SHOWN = 6
 
 OpenDatabase = Callable[[Path], AbstractContextManager[psycopg.Connection]]
 
 
 class GateUsageError(ValueError):
     """The gate cannot start with these inputs; the message is safe to print."""
+
+
+class _GateExit(Exception):
+    """The gate stops early with *code*; the message is safe to print."""
+
+    def __init__(self, code: int, message: str):
+        super().__init__(message)
+        self.code = code
 
 
 @contextmanager
@@ -103,9 +111,10 @@ def snapshot_database(snapshot_path: Path) -> Iterator[psycopg.Connection]:
             load_snapshot(conn, snapshot_path)
             yield conn
         finally:
-            conn.rollback()
-            conn.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(schema))
-            conn.commit()
+            if not conn.broken:  # a lost connection takes its schema's session with it
+                conn.rollback()
+                conn.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(schema))
+                conn.commit()
 
 
 def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
@@ -129,7 +138,7 @@ def _retrieve_all(
 # ── Output ────────────────────────────────────────────────────────────────────
 
 def _fmt(value: float | None, sign: str = "") -> str:
-    return "–" if value is None else f"{value:{sign}.{_SHOWN}f}"
+    return "none" if value is None else f"{value:{sign}.{SHOWN_DECIMALS}f}"
 
 
 def _rows(baseline: dict[str, ClassScores] | None, current: dict[str, ClassScores],
@@ -173,18 +182,31 @@ def _publish(report: str) -> None:
     """Print *report*, and append it to the GitHub job summary when that is set."""
     print(report)
     summary = os.environ.get(SUMMARY_ENV)
-    if summary:
+    if not summary:
+        return
+    try:
         with open(summary, "a", encoding="utf-8") as fh:
             fh.write(report + "\n")
+    except OSError as exc:
+        raise _GateExit(EXIT_RUN_ERROR,
+                        f"could not append to {SUMMARY_ENV} ({summary}): {exc}") from exc
 
 
 # ── Modes ─────────────────────────────────────────────────────────────────────
 
-def _update(path: Path, new: GateBaseline, k: int) -> int:
+def _previous_baseline(path: Path) -> GateBaseline | None:
+    """The baseline an update replaces: None if there is none; an invalid one stops the gate,
+    since its numbers could not be checked for a lowering."""
+    if not path.exists():
+        return None
     try:
-        old = read_baseline(path)
-    except BaselineError:
-        old = None
+        return read_baseline(path)
+    except BaselineError as exc:
+        raise _GateExit(EXIT_USAGE, f"{exc}\nFix or remove it before updating the gate baseline."
+                        ) from exc
+
+
+def _update(path: Path, old: GateBaseline | None, new: GateBaseline, k: int) -> int:
     write_baseline(path, new)
     changes = baseline_changes(old, new)
     lowered = any("LOWERED" in line for line in changes)
@@ -200,7 +222,10 @@ def _update(path: Path, new: GateBaseline, k: int) -> int:
 
 
 def _check(baseline: GateBaseline, current: dict[str, ClassScores], k: int) -> int:
-    drops = compare(baseline.scores, current)
+    try:
+        drops = compare(baseline.scores, current)
+    except ValueError as exc:  # only a hand-edited baseline gets here; the hashes catch the rest
+        raise _GateExit(EXIT_USAGE, f"the gate baseline does not fit this run: {exc}") from exc
     verdict = (f"FAIL: {len(drops)} gated numbers dropped." if drops
                else "PASS: no gated number dropped.")
     _publish(_report(baseline.scores, current, drops, k, verdict))
@@ -209,26 +234,18 @@ def _check(baseline: GateBaseline, current: dict[str, ClassScores], k: int) -> i
     return EXIT_DROPPED if drops else EXIT_OK
 
 
-class _Stop(Exception):
-    """The gate stops early with *code*; the message is safe to print."""
-
-    def __init__(self, code: int, message: str):
-        super().__init__(message)
-        self.code = code
-
-
 def _inputs(eval_dir: Path, snapshot_path: Path) -> tuple[tuple[EvalRecord, ...], Snapshot]:
     """The gated records and the checked snapshot."""
     try:
         records = gated_records(agent_drafted_set(load_question_sets(eval_dir)).records)
     except QuestionSetError as exc:
-        raise _Stop(EXIT_USAGE, str(exc)) from exc
+        raise _GateExit(EXIT_USAGE, str(exc)) from exc
     try:
         snapshot = read_snapshot(snapshot_path)
     except SnapshotError as exc:
-        raise _Stop(EXIT_RUN_ERROR, f"the gate could not run: {exc}") from exc
+        raise _GateExit(EXIT_RUN_ERROR, f"the gate could not run: {exc}") from exc
     if snapshot.model != DEFAULT_MODEL:
-        raise _Stop(EXIT_USAGE, f"the snapshot holds {snapshot.model} vectors; "
+        raise _GateExit(EXIT_USAGE, f"the snapshot holds {snapshot.model} vectors; "
                                 f"the vector arm uses {DEFAULT_MODEL}")
     return records, snapshot
 
@@ -238,12 +255,12 @@ def _matching_baseline(path: Path, snapshot: Snapshot, question_sha: str, k: int
     try:
         baseline = read_baseline(path)
     except BaselineError as exc:
-        raise _Stop(EXIT_USAGE, str(exc)) from exc
+        raise _GateExit(EXIT_USAGE, str(exc)) from exc
     problems = baseline_mismatches(baseline, snapshot_sha256=snapshot.sha256,
                                    question_set_sha256=question_sha,
                                    embedding_model=DEFAULT_MODEL, k=k)
     if problems:
-        raise _Stop(EXIT_USAGE, "\n  ".join(
+        raise _GateExit(EXIT_USAGE, "\n  ".join(
             ["the gate's inputs differ from the gate baseline's:", *problems]))
     return baseline
 
@@ -255,24 +272,24 @@ def _score(open_database: OpenDatabase, snapshot_path: Path, snapshot: Snapshot,
         with open_database(snapshot_path) as conn:
             return score_questions(_retrieve_all(conn, snapshot, records, k))
     except GateUsageError as exc:
-        raise _Stop(EXIT_USAGE, str(exc)) from exc
+        raise _GateExit(EXIT_USAGE, str(exc)) from exc
     except (ArmError, SnapshotError) as exc:
-        raise _Stop(EXIT_RUN_ERROR, f"the gate could not run: {exc}") from exc
+        raise _GateExit(EXIT_RUN_ERROR, f"the gate could not run: {exc}") from exc
     except psycopg.Error as exc:  # the message can quote the URL, so only the type is shown
-        raise _Stop(EXIT_RUN_ERROR,
+        raise _GateExit(EXIT_RUN_ERROR,
                     f"the gate could not run: database error ({type(exc).__name__})") from exc
 
 
-def _new_baseline(path: Path, snapshot: Snapshot, question_sha: str, k: int,
-                  scores: dict[str, ClassScores]) -> int:
+def _new_baseline(path: Path, old: GateBaseline | None, snapshot: Snapshot, question_sha: str,
+                  k: int, scores: dict[str, ClassScores]) -> int:
     new = GateBaseline(label=AGENT_DRAFTED_LABEL, arm=VectorArm.name, split=GATED_SPLIT,
                        commit=git_state(), snapshot_sha256=snapshot.sha256,
                        question_set_sha256=question_sha, embedding_model=DEFAULT_MODEL,
                        k=k, scores=scores)
     try:
-        return _update(path, new, k)
+        return _update(path, old, new, k)
     except OSError as exc:
-        raise _Stop(EXIT_RUN_ERROR, f"could not write the gate baseline {path}: {exc}") from exc
+        raise _GateExit(EXIT_RUN_ERROR, f"could not write the gate baseline {path}: {exc}") from exc
 
 
 def main(
@@ -293,13 +310,14 @@ def main(
     try:
         records, snapshot = _inputs(eval_dir, snapshot_path)
         question_sha = question_set_sha256(records)
-        baseline = (None if args.update_baseline
-                    else _matching_baseline(baseline_path, snapshot, question_sha, k))
+        if args.update_baseline:
+            previous = _previous_baseline(baseline_path)
+            current = _score(open_database, snapshot_path, snapshot, records, k)
+            return _new_baseline(baseline_path, previous, snapshot, question_sha, k, current)
+        baseline = _matching_baseline(baseline_path, snapshot, question_sha, k)
         current = _score(open_database, snapshot_path, snapshot, records, k)
-        if baseline is None:
-            return _new_baseline(baseline_path, snapshot, question_sha, k, current)
         return _check(baseline, current, k)
-    except _Stop as stop:
+    except _GateExit as stop:
         print(str(stop), file=sys.stderr)
         return stop.code
 
