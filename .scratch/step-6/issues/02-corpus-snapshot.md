@@ -4,14 +4,14 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done (2026-10-06)
 
-- [ ] Rebuilding the snapshot with unchanged data gives a byte-identical file (stable row order, no timestamps).
-- [ ] The snapshot holds no `test` split query vectors, no decline or unanswerable query vectors, and no secrets.
-- [ ] Round trip test: building from a database and loading into an empty throwaway schema gives identical rows in `filings`, `chunks` and `chunk_embeddings`.
-- [ ] Loading a snapshot with a changed byte, or whose rows fail a schema CHECK, fails loudly.
-- [ ] The snapshot query embedder returns the stored vector for a gated question and raises for any other question; it never calls Voyage.
-- [ ] A test compares the committed snapshot with the local database and query cache when both are present, and skips otherwise (prior art: the `corpus_filings.json` check against `data/parsed`).
-- [ ] The snapshot is built from the local database, committed, and its size is reported in the BUILD-LOG entry (estimate 10–12 MB).
-- [ ] No schema change.
-- [ ] `uv run ruff check .` and `uv run --env-file .env pytest` pass.
+- [x] Rebuilding the snapshot with unchanged data gives a byte-identical file (stable row order, no timestamps).
+- [x] The snapshot holds no `test` split query vectors, no decline or unanswerable query vectors, and no secrets.
+- [x] Round trip test: building from a database and loading into an empty throwaway schema gives identical rows in `filings`, `chunks` and `chunk_embeddings`.
+- [x] Loading a snapshot with a changed byte, or whose rows fail a schema CHECK, fails loudly.
+- [x] The snapshot query embedder returns the stored vector for a gated question and raises for any other question; it never calls Voyage.
+- [x] A test compares the committed snapshot with the local database and query cache when both are present, and skips otherwise (prior art: the `corpus_filings.json` check against `data/parsed`).
+- [x] The snapshot is built from the local database, committed, and its size is reported in the BUILD-LOG entry (estimate 10–12 MB).
+- [x] No schema change.
+- [x] `uv run ruff check .` and `uv run --env-file .env pytest` pass.

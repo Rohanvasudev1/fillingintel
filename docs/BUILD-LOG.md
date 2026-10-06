@@ -975,6 +975,23 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
 **Next session starts with**
 1. Ticket 03 (quality gate command) once ticket 02's snapshot has landed, carrying the two notes above.
 
+## 2026-10-06 — Step 6 ticket 02: corpus snapshot and snapshot query embedder
+
+- **What it is.** `tests/fixtures/corpus_snapshot.jsonl.gz` holds the local database's 24 `filings` rows (with parsed text), 2,144 `chunks` rows and 2,144 `voyage-4-large` `chunk_embeddings` rows, plus the query vectors of the 82 answerable `dev` agent-drafted questions. The file is **12.4 MB** (12,376,910 bytes, SHA-256 `f4e06d4d…`), a little above the 10–12 MB estimate. It stores no question text. Each query vector is keyed by model and the SHA-256 of the question text, as in the query cache.
+- **Format.** The first line is a header with the format number, the model, the row counts and the SHA-256 of the lines after it. Rows follow in primary key order, with sorted keys and a zero gzip timestamp. Two rebuilds from the same data gave the same bytes. Vectors go in as pgvector's text form, so they round-trip exactly.
+- **Code.** `eval/snapshot.py` builds, reads and loads the file. `SnapshotQueryEmbedder` serves the stored vectors through the `QueryEmbedder` interface and raises `SnapshotError` for any other question or model. It never calls Voyage. `ingest/store.py` gains `export_rows`, `import_rows` and `require_current_embeddings`. `python -m scripts.build_fixtures` writes the snapshot when `DATABASE_URL` is set and skips it otherwise. The script now has to run with `-m`, because the old `python scripts/build_fixtures.py` form cannot import `ingest`.
+- **Loading.** `load_snapshot` checks gzip's CRC and the body hash, applies the schema, and inserts every row in one transaction. The schema's CHECKs run on each row. It refuses tables that already hold filings, and after the insert it refuses any chunk without a current vector. Filings and embeddings go in through new INSERTs, not `load_filing` or `save_embedding`. `load_filing` needs a `ParsedFiling` and runs the chunker, and `save_embedding` commits per row and stamps a new time.
+- **What "identical rows" means.** The round-trip test compares every column except `loaded_at` and `embedded_at`. The snapshot leaves those timestamps out, since they would make each rebuild differ.
+- **Fixture rebuild change.** `build_fixture` now leaves an HTML fixture alone when its content already matches `data/raw`. The committed fixtures carry a filename and timestamp in their gzip headers, so each rebuild used to rewrite all six with the same content.
+- **Evidence.** `tests/test_snapshot.py` has 24 tests: byte-identical rebuilds, round trip between two throwaway schemas, a changed byte, an edited body, a failed `text_sha256` CHECK and a failed `chunk_id` CHECK, a stale vector, the embedder, the gated question set, no secrets, the committed file loading into an empty schema, and the committed file matching the local database and query cache (skips in CI). Full suite with the database, after rebasing on ticket 01: 1188 passed, 1 skipped (the documented NVIDIA pointer section). `ruff` is clean.
+- **Review (`mattpocock-skills:code-review`).**
+  - Standards: no hard violations, and the SQL is parameterized or built from column constants. All findings are fixed. Columns are now excluded by name, not by position. The embedding INSERT shares its prefix with the upsert, and the gap check is one function. The throwaway schema helper moved into `conftest.py`. Duplicate query vectors and JSON booleans are refused, and a damaged HTML fixture is rewritten instead of crashing the script.
+  - Spec: `load_snapshot` now applies the schema itself. The fixture script builds the HTML and the filing list again without a database. The new INSERTs and the timestamp exception are recorded above.
+- **For ticket 03.** `load_snapshot` returns a `Snapshot` with `sha256` and `query_vectors`. As ticket 01's notes asked, a missing vector raises `MissingQueryVector`, a subclass of both `SnapshotError` and `CacheError`, so `VectorArm.retrieve()` reports it as an `ArmError`. The gate should treat a `SnapshotError` from `load_snapshot` as "could not run".
+
+**Next session starts with**
+1. Step 6 ticket 03 (the `eval.gate` command). Tickets 01 and 02 are both in; read ticket 01's notes above as well.
+
 ---
 
 ## Findings worth telling

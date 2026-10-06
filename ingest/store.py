@@ -86,13 +86,16 @@ _CHUNKS_FOR_EMBEDDING = cast(
     " LEFT JOIN chunk_embeddings e ON e.chunk_id = c.chunk_id AND e.model = %s"
     " ORDER BY c.chunk_id",
 )
-_INSERTED_EMBEDDING_COLUMNS = _EMBEDDING_COLUMNS[:-1]  # embedded_at is set by the database
+# embedded_at is set by the database.
+_INSERTED_EMBEDDING_COLUMNS = tuple(c for c in _EMBEDDING_COLUMNS if c != "embedded_at")
 # Built from the column tuple above, never from input.  The last value is cast to vector.
+_INSERT_EMBEDDING = (
+    f"INSERT INTO chunk_embeddings ({', '.join(_INSERTED_EMBEDDING_COLUMNS)}) "
+    f"VALUES ({', '.join(['%s'] * (len(_INSERTED_EMBEDDING_COLUMNS) - 1))}, %s::vector)"
+)
 _UPSERT_EMBEDDING = cast(
     LiteralString,
-    f"INSERT INTO chunk_embeddings ({', '.join(_INSERTED_EMBEDDING_COLUMNS)}) "
-    f"VALUES ({', '.join(['%s'] * (len(_INSERTED_EMBEDDING_COLUMNS) - 1))}, %s::vector) "
-    "ON CONFLICT (chunk_id, model) DO UPDATE SET "
+    _INSERT_EMBEDDING + " ON CONFLICT (chunk_id, model) DO UPDATE SET "
     + ", ".join(f"{col} = EXCLUDED.{col}" for col in _INSERTED_EMBEDDING_COLUMNS[2:])
     + ", embedded_at = now()",
 )
@@ -127,6 +130,31 @@ _EMBEDDING_GAPS = cast(
     " LEFT JOIN chunk_embeddings e ON e.chunk_id = c.chunk_id AND e.model = %s",
 )
 _CHUNKER_VERSIONS: LiteralString = "SELECT DISTINCT chunker_version FROM chunks ORDER BY 1"
+# Snapshot rows (Step 6, ADR-0003): every column but the load timestamps, which would
+# make a rebuild from unchanged data differ.  Built from the column tuples, never from input.
+SNAPSHOT_FILING_COLUMNS = tuple(c for c in _FILING_COLUMNS if c != "loaded_at")
+SNAPSHOT_CHUNK_COLUMNS = _CHUNK_COLUMNS
+SNAPSHOT_EMBEDDING_COLUMNS = _INSERTED_EMBEDDING_COLUMNS
+_EXPORT_FILINGS = cast(
+    LiteralString,
+    f"SELECT {', '.join(SNAPSHOT_FILING_COLUMNS)} FROM filings ORDER BY accession_no",
+)
+_EXPORT_CHUNKS = cast(
+    LiteralString, f"SELECT {', '.join(SNAPSHOT_CHUNK_COLUMNS)} FROM chunks ORDER BY chunk_id"
+)
+_EXPORT_EMBEDDINGS = cast(
+    LiteralString,
+    "SELECT "
+    + ", ".join("embedding::text" if c == "embedding" else c for c in SNAPSHOT_EMBEDDING_COLUMNS)
+    + " FROM chunk_embeddings WHERE model = %s ORDER BY chunk_id",
+)
+_INSERT_FILING_ROW = cast(
+    LiteralString,
+    f"INSERT INTO filings ({', '.join(SNAPSHOT_FILING_COLUMNS)}) "
+    f"VALUES ({', '.join(['%s'] * len(SNAPSHOT_FILING_COLUMNS))})",
+)
+_INSERT_EMBEDDING_ROW = cast(LiteralString, _INSERT_EMBEDDING)
+_HAS_FILINGS: LiteralString = "SELECT EXISTS (SELECT 1 FROM filings)"
 _LIVE_COLUMNS: LiteralString = """
 SELECT table_name, column_name FROM information_schema.columns
 WHERE table_schema = current_schema()
@@ -156,6 +184,17 @@ class EmbeddingGaps(NamedTuple):
 
     missing: int
     stale: int
+
+
+class SnapshotRows(NamedTuple):
+    """The stored rows a snapshot carries, each a dict keyed by column, in primary key order.
+
+    Embedding vectors are pgvector's text form, so they round-trip exactly.
+    """
+
+    filings: tuple[dict[str, object], ...]
+    chunks: tuple[dict[str, object], ...]
+    embeddings: tuple[dict[str, object], ...]
 
 
 class ChunkNotFound(KeyError):
@@ -322,6 +361,15 @@ def embedding_gaps(conn: psycopg.Connection, model: str) -> EmbeddingGaps:
     return EmbeddingGaps(*conn.execute(_EMBEDDING_GAPS, (model,)).fetchone())
 
 
+def require_current_embeddings(conn: psycopg.Connection, model: str) -> None:
+    """Raise ``ValueError`` if any chunk lacks a *model* vector or has one made from other text."""
+    gaps = embedding_gaps(conn, model)
+    if gaps.missing or gaps.stale:
+        raise ValueError(
+            f"{gaps.missing} chunks lack a {model} vector and {gaps.stale} have a stale one"
+        )
+
+
 def chunker_versions(conn: psycopg.Connection) -> list[str]:
     """The distinct ``chunker_version`` values of the stored chunks, sorted."""
     return [row[0] for row in conn.execute(_CHUNKER_VERSIONS)]
@@ -351,3 +399,47 @@ def nearest_chunks(
 def list_filings(conn: psycopg.Connection) -> list[FilingRow]:
     """Each stored filing's metadata, by accession number."""
     return [FilingRow(*row) for row in conn.execute(_LIST_FILINGS)]
+
+
+# ── Snapshot rows (Step 6) ────────────────────────────────────────────────────
+
+def _dicts(cur: psycopg.Cursor, columns: Sequence[str]) -> tuple[dict[str, object], ...]:
+    return tuple(dict(zip(columns, row, strict=True)) for row in cur)
+
+
+def export_rows(conn: psycopg.Connection, model: str) -> SnapshotRows:
+    """Every filing and chunk, and every *model* vector, without load timestamps."""
+    return SnapshotRows(
+        filings=_dicts(conn.execute(_EXPORT_FILINGS), SNAPSHOT_FILING_COLUMNS),
+        chunks=_dicts(conn.execute(_EXPORT_CHUNKS), SNAPSHOT_CHUNK_COLUMNS),
+        embeddings=_dicts(
+            conn.execute(_EXPORT_EMBEDDINGS, (model,)), SNAPSHOT_EMBEDDING_COLUMNS
+        ),
+    )
+
+
+def import_rows(conn: psycopg.Connection, rows: SnapshotRows, model: str) -> None:
+    """Insert *rows* into tables that hold no filings, atomically, then commit.
+
+    The schema's CHECKs run on every row.  Raises ``ValueError`` if the tables
+    already hold filings, or if afterwards a chunk lacks a *model* vector or has
+    one made from other text; ``psycopg.Error`` if a row breaks a constraint.
+    Either way nothing is inserted.
+    """
+    if conn.execute(_HAS_FILINGS).fetchone()[0]:
+        raise ValueError("the filings table is not empty; load a snapshot into an empty schema")
+    with conn.transaction():
+        with conn.cursor() as cur:
+            cur.executemany(_INSERT_FILING_ROW, _values(rows.filings, SNAPSHOT_FILING_COLUMNS))
+            cur.executemany(_INSERT_CHUNK, _values(rows.chunks, SNAPSHOT_CHUNK_COLUMNS))
+            cur.executemany(
+                _INSERT_EMBEDDING_ROW, _values(rows.embeddings, SNAPSHOT_EMBEDDING_COLUMNS)
+            )
+        require_current_embeddings(conn, model)
+    conn.commit()
+
+
+def _values(
+    rows: Sequence[dict[str, object]], columns: Sequence[str]
+) -> list[tuple[object, ...]]:
+    return [tuple(row[col] for col in columns) for row in rows]
