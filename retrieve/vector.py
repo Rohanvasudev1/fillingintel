@@ -13,7 +13,7 @@ import os
 import time
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import fields
 from pathlib import Path
 from types import MappingProxyType
 
@@ -41,7 +41,7 @@ from retrieve.answer_model import (
 )
 from retrieve.answer_model import API_KEY_ENV as ANTHROPIC_KEY_ENV
 from retrieve.answer_prompt import AnswerPrompt, PromptError, SourceChunk, load_prompt
-from retrieve.arm import ArmConfig, ArmError, ArmResult, ArmSpec, RetrievedChunk
+from retrieve.arm import ArmConfig, ArmError, ArmResult, ArmSpec, Retrieval, RetrievedChunk
 from retrieve.pricing import PRICE_TABLE_DATE, PRICES, embedding_cost
 from retrieve.query_cache import CachedQueryEmbedder, CacheError
 from retrieve.question_filter import (
@@ -54,20 +54,18 @@ from retrieve.response_cache import CachedAnswerModel
 
 TOP_K = 10
 _MS_PER_SECOND = 1000.0
-
-
-@dataclass(frozen=True)
-class _Retrieval:
-    rows: list[tuple[str, float]]  # (chunk_id, cosine similarity), best first
-    embed_ms: float
-    search_ms: float
-    query_cached: bool
-    embed_tokens: int
+# Raised as ArmError.  OSError: a cache file could not be written.
+_RETRIEVAL_ERRORS = (VoyageError, CacheError, psycopg.Error, OSError)
+_ANSWER_ERRORS = (CacheError, psycopg.Error, ChunkNotFound, AnswerModelError, OSError)
 
 
 class VectorArm:
     """Embeds the question (input type ``query``), retrieves the top *k* chunks within
-    the question's filter, and has the answer model write a cited answer from them."""
+    the question's filter, and has the answer model write a cited answer from them.
+
+    With no answer model the arm can only ``retrieve``, which is what the offline
+    quality gate needs (ADR-0003).
+    """
 
     name = "vector"
 
@@ -75,7 +73,7 @@ class VectorArm:
         self,
         conn: psycopg.Connection,
         embedder: QueryEmbedder,
-        answer_model: AnswerModel,
+        answer_model: AnswerModel | None,
         model: str = DEFAULT_MODEL,
         k: int = TOP_K,
         clock: Callable[[], float] = time.perf_counter,
@@ -102,43 +100,44 @@ class VectorArm:
 
     def run(self, question: str) -> ArmResult:
         """Retrieve and answer for one question; any failure is raised as ``ArmError``."""
+        if self._answer_model is None:
+            raise ArmError("the vector arm was opened with no answer model; use retrieve()")
+        retrieval = self.retrieve(question)
+        try:
+            chunks = self._source_chunks([r.chunk_id for r in retrieval.retrieved])
+            answer = write_answer(question, chunks, self._answer_model, self._prompt)
+        except _ANSWER_ERRORS as exc:
+            raise _arm_error(exc) from exc
+        retrieval_fields = {f.name: getattr(retrieval, f.name) for f in fields(Retrieval)}
+        return ArmResult(**retrieval_fields, answer=answer, sources=chunks)
+
+    def retrieve(self, question: str) -> Retrieval:
+        """Filter, embed and search for one question, with no answer model call.
+
+        ``run`` answers from exactly this result.  Any failure is raised as ``ArmError``.
+        """
         question_filter = parse_question_filter(question, self._filings)
         try:
-            retrieval = self._retrieve(question, question_filter.accession_nos)
-            chunks = self._source_chunks([chunk_id for chunk_id, _ in retrieval.rows])
-            answer = write_answer(question, chunks, self._answer_model, self._prompt)
-        except (VoyageError, CacheError, psycopg.Error, ChunkNotFound, AnswerModelError,
-                OSError) as exc:  # OSError: a cache file could not be written
-            raise ArmError(f"vector arm failed ({type(exc).__name__}): {exc}") from exc
-        return ArmResult(
-            retrieved=tuple(RetrievedChunk(chunk_id, score) for chunk_id, score in retrieval.rows),
+            start = self._clock()
+            embedding = self._embedder.embed_query(question, self._model)
+            embedded = self._clock()
+            rows = nearest_chunks(self._conn, self._model, embedding.vector, self._k,
+                                  question_filter.accession_nos)
+            searched = self._clock()
+        except _RETRIEVAL_ERRORS as exc:
+            raise _arm_error(exc) from exc
+        return Retrieval(
+            retrieved=tuple(RetrievedChunk(chunk_id, score) for chunk_id, score in rows),
             question_filter=question_filter,
             companies_without_chunks=companies_without_chunks(
-                question_filter, (chunk_id for chunk_id, _ in retrieval.rows), self._filings
+                question_filter, (chunk_id for chunk_id, _ in rows), self._filings
             ),
-            embed_ms=retrieval.embed_ms,
-            search_ms=retrieval.search_ms,
-            query_cached=retrieval.query_cached,
-            embed_tokens=retrieval.embed_tokens,
-            embed_cost_usd=embedding_cost(self._model, retrieval.embed_tokens),
-            answer=answer,
-            sources=chunks,
-        )
-
-    def _retrieve(self, question: str, accession_nos: Sequence[str] | None) -> _Retrieval:
-        start = self._clock()
-        embedding = self._embedder.embed_query(question, self._model)
-        embedded = self._clock()
-        rows = nearest_chunks(self._conn, self._model, embedding.vector, self._k, accession_nos)
-        searched = self._clock()
-        return _Retrieval(
-            rows=rows,
             embed_ms=(embedded - start) * _MS_PER_SECOND,
             search_ms=(searched - embedded) * _MS_PER_SECOND,
             query_cached=embedding.from_cache,
             embed_tokens=embedding.api_token_count,
+            embed_cost_usd=embedding_cost(self._model, embedding.api_token_count),
         )
-
 
     def _source_chunks(self, chunk_ids: Sequence[str]) -> tuple[SourceChunk, ...]:
         """Each chunk's resolved text and the source the answer model is told about."""
@@ -151,6 +150,10 @@ class VectorArm:
                         c.section, resolve(self._conn, c.chunk_id))
             for c in chunks
         )
+
+
+def _arm_error(exc: Exception) -> ArmError:
+    return ArmError(f"vector arm failed ({type(exc).__name__}): {exc}")
 
 
 def _check_prices(models: Sequence[str]) -> None:

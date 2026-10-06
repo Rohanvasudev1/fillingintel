@@ -28,8 +28,8 @@ class RetrievedChunk:
 
 
 @dataclass(frozen=True)
-class ArmResult:
-    """What one arm returned for one question."""
+class Retrieval:
+    """What an arm's search returned for one question, before any answer is written."""
 
     retrieved: tuple[RetrievedChunk, ...]  # best first
     question_filter: QuestionFilter
@@ -39,12 +39,18 @@ class ArmResult:
     query_cached: bool  # cached embeddings take ~0 ms, so latency stats must tell them apart
     embed_tokens: int  # as Voyage reported them, also for a cached embedding
     embed_cost_usd: float
-    answer: Answer
-    sources: tuple[SourceChunk, ...]  # what the answer model saw, in retrieval order; for judges
 
     @property
     def retrieval_ms(self) -> float:
         return self.embed_ms + self.search_ms
+
+
+@dataclass(frozen=True)
+class ArmResult(Retrieval):
+    """What one arm returned for one question: its retrieval and the answer written from it."""
+
+    answer: Answer
+    sources: tuple[SourceChunk, ...]  # what the answer model saw, in retrieval order; for judges
 
 
 @dataclass(frozen=True)

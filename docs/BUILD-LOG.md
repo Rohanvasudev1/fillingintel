@@ -956,6 +956,25 @@ Model: Claude Opus 5.5, for the main session and the drafting subagents. Fixed p
 1. Step 6 (CI quality gate): `/grill-with-docs` on the ~40-question CI subset, the regression thresholds against this baseline, and Phoenix tracing.
 2. Open leads carried over: INTC FY2025 10-K headcount and capex table missing from chunks; NVDA Q3 FY2026 table header duplicated; judge calibration against hand scores before any judged number loses "uncalibrated".
 
+
+## 2026-10-06 — Step 6 ticket 01: retrieval-only method on the vector arm
+
+- **What changed.**
+  - `VectorArm.retrieve(question)` filters, embeds and searches with no answer model call. It returns a `Retrieval` (`retrieve/arm.py`) with the retrieved chunks and scores, the question filter, the named companies with no retrieved chunk, the embedding and search timings, and the embedding tokens and cost.
+  - `run()` calls `retrieve()` and then writes the answer, so the gate (ticket 03) and `eval.run` share one search path.
+  - `ArmResult` now extends `Retrieval` and adds `answer` and `sources`. Its attributes are the same as before, so `eval.run`, the results file and the judges are untouched.
+  - The arm accepts `answer_model=None`. `retrieve()` works without it, and `run()` raises `ArmError`. `open_vector_arm` and `VECTOR.required_env` are unchanged, so `eval.run` still needs `ANTHROPIC_API_KEY`.
+  - Failures in `retrieve()` (Voyage, cache, database, cache file write) are raised as `ArmError` with the same message format as `run()`.
+- **Tests (test-first, 8 new, all shown failing first).** `retrieve()` matches `run()`'s chunks, scores, filter, coverage, timings and cost; it sends no answer model request; it works with no answer model while `run()` refuses; k = 1 returns one chunk; embedding, cache and database errors become `ArmError`. The 19 existing vector arm tests are unchanged.
+- **Evidence.** 831 passed and 14 skipped with the database (worktree at d870811 plus this change). The skips are the documented NVIDIA pointer section and the tests that need `data/raw` or `data/parsed`, which a worktree does not have. No database test skipped. `ruff` is clean. No eval slice was run: retrieval output is identical by test, and the gate that scores it comes in ticket 03.
+- **Review (`mattpocock-skills:code-review`).**
+  - Standards: `Retrieval` duplicated eight `ArmResult` fields, and `run()` copied them one by one. Fixed by making `ArmResult` extend `Retrieval`. The two exception tuples are now named constants. One test was renamed to say what it checks.
+  - Spec: no missing requirements. `run()` wraps the same exception types as before, now split by phase; neither phase calls code that raises the types it no longer catches.
+  - Left for ticket 03: with no answer model, `arm.config` still names the answer model, effort and prompt. If the gate records `ArmConfig`, it must leave those out. The snapshot query embedder should raise `CacheError` or `ArmError` for a missing vector, so that `retrieve()` wraps it.
+
+**Next session starts with**
+1. Ticket 03 (quality gate command) once ticket 02's snapshot has landed, carrying the two notes above.
+
 ---
 
 ## Findings worth telling

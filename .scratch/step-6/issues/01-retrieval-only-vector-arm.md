@@ -4,11 +4,11 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done (2026-10-06)
 
-- [ ] The retrieval-only method needs no answer model call, and a caller can use it without an answer model or `ANTHROPIC_API_KEY`.
-- [ ] A test shows the retrieval-only method returns exactly the chunks, scores and filter that `run()` used for the same question (existing fake embedder and fake answer model).
-- [ ] A test shows the method respects the arm's k (k = 1 returns one chunk).
-- [ ] All existing vector arm and `eval.run` tests pass unchanged.
-- [ ] Errors from embedding, the cache or the database are raised as `ArmError`, as in `run()`.
-- [ ] `uv run ruff check .` and `uv run --env-file .env pytest` pass.
+- [x] The retrieval-only method needs no answer model call, and a caller can use it without an answer model or `ANTHROPIC_API_KEY`.
+- [x] A test shows the retrieval-only method returns exactly the chunks, scores and filter that `run()` used for the same question (existing fake embedder and fake answer model).
+- [x] A test shows the method respects the arm's k (k = 1 returns one chunk).
+- [x] All existing vector arm and `eval.run` tests pass unchanged.
+- [x] Errors from embedding, the cache or the database are raised as `ArmError`, as in `run()`.
+- [x] `uv run ruff check .` and `uv run --env-file .env pytest` pass.

@@ -21,6 +21,7 @@ from retrieve.answer_model import AnswerModelError, AnswerRequest, ApiResponse
 from retrieve.answer_prompt import load_prompt
 from retrieve.arm import ArmError
 from retrieve.pricing import embedding_cost
+from retrieve.query_cache import CacheError
 from retrieve.vector import TOP_K, VectorArm
 from tests.anthropic_fixtures import load, with_text
 from tests.conftest import FIXTURE_NAMES
@@ -253,3 +254,61 @@ def test_a_not_found_answer_passes_through_the_arm(db_conn, embedded):
 def test_an_unpriced_embedding_model_stops_the_arm_before_any_question(db_conn, embedded):
     with pytest.raises(ArmError, match="no price"):
         VectorArm(db_conn, FakeQueryEmbedder(), ScriptedAnswerModel(), "voyage-unpriced")
+
+
+def test_retrieve_returns_the_same_retrieval_as_run(db_conn, embedded):
+    question = "How do NVIDIA and Intel describe their reliance on TSMC?"
+    ticks = iter([3.0, 3.1, 3.25, 5.0, 5.1, 5.25])
+    arm = _arm(db_conn, FakeQueryEmbedder(), clock=lambda: next(ticks))
+    retrieval = arm.retrieve(question)
+    result = arm.run(question)
+    assert retrieval.retrieved == result.retrieved
+    assert retrieval.question_filter == result.question_filter
+    assert retrieval.companies_without_chunks == result.companies_without_chunks == ("NVDA",)
+    assert (retrieval.embed_ms, retrieval.search_ms) == pytest.approx(
+        (result.embed_ms, result.search_ms)
+    )
+    assert (retrieval.query_cached, retrieval.embed_tokens, retrieval.embed_cost_usd) == (
+        result.query_cached, result.embed_tokens, result.embed_cost_usd
+    )
+    assert retrieval.retrieval_ms == pytest.approx(250.0)
+
+
+def test_retrieve_makes_no_answer_model_call(db_conn, embedded):
+    answer_model = ScriptedAnswerModel()
+    _arm(db_conn, FakeQueryEmbedder(), answer_model).retrieve(QUESTION)
+    assert answer_model.requests == []
+
+
+def test_retrieve_works_with_no_answer_model_and_run_refuses(db_conn, embedded):
+    arm = VectorArm(db_conn, FakeQueryEmbedder(), None, MODEL)
+    retrieval = arm.retrieve(QUESTION)
+    assert [r.chunk_id for r in retrieval.retrieved] == embedded[:TOP_K]
+    with pytest.raises(ArmError, match="no answer model"):
+        arm.run(QUESTION)
+
+
+def test_retrieve_respects_the_arms_k(db_conn, embedded):
+    retrieval = _arm(db_conn, FakeQueryEmbedder(), k=1).retrieve(QUESTION)
+    assert [r.chunk_id for r in retrieval.retrieved] == embedded[:1]
+
+
+@pytest.mark.parametrize(
+    ("error", "name"),
+    [(VoyageError("HTTP 401"), "VoyageError"), (CacheError("bad cache file"), "CacheError"),
+     (OSError("disk full"), "OSError")],
+)
+def test_retrieve_raises_embedding_and_cache_failures_as_arm_errors(db_conn, embedded, error,
+                                                                    name):
+    arm = _arm(db_conn, FakeQueryEmbedder(error=error))
+    with pytest.raises(ArmError, match=name):
+        arm.retrieve(QUESTION)
+
+
+def test_retrieve_raises_a_database_failure_as_an_arm_error(db_conn, embedded):
+    arm = _arm(db_conn, FakeQueryEmbedder(vector=(1.0, 0.0, 0.0)))  # wrong dimension
+    try:
+        with pytest.raises(ArmError, match=r"vector arm failed \(\w+\): "):
+            arm.retrieve(QUESTION)
+    finally:
+        db_conn.rollback()
