@@ -35,7 +35,7 @@ from ingest.store import (
     save_embedding,
 )
 from ingest.voyage import Embedding
-from retrieve.query_cache import DEFAULT_CACHE_DIR, CachedQueryEmbedder
+from retrieve.query_cache import DEFAULT_CACHE_DIR, CachedQueryEmbedder, CacheError
 from tests.conftest import FIXTURE_NAMES, throwaway_schema
 
 MODEL = "voyage-4-large"
@@ -241,6 +241,12 @@ def test_the_embedder_returns_the_stored_vector_for_a_gated_question():
 def test_the_embedder_raises_for_any_other_question_or_model(question, model):
     with pytest.raises(SnapshotError, match="no snapshot vector"):
         SnapshotQueryEmbedder(_query_vectors()).embed_query(question, model)
+
+
+def test_a_missing_vector_is_a_query_cache_error_so_the_arm_reports_it():
+    # VectorArm.retrieve() turns CacheError into ArmError (ticket 01).
+    with pytest.raises(CacheError):
+        SnapshotQueryEmbedder(_query_vectors()).embed_query("Not gated?", MODEL)
 
 
 # ── the committed snapshot ────────────────────────────────────────────────────

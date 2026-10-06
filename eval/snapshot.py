@@ -65,6 +65,10 @@ class SnapshotError(RuntimeError):
     """A snapshot cannot be built, read or loaded, or has no vector for a question."""
 
 
+class MissingQueryVector(SnapshotError, CacheError):
+    """The snapshot has no vector for a question; ``VectorArm`` reports it as an ``ArmError``."""
+
+
 @dataclass(frozen=True)
 class QueryVector:
     """A gated question's query embedding, keyed by model and question text hash."""
@@ -125,10 +129,10 @@ class SnapshotQueryEmbedder:
         self._vectors = {(v.model, v.text_sha256): v for v in query_vectors}
 
     def embed_query(self, text: str, model: str) -> Embedding:
-        """The stored vector for *text* and *model*; raises ``SnapshotError`` for any other."""
+        """The stored vector for *text* and *model*; raises ``MissingQueryVector`` for any other."""
         stored = self._vectors.get((model, text_sha256(text)))
         if stored is None:
-            raise SnapshotError(
+            raise MissingQueryVector(
                 f"no snapshot vector for question {text_sha256(text)[:12]} and model {model}"
             )
         return Embedding(stored.vector, stored.api_token_count, from_cache=True)
