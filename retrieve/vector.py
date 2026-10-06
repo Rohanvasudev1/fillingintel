@@ -121,7 +121,7 @@ class VectorArm:
             start = self._clock()
             embedding = self._embedder.embed_query(question, self._model)
             embedded = self._clock()
-            rows = nearest_chunks(self._conn, self._model, embedding.vector, self._k,
+            rows = nearest_chunks(self._conn, self._model, embedding.vector, 1,
                                   question_filter.accession_nos)
             searched = self._clock()
         except _RETRIEVAL_ERRORS as exc:
