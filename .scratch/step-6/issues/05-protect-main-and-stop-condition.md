@@ -4,11 +4,11 @@
 
 **Blocked by:** 04
 
-**Status:** ready-for-agent
+**Status:** done (2026-10-06)
 
-- [ ] Before creating the ruleset, the agent shows the user the exact `gh api` call and waits for a yes in chat.
-- [ ] The ruleset targets `main`, requires `lint-and-test` and `quality-gate`, and has no bypass actors. Read it back with `gh api` and confirm.
-- [ ] A direct push to `main` is rejected (shown by the push error or the ruleset's evaluation, without forcing anything).
-- [ ] A branch that sets k to 1 is opened as a PR; `quality-gate` fails, naming the dropped numbers, and GitHub shows the PR as blocked.
-- [ ] The k = 1 PR is closed without merging and its branch deleted; its link goes in the BUILD-LOG entry.
-- [ ] The BUILD-LOG entry records that v1 (RUNBOOK steps 1–6) is complete once this ticket and the tracing tickets are done.
+- [x] Before creating the ruleset, the agent shows the user the exact `gh api` call and waits for a yes in chat.
+- [x] The ruleset targets `main`, requires `lint-and-test` and `quality-gate`, and has no bypass actors. Read it back with `gh api` and confirm.
+- [x] A direct push to `main` is rejected (shown by the push error or the ruleset's evaluation, without forcing anything).
+- [x] A branch that sets k to 1 is opened as a PR; `quality-gate` fails, naming the dropped numbers, and GitHub shows the PR as blocked.
+- [x] The k = 1 PR is closed without merging and its branch deleted; its link goes in the BUILD-LOG entry.
+- [x] The BUILD-LOG entry records that v1 (RUNBOOK steps 1–6) is complete once this ticket and the tracing tickets are done.

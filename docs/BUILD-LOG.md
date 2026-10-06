@@ -1053,6 +1053,26 @@ PR: https://github.com/Rohanvasudev1/fillingintel/pull/3 (branch `step-6/04-qual
 
 ---
 
+## 2026-10-06 — Step 6 ticket 05: protect `main` and the stop condition
+
+Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (37455002708) passed both checks.
+
+- **Ruleset.** The user approved the exact `gh api` call in chat, and then I created ruleset 24576386, "main: CI and quality gate must pass" (https://github.com/Rohanvasudev1/fillingintel/rules/24576386). It targets `~DEFAULT_BRANCH`, is `active`, and requires `lint-and-test` and `quality-gate` from GitHub Actions (integration 15368). `strict_required_status_checks_policy` is false. It has no bypass actors. Reading it back with `gh api .../rulesets/24576386` and `.../rules/branches/main` showed both checks, `bypass_actors: []` and `current_user_can_bypass: never`. The research had recommended an admin bypass for PRs only. The ticket has none, so the owner is bound too.
+- **Direct push rejected.** I made an empty commit on a detached `origin/main` and pushed it to `main`. GitHub refused it with `GH013: Repository rule violations found for refs/heads/main ... 2 of 2 required status checks are expected` and `push declined due to repository rule violations`. `main` stayed at cf56ac9. Nothing was forced. The ruleset has no "require a pull request" rule, so a commit that already passed both checks on a branch could still be pushed straight to `main`.
+- **Stop condition (k = 1).** PR: https://github.com/Rohanvasudev1/fillingintel/pull/4, closed without merging, branch deleted. With the user's agreement, the PR changed the vector arm's search to ask for 1 chunk (`retrieve/vector.py:124`) and left `TOP_K` at 10. A plain `TOP_K = 1` would have failed as an input mismatch (exit 2) without naming any scores. CI run 37456438739:
+  - `quality-gate` failed with exit 4. It named 10 dropped numbers, every recall@5 and recall@10, per class and pooled. Pooled recall@10 fell from 0.890244 to 0.417683, and multi_hop recall@10 from 0.717391 to 0.166667 (agent-drafted questions).
+  - The wrong-evidence rate fell in every class (pooled 0.060976 to 0.012195). With one chunk, fewer hard negatives rank above gold. The gate only fails a rise, so these rows read "ok". Recall is what catches this kind of break.
+  - `lint-and-test` also failed: 9 tests in `tests/test_vector_arm.py` and `tests/test_gate.py`.
+  - `gh pr view 4` reported `mergeStateStatus: BLOCKED`.
+- **Workflow from now on.** Every change, this entry included, reaches `main` through a PR with both checks green.
+- **v1.** RUNBOOK steps 1–6 are v1. v1 is complete once this ticket and the tracing tickets (06, 07, 08) are done. Only the tracing tickets remain.
+- **Evidence.** No repository code changed in this ticket, so no new tests and no code review. The only commit is this entry and the ticket statuses.
+
+**Next session starts with**
+1. Ticket 06 (Phoenix service in docker-compose.yml), on its own branch and PR.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.
