@@ -6,6 +6,10 @@
 
 **Status:** ready-for-agent
 
+**Notes from ticket 06:**
+- `.env.example` names the text-capture setting `FILINGINTEL_TRACE_TEXT` (off unless `true`). Use that name, or rename it in `.env.example` in the same change.
+- `.env.example` gives `PHOENIX_COLLECTOR_ENDPOINT=http://localhost:6006`, the base URL. Phoenix takes spans at `POST /v1/traces`. An `OTLPSpanExporter(endpoint=...)` argument is used as given, with no path added, so the tracing module appends `/v1/traces`.
+
 - [ ] A tracing module builds a `TracerProvider` with a `BatchSpanProcessor` and an OTLP HTTP exporter with a 2-second timeout only when the endpoint is set. It never calls `trace.set_tracer_provider`. `eval.run` shuts the provider down before exiting.
 - [ ] The vector arm takes an optional tracer; with none, it records no spans.
 - [ ] Span names, kinds and attribute names follow OpenInference, using the conventions package constants.

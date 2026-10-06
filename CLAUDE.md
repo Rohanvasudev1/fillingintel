@@ -37,7 +37,8 @@ Ask before: adding a dependency, changing a schema, changing the eval harness or
 ## Commands
 - Tests: uv run pytest
 - Lint: uv run ruff check .
-- Databases: docker compose up -d
+- Databases and Phoenix: docker compose up -d
+- Phoenix UI: http://localhost:6006
 - Tests with the database: uv run --env-file .env pytest
 - Corpus (network; writes spikes/corpus_report.txt and data/parsed/): uv run --env-file .env python -m ingest.corpus
 - Load and verify (offline; writes spikes/load_report.txt): uv run --env-file .env python -m ingest.load --verify
@@ -138,5 +139,6 @@ Files changed; evidence (tests, eval results with commit); regressions; decision
   - Compose: arizephoenix/phoenix:20.19.0 with a data volume (PHOENIX_WORKING_DIR), PHOENIX_TELEMETRY_ENABLED=false and PHOENIX_ALLOW_EXTERNAL_RESOURCES=false. Phoenix, Postgres and Neo4j ports bind to 127.0.0.1 only.
   - Tracing off means no SDK objects are built. BatchSpanProcessor with a 2 s exporter timeout and an explicit shutdown. Tests pass their own TracerProvider with an in-memory exporter; code never calls trace.set_tracer_provider. An autouse pytest fixture removes PHOENIX_COLLECTOR_ENDPOINT and OTEL_EXPORTER_OTLP_*.
   - Cost in traces: Phoenix prices LLM spans from token counts, so cache replays carry no token counts, Claude's prompt count is uncached + cache-read + cache-write, and Voyage and per-call costs go in project attributes.
+  - Text-capture setting (user decision, 2026-10-06): `FILINGINTEL_TRACE_TEXT`, off unless `true`. Only then do prompt and answer text go on spans.
   - eval/judging/runner.py submits judge tasks with contextvars.copy_context().run so judge spans keep their parent. Scores do not change.
   - `main` is protected by a ruleset requiring the gate job, with no bypass; changing it means editing the ruleset (set up only after the user approves). CI triggers on pull_request and on push to main, with no paths filters.

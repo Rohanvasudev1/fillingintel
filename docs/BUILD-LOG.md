@@ -1071,6 +1071,20 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 **Next session starts with**
 1. Ticket 06 (Phoenix service in docker-compose.yml), on its own branch and PR.
 
+## 2026-10-06 — Step 6 ticket 06: Phoenix in Docker Compose, services on localhost
+
+- **Compose.** A `phoenix` service runs `arizephoenix/phoenix:20.19.0` (digest `sha256:d240d8d4…`, as in the research note). It sets `PHOENIX_WORKING_DIR=/mnt/data` on the named volume `phoenix_data`, with `PHOENIX_TELEMETRY_ENABLED=false` and `PHOENIX_ALLOW_EXTERNAL_RESOURCES=false`. Ports 6006 and 4317 are published on 127.0.0.1. Postgres (5432) and Neo4j (7474, 7687) now publish on 127.0.0.1 too, so `docker ps` shows no `0.0.0.0` binding.
+- **Healthcheck.** The image is distroless, with entrypoint `/usr/bin/python3.13`. `python` and `python3` both exist in it. The check runs `python3 -c "urllib.request.urlopen('http://127.0.0.1:6006/healthz', timeout=3)"`. Run by hand in the container it exits 0, and it exits 1 against a port nothing listens on. Compose reports the service `healthy`.
+- **Persistence.** I sent one CHAIN span over OTLP HTTP to `/v1/traces` from a throwaway `uv run --no-project` environment, under project `ticket06-check` (trace `529ff5b2b2d831276e719c392727a93b`). After `docker compose down` (0 containers left) and `up -d`, `GET /v1/projects/ticket06-check/spans` still returned it. The project is still in Phoenix and can be deleted from the UI.
+- **No third-party requests.** In the browser pane I loaded the UI, the project page and the trace view. The network log and `performance.getEntriesByType('resource')` showed requests to `localhost:6006` only. The served `index.html` has no Scarf, FullStory or Google Fonts reference.
+- **Text-capture setting.** `.env.example` names it `FILINGINTEL_TRACE_TEXT`, commented out. The spec left the name open. Ticket 07 has a note to use it, and to append `/v1/traces` to `PHOENIX_COLLECTOR_ENDPOINT`.
+- **Compose project name.** The worktree's directory name differs from the repo's, so I ran compose with `-p fillingintel` to reuse the existing `fillingintel_postgres_data` and `fillingintel_neo4j_data` volumes. Until this PR merges, `docker compose up -d` from the main checkout recreates Postgres and Neo4j on all interfaces and warns that `phoenix` is an orphan container.
+- **Evidence.** `uv run ruff check .` is clean. `uv run --env-file .env pytest`: 910 passed, 15 skipped. `tests/test_store.py`: 31 passed against the rebound Postgres. No Python code changed, so there are no new tests and no eval slice.
+- **Review** (`mattpocock-skills:code-review`). Spec: nothing missing. Standards: no hard violations. Fixed: the healthcheck uses 127.0.0.1 instead of `localhost`, the CLAUDE.md Commands line is split in two, and the notes went into ticket 07. Kept: the 4317 mapping, flagged as Speculative Generality, because the ticket and spec ask for it.
+
+**Next session starts with**
+1. Merge this ticket's PR, then ticket 07 (tracing for retrieval and answers).
+
 ---
 
 ## Findings worth telling
