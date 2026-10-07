@@ -34,8 +34,10 @@ from pydantic import BaseModel, ValidationError
 from ragas.llms.base import InstructorBaseRagasLLM
 
 from eval.judging.openai_backend import OpenAIUsage, parse_openai_reply
+from eval.judging.tracing import JUDGE_CALL_SPAN, judge_call_attributes, judge_request_attributes
 from retrieve.answer_model import AnswerModel, AnswerModelError, Effort
 from retrieve.pricing import openai_cost
+from retrieve.tracing import Kind, SpanRecorder
 
 JUDGE_PROVIDER = "openai"
 JUDGE_MODEL = "gpt-6-luna"
@@ -106,12 +108,14 @@ class OpenAIJudge(InstructorBaseRagasLLM):
 
     Ragas calls ``agenerate`` and reads only the parsed reply, so the repeat
     counter and the call log live on this short-lived object; each is replaced
-    with a new copy on every call, never changed in place.
+    with a new copy on every call, never changed in place.  Each call is an LLM
+    span on *spans*, under whichever span is current; with no recorder, none.
     """
 
     def __init__(self, backend: AnswerModel, run: int, model: str = JUDGE_MODEL,
                  effort: Effort = JUDGE_EFFORT,
-                 max_output_tokens: int = JUDGE_MAX_OUTPUT_TOKENS):
+                 max_output_tokens: int = JUDGE_MAX_OUTPUT_TOKENS,
+                 spans: SpanRecorder | None = None):
         if not 1 <= run <= JUDGE_RUNS:
             raise ValueError(f"judge run must be 1 to {JUDGE_RUNS}, got {run}")
         self._backend = backend
@@ -119,6 +123,7 @@ class OpenAIJudge(InstructorBaseRagasLLM):
         self._model = model
         self._effort = effort
         self._max_output_tokens = max_output_tokens
+        self._spans = spans if spans is not None else SpanRecorder.off()
         self._repeats: dict[str, int] = {}
         self.calls: tuple[JudgeCall, ...] = ()
 
@@ -140,9 +145,14 @@ class OpenAIJudge(InstructorBaseRagasLLM):
 
     def generate(self, prompt: str, response_model: type[ReplyT]) -> ReplyT:
         """Ask the judge *prompt*; the reply validated as *response_model*."""
-        response = self._backend.complete(self._request(prompt, response_model))
-        reply = parse_openai_reply(response.body)
-        call = JudgeCall(reply.usage, openai_cost(self._model, reply.usage), response.from_cache)
+        request = self._request(prompt, response_model)
+        with self._spans.span(JUDGE_CALL_SPAN, Kind.LLM, judge_request_attributes(
+                self._model, self._effort, self._max_output_tokens)) as span:
+            response = self._backend.complete(request)
+            reply = parse_openai_reply(response.body)
+            call = JudgeCall(reply.usage, openai_cost(self._model, reply.usage),
+                             response.from_cache)
+            span.set_attributes(judge_call_attributes(call))
         self.calls = (*self.calls, call)  # tokens are spent even when the reply is unusable
         if reply.refusal is not None:
             raise JudgeReplyError("judge refused")
