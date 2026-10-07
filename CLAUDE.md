@@ -165,3 +165,4 @@ Files changed; evidence (tests, eval results with commit); regressions; decision
   - Property types (ticket 01, user decision 2026-10-07): Filing's date is `filing_date` (DATE), named as in Postgres; `MetricValue.value` is FLOAT, and the write path accepts an int and stores it as a float; `OWNS.stake` is FLOAT, the owned share from 0 to 1; keys, `cik` and `fiscal_period` are STRING. Ticket 03 adds `graph/` to git_state()'s +dirty list.
   - Approved dependency: `neo4j==6.3.1` (pulls only pytz), created with `telemetry_disabled=True` and an explicit database name.
   - Glossary: "edge" in docs and code, "relationship" only when quoting Neo4j; the extractor's output is a "candidate triple" until validated.
+  - Rewrites (ticket 03, user decision 2026-10-07): a node or edge written again takes the latest batch's property values; an `EVIDENCED_BY` edge keeps its first span. Revisit in Step 8 with `confidence` (OPEN-DECISIONS).

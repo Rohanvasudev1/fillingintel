@@ -1211,7 +1211,7 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
   - local set and dict accumulators inside private functions, because nothing outside them changes;
   - `defined = {p.name: p ...}` written in two places, because it is one line.
 - **Evidence.** `uv run ruff check .` is clean. Full suite against the local `neo4j-test`: 1078 passed, 15 skipped, of which 52 are the new graph tests. The skips are tests that need `data/` (not in a worktree) plus the documented pointer-section skip. CI result is on the PR.
-- **Decision needed.** When a node or edge is written again, which property values win? Today the latest batch's values replace the earlier ones (a node's `name`, an edge's `stake`), and an `EVIDENCED_BY` edge keeps its first span. Recommendation: keep "latest wins" for now and decide again in Step 8, when `confidence` arrives.
+- **Decision (user, 2026-10-07, as recommended).** When a node or edge is written again, the latest batch's values replace the earlier ones (a node's `name`, an edge's `stake`), and an `EVIDENCED_BY` edge keeps its first span. This is decided again in Step 8, when `confidence` arrives; the question is in OPEN-DECISIONS and the rule in CLAUDE.md Decisions.
 
 **Next session starts with**
 1. Merge this ticket's PR. Next is ticket 04 (`validate_graph()` and `python -m graph.validate`). The shared test graph is ready to break one thing at a time; remember the test marker node from ticket 02's note.
