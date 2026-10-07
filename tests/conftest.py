@@ -246,3 +246,8 @@ def db_conn():
     """A connection with a throwaway schema on its search path, for the test session."""
     with throwaway_schema() as conn:
         yield conn
+
+
+# ── Neo4j (Step 7) ─────────────────────────────────────────────────────────────
+
+from tests.neo4j_fixtures import neo4j_driver, neo4j_test_session  # noqa: E402, F401
