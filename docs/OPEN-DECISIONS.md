@@ -18,11 +18,11 @@ Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstra
 ## After the first graph arm
 - `benchmarks/results.md`: ARCHITECTURE.md says CI regenerates it. Deferred at the Step 6 grilling (2026-10-06): decide whether a local command or CI writes it once there is more than one arm to compare.
 
-## Step 7 — ontology
-- Add Supplier and Competitor node types so cross-company questions are answerable by traversal.
-
 ## Step 8 — extraction
 - Reject any fact whose evidence span doesn't appear verbatim (whitespace-normalised) in its chunk; report the rejection rate.
+
+## Step 11 — graph retrieval arms
+- Neo4j Community has no read-only roles (docs/research/neo4j-driver-and-constraints.md), so GRAPH-LAYER.md's "read-only credentials" are not available. Decide the guards for text-to-Cypher: READ transactions, rejecting any generated query whose `EXPLAIN` type is not read-only, and an allowlist of Cypher clauses.
 
 ## Step 13b — agentic arms
 - Set the tool-call cap before the benchmark run.
