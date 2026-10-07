@@ -13,4 +13,6 @@
 - [ ] Writing the same edge twice with a new chunk gives one edge with both chunks and spans; writing it again with a chunk already listed adds nothing.
 - [ ] One person with two roles at one company gives two `HOLDS_ROLE_AT` edges.
 - [ ] Labels and edge types reach Cypher only from the ontology, in backticks; every value is a parameter; no `$(...)` dynamic labels. A test passes a label or property value containing Cypher and shows it is rejected or stored as plain data.
+- [ ] `MetricValue.value` is FLOAT in the ontology: the batch check accepts an int there and the write path stores it as a float, so a whole-number figure is not rejected (user decision, 2026-10-07).
+- [ ] `git_state()` counts changes under `graph/` as +dirty, alongside ingest/, db/, eval/, retrieve/, prompts/, tests/ and scripts/ (user decision, 2026-10-07).
 - [ ] Rule tests written first and shown failing (`/tdd`). Code review with `mattpocock-skills:code-review` (Cypher axis). `uv run ruff check .` and `uv run --env-file .env pytest` pass, and CI is green.

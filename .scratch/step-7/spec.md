@@ -134,7 +134,7 @@ The stop condition is met when the module exists, the constraints are applied to
 - Edge types and endpoints are exactly the list in CLAUDE.md Decisions (Step 7). `FILED`, `COVERS_PERIOD`, `PART_OF` and `EVIDENCED_BY` are structural; the rest are extracted.
 - Required properties:
   - Company: cik, name, ticker
-  - Filing: accession_no, form_type, filed_date, fiscal_period
+  - Filing: accession_no, form_type, filing_date (the Postgres column name; user decision 2026-10-07), fiscal_period
   - Period: cik, fiscal_period
   - Chunk: chunk_id, accession_no, section (never text)
   - extracted labels: key and name, except RiskFactor (key, title) and MetricValue (key, concept, value, unit, period)

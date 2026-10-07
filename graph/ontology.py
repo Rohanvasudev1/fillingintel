@@ -100,7 +100,7 @@ LABELS: tuple[LabelDef, ...] = (
     _structural(
         "Filing", ("accession_no",),
         (Prop("accession_no", PropType.STRING), Prop("form_type", PropType.STRING),
-         Prop("filed_date", PropType.DATE), Prop("fiscal_period", PropType.STRING)),
+         Prop("filing_date", PropType.DATE), Prop("fiscal_period", PropType.STRING)),
         "A 10-K or 10-Q in the corpus, identified by its EDGAR accession number.",
     ),
     _structural(

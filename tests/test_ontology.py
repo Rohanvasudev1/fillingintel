@@ -22,7 +22,7 @@ CLAUDE_MD = Path(__file__).resolve().parent.parent / "CLAUDE.md"
 # One entry per ontology version. Editing a label, edge type, property or
 # description changes the schema text: bump ONTOLOGY_VERSION and add its pin here.
 PINNED_SCHEMA_SHA256 = {
-    1: "2c315f2022b0c0a6a4ab6b97d06408934196eea8c0c3c5586a0f3ed02757b97c",
+    1: "9f2687c2aa33872bdf77b64c3b0d80b773cdeac7f7b67dc981892f9bcc57fb37",
 }
 
 STRUCTURAL_LABELS = ["Company", "Filing", "Period", "Chunk"]
@@ -34,7 +34,7 @@ STRUCTURAL_EDGES = {"FILED", "COVERS_PERIOD", "PART_OF", "EVIDENCED_BY"}
 
 REQUIRED_NODE_PROPERTIES = {
     "Company": {"cik", "name", "ticker"},
-    "Filing": {"accession_no", "form_type", "filed_date", "fiscal_period"},
+    "Filing": {"accession_no", "form_type", "filing_date", "fiscal_period"},
     "Period": {"cik", "fiscal_period"},
     "Chunk": {"chunk_id", "accession_no", "section"},
     "RiskFactor": {"key", "title"},
@@ -117,7 +117,7 @@ def test_property_types():
         (label, p.name): p.type for label in LABELS_BY_NAME
         for p in LABELS_BY_NAME[label].properties
     }
-    assert types[("Filing", "filed_date")] is PropType.DATE
+    assert types[("Filing", "filing_date")] is PropType.DATE
     assert types[("Company", "cik")] is PropType.STRING
     assert types[("MetricValue", "value")] is PropType.FLOAT
     for label in EXTRACTED_LABELS:
