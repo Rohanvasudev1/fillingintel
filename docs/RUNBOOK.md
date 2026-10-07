@@ -145,6 +145,15 @@ Wire Phoenix for tracing. Every retrieval and generation call becomes a span.
 
 **Stop condition:** open a PR that deliberately breaks retrieval (drop k to 1). CI must fail. Revert. This is the moment v1 is real.
 
+#### Step 6 — outcome (met 2026-10-06, step closed 2026-10-07)
+
+Built as eight tickets, each through its own PR (spec: `.scratch/step-6/spec.md`; decisions: ADR-0003 and CLAUDE.md Decisions, Step 6 entries):
+- **Gate.** `python -m eval.gate` runs the vector arm's real search offline over a committed snapshot of the corpus database (filings, chunks, embeddings and the gated query vectors). It scores recall@5, recall@10 and the wrong-evidence rate per class and pooled on all 82 answerable `dev` questions, not ~40 (ADR-0003). Any drop against `benchmarks/gate_baseline.json` fails. The CI job `quality-gate` runs it on every PR and every push to `main`, with no API calls.
+- **Protection.** Ruleset 24576386 on `main` requires `lint-and-test` and `quality-gate`, with no bypass.
+- **Tracing.** Phoenix runs in Docker Compose. With `PHOENIX_COLLECTOR_ENDPOINT` set, each eval question is one trace: filter, query embedding, vector search, answer generation, and an EVALUATOR span per judged metric with an LLM span per judge call. Unset, nothing is traced.
+
+The stop condition is met. PR #4 made the search return 1 chunk. `quality-gate` failed with exit 4 and named all 10 recall numbers that dropped; pooled recall@10 fell from 0.890 to 0.418 (agent-drafted questions). GitHub blocked the merge, and the PR was closed unmerged (CI run 37456438739).
+
 ---
 
 ## Phase C — the graph

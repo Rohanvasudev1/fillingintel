@@ -4,7 +4,7 @@
 
 **Blocked by:** 01, 06
 
-**Status:** done (branch claude/tracing-retrieval-answers-09eea4)
+**Status:** done (2026-10-07; PR #7 merged)
 
 **Notes from ticket 06:**
 - `.env.example` names the text-capture setting `FILINGINTEL_TRACE_TEXT` (off unless `true`). Use that name, or rename it in `.env.example` in the same change.

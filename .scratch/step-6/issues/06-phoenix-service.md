@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** done (branch step-6/06-phoenix-service)
+**Status:** done (2026-10-06; PR #6 merged)
 
 - [x] The Phoenix image tag is pinned exactly, like the other services.
 - [x] Every published port in the compose file is bound to `127.0.0.1`.

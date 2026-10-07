@@ -1098,6 +1098,8 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 - **Evidence.** `uv run ruff check .` clean. `uv run --env-file .env pytest`: 1282 passed, 1 skipped (the worktree had `data/` linked, so the local-corpus tests ran; without it the count was 948 passed, 13 skipped). `python -m eval.gate`: PASS, every gated number unchanged (pooled recall@10 0.890244, n=82, agent-drafted questions).
 - **Review** (`mattpocock-skills:code-review`). Fixed: the autouse fixture also clears `FILINGINTEL_TRACE_TEXT`; endpoints with a query or fragment are refused, so nothing secret can reach the "tracing to" log line; the Voyage input type is a shared constant (`ingest.voyage.QUERY_INPUT`); the LLM span records the request as sent instead of re-rendering the prompt. Kept: `None` as "no recorder", because the ticket asks for an optional tracer; `_write_answer` takes the answer model as a parameter so the type checker sees it is not `None`; question text on the filter and search spans, as the research note's span table lays out; `_execute`'s keyword parameters, which exist only to wrap the run in `try/finally`. Noted for ticket 08: the root span ends before judging starts, so judge spans need the question's span context kept and passed as parent.
 
+- **PR.** Commit 91326ba on branch `claude/tracing-retrieval-answers-09eea4`, opened as https://github.com/Rohanvasudev1/fillingintel/pull/7. Auto-fix is on for it (user's request, 2026-10-07): a CI failure, merge conflict or review comment wakes the session that opened it, which fixes, verifies and pushes to the same branch. The user still merges. (Restored in the Step 6 wrap-up: PR #8, which added this line, was closed unmerged.)
+
 **Next session starts with**
 1. Merge this ticket's PR, then ticket 08 (judge spans), starting from the note at the top of its ticket.
 
@@ -1131,6 +1133,27 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 
 **Next session starts with**
 1. Merge this ticket's PR. That finishes Step 6's tickets; next is the Step 6 wrap-up against the RUNBOOK.
+
+## 2026-10-07 — Step 6 wrap-up ✅ (Step 6 closed; v1 complete)
+
+- **Tickets.** All eight merged through their own PRs: 01 (retrieval-only arm), 02 #1, 03 #2, 04 #3, 05 #5, 06 #6, 07 #7, 08 #9. PR #4 was the k = 1 stop-condition PR, closed unmerged. PR #8 was closed unmerged; its one line about PR #7 is restored in the ticket 07 entry above. Every acceptance box in the eight tickets is ticked.
+- **Spec check.** I read the 58 user stories in `.scratch/step-6/spec.md` against `main` at 335f731 and the ticket entries. All are met:
+  - Gate (stories 1–24): offline, 82 questions, zero tolerance, named drops, job summary, baseline file, first baseline matched to the committed run (`tests/test_gate_baseline_run.py`).
+  - Snapshot (25–32): one gzipped file, hash-checked on load, matched against the local database by a test that skips in CI.
+  - PRs and protection (33–38): one PR per ticket, ruleset 24576386, `ci.yml` triggers on `pull_request` and pushes to `main` with no paths filters.
+  - Tracing (39–54): tickets 07 and 08.
+  - Compose (55–58): ticket 06.
+- **Stop condition.** Met in ticket 05 (PR #4, CI run 37456438739). The RUNBOOK now has a "Step 6 — outcome" section, as Step 3 has.
+- **CI on `main`.** The push run for the PR #9 merge (37612322365, commit 335f731) passed both `lint-and-test` and `quality-gate`.
+- **Docs.** RUNBOOK outcome section. OPEN-DECISIONS: the Steps 5–6 entry now says what Step 5 finished (pinned judges, 3 runs, bootstrap intervals) and what is open (judge calibration, paired comparisons between arms). A new "Step 6 — to confirm" list holds four items raised during the tickets, each with a recommendation. Ticket statuses for 06–08 and the spec now name their PRs.
+- **Loose ends.**
+  - The remote branch `step-6/05-stop-condition-k1` still exists, though ticket 05 says it was deleted. Deleting it changes GitHub, so it waits for the user.
+  - Seven old worktrees and their local branches under `.claude/worktrees/` are all merged into `main`. Each holds a copy of `.venv`. They can be cleaned up.
+- **Evidence.** No code changed, so no new tests and no code review. `uv run ruff check .` is clean.
+
+**Next session starts with**
+1. The four "Step 6 — to confirm" items in OPEN-DECISIONS.
+2. Step 7 (ontology as code), starting with `/grill-with-docs`. Judge calibration stays open until before the final benchmark.
 
 ---
 

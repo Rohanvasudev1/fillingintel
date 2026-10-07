@@ -4,7 +4,7 @@
 
 **Blocked by:** 07
 
-**Status:** done
+**Status:** done (2026-10-07; PR #9 merged as 335f731)
 
 **Note from ticket 07:** the root `answer_question` span in `eval/run.py` `_run_arm` wraps only `arm.run`; judging runs later in `_judge`, after every root span has ended. To put judge spans under their question, keep each question's span context (for example on the outcome) and start the EVALUATOR span with it as parent. Copying the context in the runner alone is not enough.
 

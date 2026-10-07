@@ -11,8 +11,15 @@ Decisions raised but not yet made, grouped by the step where each must be settle
 - Optional, before the final benchmark: the friend Ctrl-F test on five dev multi-hop drafts (skipped on 2026-10-04).
 
 ## Steps 5–6 — eval harness
-- Calibrate LLM judges against ~60 hand-scored answers (Cohen's kappa); pin judge model versions; average 3 runs.
-- Bootstrap confidence intervals on every results cell; paired comparisons between arms.
+Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstrap 95% intervals on every results cell. Still open:
+- Calibrate the LLM judges against ~60 hand-scored answers (Cohen's kappa). Until then every judged number is labelled "uncalibrated". Must happen before the final benchmark.
+- Paired comparisons between arms, once a second arm exists (Step 11).
+
+## Step 6 — to confirm (raised during the tickets)
+- The gate loads the committed snapshot itself, into a throwaway schema it drops afterwards, rather than CI loading it in a separate step (ticket 03). Recommendation: confirm. The laptop and CI then run the same command.
+- The gate's question set hash covers only the 82 gated records, so editing a decline or `test` record doesn't force a baseline rewrite (ticket 03). Recommendation: confirm.
+- Judge prompt text never goes on spans, even with `FILINGINTEL_TRACE_TEXT=true` (ticket 08). Recommendation: keep it off. The prompts repeat chunk and answer text already on the answer span, and they're large.
+- Ruleset 24576386 has no "require a pull request" rule. A commit that already passed both checks on a branch can still be pushed straight to `main` (ticket 05). Recommendation: add the rule. It's a settings change, so it needs your yes to the exact `gh api` call.
 
 ## After the first graph arm
 - `benchmarks/results.md`: ARCHITECTURE.md says CI regenerates it. Deferred at the Step 6 grilling (2026-10-06): decide whether a local command or CI writes it once there is more than one arm to compare.
