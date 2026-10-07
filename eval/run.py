@@ -14,6 +14,9 @@ new, empty response cache under ``data/cache/responses-uncached/``, so nothing i
 replayed and the shared cache is left as it was.  Query embeddings stay cached,
 so retrieval is the same and only the models' answers and verdicts can change.
 
+With ``PHOENIX_COLLECTOR_ENDPOINT`` set, each question's answer is traced to
+Phoenix as one tree of spans (``retrieve.tracing``); unset, nothing is traced.
+
 ``dev`` is the default split.  ``test`` is scored only with ``--final``, once,
 for the final benchmark.  Results go to ``benchmarks/runs/``, which git ignores.
 """
@@ -24,11 +27,11 @@ import logging
 import os
 import sys
 import tempfile
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import replace
 from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from eval.filter_report import build_filter_report
 from eval.judging.report import run_judge_usage
@@ -48,6 +51,19 @@ from ingest.provenance import REPO_ROOT, git_state
 from retrieve.arm import Arm, ArmConfig, ArmError, ArmSpec
 from retrieve.arms import ARMS
 from retrieve.response_cache import DEFAULT_CACHE_DIR as DEFAULT_RESPONSE_CACHE
+from retrieve.tracing import (
+    QUESTION_SPAN,
+    Kind,
+    SpanRecorder,
+    TracingConfigError,
+    build_provider,
+    question_attributes,
+    status_attributes,
+    text_capture,
+)
+
+if TYPE_CHECKING:
+    from opentelemetry.sdk.trace import TracerProvider
 
 RUNS_DIR = REPO_ROOT / "benchmarks" / "runs"
 UNCACHED_ROOT = REPO_ROOT / "data" / "cache" / "responses-uncached"
@@ -55,6 +71,8 @@ SEED = 20261005  # recorded in every header; seeds every bootstrap interval
 PROGRESS_EVERY = 10
 EXIT_USAGE = 2
 EXIT_RUN_ERROR = 3
+
+TRACER_NAME = "filingintel.eval"
 
 logger = logging.getLogger(__name__)
 
@@ -93,12 +111,22 @@ def env_problem(required_env: Sequence[str], forbidden_env: Sequence[str],
     return None
 
 
-def _run_arm(arm: Arm, sets: Sequence[QuestionSet], split: str) -> list[Outcome]:
-    """Run *arm* on every *split* record of every set; the arm sees only the question text."""
+def _run_arm(arm: Arm, sets: Sequence[QuestionSet], split: str,
+             spans: SpanRecorder) -> list[Outcome]:
+    """Run *arm* on every *split* record of every set; the arm sees only the question text.
+
+    Each question is one trace, rooted in a span that holds the question and its record.
+    """
     todo = [(s.name, r) for s in sets for r in s.records if r.split == split]
     outcomes = []
     for done, (set_name, record) in enumerate(todo, start=1):
-        outcomes.append(Outcome(set_name, record, arm.run(record.question)))
+        metadata = {"question_id": record.id, "set": set_name, "arm": arm.name,
+                    "split": split, "class": record.class_}
+        attributes = question_attributes(record.question, metadata)
+        with spans.span(QUESTION_SPAN, Kind.CHAIN, attributes) as span:
+            result = arm.run(record.question)
+            span.set_attributes(status_attributes(result.answer.status))
+        outcomes.append(Outcome(set_name, record, result))
         if done % PROGRESS_EVERY == 0:
             logger.info("%d of %d questions", done, len(todo))
     return outcomes
@@ -120,11 +148,12 @@ def _fresh_cache(root: Path, day: date) -> Path:
 
 
 def _score(
-    spec: ArmSpec, judges: JudgeSpec, sets: Sequence[QuestionSet], split: str, cache_dir: Path
+    spec: ArmSpec, judges: JudgeSpec, sets: Sequence[QuestionSet], split: str, cache_dir: Path,
+    spans: SpanRecorder,
 ) -> tuple[list[Outcome], ArmConfig, JudgeConfig]:
     """Every *split* question answered by the arm, then judged; raises ArmError or JudgeRunError."""
-    with spec.open(cache_dir) as arm:
-        outcomes = _run_arm(arm, sets, split)
+    with spec.open(cache_dir, spans) as arm:
+        outcomes = _run_arm(arm, sets, split, spans)
         config = arm.config
     with judges.open(cache_dir) as judge:
         return _judge(judge, outcomes), config, judge.config
@@ -152,9 +181,10 @@ def main(
     today: date | None = None,
     response_cache: Path = DEFAULT_RESPONSE_CACHE,
     uncached_root: Path = UNCACHED_ROOT,
+    tracing: Callable[[Mapping[str, str]], TracerProvider | None] = build_provider,
 ) -> int:
     """CLI entry point.  Exit codes: 0 ok; 2 bad input; 3 the run could not finish or be
-    written (no results file)."""
+    written (no results file).  *tracing* builds the span provider from the environment."""
     args = _parse_args(argv, list(arms))
     logging.basicConfig(level=logging.INFO)
     logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -166,10 +196,25 @@ def main(
         return EXIT_USAGE
     try:
         sets = load_question_sets(eval_dir)
-    except QuestionSetError as exc:
+        capture = text_capture(os.environ)
+        provider = tracing(os.environ)
+    except (QuestionSetError, TracingConfigError) as exc:
         print(str(exc), file=sys.stderr)
         return EXIT_USAGE
+    spans = (SpanRecorder(provider.get_tracer(TRACER_NAME), capture) if provider is not None
+             else SpanRecorder.off())
+    try:
+        return _execute(args, spec, judges, sets, spans, runs_dir=runs_dir, today=today,
+                        response_cache=response_cache, uncached_root=uncached_root)
+    finally:
+        if provider is not None:
+            provider.shutdown()  # flushes queued spans; a stopped Phoenix costs about a second
 
+
+def _execute(args: argparse.Namespace, spec: ArmSpec, judges: JudgeSpec,
+             sets: Sequence[QuestionSet], spans: SpanRecorder, *, runs_dir: Path,
+             today: date | None, response_cache: Path, uncached_root: Path) -> int:
+    """Answer, judge and write the results file; returns the exit code."""
     commit = git_state()
     now = datetime.now(UTC)
     day = today or now.date()
@@ -179,7 +224,7 @@ def main(
         print(f"could not create a new response cache in {uncached_root}: {exc}", file=sys.stderr)
         return EXIT_RUN_ERROR
     try:
-        outcomes, config, judge_config = _score(spec, judges, sets, args.split, cache_dir)
+        outcomes, config, judge_config = _score(spec, judges, sets, args.split, cache_dir, spans)
     except (ArmError, JudgeRunError) as exc:
         print(f"run stopped, no results written: {exc}", file=sys.stderr)
         return EXIT_RUN_ERROR

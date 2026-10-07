@@ -6,15 +6,18 @@ with the shared parser in ``retrieve.question_filter``.
 """
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from retrieve.answer import Answer
 from retrieve.answer_prompt import AnswerPrompt, SourceChunk
 from retrieve.question_filter import QuestionFilter
+
+if TYPE_CHECKING:
+    from retrieve.tracing import SpanRecorder
 
 
 class ArmError(RuntimeError):
@@ -72,15 +75,24 @@ class Arm(Protocol):
     def run(self, question: str) -> ArmResult: ...
 
 
+class ArmOpener(Protocol):
+    """Opens an arm on the response cache folder its model calls go through.
+
+    With a span recorder the arm records its steps as spans; with none it records nothing.
+    """
+
+    def __call__(self, response_cache: Path, spans: SpanRecorder | None = None,
+                 ) -> AbstractContextManager[Arm]: ...
+
+
 @dataclass(frozen=True)
 class ArmSpec:
     """A registered arm: the environment variables it needs and how to open it.
 
-    ``open`` takes the folder of the response cache the arm's model calls go
-    through and returns a context manager, so the arm owns and closes its own
+    ``open`` returns a context manager, so the arm owns and closes its own
     connections.  The harness checks ``required_env`` before opening anything.
     """
 
     name: str
     required_env: tuple[str, ...]
-    open: Callable[[Path], AbstractContextManager[Arm]]
+    open: ArmOpener

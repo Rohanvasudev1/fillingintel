@@ -34,6 +34,7 @@ _RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
 _ERROR_BODY_CHARS = 300
 
 InputType = Literal["query", "document"]
+QUERY_INPUT: InputType = "query"
 logger = logging.getLogger(__name__)
 
 
@@ -164,7 +165,7 @@ class VoyageClient:
 
     def embed_query(self, text: str, model: str) -> Embedding:
         """Embed one question with ``input_type`` query and truncation off."""
-        return self._embed(text, model, "query")
+        return self._embed(text, model, QUERY_INPUT)
 
     def _embed(self, text: str, model: str, input_type: InputType) -> Embedding:
         if model not in MODELS:

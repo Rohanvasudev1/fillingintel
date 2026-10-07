@@ -4,22 +4,27 @@
 
 **Blocked by:** 01, 06
 
-**Status:** ready-for-agent
+**Status:** done (branch claude/tracing-retrieval-answers-09eea4)
 
 **Notes from ticket 06:**
 - `.env.example` names the text-capture setting `FILINGINTEL_TRACE_TEXT` (off unless `true`). Use that name, or rename it in `.env.example` in the same change.
 - `.env.example` gives `PHOENIX_COLLECTOR_ENDPOINT=http://localhost:6006`, the base URL. Phoenix takes spans at `POST /v1/traces`. An `OTLPSpanExporter(endpoint=...)` argument is used as given, with no path added, so the tracing module appends `/v1/traces`.
 
-- [ ] A tracing module builds a `TracerProvider` with a `BatchSpanProcessor` and an OTLP HTTP exporter with a 2-second timeout only when the endpoint is set. It never calls `trace.set_tracer_provider`. `eval.run` shuts the provider down before exiting.
-- [ ] The vector arm takes an optional tracer; with none, it records no spans.
-- [ ] Span names, kinds and attribute names follow OpenInference, using the conventions package constants.
-- [ ] LLM spans carry `llm.model_name`, the provider and token counts. A response-cache replay carries no `llm.token_count.*`. Claude's prompt count is uncached input plus cache reads plus cache writes.
-- [ ] Our own per-call cost and the Voyage cost go in project-namespaced attributes.
-- [ ] Prompt and answer text appear on spans only when the text-capture setting is on. No attribute ever holds an API key or request header (tested).
-- [ ] An autouse pytest fixture removes `PHOENIX_COLLECTOR_ENDPOINT` and `OTEL_EXPORTER_OTLP_*` for every test; a test shows the tracing module builds nothing when the variable is unset.
-- [ ] Tracing tests (test-first) pass their own `TracerProvider` with an in-memory exporter and check names, kinds, parent links and attributes for one question run with the fake embedder and fake answer model.
-- [ ] Tracing changes no score and no run file field: a test compares an untraced and a traced run's output with fakes.
-- [ ] Demo: with Phoenix up, a cached traced `eval.run` over a few dev questions shows their trees in the Phoenix UI. Screenshot or description in the BUILD-LOG entry. The run makes no paid calls (all answers replayed from the cache).
-- [ ] With Phoenix stopped and the endpoint set, a run still finishes, with at most a few seconds of export delay at shutdown.
-- [ ] `uv.lock` adds only the expected packages and changes no existing version.
-- [ ] `uv run ruff check .` and `uv run --env-file .env pytest` pass.
+- [x] A tracing module builds a `TracerProvider` with a `BatchSpanProcessor` and an OTLP HTTP exporter with a 2-second timeout only when the endpoint is set. It never calls `trace.set_tracer_provider`. `eval.run` shuts the provider down before exiting.
+- [x] The vector arm takes an optional tracer; with none, it records no spans.
+- [x] Span names, kinds and attribute names follow OpenInference, using the conventions package constants.
+- [x] LLM spans carry `llm.model_name`, the provider and token counts. A response-cache replay carries no `llm.token_count.*`. Claude's prompt count is uncached input plus cache reads plus cache writes.
+- [x] Our own per-call cost and the Voyage cost go in project-namespaced attributes.
+- [x] Prompt and answer text appear on spans only when the text-capture setting is on. No attribute ever holds an API key or request header (tested).
+- [x] An autouse pytest fixture removes `PHOENIX_COLLECTOR_ENDPOINT` and `OTEL_EXPORTER_OTLP_*` for every test; a test shows the tracing module builds nothing when the variable is unset.
+- [x] Tracing tests (test-first) pass their own `TracerProvider` with an in-memory exporter and check names, kinds, parent links and attributes for one question run with the fake embedder and fake answer model.
+- [x] Tracing changes no score and no run file field: a test compares an untraced and a traced run's output with fakes.
+- [x] Demo: with Phoenix up, a cached traced `eval.run` over a few dev questions shows their trees in the Phoenix UI. Screenshot or description in the BUILD-LOG entry. The run makes no paid calls (all answers replayed from the cache).
+- [x] With Phoenix stopped and the endpoint set, a run still finishes, with at most a few seconds of export delay at shutdown.
+- [x] `uv.lock` adds only the expected packages and changes no existing version.
+- [x] `uv run ruff check .` and `uv run --env-file .env pytest` pass.
+
+**Notes from the implementation:**
+- The arm, `ArmSpec.open` and `eval.run` take a `SpanRecorder` (`retrieve/tracing.py`): an OpenTelemetry tracer plus the text-capture setting. "Optional tracer" in this ticket and in 08 means an optional `SpanRecorder`; `SpanRecorder.off()` records nothing.
+- `eval.run` refuses to start (exit 2) when `PHOENIX_COLLECTOR_ENDPOINT` is not an http(s) base URL, or holds credentials, a query or a fragment, and when `FILINGINTEL_TRACE_TEXT` is set to anything but true or false.
+- A cached query embedding keeps `filingintel.cost_usd` above zero. That is the run file's `embed_cost_usd` (same formula, recorded whether or not the call was replayed), not a billed call; `filingintel.cache_hit` says which.
