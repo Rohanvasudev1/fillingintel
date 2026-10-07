@@ -1211,10 +1211,32 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
   - local set and dict accumulators inside private functions, because nothing outside them changes;
   - `defined = {p.name: p ...}` written in two places, because it is one line.
 - **Evidence.** `uv run ruff check .` is clean. Full suite against the local `neo4j-test`: 1078 passed, 15 skipped, of which 52 are the new graph tests. The skips are tests that need `data/` (not in a worktree) plus the documented pointer-section skip. CI result is on the PR.
-- **Decision needed.** When a node or edge is written again, which property values win? Today the latest batch's values replace the earlier ones (a node's `name`, an edge's `stake`), and an `EVIDENCED_BY` edge keeps its first span. Recommendation: keep "latest wins" for now and decide again in Step 8, when `confidence` arrives.
+- **Decision (user, 2026-10-07, as recommended).** When a node or edge is written again, the latest batch's values replace the earlier ones (a node's `name`, an edge's `stake`), and an `EVIDENCED_BY` edge keeps its first span. This is decided again in Step 8, when `confidence` arrives; the question is in OPEN-DECISIONS and the rule in CLAUDE.md Decisions.
 
 **Next session starts with**
 1. Merge this ticket's PR. Next is ticket 04 (`validate_graph()` and `python -m graph.validate`). The shared test graph is ready to break one thing at a time; remember the test marker node from ticket 02's note.
+
+## 2026-10-07 — Step 7 ticket 04: validate_graph() and `python -m graph.validate`
+
+- **Started with** cherry-picking 3720aac (the latest-wins rewrite decision, docs only), which never reached GitHub, and deleting the local `rewrite-decision-docs` branch.
+- **Built.** `graph/validate.py` holds `validate_graph(driver, postgres=None)` and the command; `graph/validation_report.py` holds `Check`, the report and `GraphValidationError`. All graph checks run in one read transaction, so they see one state of the graph. Checks, in report order: `graph_meta`, `node_labels`, `edge_types`, `endpoints`, `node_properties`, `edge_properties`, `node_evidence`, `edge_evidence`, `structure`, and `postgres_chunks` when a connection is given. Each bad item counts once per check, and each check keeps its first 20 examples. The command opens Postgres read only and prints every check with its count, plus whether the Postgres check ran or was skipped. Exit codes follow `eval.gate`: bad arguments give argparse's 2; missing settings, a malformed `NEO4J_URI`, or Neo4j or Postgres unreachable give 3; violations give 4.
+- **Rules beyond the ticket's list**, each one the write path already enforces or one that follows from story 58: unknown properties, blank required strings, duplicate chunk IDs and blank spans on an edge, and an `ontology_version` value other than the code's.
+- **Test marker decision** (ticket 02's note): production code has no exclusion for it. The `unmarked` test fixture deletes the marker for each validation test and restores it in teardown.
+- **Refactor.** `graph/constraints.py` now exports `GRAPH_META`, `GRAPH_META_QUERY` and `graph_meta_problem(rows, required=...)`, so the write path and the validator share one `:GraphMeta` comparison and one message.
+- **Tests** (`tests/test_graph_validate.py`, 34). Written first and shown failing: collection failed on the missing module, and later the new `PART_OF` target check failed its test before the code existed. Covered: the valid graph, an empty graph with `:GraphMeta`, and 17 broken cases, each made with raw Cypher and each failing exactly its own check. Also the two Postgres cases (a chunk ID unknown to Postgres; a chunk moved to another filing together with its `PART_OF` edge), a mixed graph with 27 violations whose examples are capped at 20, and the command's exit codes 0, 2, 3 (three ways) and 4.
+- **Code review** (`mattpocock-skills:code-review`, both axes plus Cypher and SQL). Neither axis found a hard violation. Cypher: names come only from the ontology through `quoted()`, values are parameters, and there are no dynamic labels. SQL: `chunk_id = ANY(%s)`, which uses the primary key. The whole-graph scans are inherent to a validator and cheap at 24 filings. Fixed:
+  - the Spec axis found that a Chunk whose `PART_OF` edge points at another filing than its own `accession_no` passed every check, so `structure` now catches it (test first);
+  - structural names are looked up in the ontology, so a rename fails at import;
+  - `_stored_as` raises on an unhandled `PropType`;
+  - the duplicated "no :GraphMeta" message is now one;
+  - Postgres opens read only; the default connect does it, so an injected test connection is never changed;
+  - the chunk map has a named type, and a comment ties exit code 2 to argparse.
+
+  Kept as they are: local accumulators inside private functions, and reading each edge type twice (endpoints, then properties), because that keeps each check one simple query.
+- **Evidence.** `uv run ruff check .` is clean. Full suite against the local `neo4j-test` and Postgres: 1446 passed, 1 skipped (the documented pointer-section skip), with `data/` linked in for the run. CI result is on the PR.
+
+**Next session starts with**
+1. Merge this ticket's PR. Next is ticket 05 (stop condition and close): apply the constraints to the local Neo4j, run `python -m graph.validate` there, show it failing on broken graphs, and record the run here.
 
 ---
 

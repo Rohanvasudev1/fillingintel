@@ -177,7 +177,7 @@ The stop condition is met when the module exists, the constraints are applied to
   2. Raises with the full violation list if there are any, before any write.
   3. Otherwise writes the batch in one write transaction.
 - Nodes are merged on their key properties. Edges are merged on (start key, type, end key, role where present). On a merge, new chunk IDs are appended with their spans, and chunk IDs already listed are skipped.
-- Added in ticket 03 (2026-10-07): `write_batch` refuses, inside its transaction, a graph with no `:GraphMeta` or one built under another ontology, so a batch never lands before `apply_constraints()` has run. On a rewrite, a node's or edge's other properties take the batch's values, and an `EVIDENCED_BY` edge keeps the span it was first written with (open question for the user: latest or first value wins).
+- Added in ticket 03 (2026-10-07): `write_batch` refuses, inside its transaction, a graph with no `:GraphMeta` or one built under another ontology, so a batch never lands before `apply_constraints()` has run. On a rewrite, a node's or edge's other properties take the batch's values, and an `EVIDENCED_BY` edge keeps the span it was first written with (user decision 2026-10-07; revisit in Step 8 with `confidence`).
 - Labels and edge types are interpolated only from the ontology's definitions, in backticks. Values are always parameters. Dynamic-label syntax (`$(...)`) is not used, because on 5.26 a MATCH with it scans every node (research note, section 6.3).
 - The driver is created with `telemetry_disabled=True`, and every query passes the database name explicitly. Connection settings come from environment variables: `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`.
 

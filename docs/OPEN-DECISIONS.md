@@ -20,6 +20,7 @@ Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstra
 
 ## Step 8 — extraction
 - Reject any fact whose evidence span doesn't appear verbatim (whitespace-normalised) in its chunk; report the rejection rate.
+- Rewrites: when a node or edge is written again, the latest batch's property values win, and an `EVIDENCED_BY` edge keeps its first span (Step 7 ticket 03, user decision 2026-10-07). Revisit when `confidence` is added: should a lower-confidence rewrite replace a higher-confidence value?
 
 ## Step 11 — graph retrieval arms
 - Neo4j Community has no read-only roles (docs/research/neo4j-driver-and-constraints.md), so GRAPH-LAYER.md's "read-only credentials" are not available. Decide the guards for text-to-Cypher: READ transactions, rejecting any generated query whose `EXPLAIN` type is not read-only, and an allowlist of Cypher clauses.

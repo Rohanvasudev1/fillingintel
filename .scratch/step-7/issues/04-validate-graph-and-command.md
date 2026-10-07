@@ -4,14 +4,14 @@
 
 **Blocked by:** 03 (Guarded write path)
 
-**Status:** ready-for-agent
+**Status:** done (PR pending)
 
-- [ ] The valid test graph and an empty graph with a correct `:GraphMeta` both pass.
-- [ ] One test per broken case, each breaking one thing in the valid graph with raw Cypher that goes around the write path: unknown label, two ontology labels on one node, unknown edge type, disallowed endpoint, missing property, wrong property type, extracted node without evidence, empty `chunk_ids`, dangling chunk ID, span and chunk lists of different lengths, Filing without `FILED`, Chunk without `PART_OF`, wrong `:GraphMeta`.
-- [ ] A Chunk node whose ID is not in Postgres, or is under another filing, fails the Postgres check (existing throwaway-schema Postgres fixture). Postgres queries are parameterised.
-- [ ] A graph with several kinds of violation reports all of them with correct counts, and examples are capped at 20 per check.
-- [ ] The command prints which checks ran and whether the Postgres check ran or was skipped.
-- [ ] Exit codes tested through `main(argv)`: 0, 2, 3 (missing settings, Neo4j unreachable) and 4.
+- [x] The valid test graph and an empty graph with a correct `:GraphMeta` both pass.
+- [x] One test per broken case, each breaking one thing in the valid graph with raw Cypher that goes around the write path: unknown label, two ontology labels on one node, unknown edge type, disallowed endpoint, missing property, wrong property type, extracted node without evidence, empty `chunk_ids`, dangling chunk ID, span and chunk lists of different lengths, Filing without `FILED`, Chunk without `PART_OF`, wrong `:GraphMeta`.
+- [x] A Chunk node whose ID is not in Postgres, or is under another filing, fails the Postgres check (existing throwaway-schema Postgres fixture). Postgres queries are parameterised.
+- [x] A graph with several kinds of violation reports all of them with correct counts, and examples are capped at 20 per check.
+- [x] The command prints which checks ran and whether the Postgres check ran or was skipped.
+- [x] Exit codes tested through `main(argv)`: 0, 2, 3 (missing settings, Neo4j unreachable) and 4.
 - [ ] Tests written first and shown failing (`/tdd`). Code review with `mattpocock-skills:code-review` (Cypher and SQL axes). `uv run ruff check .` and `uv run --env-file .env pytest` pass, and CI is green.
 
 **Note from ticket 02 (2026-10-07):** every test database permanently holds one `:FilingIntelTestMarker` node (`tests/neo4j_fixtures.py`), the guard that stops tests wiping a real graph. `validate_graph()` would report it as an unknown label, so the empty-graph case could not pass. Recommendation: keep the marker out of the production code; the live tests remove it for the validation call (as the `unclaimed` fixture in `tests/test_graph_constraints.py` does) or pass a test-only exclusion. Decide during this ticket.

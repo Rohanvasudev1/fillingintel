@@ -45,6 +45,7 @@ Ask before: adding a dependency, changing a schema, changing the eval harness or
 - Load and verify (offline; writes spikes/load_report.txt): uv run --env-file .env python -m ingest.load --verify
 - Eval set (Step 4): uv run python -m eval.search <words> [--ticker] [--period] [--section] or --show <chunk_id>; eval.validate <file> [--kind] [--db]; eval.coverage <file>; eval.review --reviewer "<name>" (the user only); eval.merge_drafts
 - Quality gate (offline, needs only DATABASE_URL; loads the snapshot into a throwaway schema): uv run --env-file .env python -m eval.gate. Exit 0 pass, 2 bad input, 3 could not run, 4 scores dropped. `--update-baseline` rewrites benchmarks/gate_baseline.json; never lower it without the user's yes.
+- Graph validation (reads NEO4J_URI/USER/PASSWORD; adds the Postgres chunk check when DATABASE_URL is set): uv run --env-file .env python -m graph.validate. Exit 0 valid, 2 bad arguments, 3 could not run, 4 violations found.
 - (add when they exist: eval-fast, eval-full)
 
 ## Agent skills
@@ -165,3 +166,4 @@ Files changed; evidence (tests, eval results with commit); regressions; decision
   - Property types (ticket 01, user decision 2026-10-07): Filing's date is `filing_date` (DATE), named as in Postgres; `MetricValue.value` is FLOAT, and the write path accepts an int and stores it as a float; `OWNS.stake` is FLOAT, the owned share from 0 to 1; keys, `cik` and `fiscal_period` are STRING. Ticket 03 adds `graph/` to git_state()'s +dirty list.
   - Approved dependency: `neo4j==6.3.1` (pulls only pytz), created with `telemetry_disabled=True` and an explicit database name.
   - Glossary: "edge" in docs and code, "relationship" only when quoting Neo4j; the extractor's output is a "candidate triple" until validated.
+  - Rewrites (ticket 03, user decision 2026-10-07): a node or edge written again takes the latest batch's property values; an `EVIDENCED_BY` edge keeps its first span. Revisit in Step 8 with `confidence` (OPEN-DECISIONS).
