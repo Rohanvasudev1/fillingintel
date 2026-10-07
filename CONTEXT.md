@@ -17,8 +17,8 @@ The section holding a filing's text before its first located Item. In some filin
 _Avoid_: cover page, front matter
 
 **Chunk**:
-A span of one section with the ID `{accession_no}:{ordinal}`. Retrieval returns chunks and answers cite them.
-_Avoid_: passage, document, node
+A span of one section with the ID `{accession_no}:{ordinal}`. Retrieval returns chunks, answers cite them, and graph evidence points at them.
+_Avoid_: passage, document
 
 ## Eval
 
@@ -50,6 +50,39 @@ _Avoid_: validation
 
 **Calibration**:
 Measuring a judge's agreement with hand scores, as Cohen's kappa. Required before the final benchmark.
+
+## Graph
+
+**Ontology**:
+The fixed list of node labels, edge types, their allowed endpoints and required properties. The graph holds nothing outside it, and any change to it creates a new ontology version.
+_Avoid_: schema, when meaning the graph's types rather than the Postgres tables
+
+**Company**:
+One of the three filers (NVIDIA, AMD, Intel), identified by its CIK.
+_Avoid_: organization, issuer
+
+**Organization**:
+Any other company or body a filing names, such as a supplier, customer, competitor, partner or acquired business. Its role comes from its edges, not its label.
+_Avoid_: supplier, competitor, subsidiary, when used as a type
+
+**Structural node**:
+A node taken from EDGAR metadata rather than from text: a Company, Filing, Period or Chunk. Its evidence is the filing record.
+
+**Extracted node**:
+A node an extractor read out of a chunk's text. It needs at least one chunk as evidence.
+_Avoid_: entity, when the structural/extracted distinction matters
+
+**Edge**:
+A typed connection between two nodes, allowed only between the labels the ontology lists for its type. An extracted edge carries its evidence chunks itself.
+_Avoid_: relationship (Neo4j's word, kept for quoting its docs), link
+
+**Candidate triple**:
+What the extractor returns for one chunk before validation. It becomes an edge only after it passes the ontology and evidence checks.
+_Avoid_: fact, edge, before validation
+
+**Evidence**:
+The chunk or chunks a node or edge was read from. A node or edge with no evidence is rejected.
+_Avoid_: source, provenance, when meaning the chunk pointer itself
 
 ## Retrieval
 
