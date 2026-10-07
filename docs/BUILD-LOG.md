@@ -1145,14 +1145,16 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
   - Compose (55–58): ticket 06.
 - **Stop condition.** Met in ticket 05 (PR #4, CI run 37456438739). The RUNBOOK now has a "Step 6 — outcome" section, as Step 3 has.
 - **CI on `main`.** The push run for the PR #9 merge (37612322365, commit 335f731) passed both `lint-and-test` and `quality-gate`.
-- **Docs.** RUNBOOK outcome section. OPEN-DECISIONS: the Steps 5–6 entry now says what Step 5 finished (pinned judges, 3 runs, bootstrap intervals) and what is open (judge calibration, paired comparisons between arms). A new "Step 6 — to confirm" list holds four items raised during the tickets, each with a recommendation. Ticket statuses for 06–08 and the spec now name their PRs.
-- **Loose ends.**
-  - The remote branch `step-6/05-stop-condition-k1` still exists, though ticket 05 says it was deleted. Deleting it changes GitHub, so it waits for the user.
-  - Seven old worktrees and their local branches under `.claude/worktrees/` are all merged into `main`. Each holds a copy of `.venv`. They can be cleaned up.
+- **Docs.** RUNBOOK outcome section. OPEN-DECISIONS: the Steps 5–6 entry now says what Step 5 finished (pinned judges, 3 runs, bootstrap intervals) and what is open (judge calibration, paired comparisons between arms). Four items raised during the tickets went to the user; see Decisions below. Ticket statuses for 06–08 and the spec now name their PRs.
+- **Cleanup (user's go-ahead, 2026-10-07).**
+  - The k = 1 branch `step-6/05-stop-condition-k1` was already deleted on GitHub, as ticket 05 says. My local list of remote branches was stale; `git fetch --prune` fixed it.
+  - Removed five merged worktrees under `.claude/worktrees/` and their local branches, plus four other merged local branches. Each worktree was checked first for uncommitted changes and commits not on `main`. The only such commit was the PR #7 line restored above. The ticket 07 demo's run file was copied to the main checkout's `benchmarks/runs/` before its worktree was removed.
+  - Kept `retrieval-only-vector-arm-15a72c`: it holds its own `.env`, which invariant 7 stops me reading or comparing with the main one.
+- **Decisions (user, 2026-10-07).** All four "Step 6 — to confirm" items as recommended. The first three are now in CLAUDE.md Decisions. The fourth, a "require a pull request" rule on ruleset 24576386, waits under "Step 6 — to apply" in OPEN-DECISIONS until the user approves the exact `gh api` call.
 - **Evidence.** No code changed, so no new tests and no code review. `uv run ruff check .` is clean.
 
 **Next session starts with**
-1. The four "Step 6 — to confirm" items in OPEN-DECISIONS.
+1. The "require a pull request" rule, if not yet applied (OPEN-DECISIONS, "Step 6 — to apply").
 2. Step 7 (ontology as code), starting with `/grill-with-docs`. Judge calibration stays open until before the final benchmark.
 
 ---
