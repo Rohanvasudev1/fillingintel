@@ -1,11 +1,12 @@
 """The shared valid test graph (Step 7).
 
-Structural nodes for NVIDIA's FY2026 10-K fixture, Chunk nodes with the real
-chunk IDs the chunker gives that filing, and hand-written extracted nodes and
-edges that quote it: TSMC as NVIDIA's foundry, the Compute & Networking
-segment, Jen-Hsun Huang's two roles, export controls, and the share of revenue
-from the largest direct customer. Every quote is checked to be a substring of
-its chunk's text, so a bad quote or a chunker change fails the fixture.
+Structural nodes for the NVIDIA FY2026 and AMD FY2025 10-K fixtures, Chunk
+nodes with the real chunk IDs the chunker gives those filings, and
+hand-written extracted nodes and edges that quote them: TSMC as NVIDIA's
+foundry, the Compute & Networking segment, Jen-Hsun Huang's two roles, export
+controls, the share of revenue from the largest direct customer, and AMD
+naming NVIDIA as a competitor. Every quote is checked to be a substring of its
+chunk's text, so a bad quote or a chunker change fails the fixture.
 """
 from __future__ import annotations
 
@@ -18,10 +19,12 @@ from graph.batch import Batch, EdgeRecord, Evidence, NodeRecord, NodeRef
 
 NVDA_CIK = "1045810"
 NVDA_10K = "0001045810-26-000021"
+AMD_CIK = "2488"
+AMD_10K = "0000002488-26-000018"
 
 
-def _chunk(ordinal: int) -> str:
-    return f"{NVDA_10K}:{ordinal:04d}"
+def _chunk(ordinal: int, accession_no: str = NVDA_10K) -> str:
+    return f"{accession_no}:{ordinal:04d}"
 
 
 SEGMENTS_CHUNK = _chunk(6)
@@ -31,6 +34,7 @@ OFFICERS_CHUNK = _chunk(16)
 CUSTOMERS_CHUNK = _chunk(36)
 MDA_SEGMENTS_CHUNK = _chunk(61)
 MDA_CUSTOMERS_CHUNK = _chunk(67)
+AMD_COMPETITION_CHUNK = _chunk(14, AMD_10K)
 
 QUOTES = {
     SEGMENTS_CHUNK: "The Compute & Networking segment includes our Data Center accelerated "
@@ -43,11 +47,15 @@ QUOTES = {
     CUSTOMERS_CHUNK: "sales to one direct customer represented 22% of total revenue",
     MDA_SEGMENTS_CHUNK: 'Our two operating segments are "Compute & Networking" and "Graphics',
     MDA_CUSTOMERS_CHUNK: "sales to one direct customer represented 22% of total revenue",
+    AMD_COMPETITION_CHUNK: "Qualcomm Incorporated and NVIDIA",
 }
 
 NVIDIA = NodeRef.of("Company", cik=NVDA_CIK)
 FILING = NodeRef.of("Filing", accession_no=NVDA_10K)
 PERIOD = NodeRef.of("Period", cik=NVDA_CIK, fiscal_period="FY2026")
+AMD = NodeRef.of("Company", cik=AMD_CIK)
+AMD_FILING = NodeRef.of("Filing", accession_no=AMD_10K)
+AMD_PERIOD = NodeRef.of("Period", cik=AMD_CIK, fiscal_period="FY2025")
 TSMC = NodeRef.of("Organization", key="org:tsmc")
 COMPUTE = NodeRef.of("Segment", key="segment:nvda:compute-networking")
 HUANG = NodeRef.of("Person", key="person:jen-hsun-huang")
@@ -67,17 +75,32 @@ def edge_evidence(*chunk_ids: str) -> dict[str, list[str]]:
     return {"chunk_ids": list(chunk_ids), "evidence_spans": [QUOTES[c] for c in chunk_ids]}
 
 
+def _accession_no(chunk_id: str) -> str:
+    return chunk_id.split(":")[0]
+
+
+def _filing_nodes(
+    cik: str, name: str, ticker: str, accession_no: str, filing_date: date, fiscal_period: str,
+) -> tuple[NodeRecord, ...]:
+    return (
+        NodeRecord("Company", {"cik": cik, "name": name, "ticker": ticker}),
+        NodeRecord("Filing", {
+            "accession_no": accession_no, "form_type": "10-K",
+            "filing_date": filing_date, "fiscal_period": fiscal_period,
+        }),
+        NodeRecord("Period", {"cik": cik, "fiscal_period": fiscal_period}),
+    )
+
+
 def _structural_nodes(sections: Mapping[str, str]) -> tuple[NodeRecord, ...]:
     return (
-        NodeRecord("Company", {"cik": NVDA_CIK, "name": "NVIDIA CORP", "ticker": "NVDA"}),
-        NodeRecord("Filing", {
-            "accession_no": NVDA_10K, "form_type": "10-K",
-            "filing_date": date(2026, 2, 26), "fiscal_period": "FY2026",
-        }),
-        NodeRecord("Period", {"cik": NVDA_CIK, "fiscal_period": "FY2026"}),
+        *_filing_nodes(NVDA_CIK, "NVIDIA CORP", "NVDA", NVDA_10K, date(2026, 2, 26), "FY2026"),
+        *_filing_nodes(AMD_CIK, "ADVANCED MICRO DEVICES INC", "AMD", AMD_10K,
+                       date(2026, 2, 25), "FY2025"),
         *(
             NodeRecord("Chunk", {
-                "chunk_id": chunk_id, "accession_no": NVDA_10K, "section": sections[chunk_id],
+                "chunk_id": chunk_id, "accession_no": _accession_no(chunk_id),
+                "section": sections[chunk_id],
             })
             for chunk_id in QUOTES
         ),
@@ -109,8 +132,11 @@ def _edges() -> tuple[EdgeRecord, ...]:
     return (
         EdgeRecord("FILED", NVIDIA, FILING),
         EdgeRecord("COVERS_PERIOD", FILING, PERIOD),
+        EdgeRecord("FILED", AMD, AMD_FILING),
+        EdgeRecord("COVERS_PERIOD", AMD_FILING, AMD_PERIOD),
         *(
-            EdgeRecord("PART_OF", NodeRef.of("Chunk", chunk_id=chunk_id), FILING)
+            EdgeRecord("PART_OF", NodeRef.of("Chunk", chunk_id=chunk_id),
+                       NodeRef.of("Filing", accession_no=_accession_no(chunk_id)))
             for chunk_id in QUOTES
         ),
         EdgeRecord("SUPPLIES", TSMC, NVIDIA, edge_evidence(SUPPLY_CHUNK)),
@@ -122,6 +148,7 @@ def _edges() -> tuple[EdgeRecord, ...]:
                    {"role": "Chief Executive Officer", **edge_evidence(OFFICERS_CHUNK)}),
         EdgeRecord("REPORTS", FILING, TOP_CUSTOMER_SHARE, edge_evidence(CUSTOMERS_CHUNK)),
         EdgeRecord("MEASURES", TOP_CUSTOMER_SHARE, NVIDIA, edge_evidence(CUSTOMERS_CHUNK)),
+        EdgeRecord("COMPETES_WITH", AMD, NVIDIA, edge_evidence(AMD_COMPETITION_CHUNK)),
     )
 
 
@@ -143,24 +170,20 @@ def valid_test_batch(chunk_texts: Mapping[str, str], sections: Mapping[str, str]
 
 
 @pytest.fixture(scope="session")
-def nvda_10k_chunks(nvda_10k_filing):
-    """chunk_id -> (section, text) for every chunk of the NVIDIA 10-K fixture."""
+def test_graph_chunks(nvda_10k_filing, amd_10k_filing):
+    """chunk_id -> (section, text) for every chunk of the two fixture filings."""
     from ingest.chunker import chunk_filing
 
-    text = nvda_10k_filing.text
     return {
-        c.chunk_id: (c.section, text[c.char_start:c.char_end])
-        for c in chunk_filing(nvda_10k_filing)
+        c.chunk_id: (c.section, filing.text[c.char_start:c.char_end])
+        for filing in (nvda_10k_filing, amd_10k_filing)
+        for c in chunk_filing(filing)
     }
 
 
 @pytest.fixture(scope="session")
-def chunk_texts(nvda_10k_chunks):
-    return {chunk_id: text for chunk_id, (_, text) in nvda_10k_chunks.items()}
-
-
-@pytest.fixture(scope="session")
-def graph_test_batch(nvda_10k_chunks, chunk_texts):
+def graph_test_batch(test_graph_chunks):
     """The valid test graph, built once per session."""
-    sections = {chunk_id: section for chunk_id, (section, _) in nvda_10k_chunks.items()}
-    return valid_test_batch(chunk_texts, sections)
+    sections = {chunk_id: section for chunk_id, (section, _) in test_graph_chunks.items()}
+    texts = {chunk_id: text for chunk_id, (_, text) in test_graph_chunks.items()}
+    return valid_test_batch(texts, sections)

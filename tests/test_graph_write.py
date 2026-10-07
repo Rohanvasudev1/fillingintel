@@ -88,10 +88,10 @@ def test_a_valid_batch_reads_back_with_every_property(written, graph_test_batch)
 
 
 def _plain(row):
-    """Neo4j dates as Python ones and ints as floats, so both sides compare."""
+    """Neo4j dates as Python ones, ints as floats and keys sorted, so both sides compare."""
     props = {
         k: v.to_native() if isinstance(v, Date) else float(v) if k == "value" else v
-        for k, v in row["p"].items()
+        for k, v in sorted(row["p"].items())
     }
     return {"labels": row["labels"], "p": props}
 
@@ -108,8 +108,9 @@ def test_edges_and_node_evidence_carry_ontology_version_and_their_evidence(writt
     assert evidenced == {"p": {"evidence_span": QUOTES[SUPPLY_CHUNK],
                                "ontology_version": ONTOLOGY_VERSION},
                          "chunk": SUPPLY_CHUNK}
-    [filed] = _edges(written, "FILED")
-    assert filed["p"] == {"ontology_version": ONTOLOGY_VERSION}
+    assert [f["p"] for f in _edges(written, "FILED")] == [
+        {"ontology_version": ONTOLOGY_VERSION}
+    ] * 2
 
 
 def test_a_whole_number_metric_value_is_stored_as_a_float(written):
@@ -120,8 +121,8 @@ def test_a_whole_number_metric_value_is_stored_as_a_float(written):
 
 
 def test_a_filing_date_is_stored_as_a_date(written):
-    [row] = _run(written, "MATCH (f:Filing) RETURN f.filing_date AS d, "
-                          "f.filing_date IS :: DATE AS is_date")
+    [row] = _run(written, "MATCH (f:Filing {accession_no: $a}) RETURN f.filing_date AS d, "
+                          "f.filing_date IS :: DATE AS is_date", a=NVDA_10K)
     assert row["is_date"] and row["d"].to_native() == date(2026, 2, 26)
 
 

@@ -155,6 +155,12 @@ The stop condition is met when the module exists, the constraints are applied to
 ### Batch checking
 - A pure function takes a batch (nodes and edges as plain typed records) and returns every violation. Its rules: the label or type is known, the endpoints are allowed, required properties are present with the right types, evidence is present and shaped correctly, and every chunk ID an edge cites is a Chunk in the batch or named as already in the graph. The caller passes the set of existing chunk IDs.
 - A violation names the item, the rule and a readable message.
+- Added in ticket 03 (2026-10-07), each serving stories 40–42 and 47 or invariant 4:
+  - a property outside the ontology is rejected, so the write path can't add one;
+  - `ontology_version` comes from the write path, and a caller-supplied one is rejected;
+  - an extracted node carries its evidence on the node record as (chunk ID, span) pairs, which the write path turns into `EVIDENCED_BY` edges; an `EVIDENCED_BY` edge passed as an edge is rejected, and so is evidence on a structural node;
+  - a chunk ID listed twice on one item, or a blank span, is rejected;
+  - an edge endpoint must be a node in the batch or already in the graph, so a MATCH can't silently drop the edge. The caller passes the existing endpoint nodes alongside the existing chunk IDs.
 
 ### Constraints
 - `apply_constraints(driver)`:
@@ -171,6 +177,7 @@ The stop condition is met when the module exists, the constraints are applied to
   2. Raises with the full violation list if there are any, before any write.
   3. Otherwise writes the batch in one write transaction.
 - Nodes are merged on their key properties. Edges are merged on (start key, type, end key, role where present). On a merge, new chunk IDs are appended with their spans, and chunk IDs already listed are skipped.
+- Added in ticket 03 (2026-10-07): `write_batch` refuses, inside its transaction, a graph with no `:GraphMeta` or one built under another ontology, so a batch never lands before `apply_constraints()` has run. On a rewrite, a node's or edge's other properties take the batch's values, and an `EVIDENCED_BY` edge keeps the span it was first written with (open question for the user: latest or first value wins).
 - Labels and edge types are interpolated only from the ontology's definitions, in backticks. Values are always parameters. Dynamic-label syntax (`$(...)`) is not used, because on 5.26 a MATCH with it scans every node (research note, section 6.3).
 - The driver is created with `telemetry_disabled=True`, and every query passes the database name explicitly. Connection settings come from environment variables: `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`.
 

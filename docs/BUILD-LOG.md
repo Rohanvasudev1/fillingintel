@@ -1184,6 +1184,38 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 **Next session starts with**
 1. Merge this ticket's PR. Next is ticket 03 (guarded write path).
 
+## 2026-10-07 — Step 7 ticket 03: guarded write path
+
+- **What.** `graph/batch.py` holds the batch records (`NodeRef`, `NodeRecord` with its `Evidence` pairs, `EdgeRecord`, `Batch`), frozen with read-only property maps, and the pure `check_batch(batch, existing_chunk_ids, existing_nodes)`. It returns every `Violation` (item, rule, message) in batch order. `graph/write.py` has `write_batch(driver, batch)`. In one write transaction it checks `:GraphMeta`, reads which cited chunks and edge endpoints already exist, runs the check, and raises `BatchRejected` with the full list before any write. Otherwise it merges nodes, then edges, then node evidence, with one `UNWIND` query per label or (type, start label, end label). `graph/cypher.py` holds the identifier check and backtick quoting, now shared with `constraints.py`. `git_state()` counts `graph/` as code. No new dependency, no schema change.
+- **How merging works.** Nodes merge on their key properties. Edges merge on (start, type, end), plus `role` for `INVOLVED_IN` and `HOLDS_ROLE_AT`. New chunk IDs are appended with their spans; ones already listed are skipped, including when the same edge appears twice in one batch. Node evidence is one `EVIDENCED_BY` edge per (node, chunk). An int `MetricValue.value` (or `OWNS.stake`) is stored as a float. Each query returns its row count, and a short count raises `IncompleteWrite`, which rolls the batch back.
+- **Rules beyond the ticket's list**, recorded in the step spec:
+  - a property outside the ontology is rejected;
+  - a caller-supplied `ontology_version` is rejected, since the write path sets it;
+  - an `EVIDENCED_BY` edge passed as an edge is rejected, since node evidence goes on the node record;
+  - evidence on a structural node is rejected;
+  - a chunk listed twice on one item, or a blank span, is rejected;
+  - an edge endpoint must be in the batch or the graph;
+  - writing to a graph with no `:GraphMeta`, or another ontology's, is refused.
+- **Test graph.** `tests/graph_test_data.py` builds one valid batch from the NVIDIA FY2026 and AMD FY2025 10-K fixtures. It has 8 real Chunk nodes from the chunker; TSMC as NVIDIA's foundry; the Compute & Networking segment; Jen-Hsun Huang as President and as CEO; export controls; 22% of revenue from one direct customer (an int); and AMD naming NVIDIA as a competitor. Every quote is checked against its chunk's text when the fixture is built.
+- **TDD.** `tests/test_provenance.py` failed on `graph/` first. The 33 rule tests in `tests/test_graph_batch.py` ran against record types and an empty `check_batch`: 30 failed, and the 3 that passed were the valid-graph, empty-batch and int-for-float cases. The 19 live tests in `tests/test_graph_write.py` ran against a stub `write_batch`: 18 failed, and the dynamic-label source check passed. The first full implementation failed one test, the several-violations case: a span-length mismatch hid an unknown chunk on the same edge. The check now reports both.
+- **Code review** (`mattpocock-skills:code-review`, both axes plus Cypher). Neither axis found a hard violation. Cypher: every node MATCH and MERGE uses a constrained label's full key, so it plans an index seek; the chunk lookup is an `IN` seek; names come only from the ontology; every value is a parameter. Fixed:
+  - shared constants replace repeated property-name strings;
+  - one `is_well_formed` reference check and one `key_values` helper serve both the check and the writer;
+  - `IncompleteWrite` replaces a bare `RuntimeError`;
+  - `RESERVED` is renamed `ONTOLOGY_VERSION_PROPERTY`, and the `_checked` alias is gone;
+  - the test graph gained the AMD filing, since the ticket says "fixture filings";
+  - the extra rules are recorded in the spec.
+
+  Kept as they are:
+  - edge evidence as two parallel lists on `EdgeRecord`, because ADR-0004 fixes that shape and the length check exists for it;
+  - local set and dict accumulators inside private functions, because nothing outside them changes;
+  - `defined = {p.name: p ...}` written in two places, because it is one line.
+- **Evidence.** `uv run ruff check .` is clean. Full suite against the local `neo4j-test`: 1078 passed, 15 skipped, of which 52 are the new graph tests. The skips are tests that need `data/` (not in a worktree) plus the documented pointer-section skip. CI result is on the PR.
+- **Decision needed.** When a node or edge is written again, which property values win? Today the latest batch's values replace the earlier ones (a node's `name`, an edge's `stake`), and an `EVIDENCED_BY` edge keeps its first span. Recommendation: keep "latest wins" for now and decide again in Step 8, when `confidence` arrives.
+
+**Next session starts with**
+1. Merge this ticket's PR. Next is ticket 04 (`validate_graph()` and `python -m graph.validate`). The shared test graph is ready to break one thing at a time; remember the test marker node from ticket 02's note.
+
 ---
 
 ## Findings worth telling

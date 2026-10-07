@@ -17,9 +17,12 @@ from types import MappingProxyType
 from graph.ontology import EDGE_TYPES_BY_NAME, LABELS_BY_NAME, Kind, Prop, PropType
 
 # Set by the write path on every node and edge, never by the caller.
-RESERVED = "ontology_version"
-_EVIDENCED_BY = "EVIDENCED_BY"
-_CHUNK = "Chunk"
+ONTOLOGY_VERSION_PROPERTY = "ontology_version"
+CHUNK = "Chunk"
+CHUNK_ID = "chunk_id"
+EVIDENCED_BY = "EVIDENCED_BY"
+CHUNK_IDS = "chunk_ids"
+EVIDENCE_SPANS = "evidence_spans"
 
 
 class Rule(StrEnum):
@@ -128,7 +131,7 @@ def check_batch(
     *existing_nodes*.
     """
     known_chunks = existing_chunk_ids | {
-        n.properties.get("chunk_id") for n in batch.nodes if n.label == _CHUNK
+        n.properties.get(CHUNK_ID) for n in batch.nodes if n.label == CHUNK
     }
     known_nodes = existing_nodes | {
         ref for ref in (node_ref(n) for n in batch.nodes) if ref is not None
@@ -144,13 +147,25 @@ def check_batch(
 
 def node_ref(node: NodeRecord) -> NodeRef | None:
     """The reference that names *node*, or None when its label or key is invalid."""
-    definition = LABELS_BY_NAME.get(node.label)
-    if definition is None:
+    if node.label not in LABELS_BY_NAME:
         return None
-    key = {k: node.properties.get(k) for k in definition.keys}
-    if not all(_is_text(v) for v in key.values()):
-        return None
-    return NodeRef.of(node.label, **key)
+    ref = NodeRef.of(node.label, **key_values(node.label, node.properties))
+    return ref if is_well_formed(ref) else None
+
+
+def key_values(label: str, properties: Mapping[str, object]) -> dict[str, object]:
+    """The key properties of an ontology *label* taken from *properties*."""
+    return {k: properties.get(k) for k in LABELS_BY_NAME[label].keys}
+
+
+def is_well_formed(ref: NodeRef) -> bool:
+    """Whether *ref* names an ontology label by exactly its keys, each as text."""
+    definition = LABELS_BY_NAME.get(ref.label)
+    return (
+        definition is not None
+        and sorted(k for k, _ in ref.key) == sorted(definition.keys)
+        and all(_is_text(v) for _, v in ref.key)
+    )
 
 
 def _is_text(value: object) -> bool:
@@ -178,13 +193,13 @@ def _property_violations(
 ) -> Iterator[Violation]:
     defined = {p.name: p for p in props}
     for name in values:
-        if name == RESERVED:
+        if name == ONTOLOGY_VERSION_PROPERTY:
             yield Violation(item, Rule.RESERVED_PROPERTY,
-                            f"{RESERVED} is set by the write path, not the caller")
+                            f"{ONTOLOGY_VERSION_PROPERTY} is set by the write path, not the caller")
         elif name not in defined:
             yield Violation(item, Rule.UNKNOWN_PROPERTY, f"{name!r} is not in the ontology")
     for prop in props:
-        if prop.name == RESERVED:
+        if prop.name == ONTOLOGY_VERSION_PROPERTY:
             continue
         value = values.get(prop.name)
         if value is None or (prop.type is PropType.STRING and not _is_text(value)):
@@ -240,10 +255,9 @@ def _endpoint_violations(
         yield Violation(item, Rule.DISALLOWED_ENDPOINT,
                         f"{end} label {ref.label!r} is not one of {', '.join(allowed)}")
         return
-    keys = LABELS_BY_NAME[ref.label].keys
-    if sorted(k for k, _ in ref.key) != sorted(keys) or not all(_is_text(v) for _, v in ref.key):
-        yield Violation(item, Rule.BAD_REFERENCE,
-                        f"{end} must name {ref.label} by {', '.join(keys)} as text")
+    if not is_well_formed(ref):
+        keys = ", ".join(LABELS_BY_NAME[ref.label].keys)
+        yield Violation(item, Rule.BAD_REFERENCE, f"{end} must name {ref.label} by {keys} as text")
     elif ref not in known_nodes:
         yield Violation(item, Rule.UNKNOWN_ENDPOINT,
                         f"{end} {ref} is neither in the batch nor in the graph")
@@ -258,7 +272,7 @@ def _edge_violations(
     if definition is None:
         yield Violation(item, Rule.UNKNOWN_EDGE_TYPE, f"{edge.type!r} is not an ontology edge type")
         return
-    if edge.type == _EVIDENCED_BY:
+    if edge.type == EVIDENCED_BY:
         yield Violation(item, Rule.UNEXPECTED_EVIDENCE,
                         "node evidence goes on the node record, not as an edge")
         return
@@ -272,12 +286,12 @@ def _edge_violations(
 def _edge_evidence_violations(
     item: str, props: Mapping[str, object], known_chunks: frozenset[object],
 ) -> Iterator[Violation]:
-    chunk_ids, spans = props.get("chunk_ids"), props.get("evidence_spans")
+    chunk_ids, spans = props.get(CHUNK_IDS), props.get(EVIDENCE_SPANS)
     if not isinstance(chunk_ids, list | tuple) or not isinstance(spans, list | tuple):
         return  # reported as a missing or wrongly typed property
     if not chunk_ids:
-        yield Violation(item, Rule.MISSING_EVIDENCE, "an extracted edge needs chunk_ids")
+        yield Violation(item, Rule.MISSING_EVIDENCE, f"an extracted edge needs {CHUNK_IDS}")
     elif len(chunk_ids) != len(spans):
         yield Violation(item, Rule.EVIDENCE_LENGTH_MISMATCH,
-                        f"{len(chunk_ids)} chunk_ids but {len(spans)} evidence_spans")
+                        f"{len(chunk_ids)} {CHUNK_IDS} but {len(spans)} {EVIDENCE_SPANS}")
     yield from _evidence_violations(item, list(chunk_ids), list(spans), known_chunks)
