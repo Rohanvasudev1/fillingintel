@@ -25,7 +25,11 @@ from graph.cypher import quoted
 from graph.ontology import EDGE_TYPES, LABELS, ONTOLOGY_VERSION
 from graph.schema_text import SCHEMA_TEXT_SHA256
 
-_GRAPH_META = "GraphMeta"
+GRAPH_META = "GraphMeta"
+GRAPH_META_QUERY = (
+    f"MATCH (m:{quoted(GRAPH_META)}) "
+    "RETURN m.ontology_version AS ontology_version, m.schema_sha256 AS schema_sha256"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,7 +58,7 @@ EXPECTED_CONSTRAINTS: tuple[ConstraintDef, ...] = tuple(
 _EXPECTED_NAMES = frozenset(c.name for c in EXPECTED_CONSTRAINTS)
 # A constraint on any of these that the code doesn't define is reported as extra.
 _ONTOLOGY_NAMES = (
-    frozenset(d.name for d in LABELS) | frozenset(d.name for d in EDGE_TYPES) | {_GRAPH_META}
+    frozenset(d.name for d in LABELS) | frozenset(d.name for d in EDGE_TYPES) | {GRAPH_META}
 )
 
 
@@ -115,15 +119,26 @@ def _compare(found: tuple[ConstraintDef, ...]) -> ConstraintMismatch | None:
     return None
 
 
-def _check_graph_meta(rows: list[dict]) -> None:
+def graph_meta_problem(rows: list[dict]) -> str | None:
+    """Why the :GraphMeta rows from GRAPH_META_QUERY don't match the code, or None.
+
+    No rows is not a problem here: a fresh database has none yet.
+    """
     if len(rows) > 1:
-        raise GraphMetaMismatch(f"found {len(rows)} :{_GRAPH_META} nodes; expected one")
+        return f"found {len(rows)} :{GRAPH_META} nodes; expected one"
     expected = {"ontology_version": ONTOLOGY_VERSION, "schema_sha256": SCHEMA_TEXT_SHA256}
     if rows and rows[0] != expected:
-        raise GraphMetaMismatch(
+        return (
             f"the graph was built under ontology {rows[0]}, but the code is {expected}. "
             "Moving a graph to a new ontology is an explicit step, not done here."
         )
+    return None
+
+
+def _check_graph_meta(rows: list[dict]) -> None:
+    problem = graph_meta_problem(rows)
+    if problem:
+        raise GraphMetaMismatch(problem)
 
 
 def require_graph_meta(tx: ManagedTransaction) -> None:
@@ -132,30 +147,23 @@ def require_graph_meta(tx: ManagedTransaction) -> None:
     The write path calls this inside its transaction, so a batch never lands in
     a graph without the constraints or one built under another ontology.
     """
-    result = tx.run(
-        f"MATCH (m:{quoted(_GRAPH_META)}) "
-        "RETURN m.ontology_version AS ontology_version, m.schema_sha256 AS schema_sha256",
-    )
+    result = tx.run(GRAPH_META_QUERY)
     rows = [r.data() for r in result]
     if not rows:
         raise GraphMetaMismatch(
-            f"no :{_GRAPH_META} node; run apply_constraints() before writing to the graph"
+            f"no :{GRAPH_META} node; run apply_constraints() before writing to the graph"
         )
     _check_graph_meta(rows)
 
 
 def _graph_meta_rows(driver: Driver, database: str) -> list[dict]:
-    records, _, _ = driver.execute_query(
-        f"MATCH (m:{quoted(_GRAPH_META)}) "
-        "RETURN m.ontology_version AS ontology_version, m.schema_sha256 AS schema_sha256",
-        database_=database,
-    )
+    records, _, _ = driver.execute_query(GRAPH_META_QUERY, database_=database)
     return [r.data() for r in records]
 
 
 def _merge_graph_meta(tx: ManagedTransaction) -> None:
     result = tx.run(
-        f"MERGE (m:{quoted(_GRAPH_META)}) "
+        f"MERGE (m:{quoted(GRAPH_META)}) "
         "ON CREATE SET m.ontology_version = $version, m.schema_sha256 = $sha256 "
         "RETURN m.ontology_version AS ontology_version, m.schema_sha256 AS schema_sha256",
         version=ONTOLOGY_VERSION, sha256=SCHEMA_TEXT_SHA256,
