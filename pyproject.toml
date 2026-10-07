@@ -37,7 +37,7 @@ target-version = "py311"
 select = ["E", "F", "I", "UP"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["ingest", "eval", "tests", "scripts"]
+known-first-party = ["ingest", "eval", "graph", "tests", "scripts"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
