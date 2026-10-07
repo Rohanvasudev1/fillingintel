@@ -146,3 +146,4 @@ Files changed; evidence (tests, eval results with commit); regressions; decision
   - `eval.gate` loads the committed snapshot itself, into a throwaway schema it drops afterwards, so the laptop and CI run the same command.
   - The gate's question set hash covers only the 82 gated records; editing a decline or `test` record does not force a baseline rewrite.
   - Judge prompt text never goes on spans, even with `FILINGINTEL_TRACE_TEXT=true`; that setting covers the answer prompt and answer only.
+  - Ruleset 24576386 also requires a pull request (0 approvals, since the user can't approve their own PRs), so nothing reaches `main` except through a PR with both checks green.

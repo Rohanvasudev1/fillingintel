@@ -1150,12 +1150,11 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
   - The k = 1 branch `step-6/05-stop-condition-k1` was already deleted on GitHub, as ticket 05 says. My local list of remote branches was stale; `git fetch --prune` fixed it.
   - Removed five merged worktrees under `.claude/worktrees/` and their local branches, plus four other merged local branches. Each worktree was checked first for uncommitted changes and commits not on `main`. The only such commit was the PR #7 line restored above. The ticket 07 demo's run file was copied to the main checkout's `benchmarks/runs/` before its worktree was removed.
   - Kept `retrieval-only-vector-arm-15a72c`: it holds its own `.env`, which invariant 7 stops me reading or comparing with the main one.
-- **Decisions (user, 2026-10-07).** All four "Step 6 — to confirm" items as recommended. The first three are now in CLAUDE.md Decisions. The fourth, a "require a pull request" rule on ruleset 24576386, waits under "Step 6 — to apply" in OPEN-DECISIONS until the user approves the exact `gh api` call.
+- **Decisions (user, 2026-10-07).** All four "Step 6 — to confirm" items as recommended. The first three are now in CLAUDE.md Decisions. The fourth: the user approved the exact `gh api -X PUT .../rulesets/24576386` call in chat, and I applied it. The ruleset now has two rules, the existing required checks (`lint-and-test`, `quality-gate`) and `pull_request` with 0 required approvals, still with no bypass actors. GitHub added `require_extra_approval_for_unattributed_changes: true` on its own; PR #10 still reported `mergeStateStatus: CLEAN` afterwards, so it does not block the user's PRs. An empty commit pushed straight to `main` from a fresh clone was refused with `GH013 ... Changes must be made through a pull request`, and `main` stayed at 335f731.
 - **Evidence.** No code changed, so no new tests and no code review. `uv run ruff check .` is clean.
 
 **Next session starts with**
-1. The "require a pull request" rule, if not yet applied (OPEN-DECISIONS, "Step 6 — to apply").
-2. Step 7 (ontology as code), starting with `/grill-with-docs`. Judge calibration stays open until before the final benchmark.
+1. Step 7 (ontology as code), starting with `/grill-with-docs`. Judge calibration stays open until before the final benchmark.
 
 ---
 

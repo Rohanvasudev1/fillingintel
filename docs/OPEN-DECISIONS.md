@@ -15,9 +15,6 @@ Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstra
 - Calibrate the LLM judges against ~60 hand-scored answers (Cohen's kappa). Until then every judged number is labelled "uncalibrated". Must happen before the final benchmark.
 - Paired comparisons between arms, once a second arm exists (Step 11).
 
-## Step 6 — to apply
-- Add a "require a pull request" rule to ruleset 24576386, so a commit can reach `main` only through a PR (user agreed 2026-10-07; the exact `gh api` call still needs the user's yes). Recommendation: 0 required approvals, since the user is the only reviewer and can't approve their own PRs.
-
 ## After the first graph arm
 - `benchmarks/results.md`: ARCHITECTURE.md says CI regenerates it. Deferred at the Step 6 grilling (2026-10-06): decide whether a local command or CI writes it once there is more than one arm to compare.
 
