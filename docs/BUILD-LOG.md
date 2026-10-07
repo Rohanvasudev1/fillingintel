@@ -1101,6 +1101,8 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 **Next session starts with**
 1. Merge this ticket's PR, then ticket 08 (judge spans), starting from the note at the top of its ticket.
 
+- **PR.** Commit 91326ba, PR https://github.com/Rohanvasudev1/fillingintel/pull/7, merged by the user on 2026-10-07 (merge commit d5d9867). Auto-fix was switched on for it at the user's request: a CI failure, merge conflict or review comment would wake the session, which would fix, verify and push to the same branch.
+
 ---
 
 ## Findings worth telling
