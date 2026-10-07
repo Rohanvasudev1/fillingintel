@@ -11,8 +11,9 @@ Decisions raised but not yet made, grouped by the step where each must be settle
 - Optional, before the final benchmark: the friend Ctrl-F test on five dev multi-hop drafts (skipped on 2026-10-04).
 
 ## Steps 5–6 — eval harness
-- Calibrate LLM judges against ~60 hand-scored answers (Cohen's kappa); pin judge model versions; average 3 runs.
-- Bootstrap confidence intervals on every results cell; paired comparisons between arms.
+Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstrap 95% intervals on every results cell. Still open:
+- Calibrate the LLM judges against ~60 hand-scored answers (Cohen's kappa). Until then every judged number is labelled "uncalibrated". Must happen before the final benchmark.
+- Paired comparisons between arms, once a second arm exists (Step 11).
 
 ## After the first graph arm
 - `benchmarks/results.md`: ARCHITECTURE.md says CI regenerates it. Deferred at the Step 6 grilling (2026-10-06): decide whether a local command or CI writes it once there is more than one arm to compare.

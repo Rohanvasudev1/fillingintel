@@ -142,3 +142,8 @@ Files changed; evidence (tests, eval results with commit); regressions; decision
   - Text-capture setting (user decision, 2026-10-06): `FILINGINTEL_TRACE_TEXT`, off unless `true`. Only then do prompt and answer text go on spans.
   - eval/judging/runner.py submits judge tasks with contextvars.copy_context().run so judge spans keep their parent. Scores do not change.
   - `main` is protected by a ruleset requiring the gate job, with no bypass; changing it means editing the ruleset (set up only after the user approves). CI triggers on pull_request and on push to main, with no paths filters.
+- Step 6 confirmations (user decision, 2026-10-07):
+  - `eval.gate` loads the committed snapshot itself, into a throwaway schema it drops afterwards, so the laptop and CI run the same command.
+  - The gate's question set hash covers only the 82 gated records; editing a decline or `test` record does not force a baseline rewrite.
+  - Judge prompt text never goes on spans, even with `FILINGINTEL_TRACE_TEXT=true`; that setting covers the answer prompt and answer only.
+  - Ruleset 24576386 also requires a pull request (0 approvals, since the user can't approve their own PRs), so nothing reaches `main` except through a PR with both checks green.

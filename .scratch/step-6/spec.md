@@ -1,6 +1,6 @@
 # Step 6: CI quality gate and Phoenix tracing
 
-Status: ready-for-agent
+Status: done (2026-10-07)
 Sources: RUNBOOK Step 6, ADR-0003, docs/research/phoenix-tracing.md, and the grilling session of 2026-10-06, whose decisions are in CLAUDE.md Decisions (Step 6 entries).
 
 ## Problem Statement
