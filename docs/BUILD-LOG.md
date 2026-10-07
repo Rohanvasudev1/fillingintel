@@ -1156,6 +1156,21 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 **Next session starts with**
 1. Step 7 (ontology as code), starting with `/grill-with-docs`. Judge calibration stays open until before the final benchmark.
 
+## 2026-10-07 — Step 7 ticket 01: ontology module and schema text
+
+- **What.** A new `graph` package. `graph/ontology.py` holds the 14 node labels (4 structural, 10 extracted) and 20 edge types as frozen dataclasses in tuples, with read-only lookups by name. Each definition has its kind, keys, typed properties (`Prop.required` marks optional `stake` on `OWNS`), endpoints for edges, and a hand-written one-line description. `graph/schema_text.py` renders the labels, then the edge types, in the module's order, and exposes `SCHEMA_TEXT_SHA256`. `ONTOLOGY_VERSION = 1`, hash `9f2687c2…57fb37` (after the rename below). `pyproject.toml` adds `graph` to ruff's first-party list. No new dependency.
+- **Types I chose (the spec names properties, not types).** `cik`, `fiscal_period`, `period` and `key` are STRING, `filed_date` (renamed below) is DATE, `MetricValue.value` is FLOAT, and `stake` is FLOAT, described in the schema text as the owned share from 0 to 1. A type change is an ontology edit, so it needs version 2 once anything records version 1.
+- **TDD.** `tests/test_ontology.py` was written first. Against stub modules with empty definitions, 40 tests failed and 7 passed, because they loop over empty tuples. One failure was in the test itself: its parser of the CLAUDE.md endpoint table stopped at the first name in "SUPPLIES, CUSTOMER_OF, COMPETES_WITH". I fixed the regex, not the module. The endpoint test reads that CLAUDE.md line directly, so the module and the doc can't drift apart without a failure.
+- **Code review** (`mattpocock-skills:code-review`, both axes). Spec: every acceptance item met. Standards: no hard violations. Fixed: type hints and class docstrings in `ontology.py`; the docstring no longer claims the module stops other files from defining types; clear failure messages when the CLAUDE.md line changes shape; clearer test helper names; a new test that labels, edge types and property names are plain identifiers, ahead of ticket 03 putting them into Cypher. Kept as-is: the parallel `_label_block` and `_edge_block`, and plain strings for endpoint labels (tests check each names a known label).
+- **Evidence.** `uv run ruff check .` is clean. `uv run --env-file .env pytest`: 1005 passed, 15 skipped, of which 48 are in `tests/test_ontology.py`. Of the skips, 14 need `data/raw`, `data/parsed` or the local query cache, which this worktree lacks; the 15th is the documented pointer-section skip. No graph test needs that data.
+- **Decisions (user, 2026-10-07), all as recommended.**
+  1. Filing's date property is `filing_date`, as in Postgres `filings` and `FilingMeta`, so the Step 10 loader copies the column without renaming it. The spec said `filed_date`. The test was changed first and failed, then the module. The pinned hash failed as designed and was re-pinned at version 1 (`9f2687c2…57fb37`), since nothing had recorded the old hash. The spec line, CLAUDE.md Decisions and this entry say so.
+  2. The types above stay. Ticket 03 gains a box: the batch check accepts an int for `MetricValue.value` and the write path stores it as a float.
+  3. Ticket 03 gains a box to add `graph/` to `git_state()`'s +dirty list.
+
+**Next session starts with**
+1. Merge this ticket's PR. Next is ticket 02 (Neo4j test instance and constraints), which adds `neo4j==6.3.1` and the CI service.
+
 ---
 
 ## Findings worth telling
