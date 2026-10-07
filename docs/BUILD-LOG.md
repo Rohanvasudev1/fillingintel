@@ -1101,6 +1101,8 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 **Next session starts with**
 1. Merge this ticket's PR, then ticket 08 (judge spans), starting from the note at the top of its ticket.
 
+- **PR.** Commit 91326ba on branch `claude/tracing-retrieval-answers-09eea4`, opened as https://github.com/Rohanvasudev1/fillingintel/pull/7. Auto-fix is on for it (user's request, 2026-10-07): a CI failure, merge conflict or review comment wakes the session that opened it, which fixes, verifies and pushes to the same branch. The user still merges.
+
 ---
 
 ## Findings worth telling
