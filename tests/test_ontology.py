@@ -54,21 +54,25 @@ KEYS = {
 }
 
 
-def _props(definition, *, required=True):
+def _props_by_name(definition, *, required=True):
     return {p.name: p for p in definition.properties if p.required is required}
 
 
 def _claude_md_endpoints():
     """Parse the edge-type table from CLAUDE.md Decisions (Step 7)."""
     line = next(
-        ln for ln in CLAUDE_MD.read_text().splitlines()
-        if ln.strip().startswith("- Edge types (start → end):")
+        (ln for ln in CLAUDE_MD.read_text().splitlines()
+         if ln.strip().startswith("- Edge types (start → end):")),
+        None,
     )
+    assert line, "CLAUDE.md has no '- Edge types (start → end):' line under Decisions"
     table = line.split("):", 1)[1].split(". Any other endpoint pair", 1)[0]
     endpoints = {}
     for entry in table.split(";"):
         entry = re.sub(r"\([^)]*\)", "", entry).strip()
-        names, pair = re.fullmatch(r"([A-Z_]+(?:, [A-Z_]+)*) (.+→.+)", entry).groups()
+        match = re.fullmatch(r"([A-Z_]+(?:, [A-Z_]+)*) (.+→.+)", entry)
+        assert match, f"can't parse CLAUDE.md edge entry {entry!r}"
+        names, pair = match.groups()
         start, end = (side.strip() for side in pair.split("→"))
         starts = EXTRACTED_LABELS if start == "extracted node" else start.split("|")
         for name in names.split(","):
@@ -91,16 +95,16 @@ def test_community_waits_for_step_12():
 
 @pytest.mark.parametrize("name", STRUCTURAL_LABELS + EXTRACTED_LABELS)
 def test_label_required_properties(name):
-    required = set(_props(LABELS_BY_NAME[name]))
+    required = set(_props_by_name(LABELS_BY_NAME[name]))
     assert required == REQUIRED_NODE_PROPERTIES[name] | {"ontology_version"}
-    assert not _props(LABELS_BY_NAME[name], required=False)
+    assert not _props_by_name(LABELS_BY_NAME[name], required=False)
 
 
 @pytest.mark.parametrize("name", STRUCTURAL_LABELS + EXTRACTED_LABELS)
 def test_label_keys(name):
     definition = LABELS_BY_NAME[name]
     assert definition.keys == KEYS[name]
-    assert set(definition.keys) <= set(_props(definition))
+    assert set(definition.keys) <= set(_props_by_name(definition))
 
 
 def test_chunk_has_no_text_property():
@@ -146,7 +150,7 @@ def test_endpoints_are_known_labels():
 
 def test_extracted_edges_require_evidence_lists():
     for d in EDGE_TYPES:
-        required = _props(d)
+        required = _props_by_name(d)
         if d.kind is Kind.EXTRACTED:
             assert required["chunk_ids"].type is PropType.LIST_STRING, d.name
             assert required["evidence_spans"].type is PropType.LIST_STRING, d.name
@@ -155,22 +159,19 @@ def test_extracted_edges_require_evidence_lists():
 
 
 def test_evidenced_by_requires_one_span():
-    required = _props(EDGE_TYPES_BY_NAME["EVIDENCED_BY"])
+    required = _props_by_name(EDGE_TYPES_BY_NAME["EVIDENCED_BY"])
     assert required["evidence_span"].type is PropType.STRING
 
 
 def test_role_and_stake():
-    extra = {
-        d.name: {n for n in {p.name for p in d.properties}
-                 if n not in {"ontology_version", "chunk_ids", "evidence_spans", "evidence_span"}}
-        for d in EDGE_TYPES
-    }
-    assert {n: e for n, e in extra.items() if e} == {
+    shared = {"ontology_version", "chunk_ids", "evidence_spans", "evidence_span"}
+    edge_specific = {d.name: {p.name for p in d.properties} - shared for d in EDGE_TYPES}
+    assert {n: props for n, props in edge_specific.items() if props} == {
         "INVOLVED_IN": {"role"}, "HOLDS_ROLE_AT": {"role"}, "OWNS": {"stake"},
     }
-    assert _props(EDGE_TYPES_BY_NAME["INVOLVED_IN"])["role"].type is PropType.STRING
-    assert _props(EDGE_TYPES_BY_NAME["HOLDS_ROLE_AT"])["role"].type is PropType.STRING
-    assert "stake" in _props(EDGE_TYPES_BY_NAME["OWNS"], required=False)
+    assert _props_by_name(EDGE_TYPES_BY_NAME["INVOLVED_IN"])["role"].type is PropType.STRING
+    assert _props_by_name(EDGE_TYPES_BY_NAME["HOLDS_ROLE_AT"])["role"].type is PropType.STRING
+    assert "stake" in _props_by_name(EDGE_TYPES_BY_NAME["OWNS"], required=False)
 
 
 def test_only_competes_with_is_symmetric():
@@ -181,7 +182,18 @@ def test_only_competes_with_is_symmetric():
 
 def test_every_node_and_edge_requires_ontology_version():
     for d in (*LABELS, *EDGE_TYPES):
-        assert _props(d)["ontology_version"].type is PropType.INTEGER, d.name
+        assert _props_by_name(d)["ontology_version"].type is PropType.INTEGER, d.name
+
+
+def test_names_are_plain_identifiers():
+    # Later tickets interpolate labels and edge types into Cypher in backticks.
+    for d in LABELS:
+        assert re.fullmatch(r"[A-Z][A-Za-z]*", d.name), d.name
+    for d in EDGE_TYPES:
+        assert re.fullmatch(r"[A-Z]+(_[A-Z]+)*", d.name), d.name
+    for d in (*LABELS, *EDGE_TYPES):
+        for p in d.properties:
+            assert re.fullmatch(r"[a-z]+(_[a-z]+)*", p.name), (d.name, p.name)
 
 
 def test_every_definition_has_a_one_line_description():

@@ -4,7 +4,7 @@ Every node label and edge type the graph may hold is defined here, with its
 kind, keys, properties, allowed endpoints and a one-line description written
 by hand. The schema text for prompts, the Neo4j constraints and the write and
 validation checks are all derived from this module, so no other file can
-introduce a type. Any edit here changes the schema text and needs a new
+define a type. Any edit here changes the schema text and needs a new
 ONTOLOGY_VERSION (tests/test_ontology.py pins the hash).
 
 Structural labels and edges come from EDGAR metadata; their evidence is the
@@ -22,6 +22,8 @@ ONTOLOGY_VERSION = 1
 
 
 class Kind(StrEnum):
+    """Structural types come from EDGAR metadata; extracted ones from filing text."""
+
     STRUCTURAL = "structural"
     EXTRACTED = "extracted"
 
@@ -38,6 +40,8 @@ class PropType(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class Prop:
+    """One property of a label or edge type."""
+
     name: str
     type: PropType
     required: bool = True
@@ -45,6 +49,8 @@ class Prop:
 
 @dataclass(frozen=True, slots=True)
 class LabelDef:
+    """One node label; `keys` are the properties its uniqueness constraint covers."""
+
     name: str
     kind: Kind
     keys: tuple[str, ...]
@@ -54,6 +60,8 @@ class LabelDef:
 
 @dataclass(frozen=True, slots=True)
 class EdgeDef:
+    """One edge type and the labels allowed at its start and end."""
+
     name: str
     kind: Kind
     starts: tuple[str, ...]
@@ -72,11 +80,13 @@ _EDGE_EVIDENCE = (
 )
 
 
-def _structural(name: str, keys: tuple[str, ...], props: tuple[Prop, ...], description: str):
+def _structural(
+    name: str, keys: tuple[str, ...], props: tuple[Prop, ...], description: str,
+) -> LabelDef:
     return LabelDef(name, Kind.STRUCTURAL, keys, (*props, _VERSION), description)
 
 
-def _extracted(name: str, description: str, props: tuple[Prop, ...] = (_NAME,)):
+def _extracted(name: str, description: str, props: tuple[Prop, ...] = (_NAME,)) -> LabelDef:
     return LabelDef(name, Kind.EXTRACTED, ("key",), (_KEY, *props, _VERSION), description)
 
 
@@ -143,11 +153,17 @@ _EXTRACTED_LABEL_NAMES = tuple(d.name for d in LABELS if d.kind is Kind.EXTRACTE
 _FIRMS = ("Company", "Organization")
 
 
-def _structural_edge(name, starts, ends, description, props=()):
+def _structural_edge(
+    name: str, starts: tuple[str, ...], ends: tuple[str, ...], description: str,
+    props: tuple[Prop, ...] = (),
+) -> EdgeDef:
     return EdgeDef(name, Kind.STRUCTURAL, starts, ends, (*props, _VERSION), description)
 
 
-def _extracted_edge(name, starts, ends, description, props=(), symmetric=False):
+def _extracted_edge(
+    name: str, starts: tuple[str, ...], ends: tuple[str, ...], description: str,
+    props: tuple[Prop, ...] = (), symmetric: bool = False,
+) -> EdgeDef:
     return EdgeDef(
         name, Kind.EXTRACTED, starts, ends, (*props, *_EDGE_EVIDENCE, _VERSION),
         description, symmetric,
