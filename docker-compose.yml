@@ -25,6 +25,18 @@ services:
     volumes:
       - neo4j_data:/data
 
+  # Graph tests only (Step 7): the same image on other host ports, with its own
+  # volume and credentials, so tests never touch the graph in `neo4j`. The test
+  # fixture also refuses a database that has data but no test marker node.
+  neo4j-test:
+    image: neo4j:5.26.31-community
+    environment:
+      NEO4J_AUTH: ${NEO4J_TEST_USER}/${NEO4J_TEST_PASSWORD}
+    ports:
+      - "127.0.0.1:7688:7687"
+    volumes:
+      - neo4j_test_data:/data
+
   # Tracing UI and collector (Step 6). UI and OTLP over HTTP on 6006, OTLP over
   # gRPC on 4317. Auth is off, so the ports bind to 127.0.0.1 only. Traces are
   # kept in SQLite under PHOENIX_WORKING_DIR, on a named volume.
@@ -49,4 +61,5 @@ services:
 volumes:
   postgres_data:
   neo4j_data:
+  neo4j_test_data:
   phoenix_data:

@@ -13,3 +13,5 @@
 - [ ] The command prints which checks ran and whether the Postgres check ran or was skipped.
 - [ ] Exit codes tested through `main(argv)`: 0, 2, 3 (missing settings, Neo4j unreachable) and 4.
 - [ ] Tests written first and shown failing (`/tdd`). Code review with `mattpocock-skills:code-review` (Cypher and SQL axes). `uv run ruff check .` and `uv run --env-file .env pytest` pass, and CI is green.
+
+**Note from ticket 02 (2026-10-07):** every test database permanently holds one `:FilingIntelTestMarker` node (`tests/neo4j_fixtures.py`), the guard that stops tests wiping a real graph. `validate_graph()` would report it as an unknown label, so the empty-graph case could not pass. Recommendation: keep the marker out of the production code; the live tests remove it for the validation call (as the `unclaimed` fixture in `tests/test_graph_constraints.py` does) or pass a test-only exclusion. Decide during this ticket.
