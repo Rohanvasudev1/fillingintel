@@ -166,6 +166,12 @@ BROKEN = {
     "Chunk without PART_OF": (
         "MATCH (:Chunk {chunk_id: $chunk})-[r:PART_OF]->() DELETE r", Check.STRUCTURE,
     ),
+    "Chunk PART_OF another filing": (
+        "MATCH (c:Chunk {chunk_id: $chunk})-[r:PART_OF]->() DELETE r "
+        "WITH c MATCH (f:Filing {accession_no: $amd}) "
+        "CREATE (c)-[:PART_OF {ontology_version: 1}]->(f)",
+        Check.STRUCTURE,
+    ),
     "wrong GraphMeta": (
         "MATCH (m:GraphMeta) SET m.ontology_version = 0", Check.GRAPH_META,
     ),
@@ -194,9 +200,17 @@ def test_a_chunk_unknown_to_postgres_fails_the_postgres_check(valid_graph, postg
     assert _failures(valid_graph, postgres) == {Check.POSTGRES: 1}
 
 
+# Moves a Chunk node and its PART_OF edge to the AMD filing, so the graph stays
+# self-consistent and only Postgres can tell.
+MOVE_CHUNK_TO_AMD = (
+    "MATCH (c:Chunk {chunk_id: $chunk})-[r:PART_OF]->() DELETE r "
+    "WITH c MATCH (f:Filing {accession_no: $amd}) SET c.accession_no = $amd "
+    "CREATE (c)-[:PART_OF {ontology_version: 1}]->(f)"
+)
+
+
 def test_a_chunk_under_another_filing_fails_the_postgres_check(valid_graph, postgres):
-    _run(valid_graph, "MATCH (c:Chunk {chunk_id: $chunk}) SET c.accession_no = $amd",
-         chunk=EXPORT_CHUNK, amd=AMD_10K)
+    _run(valid_graph, MOVE_CHUNK_TO_AMD, chunk=EXPORT_CHUNK, amd=AMD_10K)
 
     assert _failures(valid_graph) == {}
     assert _failures(valid_graph, postgres) == {Check.POSTGRES: 1}
@@ -272,8 +286,7 @@ def test_command_runs_the_postgres_check_when_database_url_is_set(
 
 def test_command_exits_4_when_the_postgres_check_fails(valid_graph, graph_env, postgres):
     graph_env.setenv("DATABASE_URL", "postgresql://unused")
-    _run(valid_graph, "MATCH (c:Chunk {chunk_id: $chunk}) SET c.accession_no = $amd",
-         chunk=EXPORT_CHUNK, amd=AMD_10K)
+    _run(valid_graph, MOVE_CHUNK_TO_AMD, chunk=EXPORT_CHUNK, amd=AMD_10K)
 
     assert main([], connect_postgres=lambda url: nullcontext(postgres)) == EXIT_VIOLATIONS
 
@@ -308,3 +321,15 @@ def test_command_exits_3_when_postgres_is_unreachable(valid_graph, graph_env, ca
 
     assert main([], connect_postgres=refuse) == EXIT_RUN_ERROR
     assert "could not run" in capsys.readouterr().err
+
+
+def test_the_command_opens_postgres_read_only():
+    import os
+
+    from graph.validate import _connect_read_only
+
+    if not os.environ.get("DATABASE_URL"):
+        pytest.skip("DATABASE_URL is not set")
+    with _connect_read_only(os.environ["DATABASE_URL"]) as conn:
+        with pytest.raises(psycopg.errors.ReadOnlySqlTransaction):
+            conn.execute("CREATE TEMPORARY TABLE scratch (id int)")

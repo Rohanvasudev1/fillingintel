@@ -37,6 +37,7 @@ from graph.constraints import GRAPH_META, GRAPH_META_QUERY, graph_meta_problem
 from graph.cypher import quoted
 from graph.ontology import (
     EDGE_TYPES,
+    EDGE_TYPES_BY_NAME,
     LABELS,
     LABELS_BY_NAME,
     ONTOLOGY_VERSION,
@@ -64,7 +65,11 @@ EXIT_USAGE = 2
 EXIT_RUN_ERROR = 3
 EXIT_VIOLATIONS = 4
 
-_FILING, _FILED, _COVERS_PERIOD, _PART_OF = "Filing", "FILED", "COVERS_PERIOD", "PART_OF"
+# Looked up in the ontology, so renaming one there fails at import, not silently.
+_FILING = LABELS_BY_NAME["Filing"].name
+_FILED, _COVERS_PERIOD, _PART_OF = (
+    EDGE_TYPES_BY_NAME[name].name for name in ("FILED", "COVERS_PERIOD", "PART_OF")
+)
 _GRAPH_CHECKS = tuple(c for c in Check if c is not Check.POSTGRES)
 _LABEL_NAMES = [d.name for d in LABELS]
 _EXTRACTED_LABELS = [d.name for d in LABELS if d.kind is Kind.EXTRACTED]
@@ -102,7 +107,11 @@ def validate_graph(
     return report
 
 
-def _graph_findings(tx: ManagedTransaction) -> tuple[list[Finding], dict[str, object]]:
+# chunk_id -> the Chunk node's accession_no as stored, which may be of a wrong type.
+ChunkFilings = dict[str, object]
+
+
+def _graph_findings(tx: ManagedTransaction) -> tuple[list[Finding], ChunkFilings]:
     """Every graph finding, and chunk_id -> accession_no for each Chunk node."""
     chunks = {
         r["chunk_id"]: r["accession_no"]
@@ -141,11 +150,7 @@ def _edge_name(record: Record) -> str:
 # ── graph checks ───────────────────────────────────────────────────────────────
 
 def _graph_meta_findings(tx: ManagedTransaction) -> Iterator[Finding]:
-    rows = [r.data() for r in tx.run(GRAPH_META_QUERY)]
-    problem = (
-        f"no :{GRAPH_META} node; run apply_constraints()" if not rows
-        else graph_meta_problem(rows)
-    )
+    problem = graph_meta_problem([r.data() for r in tx.run(GRAPH_META_QUERY)], required=True)
     if problem:
         yield Finding(Check.GRAPH_META, problem)
 
@@ -199,6 +204,8 @@ def _stored_as(value: object, prop_type: PropType) -> bool:
             return isinstance(value, Date)
         case PropType.LIST_STRING:
             return isinstance(value, list) and all(isinstance(v, str) for v in value)
+        case _:
+            raise AssertionError(f"no stored-type check for {prop_type}")
 
 
 def _property_problems(props: tuple[Prop, ...], values: Mapping[str, object]) -> list[str]:
@@ -277,18 +284,24 @@ def _structure_findings(tx: ManagedTransaction) -> Iterator[Finding]:
         yield Finding(Check.STRUCTURE, f"{_node_name(r, 'n')}: {r['filed']} {_FILED} and "
                                        f"{r['covers']} {_COVERS_PERIOD} edges; expected one each")
     chunks = tx.run(
-        f"MATCH (n:{quoted(CHUNK)}) WITH n, COUNT {{ (n)-[:{quoted(_PART_OF)}]->() }} AS part_of "
-        f"WHERE part_of <> 1 {_NODE_RETURN}, part_of",
+        f"MATCH (n:{quoted(CHUNK)}) "
+        f"WITH n, COUNT {{ (n)-[:{quoted(_PART_OF)}]->() }} AS part_of, "
+        f"[(n)-[:{quoted(_PART_OF)}]->(f:{quoted(_FILING)}) "
+        "WHERE f.accession_no <> n.accession_no | f.accession_no] AS other_filings "
+        f"WHERE part_of <> 1 OR size(other_filings) > 0 {_NODE_RETURN}, part_of, other_filings",
     )
     for r in chunks:
-        yield Finding(Check.STRUCTURE,
-                      f"{_node_name(r, 'n')}: {r['part_of']} {_PART_OF} edges; expected one")
+        problems = [f"{r['part_of']} {_PART_OF} edges; expected one"] if r["part_of"] != 1 else []
+        if r["other_filings"]:
+            problems.append(f"{_PART_OF} Filing {', '.join(map(repr, r['other_filings']))}, "
+                            "not its own accession_no")
+        yield Finding(Check.STRUCTURE, f"{_node_name(r, 'n')}: {'; '.join(problems)}")
 
 
 # ── Postgres ───────────────────────────────────────────────────────────────────
 
 def _postgres_findings(
-    conn: psycopg.Connection, chunks: Mapping[str, object],
+    conn: psycopg.Connection, chunks: ChunkFilings,
 ) -> Iterator[Finding]:
     with conn.transaction():
         rows = conn.execute(
@@ -307,6 +320,13 @@ def _postgres_findings(
 # ── command ────────────────────────────────────────────────────────────────────
 
 ConnectPostgres = Callable[[str], AbstractContextManager[psycopg.Connection]]
+
+
+def _connect_read_only(url: str) -> psycopg.Connection:
+    """A Postgres connection whose transactions are read only; validation never writes."""
+    conn = psycopg.connect(url)
+    conn.read_only = True
+    return conn
 
 
 class _CouldNotRun(RuntimeError):
@@ -331,8 +351,9 @@ def _validate_from_env(connect_postgres: ConnectPostgres) -> ValidationReport:
 
 
 def main(argv: Sequence[str] | None = None, *,
-         connect_postgres: ConnectPostgres = psycopg.connect) -> int:
+         connect_postgres: ConnectPostgres = _connect_read_only) -> int:
     """CLI entry point. Exit codes: 0 valid; 2 bad arguments; 3 could not run; 4 violations."""
+    # argparse exits with status 2 (EXIT_USAGE) on bad arguments, as in eval.gate.
     argparse.ArgumentParser(
         description="Check the whole graph against the ontology and evidence rules. "
                     "Uses NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD and, when set, DATABASE_URL.",

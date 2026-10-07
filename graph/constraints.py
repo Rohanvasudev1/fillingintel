@@ -119,11 +119,13 @@ def _compare(found: tuple[ConstraintDef, ...]) -> ConstraintMismatch | None:
     return None
 
 
-def graph_meta_problem(rows: list[dict]) -> str | None:
+def graph_meta_problem(rows: list[dict], *, required: bool) -> str | None:
     """Why the :GraphMeta rows from GRAPH_META_QUERY don't match the code, or None.
 
-    No rows is not a problem here: a fresh database has none yet.
+    No rows is a problem only when *required*: a fresh database has none yet.
     """
+    if not rows and required:
+        return f"no :{GRAPH_META} node; run apply_constraints() before using the graph"
     if len(rows) > 1:
         return f"found {len(rows)} :{GRAPH_META} nodes; expected one"
     expected = {"ontology_version": ONTOLOGY_VERSION, "schema_sha256": SCHEMA_TEXT_SHA256}
@@ -135,8 +137,8 @@ def graph_meta_problem(rows: list[dict]) -> str | None:
     return None
 
 
-def _check_graph_meta(rows: list[dict]) -> None:
-    problem = graph_meta_problem(rows)
+def _check_graph_meta(rows: list[dict], *, required: bool = False) -> None:
+    problem = graph_meta_problem(rows, required=required)
     if problem:
         raise GraphMetaMismatch(problem)
 
@@ -147,13 +149,7 @@ def require_graph_meta(tx: ManagedTransaction) -> None:
     The write path calls this inside its transaction, so a batch never lands in
     a graph without the constraints or one built under another ontology.
     """
-    result = tx.run(GRAPH_META_QUERY)
-    rows = [r.data() for r in result]
-    if not rows:
-        raise GraphMetaMismatch(
-            f"no :{GRAPH_META} node; run apply_constraints() before writing to the graph"
-        )
-    _check_graph_meta(rows)
+    _check_graph_meta([r.data() for r in tx.run(GRAPH_META_QUERY)], required=True)
 
 
 def _graph_meta_rows(driver: Driver, database: str) -> list[dict]:
