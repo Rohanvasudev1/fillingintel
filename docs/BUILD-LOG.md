@@ -1101,6 +1101,37 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 **Next session starts with**
 1. Merge this ticket's PR, then ticket 08 (judge spans), starting from the note at the top of its ticket.
 
+## 2026-10-07 — Step 6 ticket 08: judge spans
+
+- **What.** Each question's judge calls now sit in its trace. `RagasJudges` opens one EVALUATOR span per metric per judge run, named after the metric, with `filingintel.judge.metric`, `filingintel.judge.run` and the score as JSON in `output.value`. A reply the judge cannot score marks the span ERROR and records the reason in `filingintel.judge.error`. `OpenAIJudge` wraps each call in an LLM span, `judge_call`, which records the model, provider `openai`, effort and output cap, the cache hit and the run file's cost. Attribute helpers live in `eval/judging/tracing.py`.
+- **Parenting.** The `answer_question` root span ends before judging starts. `_run_arm` therefore returns each root's span context next to its outcome, and `judge_all(..., parents=...)` runs every job through `contextvars.copy_context().run` with that context attached. The judge spans start under the root after the root has ended, and Phoenix shows them in the same trace. The context is kept out of `Outcome`, because `Outcome` is results-file data.
+- **Tokens.** A fresh judge call carries OpenAI's reported counts: `input_tokens` as the prompt count (it already includes cached and written tokens), cached tokens as `cache_read`, written tokens as `cache_write`, `output_tokens` as completion, reasoning tokens as `completion_details.reasoning`, and their sum as the total. A replay carries no `llm.token_count.*`. As for answers, `filingintel.cost_usd` keeps the recorded cost.
+- **Interfaces.** `RagasJudges`, `OpenAIJudge` and `open_judges` take an optional `SpanRecorder`. With none they record nothing and score exactly as before (tested). `JudgeSpec.open` now takes `(cache, spans)`, like `ArmSpec.open`. The judge fakes in `tests/test_eval_run.py` and `tests/test_tracing_run.py` gained a `spans` parameter. The runner, replay and scoring tests are unchanged.
+- **Tests.** `tests/test_judge_tracing.py` was written first and seen failing. It runs the real Ragas judges on the scripted backend through `judge_all`'s thread pool and checks:
+  - each `judge_call` sits under an EVALUATOR span under its own question's root, and the backend ran off the main thread;
+  - EVALUATOR attributes match the returned scores;
+  - fresh calls carry the reported token counts and replays carry none;
+  - with no recorder there are no spans and the scores are the same;
+  - with no parents, each judge span starts its own trace;
+  - a parent count that does not match the items raises `ValueError`;
+  - an unscorable reply marks the metric span ERROR. This test was added after review and passed at once, so I checked it fails with the status line removed.
+
+  `tests/test_tracing_run.py` adds one database test: through `eval.run`, judge spans sit under `answer_question` and start after it ends.
+- **Demo.** With Phoenix up and `PHOENIX_COLLECTOR_ENDPOINT=http://localhost:6006`, a cached `eval.run --arm vector` scored all 93 dev questions with no paid calls. The run file shows all 93 answers and all 93 query embeddings replayed, and 1,509 of 1,509 judge calls replayed. This run used the real keys, not fake ones as in ticket 07. Nothing was billed, but a cache miss would have been. Phoenix's REST API returned 2,745 spans from the run:
+  - 93 roots, each with 3 to 9 EVALUATOR spans (771 in all);
+  - every EVALUATOR span's parent is its question's `answer_question`, in the same trace;
+  - 1,509 `judge_call` spans, each under an EVALUATOR span, all `cache_hit=true` with no token counts.
+- **Scores unchanged.** The traced run's file matches an untraced cached run's apart from timing fields (316 timing leaves differ, 0 others), as in ticket 07. Against the committed baseline (`2026-10-05-vector-dev-96e8c69.json`), `eval.compare` shows retrieval, answers and costs identical. Answer relevancy's lookup mean moves by 9.4e-6 and `judged.replayed` rises. These are the same cache-replay differences ticket 07 recorded.
+- **Evidence.** `uv run ruff check .` clean. `uv run --env-file .env pytest`: 1291 passed, 1 skipped (with `data/` linked, so the local-corpus tests ran). `python -m eval.gate`: PASS, every gated number unchanged (pooled recall@10 0.890244, n=82, agent-drafted questions).
+- **Review** (`mattpocock-skills:code-review`).
+  - Spec: nothing missing.
+  - Standards: no hard violations. Fixed: an unscorable reply now marks its EVALUATOR span ERROR; a test import moved to the top of the file.
+  - Kept: the parent contexts as a list next to the outcomes, with a length check, rather than a field on `Outcome`, which would put OpenTelemetry objects in results data. Also kept: `_open_configured_judges`, because `open_judges`'s positional `config` is used by `eval.spotcheck`; separate judge and answer token helpers, because the two providers count prompt tokens differently; and the test's import of `_replies` from the scoring tests, because moving it would edit a scoring test the ticket says stays unchanged.
+- **Decision for the user.** Judge prompt text never goes on spans, even with `FILINGINTEL_TRACE_TEXT=true`. Recommendation: keep it off. Judge prompts repeat the chunk text and answer already on the answer span, and they are large.
+
+**Next session starts with**
+1. Merge this ticket's PR. That finishes Step 6's tickets; next is the Step 6 wrap-up against the RUNBOOK.
+
 ---
 
 ## Findings worth telling

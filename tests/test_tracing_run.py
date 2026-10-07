@@ -48,7 +48,22 @@ class FixedJudge:
         return RunScores(run, scores, MappingProxyType({}), 0.0, calls=0, replayed=0)
 
 
-JUDGES = JudgeSpec(required_env=(), open=lambda cache: nullcontext(FixedJudge()))
+class SpanningJudge(FixedJudge):
+    """A fixed judge that opens one EVALUATOR span per metric on the recorder it was given."""
+
+    def __init__(self, spans: SpanRecorder):
+        self._spans = spans
+
+    def judge(self, item, run: int) -> RunScores:
+        for metric in metrics_for(item.class_):
+            with self._spans.span(metric, Kind.EVALUATOR):
+                pass
+        return super().judge(item, run)
+
+
+JUDGES = JudgeSpec(required_env=(), open=lambda cache, spans: nullcontext(FixedJudge()))
+SPANNING_JUDGES = JudgeSpec(required_env=(),
+                            open=lambda cache, spans: nullcontext(SpanningJudge(spans)))
 
 
 @pytest.fixture
@@ -71,7 +86,7 @@ def _memory_provider() -> tuple[TracerProvider, InMemorySpanExporter]:
     return provider, exporter
 
 
-def _run(db_conn, eval_dir, runs_dir, provider, answer_model=None) -> int:
+def _run(db_conn, eval_dir, runs_dir, provider, answer_model=None, judges=JUDGES) -> int:
     def open_arm(response_cache, spans=None):
         ticks = itertools.count()  # the same latencies on every run
         return nullcontext(VectorArm(db_conn, FakeQueryEmbedder(),
@@ -79,7 +94,7 @@ def _run(db_conn, eval_dir, runs_dir, provider, answer_model=None) -> int:
                                      clock=lambda: float(next(ticks)), spans=spans))
 
     spec = ArmSpec(name="vector", required_env=(), open=open_arm)
-    return main(["--arm", "vector"], arms={"vector": spec}, judges=JUDGES, eval_dir=eval_dir,
+    return main(["--arm", "vector"], arms={"vector": spec}, judges=judges, eval_dir=eval_dir,
                 runs_dir=runs_dir, today=TODAY, response_cache=runs_dir / "responses",
                 uncached_root=runs_dir / "uncached", tracing=lambda environ: provider)
 
@@ -109,6 +124,20 @@ def test_one_question_is_one_trace_of_five_openinference_spans(db_conn, embedded
     for span in spans.values():
         assert span.parent.span_id == root.context.span_id
         assert span.context.trace_id == root.context.trace_id
+
+
+def test_judge_spans_sit_under_their_question_after_its_answer_span_ends(
+        db_conn, embedded, eval_dir, tmp_path):
+    provider, exporter = _memory_provider()
+    assert _run(db_conn, eval_dir, tmp_path / "runs", provider, judges=SPANNING_JUDGES) == 0
+    finished = exporter.get_finished_spans()
+    (root,) = [s for s in finished if s.name == "answer_question"]
+    evaluators = [s for s in finished if _kind(s) == "EVALUATOR"]
+    assert len(evaluators) == len(metrics_for(RECORD.class_)) * JudgeConfig().runs
+    for span in evaluators:
+        assert span.parent.span_id == root.context.span_id
+        assert span.context.trace_id == root.context.trace_id
+        assert span.start_time >= root.end_time  # judging starts after every answer
 
 
 def test_the_root_span_holds_the_question_its_record_and_the_answer_status(

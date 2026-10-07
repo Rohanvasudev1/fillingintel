@@ -30,6 +30,7 @@ from importlib.metadata import version
 from types import MappingProxyType
 from typing import Protocol
 
+from opentelemetry.trace import StatusCode
 from ragas.metrics.collections import AnswerRelevancy, Faithfulness
 
 from eval.judging import prompts
@@ -45,6 +46,7 @@ from eval.judging.openai_judge import (
     JudgeReplyError,
     OpenAIJudge,
 )
+from eval.judging.tracing import evaluator_attributes, score_attributes
 from eval.schema import Class
 from ingest.voyage import DEFAULT_MODEL, QueryEmbedder
 from retrieve.answer import Answer
@@ -52,6 +54,7 @@ from retrieve.answer_model import AnswerModel, Effort
 from retrieve.answer_prompt import SourceChunk
 from retrieve.citations import strip_citations
 from retrieve.pricing import embedding_cost
+from retrieve.tracing import Kind, SpanRecorder
 
 UNCALIBRATED = "uncalibrated"
 RELEVANCY_STRICTNESS = 3  # Ragas's default: questions generated per answer
@@ -118,28 +121,34 @@ class Judge(Protocol):
 
 class RagasJudges:
     """The real judges: the configured OpenAI model through the response cache, Voyage for
-    relevancy."""
+    relevancy.  With *spans*, each metric is an EVALUATOR span under whichever span is
+    current, holding one LLM span per judge call."""
 
     def __init__(self, backend: AnswerModel, embedder: QueryEmbedder,
-                 config: JudgeConfig | None = None):
+                 config: JudgeConfig | None = None, spans: SpanRecorder | None = None):
         self._backend = backend
         self._embedder = embedder
         self.config = config if config is not None else JudgeConfig()
+        self._spans = spans if spans is not None else SpanRecorder.off()
 
     def judge(self, item: JudgeInput, run: int) -> RunScores:
         llm = OpenAIJudge(self._backend, run, self.config.model, self.config.effort,
-                          self.config.max_output_tokens)
+                          self.config.max_output_tokens, self._spans)
         embeddings = VoyageRagasEmbedding(self._embedder, self.config.relevancy_embedding)
         scorers = _scorers(item, llm, embeddings, self.config.relevancy_strictness)
         scores: dict[str, float | None] = {}
         errors: dict[str, str] = {}
         verdicts: dict[str, tuple[bool, ...]] = {}
         for name in metrics_for(item.class_):
-            try:
-                scored = scorers[name]()
-            except JudgeReplyError as exc:
-                scores[name], errors[name] = None, str(exc)
-                continue
+            with self._spans.span(name, Kind.EVALUATOR, evaluator_attributes(name, run)) as span:
+                try:
+                    scored = scorers[name]()
+                except JudgeReplyError as exc:
+                    scores[name], errors[name] = None, str(exc)
+                    span.set_attributes(score_attributes(None, errors[name]))
+                    span.set_status(StatusCode.ERROR, errors[name])
+                    continue
+                span.set_attributes(score_attributes(scored.value, None))
             scores[name] = scored.value
             if scored.verdicts:
                 verdicts[name] = scored.verdicts

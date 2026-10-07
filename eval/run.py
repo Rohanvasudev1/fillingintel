@@ -14,8 +14,10 @@ new, empty response cache under ``data/cache/responses-uncached/``, so nothing i
 replayed and the shared cache is left as it was.  Query embeddings stay cached,
 so retrieval is the same and only the models' answers and verdicts can change.
 
-With ``PHOENIX_COLLECTOR_ENDPOINT`` set, each question's answer is traced to
-Phoenix as one tree of spans (``retrieve.tracing``); unset, nothing is traced.
+With ``PHOENIX_COLLECTOR_ENDPOINT`` set, each question is traced to Phoenix as
+one tree of spans (``retrieve.tracing``): its answer, then its judge calls,
+which start under the question's root span after that span has ended.  Unset,
+nothing is traced.
 
 ``dev`` is the default split.  ``test`` is scored only with ``--final``, once,
 for the final benchmark.  Results go to ``benchmarks/runs/``, which git ignores.
@@ -32,6 +34,9 @@ from dataclasses import replace
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+
+from opentelemetry import trace
+from opentelemetry.context import Context
 
 from eval.filter_report import build_filter_report
 from eval.judging.report import run_judge_usage
@@ -112,13 +117,15 @@ def env_problem(required_env: Sequence[str], forbidden_env: Sequence[str],
 
 
 def _run_arm(arm: Arm, sets: Sequence[QuestionSet], split: str,
-             spans: SpanRecorder) -> list[Outcome]:
+             spans: SpanRecorder) -> tuple[list[Outcome], list[Context]]:
     """Run *arm* on every *split* record of every set; the arm sees only the question text.
 
     Each question is one trace, rooted in a span that holds the question and its record.
+    Returns the outcomes and, for each, a context holding its root span, which the
+    judges' spans take as their parent.
     """
     todo = [(s.name, r) for s in sets for r in s.records if r.split == split]
-    outcomes = []
+    outcomes, parents = [], []
     for done, (set_name, record) in enumerate(todo, start=1):
         metadata = {"question_id": record.id, "set": set_name, "arm": arm.name,
                     "split": split, "class": record.class_}
@@ -127,17 +134,20 @@ def _run_arm(arm: Arm, sets: Sequence[QuestionSet], split: str,
             result = arm.run(record.question)
             span.set_attributes(status_attributes(result.answer.status))
         outcomes.append(Outcome(set_name, record, result))
+        parents.append(trace.set_span_in_context(span))
         if done % PROGRESS_EVERY == 0:
             logger.info("%d of %d questions", done, len(todo))
-    return outcomes
+    return outcomes, parents
 
 
-def _judge(judge: Judge, outcomes: Sequence[Outcome]) -> list[Outcome]:
-    """*outcomes* with every judge run attached."""
+def _judge(judge: Judge, outcomes: Sequence[Outcome],
+           parents: Sequence[Context]) -> list[Outcome]:
+    """*outcomes* with every judge run attached; each question's judge spans go under its
+    entry in *parents*."""
     items = [JudgeInput(o.record.question, o.record.class_, o.result.answer, o.result.sources)
              for o in outcomes]
     logger.info("judging %d answers, %d runs each", len(items), judge.config.runs)
-    judged = judge_all(judge, items)
+    judged = judge_all(judge, items, parents=parents)
     return [replace(o, judged=j) for o, j in zip(outcomes, judged, strict=True)]
 
 
@@ -153,10 +163,10 @@ def _score(
 ) -> tuple[list[Outcome], ArmConfig, JudgeConfig]:
     """Every *split* question answered by the arm, then judged; raises ArmError or JudgeRunError."""
     with spec.open(cache_dir, spans) as arm:
-        outcomes = _run_arm(arm, sets, split, spans)
+        outcomes, parents = _run_arm(arm, sets, split, spans)
         config = arm.config
-    with judges.open(cache_dir) as judge:
-        return _judge(judge, outcomes), config, judge.config
+    with judges.open(cache_dir, spans) as judge:
+        return _judge(judge, outcomes, parents), config, judge.config
 
 
 def _document(run: RunInfo, config: ArmConfig, sets: Sequence[QuestionSet],

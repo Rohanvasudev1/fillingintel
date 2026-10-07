@@ -192,7 +192,7 @@ def env(monkeypatch):
 
 
 def _judge_spec(judge: FakeJudge, opened: list[Path] | None = None) -> JudgeSpec:
-    def open_judge(response_cache: Path):
+    def open_judge(response_cache: Path, spans=None):
         if opened is not None:
             opened.append(response_cache)
         return nullcontext(judge)
