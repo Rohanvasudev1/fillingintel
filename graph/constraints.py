@@ -21,10 +21,10 @@ from dataclasses import dataclass
 from neo4j import Driver, ManagedTransaction
 
 from graph.connection import DATABASE
+from graph.cypher import quoted
 from graph.ontology import EDGE_TYPES, LABELS, ONTOLOGY_VERSION
 from graph.schema_text import SCHEMA_TEXT_SHA256
 
-_IDENTIFIER = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")
 _GRAPH_META = "GraphMeta"
 
 
@@ -45,12 +45,6 @@ class ConstraintDef:
 
 def _snake(label: str) -> str:
     return re.sub(r"(?<!^)(?=[A-Z])", "_", label).lower()
-
-
-def _checked(name: str) -> str:
-    if not _IDENTIFIER.match(name):
-        raise ValueError(f"not a plain identifier: {name!r}")
-    return f"`{name}`"
 
 
 EXPECTED_CONSTRAINTS: tuple[ConstraintDef, ...] = tuple(
@@ -86,9 +80,9 @@ class GraphMetaMismatch(RuntimeError):
 
 
 def _create_statement(c: ConstraintDef) -> str:
-    keys = ", ".join(f"n.{_checked(p)}" for p in c.properties)
-    return (f"CREATE CONSTRAINT {_checked(c.name)} IF NOT EXISTS "
-            f"FOR (n:{_checked(c.label)}) REQUIRE ({keys}) IS UNIQUE")
+    keys = ", ".join(f"n.{quoted(p)}" for p in c.properties)
+    return (f"CREATE CONSTRAINT {quoted(c.name)} IF NOT EXISTS "
+            f"FOR (n:{quoted(c.label)}) REQUIRE ({keys}) IS UNIQUE")
 
 
 def _found_constraints(driver: Driver, database: str) -> tuple[ConstraintDef, ...]:
@@ -132,9 +126,27 @@ def _check_graph_meta(rows: list[dict]) -> None:
         )
 
 
+def require_graph_meta(tx: ManagedTransaction) -> None:
+    """Raise GraphMetaMismatch unless :GraphMeta is present and records this ontology.
+
+    The write path calls this inside its transaction, so a batch never lands in
+    a graph without the constraints or one built under another ontology.
+    """
+    result = tx.run(
+        f"MATCH (m:{quoted(_GRAPH_META)}) "
+        "RETURN m.ontology_version AS ontology_version, m.schema_sha256 AS schema_sha256",
+    )
+    rows = [r.data() for r in result]
+    if not rows:
+        raise GraphMetaMismatch(
+            f"no :{_GRAPH_META} node; run apply_constraints() before writing to the graph"
+        )
+    _check_graph_meta(rows)
+
+
 def _graph_meta_rows(driver: Driver, database: str) -> list[dict]:
     records, _, _ = driver.execute_query(
-        f"MATCH (m:{_checked(_GRAPH_META)}) "
+        f"MATCH (m:{quoted(_GRAPH_META)}) "
         "RETURN m.ontology_version AS ontology_version, m.schema_sha256 AS schema_sha256",
         database_=database,
     )
@@ -143,7 +155,7 @@ def _graph_meta_rows(driver: Driver, database: str) -> list[dict]:
 
 def _merge_graph_meta(tx: ManagedTransaction) -> None:
     result = tx.run(
-        f"MERGE (m:{_checked(_GRAPH_META)}) "
+        f"MERGE (m:{quoted(_GRAPH_META)}) "
         "ON CREATE SET m.ontology_version = $version, m.schema_sha256 = $sha256 "
         "RETURN m.ontology_version AS ontology_version, m.schema_sha256 AS schema_sha256",
         version=ONTOLOGY_VERSION, sha256=SCHEMA_TEXT_SHA256,

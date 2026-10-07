@@ -12,6 +12,7 @@ os.environ["TIKTOKEN_CACHE_DIR"] = str(Path(__file__).resolve().parents[1] / "ve
 import pytest
 
 from ingest.models import FilingMeta
+from tests.graph_test_data import graph_test_batch, test_graph_chunks  # noqa: F401
 from tests.neo4j_fixtures import neo4j_driver, neo4j_test_session  # noqa: F401 (Step 7)
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
