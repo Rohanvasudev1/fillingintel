@@ -4,15 +4,15 @@
 
 **Blocked by:** 02 (Neo4j test instance and constraints)
 
-**Status:** ready-for-agent
+**Status:** done (2026-10-07, PR #14)
 
-- [ ] A shared valid test graph: structural nodes for fixture filings, Chunk nodes with real chunk IDs from running the chunker on the gzipped fixture filings, and hand-written extracted nodes and edges (for example NVIDIA's 10-K naming TSMC as its foundry). The helper checks that every span is a substring of its chunk's text.
-- [ ] Pure tests, one violation each, for every rule above, plus one showing a batch with several violations reports all of them.
-- [ ] A valid batch is written and reads back with every property, including `ontology_version`.
-- [ ] A batch with one bad item leaves the database exactly as before.
-- [ ] Writing the same edge twice with a new chunk gives one edge with both chunks and spans; writing it again with a chunk already listed adds nothing.
-- [ ] One person with two roles at one company gives two `HOLDS_ROLE_AT` edges.
-- [ ] Labels and edge types reach Cypher only from the ontology, in backticks; every value is a parameter; no `$(...)` dynamic labels. A test passes a label or property value containing Cypher and shows it is rejected or stored as plain data.
-- [ ] `MetricValue.value` is FLOAT in the ontology: the batch check accepts an int there and the write path stores it as a float, so a whole-number figure is not rejected (user decision, 2026-10-07).
-- [ ] `git_state()` counts changes under `graph/` as +dirty, alongside ingest/, db/, eval/, retrieve/, prompts/, tests/ and scripts/ (user decision, 2026-10-07).
-- [ ] Rule tests written first and shown failing (`/tdd`). Code review with `mattpocock-skills:code-review` (Cypher axis). `uv run ruff check .` and `uv run --env-file .env pytest` pass, and CI is green.
+- [x] A shared valid test graph: structural nodes for fixture filings, Chunk nodes with real chunk IDs from running the chunker on the gzipped fixture filings, and hand-written extracted nodes and edges (for example NVIDIA's 10-K naming TSMC as its foundry). The helper checks that every span is a substring of its chunk's text.
+- [x] Pure tests, one violation each, for every rule above, plus one showing a batch with several violations reports all of them.
+- [x] A valid batch is written and reads back with every property, including `ontology_version`.
+- [x] A batch with one bad item leaves the database exactly as before.
+- [x] Writing the same edge twice with a new chunk gives one edge with both chunks and spans; writing it again with a chunk already listed adds nothing.
+- [x] One person with two roles at one company gives two `HOLDS_ROLE_AT` edges.
+- [x] Labels and edge types reach Cypher only from the ontology, in backticks; every value is a parameter; no `$(...)` dynamic labels. A test passes a label or property value containing Cypher and shows it is rejected or stored as plain data.
+- [x] `MetricValue.value` is FLOAT in the ontology: the batch check accepts an int there and the write path stores it as a float, so a whole-number figure is not rejected (user decision, 2026-10-07).
+- [x] `git_state()` counts changes under `graph/` as +dirty, alongside ingest/, db/, eval/, retrieve/, prompts/, tests/ and scripts/ (user decision, 2026-10-07).
+- [x] Rule tests written first and shown failing (`/tdd`). Code review with `mattpocock-skills:code-review` (Cypher axis). `uv run ruff check .` and `uv run --env-file .env pytest` pass, and CI is green.

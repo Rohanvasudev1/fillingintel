@@ -27,7 +27,13 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import AbstractContextManager
 
 import psycopg
-from neo4j import READ_ACCESS, Driver, ManagedTransaction, Record
+from neo4j import (
+    READ_ACCESS,
+    Driver,
+    ManagedTransaction,
+    NotificationDisabledClassification,
+    Record,
+)
 from neo4j.exceptions import DriverError, Neo4jError
 from neo4j.time import Date
 
@@ -95,7 +101,13 @@ def validate_graph(
 
     The Postgres check runs only when *postgres* is given.
     """
-    with driver.session(database=database, default_access_mode=READ_ACCESS) as session:
+    # The checks name every ontology label, edge type and property, most of which a
+    # young graph lacks; the server's "does not exist" (UNRECOGNIZED) notifications would
+    # flood stderr. Other classes, such as deprecations, still come through.
+    with driver.session(
+        database=database, default_access_mode=READ_ACCESS,
+        notifications_disabled_classifications=[NotificationDisabledClassification.UNRECOGNIZED],
+    ) as session:
         findings, chunks = session.execute_read(_graph_findings)
     checks: tuple[Check, ...] = _GRAPH_CHECKS
     if postgres is not None:
