@@ -27,7 +27,7 @@ def _repo(tmp_path):
 def test_an_untracked_file_in_any_code_directory_marks_the_state_dirty(tmp_path):
     repo = _repo(tmp_path)
     assert not git_state(repo).endswith("+dirty")
-    for directory in ("eval", "retrieve", "prompts"):
+    for directory in ("eval", "retrieve", "prompts", "graph"):
         (repo / directory).mkdir()
         (repo / directory / "new.py").write_text("x = 1\n")
         assert git_state(repo).endswith("+dirty"), directory
