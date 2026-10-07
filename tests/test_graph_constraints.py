@@ -145,6 +145,17 @@ def test_extra_constraint_on_an_ontology_label_is_a_mismatch(neo4j_driver):
     assert _graph_meta(neo4j_driver) == []
 
 
+def test_constraint_on_graph_meta_is_a_mismatch(neo4j_driver):
+    _run(neo4j_driver,
+         "CREATE CONSTRAINT graph_meta_unique FOR (m:GraphMeta) REQUIRE m.ontology_version "
+         "IS UNIQUE")
+
+    with pytest.raises(ConstraintMismatch) as exc:
+        apply_constraints(neo4j_driver)
+
+    assert [e.name for e in exc.value.extra] == ["graph_meta_unique"]
+
+
 def test_constraint_on_another_label_is_left_alone(neo4j_driver):
     _run(neo4j_driver,
          "CREATE CONSTRAINT scratch_id_unique FOR (s:Scratch) REQUIRE s.id IS UNIQUE")
@@ -220,6 +231,20 @@ def test_same_period_label_at_two_filers_is_allowed(neo4j_driver):
 
 # ── the test-database guard ──────────────────────────────────────────────────────
 
+def _marker_count(driver):
+    return _run(driver, f"MATCH (m:`{MARKER_LABEL}`) RETURN count(m) AS n")[0]["n"]
+
+
+@pytest.fixture
+def unclaimed(neo4j_driver):
+    """The test database with its marker removed; claimed again afterwards."""
+    _run(neo4j_driver, f"MATCH (m:`{MARKER_LABEL}`) DELETE m")
+    yield neo4j_driver
+    wipe_except_marker(neo4j_driver)
+    _run(neo4j_driver, "MATCH (n) DETACH DELETE n")
+    _run(neo4j_driver, f"CREATE (:`{MARKER_LABEL}`)")
+
+
 def test_wipe_keeps_only_the_marker(neo4j_driver):
     apply_constraints(neo4j_driver)
     _run(neo4j_driver, "CREATE (:Organization {key: 'tsmc'})-[:X]->(:Scratch)")
@@ -228,27 +253,27 @@ def test_wipe_keeps_only_the_marker(neo4j_driver):
 
     assert _non_marker_node_count(neo4j_driver) == 0
     assert _constraints(neo4j_driver) == {}
-    assert _run(neo4j_driver, f"MATCH (m:`{MARKER_LABEL}`) RETURN count(m) AS n")[0]["n"] == 1
+    assert _marker_count(neo4j_driver) == 1
 
 
-def test_claim_refuses_data_without_a_marker_and_marks_an_empty_database(neo4j_driver):
-    _run(neo4j_driver, f"MATCH (m:`{MARKER_LABEL}`) DELETE m")
-    try:
-        _run(neo4j_driver, "CREATE (:Company {cik: '1045810'})")
-        with pytest.raises(NotATestDatabase):
-            claim_test_database(neo4j_driver)
-        assert _run(neo4j_driver, f"MATCH (m:`{MARKER_LABEL}`) RETURN count(m) AS n")[0]["n"] == 0
+def test_claim_refuses_nodes_without_a_marker(unclaimed):
+    _run(unclaimed, "CREATE (:Company {cik: '1045810'})")
 
-        _run(neo4j_driver, "MATCH (n) DETACH DELETE n")
-        _run(neo4j_driver,
-             "CREATE CONSTRAINT scratch_id_unique FOR (s:Scratch) REQUIRE s.id IS UNIQUE")
-        with pytest.raises(NotATestDatabase):
-            claim_test_database(neo4j_driver)
-        _run(neo4j_driver, "DROP CONSTRAINT scratch_id_unique")
+    with pytest.raises(NotATestDatabase):
+        claim_test_database(unclaimed)
+    assert _marker_count(unclaimed) == 0
 
-        claim_test_database(neo4j_driver)
-        assert _run(neo4j_driver, f"MATCH (m:`{MARKER_LABEL}`) RETURN count(m) AS n")[0]["n"] == 1
-    finally:
-        # Leave the test database claimed, whatever happened above.
-        _run(neo4j_driver, "MATCH (n) DETACH DELETE n")
-        _run(neo4j_driver, f"CREATE (:`{MARKER_LABEL}`)")
+
+def test_claim_refuses_constraints_without_a_marker(unclaimed):
+    # A real graph with constraints applied but nothing loaded yet.
+    _run(unclaimed, "CREATE CONSTRAINT scratch_id_unique FOR (s:Scratch) REQUIRE s.id IS UNIQUE")
+
+    with pytest.raises(NotATestDatabase):
+        claim_test_database(unclaimed)
+    assert _marker_count(unclaimed) == 0
+
+
+def test_claim_marks_an_empty_database(unclaimed):
+    claim_test_database(unclaimed)
+
+    assert _marker_count(unclaimed) == 1

@@ -57,7 +57,11 @@ EXPECTED_CONSTRAINTS: tuple[ConstraintDef, ...] = tuple(
     ConstraintDef(f"{_snake(d.name)}_{'_'.join(d.keys)}_unique", d.name, d.keys)
     for d in LABELS
 )
-_ONTOLOGY_NAMES = frozenset(d.name for d in LABELS) | frozenset(d.name for d in EDGE_TYPES)
+_EXPECTED_NAMES = frozenset(c.name for c in EXPECTED_CONSTRAINTS)
+# A constraint on any of these that the code doesn't define is reported as extra.
+_ONTOLOGY_NAMES = (
+    frozenset(d.name for d in LABELS) | frozenset(d.name for d in EDGE_TYPES) | {_GRAPH_META}
+)
 
 
 class ConstraintMismatch(RuntimeError):
@@ -100,7 +104,7 @@ def _found_constraints(driver: Driver, database: str) -> tuple[ConstraintDef, ..
         )
         for r in records
         if _ONTOLOGY_NAMES.intersection(r["labelsOrTypes"] or ())
-        or r["name"] in {c.name for c in EXPECTED_CONSTRAINTS}
+        or r["name"] in _EXPECTED_NAMES
     )
 
 
@@ -111,8 +115,7 @@ def _compare(found: tuple[ConstraintDef, ...]) -> ConstraintMismatch | None:
         by_name[c.name] for c in EXPECTED_CONSTRAINTS
         if c.name in by_name and by_name[c.name] != c
     )
-    expected_names = {c.name for c in EXPECTED_CONSTRAINTS}
-    extra = tuple(c for c in found if c.name not in expected_names)
+    extra = tuple(c for c in found if c.name not in _EXPECTED_NAMES)
     if missing or different or extra:
         return ConstraintMismatch(missing, different, extra)
     return None
@@ -145,16 +148,19 @@ def _merge_graph_meta(tx: ManagedTransaction) -> None:
         "RETURN m.ontology_version AS ontology_version, m.schema_sha256 AS schema_sha256",
         version=ONTOLOGY_VERSION, sha256=SCHEMA_TEXT_SHA256,
     )
-    # Raising here rolls the transaction back, so a node another writer
-    # created in the meantime is never overwritten.
+    # Raising here rolls the transaction back, so an existing node is never
+    # overwritten. Nothing stops two concurrent first runs from each creating
+    # one; the next call then refuses on the count.
     _check_graph_meta([r.data() for r in result])
 
 
 def apply_constraints(driver: Driver, database: str = DATABASE) -> None:
-    """Create the ontology's constraints and :GraphMeta, or raise without writing them.
+    """Create the ontology's constraints, check them, then create :GraphMeta.
 
-    Checks :GraphMeta first, so a graph from another ontology is refused before
-    anything changes. Running it again on a matching database changes nothing.
+    A :GraphMeta from another ontology is refused before anything changes. On a
+    ConstraintMismatch the ontology's own constraints may already have been
+    created, but :GraphMeta is not. Running it again on a matching database
+    changes nothing.
     """
     _check_graph_meta(_graph_meta_rows(driver, database))
     for c in EXPECTED_CONSTRAINTS:

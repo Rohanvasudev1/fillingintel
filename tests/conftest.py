@@ -12,6 +12,7 @@ os.environ["TIKTOKEN_CACHE_DIR"] = str(Path(__file__).resolve().parents[1] / "ve
 import pytest
 
 from ingest.models import FilingMeta
+from tests.neo4j_fixtures import neo4j_driver, neo4j_test_session  # noqa: F401 (Step 7)
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -247,7 +248,3 @@ def db_conn():
     with throwaway_schema() as conn:
         yield conn
 
-
-# ── Neo4j (Step 7) ─────────────────────────────────────────────────────────────
-
-from tests.neo4j_fixtures import neo4j_driver, neo4j_test_session  # noqa: E402, F401
