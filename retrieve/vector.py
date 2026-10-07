@@ -6,6 +6,10 @@ whose citations were not retrieved are dropped (``retrieve.answer``).  Before th
 first question the arm checks that every stored chunk has a current vector, so
 a partial embed run cannot silently cap recall, and reads the filing list the
 filter resolves against.
+
+Given a span recorder, the arm records the question filter, the query
+embedding, the search and the answer call as OpenInference spans
+(``retrieve.tracing``); without one it records nothing.
 """
 from __future__ import annotations
 
@@ -29,18 +33,33 @@ from ingest.store import (
     nearest_chunks,
     resolve,
 )
-from ingest.voyage import API_KEY_ENV, DEFAULT_MODEL, QueryEmbedder, VoyageClient, VoyageError
-from retrieve.answer import write_answer
+from ingest.voyage import (
+    API_KEY_ENV,
+    DEFAULT_MODEL,
+    Embedding,
+    QueryEmbedder,
+    VoyageClient,
+    VoyageError,
+)
+from retrieve.answer import Answer, write_answer
 from retrieve.answer_model import (
     ANSWER_EFFORT,
     ANSWER_MAX_TOKENS,
     ANSWER_MODEL,
     AnswerModel,
     AnswerModelError,
+    AnswerRequest,
     AnthropicAnswerModel,
+    ApiResponse,
+    ModelRequest,
 )
 from retrieve.answer_model import API_KEY_ENV as ANTHROPIC_KEY_ENV
-from retrieve.answer_prompt import AnswerPrompt, PromptError, SourceChunk, load_prompt
+from retrieve.answer_prompt import (
+    AnswerPrompt,
+    PromptError,
+    SourceChunk,
+    load_prompt,
+)
 from retrieve.arm import ArmConfig, ArmError, ArmResult, ArmSpec, Retrieval, RetrievedChunk
 from retrieve.pricing import PRICE_TABLE_DATE, PRICES, embedding_cost
 from retrieve.query_cache import CachedQueryEmbedder, CacheError
@@ -51,6 +70,21 @@ from retrieve.question_filter import (
     parse_question_filter,
 )
 from retrieve.response_cache import CachedAnswerModel
+from retrieve.tracing import (
+    EMBED_SPAN,
+    FILTER_SPAN,
+    GENERATION_SPAN,
+    SEARCH_SPAN,
+    Kind,
+    SpanRecorder,
+    embedding_attributes,
+    embedding_result_attributes,
+    filter_attributes,
+    generation_attributes,
+    generation_request_attributes,
+    question_input,
+    retrieval_attributes,
+)
 
 TOP_K = 10
 _MS_PER_SECOND = 1000.0
@@ -78,6 +112,7 @@ class VectorArm:
         k: int = TOP_K,
         clock: Callable[[], float] = time.perf_counter,
         prompt: AnswerPrompt | None = None,
+        spans: SpanRecorder | None = None,
     ):
         self._conn = conn
         self._embedder = embedder
@@ -86,6 +121,7 @@ class VectorArm:
         self._k = k
         self._clock = clock
         self._prompt = prompt if prompt is not None else _load_prompt()
+        self._spans = spans if spans is not None else SpanRecorder.off()
         _check_prices((model, ANSWER_MODEL))
         self.config = ArmConfig(
             models=MappingProxyType({"embedding": model, "answer": ANSWER_MODEL}),
@@ -105,7 +141,7 @@ class VectorArm:
         retrieval = self.retrieve(question)
         try:
             chunks = self._source_chunks([r.chunk_id for r in retrieval.retrieved])
-            answer = write_answer(question, chunks, self._answer_model, self._prompt)
+            answer = self._write_answer(question, chunks, self._answer_model)
         except _ANSWER_ERRORS as exc:
             raise _arm_error(exc) from exc
         retrieval_fields = {f.name: getattr(retrieval, f.name) for f in fields(Retrieval)}
@@ -116,21 +152,22 @@ class VectorArm:
 
         ``run`` answers from exactly this result.  Any failure is raised as ``ArmError``.
         """
-        question_filter = parse_question_filter(question, self._filings)
+        with self._spans.span(FILTER_SPAN, Kind.CHAIN, question_input(question)) as span:
+            question_filter = parse_question_filter(question, self._filings)
+            span.set_attributes(filter_attributes(question_filter))
         try:
             start = self._clock()
-            embedding = self._embedder.embed_query(question, self._model)
+            embedding = self._embed(question)
             embedded = self._clock()
-            rows = nearest_chunks(self._conn, self._model, embedding.vector, self._k,
-                                  question_filter.accession_nos)
+            retrieved = self._search(question, embedding.vector, question_filter.accession_nos)
             searched = self._clock()
         except _RETRIEVAL_ERRORS as exc:
             raise _arm_error(exc) from exc
         return Retrieval(
-            retrieved=tuple(RetrievedChunk(chunk_id, score) for chunk_id, score in rows),
+            retrieved=retrieved,
             question_filter=question_filter,
             companies_without_chunks=companies_without_chunks(
-                question_filter, (chunk_id for chunk_id, _ in rows), self._filings
+                question_filter, (r.chunk_id for r in retrieved), self._filings
             ),
             embed_ms=(embedded - start) * _MS_PER_SECOND,
             search_ms=(searched - embedded) * _MS_PER_SECOND,
@@ -138,6 +175,34 @@ class VectorArm:
             embed_tokens=embedding.api_token_count,
             embed_cost_usd=embedding_cost(self._model, embedding.api_token_count),
         )
+
+    def _embed(self, question: str) -> Embedding:
+        attributes = embedding_attributes(self._model, question)
+        with self._spans.span(EMBED_SPAN, Kind.EMBEDDING, attributes) as span:
+            embedding = self._embedder.embed_query(question, self._model)
+            cost = embedding_cost(self._model, embedding.api_token_count)
+            span.set_attributes(embedding_result_attributes(embedding, cost))
+        return embedding
+
+    def _search(self, question: str, vector: Sequence[float],
+                accession_nos: Sequence[str] | None) -> tuple[RetrievedChunk, ...]:
+        with self._spans.span(SEARCH_SPAN, Kind.RETRIEVER, question_input(question)) as span:
+            rows = nearest_chunks(self._conn, self._model, vector, self._k, accession_nos)
+            retrieved = tuple(RetrievedChunk(chunk_id, score) for chunk_id, score in rows)
+            span.set_attributes(retrieval_attributes(retrieved))
+        return retrieved
+
+    def _write_answer(self, question: str, chunks: Sequence[SourceChunk],
+                      answer_model: AnswerModel) -> Answer:
+        attributes = generation_request_attributes(ANSWER_MODEL, ANSWER_EFFORT, ANSWER_MAX_TOKENS,
+                                                   self._prompt.version)
+        with self._spans.span(GENERATION_SPAN, Kind.LLM, attributes) as span:
+            sent = _SentRequests(answer_model)
+            answer = write_answer(question, chunks, sent, self._prompt)
+            messages = ((sent.last.system, sent.last.user)
+                        if self._spans.capture_text and sent.last is not None else None)
+            span.set_attributes(generation_attributes(answer, messages))
+        return answer
 
     def _source_chunks(self, chunk_ids: Sequence[str]) -> tuple[SourceChunk, ...]:
         """Each chunk's resolved text and the source the answer model is told about."""
@@ -150,6 +215,20 @@ class VectorArm:
                         c.section, resolve(self._conn, c.chunk_id))
             for c in chunks
         )
+
+
+class _SentRequests:
+    """Passes requests to the answer model and keeps the last one, so a span shows the
+    prompt exactly as it was sent."""
+
+    def __init__(self, inner: AnswerModel):
+        self._inner = inner
+        self.last: AnswerRequest | None = None
+
+    def complete(self, request: ModelRequest) -> ApiResponse:
+        if isinstance(request, AnswerRequest):
+            self.last = request
+        return self._inner.complete(request)
 
 
 def _arm_error(exc: Exception) -> ArmError:
@@ -204,7 +283,8 @@ def _corpus_filings(conn: psycopg.Connection) -> tuple[CorpusFiling, ...]:
 
 
 @contextmanager
-def open_vector_arm(response_cache: Path) -> Iterator[VectorArm]:
+def open_vector_arm(response_cache: Path,
+                    spans: SpanRecorder | None = None) -> Iterator[VectorArm]:
     """The vector arm on ``DATABASE_URL``, with Voyage, Claude and their disk caches."""
     try:
         conn = psycopg.connect(os.environ["DATABASE_URL"])
@@ -212,7 +292,7 @@ def open_vector_arm(response_cache: Path) -> Iterator[VectorArm]:
         raise ArmError(f"could not connect to the database: {type(exc).__name__}") from exc
     with conn, VoyageClient.from_env() as voyage, AnthropicAnswerModel.from_env() as claude:
         yield VectorArm(conn, CachedQueryEmbedder(voyage),
-                        CachedAnswerModel(claude, response_cache))
+                        CachedAnswerModel(claude, response_cache), spans=spans)
 
 
 VECTOR = ArmSpec(

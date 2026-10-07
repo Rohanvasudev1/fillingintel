@@ -16,6 +16,16 @@ from ingest.models import FilingMeta
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
+@pytest.fixture(autouse=True)
+def _no_trace_export(monkeypatch):
+    """Tests never send spans, even when the shell or .env points at a running Phoenix,
+    and start with prompt and answer text off spans."""
+    monkeypatch.delenv("PHOENIX_COLLECTOR_ENDPOINT", raising=False)
+    monkeypatch.delenv("FILINGINTEL_TRACE_TEXT", raising=False)  # each test sets it if it needs it
+    for name in [n for n in os.environ if n.startswith("OTEL_EXPORTER_OTLP_")]:
+        monkeypatch.delenv(name)
+
+
 def _load_html(name: str) -> str:
     path = FIXTURES_DIR / f"{name}.html.gz"
     with gzip.open(path, "rt", encoding="utf-8", errors="replace") as fh:

@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Note from ticket 07:** the root `answer_question` span in `eval/run.py` `_run_arm` wraps only `arm.run`; judging runs later in `_judge`, after every root span has ended. To put judge spans under their question, keep each question's span context (for example on the outcome) and start the EVALUATOR span with it as parent. Copying the context in the runner alone is not enough.
+
 - [ ] The judge runner takes an optional tracer; with none, it records no spans and behaves exactly as before.
 - [ ] A test with the existing judge fakes and an in-memory exporter shows each judge LLM span under its EVALUATOR span, under the question's root span, with judging running on the thread pool.
 - [ ] Judge cache replays carry no `llm.token_count.*`; fresh calls carry the counts the OpenAI response reported.

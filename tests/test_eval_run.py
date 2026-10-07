@@ -208,7 +208,7 @@ def _setup(eval_dir, tmp_path, error=None, filters=None, judge_error=None):
     opened: list[Path] = []
     judge_opened: list[Path] = []
 
-    def open_arm(response_cache: Path):
+    def open_arm(response_cache: Path, spans=None):
         opened.append(response_cache)
         return nullcontext(arm)
 
@@ -398,7 +398,8 @@ def test_human_records_are_reported_in_their_own_column(eval_dir, tmp_path, env)
     # The fake arm only knows the agent-drafted questions; add the human one.
     records = load_records(eval_dir / "agent_drafted_set.jsonl") + [human]
     arm = FakeArm(records)
-    spec = ArmSpec(name="fake", required_env=(KEY_ENV,), open=lambda _cache: nullcontext(arm))
+    spec = ArmSpec(name="fake", required_env=(KEY_ENV,),
+                   open=lambda _cache, _spans=None: nullcontext(arm))
     assert main(["--arm", "fake"], arms={"fake": spec}, judges=_judge_spec(FakeJudge(records)),
                 eval_dir=eval_dir, runs_dir=runs, today=TODAY) == 0
     result = _result(runs)
