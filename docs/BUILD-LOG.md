@@ -1347,10 +1347,17 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 - **Found in passing.** The agent shell sets `ANTHROPIC_BASE_URL`, so the guard refuses there; the dry run used `env -u ANTHROPIC_BASE_URL`. `.env` does not set it.
 - **Evidence.** `uv run ruff check .` is clean. Full suite against the local Postgres: 1270 passed, 15 skipped (Neo4j tests without `NEO4J_TEST_URI`, and local-data tests). CI result is on the PR.
 
+- **First real run** (user's yes, 2026-10-09). NVDA FY2026 10-K, prompt `extract/v1@6a0f055a`, commit c816d0d. Run from this worktree, with the response cache and candidates folder pointed at the main checkout's `data/`. Report: `benchmarks/extraction/0001045810-26-000021-run1.json`.
+  - Status `complete`, exit 0: 132 of 132 chunks, no failed chunks (no `max_tokens` stops), zero `check_batch()` violations.
+  - 1,217 candidates; 0 rejected. 389 nodes and 571 edges after merging. Flags: 105 `name_not_in_span`, 23 `uncertain`.
+  - Nodes: MetricValue 175, RiskFactor 68, Product 42, Organization 39, Regulation 27, Person 16, Agreement 9, Segment 6, LegalProceeding 6, Facility 1. Edges: REPORTS and MEASURES 175 each, DISCLOSES 68, OFFERS 40, SUBJECT_TO 23, HOLDS_ROLE_AT 23, COMPETES_WITH 21, PARTY_TO 16, AFFECTS 8, SUPPLIES 7, HAS_SEGMENT 6, INVOLVED_IN 6, OWNS 2, CONCERNS 1.
+  - Tokens: 142,287 input, 875,136 cache read, 27,348 cache write, 179,350 output. Cost $2.23 at 2026-10-09 prices; the estimate was $3.63.
+  - 4 conflicts. One is case only (`gaming GPUs` / `Gaming GPUs`). Three are NVIDIA operating income for FY2024 to FY2026, where chunk 0123 (the segment note) disagrees with chunks 0063 and 0088 (FY2026: 130,387 vs 139,297). The segment note's figure is probably the segments' total before "All Other" costs, attributed to the filer. Review round 1 should check these MetricValues; this may be the first prompt fix.
+  - Zero rejections means the mechanical checks found nothing, not that the edges are right. Only the review measures accuracy.
+
 **Next session starts with**
 1. Merge this ticket's PR once CI is green.
-2. The first real run, from the main checkout so it uses the shared response cache (about $3.63, needs the user's yes): `uv run --env-file .env python -m extract.run --accession 0001045810-26-000021`. Watch for `max_tokens` failures (ticket 02 saw a reply use 78% of the cap).
-3. `/implement .scratch/step-8/issues/04-extract-review-command.md`.
+2. `/implement .scratch/step-8/issues/04-extract-review-command.md`. Round 1 then reviews run 1, whose candidates are in the main checkout's `data/extract/`.
 
 ---
 
