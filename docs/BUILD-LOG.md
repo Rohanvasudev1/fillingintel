@@ -1316,6 +1316,51 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 
 ---
 
+## 2026-10-09 — Step 8 ticket 03: `python -m extract.run`
+
+- **What changed.** `python -m extract.run --accession <no> [--max-cost USD]` extracts one filing. It reads the filing and its chunk texts from Postgres, prints a cost estimate, runs `extract_filing()` 4 calls at a time, and writes `data/extract/{accession}-run{N}.jsonl` (gitignored) and `benchmarks/extraction/{accession}-run{N}.json`. New modules: `extract/run.py`, `extract/report.py`, `extract/estimate.py`, `extract/tracing.py`. Other changes:
+  - `extract_filing()` takes `workers`; each call runs in a copy of the caller's context, and the result is the same as one at a time.
+  - `ingest/store.py` gains `get_filing_summary()` and `filing_chunk_texts()`. The second uses the same SQL expression as `resolve()`, and a test checks the texts match.
+  - `CachedAnswerModel.contains()` lets the estimate count only calls the cache will not answer, so a rerun estimates $0.
+  - `extract/` is in `git_state()`'s dirty list.
+- **Exit codes.** 0 complete; 2 bad arguments; 3 could not run (missing `ANTHROPIC_API_KEY` or `DATABASE_URL`, `ANTHROPIC_BASE_URL` set, Postgres unreachable, unknown accession, an unpriced model, estimate over the cap, a cache or file error); 4 a failed chunk or a `check_batch()` violation, with the report's status `incomplete`.
+- **Prices.** `retrieve/pricing.py` now holds dated tables. `TABLE_2026_10_05` is unchanged and stays the default, so past costs do not move. `TABLE_2026_10_09` has Sonnet 5.5 cache reads at $0.10 per MTok and is used by extraction. The report records the table and its date.
+- **Estimate.** cl100k counts × 1.3 for input. Output is assumed at 2,500 tokens a call, the research note's figure with thinking. The first call on each worker is priced as a cache write and later calls as reads. Dry run on the NVDA FY2026 10-K (`--max-cost 0`, no call made): 132 chunks, estimate $3.63.
+- **Report.** Commit, prompt version and hashes, model, effort, `max_tokens`, ontology version, chunk count, candidates, nodes, edges, rejections (count, rate, by reason, up to 3 examples each), flags, conflicts, failed chunks, violations, calls made and replayed, tokens (input, cache read, cache write, output), `cost_usd` over every reply used and `cost_this_run_usd` over fresh calls only, and the estimate. Each node and edge line in the candidates file carries an `item` string matching the flags' `item`, for ticket 04's review tool.
+- **Tracing.** One CHAIN span per run, and an LLM span per chunk call with model, settings, prompt version, chunk ID, cache hit and cost. Token counts appear only on calls actually made. Chunk and reply text appear only under `FILINGINTEL_TRACE_TEXT=true`. `retrieve/tracing.py` now exposes `token_count_attributes()` and `message_attributes()` for this; answer spans are unchanged.
+- **Tests first.** Pricing, provenance, estimate, concurrency and command tests failed before their code existed. The command tests replay ticket 02's four recorded replies through a counting fake behind the real response cache, over a throwaway schema. A cached rerun makes zero calls.
+- **Code review** (`mattpocock-skills:code-review`, both axes plus SQL). The new queries are parameterized and served by `UNIQUE (accession_no, ordinal)` and the filings primary key. Fixed:
+  - ValueErrors (an unpriced model, a bad chunk list) and a run-number OSError no longer escape as tracebacks; they exit 3;
+  - a failed report write removes the candidates file;
+  - the report is written with mode `x`, like the candidates file;
+  - an `item` field on node and edge lines;
+  - a rejection rate;
+  - `RunStatus` enum;
+  - explicit model, effort and `max_tokens` on `RunInfo`;
+  - an `Extract` Protocol;
+  - the estimate built from sums.
+
+  Kept, as judgement calls:
+  - `FilingSummary` in `ingest/store.py` repeats `FilingInfo`'s fields, so `ingest` need not import `extract`;
+  - only Anthropic costs take a table argument, since nothing else has a new price;
+  - `substr()` reads the filing text once per chunk row, which is fine at 132 chunks.
+- **Found in passing.** The agent shell sets `ANTHROPIC_BASE_URL`, so the guard refuses there; the dry run used `env -u ANTHROPIC_BASE_URL`. `.env` does not set it.
+- **Evidence.** `uv run ruff check .` is clean. Full suite against the local Postgres: 1270 passed, 15 skipped (Neo4j tests without `NEO4J_TEST_URI`, and local-data tests). CI result is on the PR.
+
+- **First real run** (user's yes, 2026-10-09). NVDA FY2026 10-K, prompt `extract/v1@6a0f055a`, commit c816d0d. Run from this worktree, with the response cache and candidates folder pointed at the main checkout's `data/`. Report: `benchmarks/extraction/0001045810-26-000021-run1.json`.
+  - Status `complete`, exit 0: 132 of 132 chunks, no failed chunks (no `max_tokens` stops), zero `check_batch()` violations.
+  - 1,217 candidates; 0 rejected. 389 nodes and 571 edges after merging. Flags: 105 `name_not_in_span`, 23 `uncertain`.
+  - Nodes: MetricValue 175, RiskFactor 68, Product 42, Organization 39, Regulation 27, Person 16, Agreement 9, Segment 6, LegalProceeding 6, Facility 1. Edges: REPORTS and MEASURES 175 each, DISCLOSES 68, OFFERS 40, SUBJECT_TO 23, HOLDS_ROLE_AT 23, COMPETES_WITH 21, PARTY_TO 16, AFFECTS 8, SUPPLIES 7, HAS_SEGMENT 6, INVOLVED_IN 6, OWNS 2, CONCERNS 1.
+  - Tokens: 142,287 input, 875,136 cache read, 27,348 cache write, 179,350 output. Cost $2.23 at 2026-10-09 prices; the estimate was $3.63.
+  - 4 conflicts. One is case only (`gaming GPUs` / `Gaming GPUs`). Three are NVIDIA operating income for FY2024 to FY2026, where chunk 0123 (the segment note) disagrees with chunks 0063 and 0088 (FY2026: 130,387 vs 139,297). The segment note's figure is probably the segments' total before "All Other" costs, attributed to the filer. Review round 1 should check these MetricValues; this may be the first prompt fix.
+  - Zero rejections means the mechanical checks found nothing, not that the edges are right. Only the review measures accuracy.
+
+**Next session starts with**
+1. Merge this ticket's PR once CI is green.
+2. `/implement .scratch/step-8/issues/04-extract-review-command.md`. Round 1 then reviews run 1, whose candidates are in the main checkout's `data/extract/`.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.

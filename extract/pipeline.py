@@ -10,16 +10,21 @@ is a bug in this package's own checks: it is logged as one and kept on the
 run, never hidden.
 
 The function calls the injected model and nothing else: no file I/O, no
-network of its own.
+network of its own. With `workers` above 1, that many calls run at a time,
+each in a copy of the caller's context so tracing spans keep their parent; the
+result is the same as one at a time, in chunk order.
 """
 from __future__ import annotations
 
+import contextvars
 import json
 import logging
 from collections import Counter
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field, replace
 from types import MappingProxyType
+from typing import TypeVar
 
 from extract.check import ChunkCheck, ReplyShapeError, check_reply
 from extract.filers import FilingInfo, known_nodes
@@ -31,6 +36,8 @@ from graph.batch import Batch, EdgeRecord, NodeRecord, Violation, check_batch
 from retrieve.answer_model import AnswerModel, AnswerModelError, TokenUsage, parse_reply
 
 logger = logging.getLogger(__name__)
+_T = TypeVar("_T")
+_R = TypeVar("_R")
 _UNUSABLE_STOPS = frozenset({"max_tokens", "refusal"})
 
 
@@ -90,10 +97,18 @@ class ExtractionRun:
 
 def extract_filing(
     filing: FilingInfo, chunks: Sequence[ChunkInput], model: AnswerModel, prompt: ExtractPrompt,
+    workers: int = 1,
 ) -> ExtractionRun:
-    """Extract every chunk of *filing* through *model* with *prompt*, check and merge."""
+    """Extract every chunk of *filing* through *model* with *prompt*, check and merge.
+
+    *workers* calls run at a time. An error that is not about one chunk (the
+    response cache, a file write) stops the run and is raised.
+    """
+    if workers < 1:
+        raise ValueError(f"workers must be at least 1, not {workers}")
     _check_chunks(filing, chunks)
-    results = [_extract_chunk(filing, chunk, model, prompt) for chunk in chunks]
+    results = _in_order(lambda chunk: _extract_chunk(filing, chunk, model, prompt), chunks,
+                        workers)
     checks = [r for _, r in results if isinstance(r, ChunkCheck)]
     failures = tuple(r for _, r in results if isinstance(r, ChunkFailure))
     merged = merge(checks)
@@ -117,6 +132,19 @@ def extract_filing(
         chunks=tuple(outcome for outcome, _ in results),
         violations=violations,
     )
+
+
+def _in_order(fn: Callable[[_T], _R], items: Sequence[_T], workers: int) -> list[_R]:
+    """*fn* of each item, in the order of *items*, *workers* at a time in copied contexts."""
+    if workers == 1:
+        return [fn(item) for item in items]
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = [pool.submit(contextvars.copy_context().run, fn, item) for item in items]
+        try:
+            return [future.result() for future in futures]
+        except BaseException:
+            pool.shutdown(wait=True, cancel_futures=True)
+            raise
 
 
 def _check_chunks(filing: FilingInfo, chunks: Sequence[ChunkInput]) -> None:

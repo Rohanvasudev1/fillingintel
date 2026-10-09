@@ -1,13 +1,20 @@
-"""The dated price table that cost figures come from (Step 5).
+"""The dated price tables that cost figures come from (Steps 5 and 8).
 
 Every cost is computed from the token counts the API reported and the prices
-below, read from each vendor's pricing page on ``PRICE_TABLE_DATE``.  The table
-goes into every results header, so a cost figure can be traced and recomputed.
-Voyage costs are list prices, before the account's free-token allowance.
+in one table, read from each vendor's pricing page on the table's date.  The
+table goes into every results header and run report, so a cost figure can be
+traced and recomputed.  A table is never edited after use: a changed price is a
+new table, and past costs keep the table they used.  Voyage costs are list
+prices, before the account's free-token allowance.
+
+``TABLE_2026_10_05`` serves Step 5 to 7 runs and stays the default.
+``TABLE_2026_10_09`` corrects Sonnet 5.5 cache reads to $0.10 per MTok
+(docs/research/claude-extraction-structured-output.md, section 2) and is used
+by extraction, the first caller that reads the prompt cache.
 """
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import asdict, dataclass
 from types import MappingProxyType
 from typing import Protocol
@@ -41,6 +48,27 @@ PRICES = MappingProxyType({
 })
 
 
+@dataclass(frozen=True)
+class PriceTable:
+    """The prices read on *date*, by model."""
+
+    date: str
+    prices: Mapping[str, TokenPrice]
+
+    def price(self, model: str) -> TokenPrice:
+        try:
+            return self.prices[model]
+        except KeyError:
+            raise ValueError(f"no price for {model!r} in the {self.date} table") from None
+
+
+TABLE_2026_10_05 = PriceTable(PRICE_TABLE_DATE, PRICES)
+TABLE_2026_10_09 = PriceTable("2026-10-09", MappingProxyType({
+    "claude-sonnet-5-5": TokenPrice(2.00, _ANTHROPIC_SOURCE, output_per_mtok=10.00,
+                                    cache_write_per_mtok=2.50, cache_read_per_mtok=0.10),
+}))
+
+
 class AnthropicUsage(Protocol):
     input_tokens: int
     output_tokens: int
@@ -56,15 +84,13 @@ class OpenAIReportedUsage(Protocol):
 
 
 def _price(model: str) -> TokenPrice:
-    try:
-        return PRICES[model]
-    except KeyError:
-        raise ValueError(f"no price for {model!r} in the {PRICE_TABLE_DATE} table") from None
+    return TABLE_2026_10_05.price(model)
 
 
-def anthropic_cost(model: str, usage: AnthropicUsage) -> float:
-    """USD for one Messages API call, from the usage it reported."""
-    p = _price(model)
+def anthropic_cost(model: str, usage: AnthropicUsage,
+                   table: PriceTable = TABLE_2026_10_05) -> float:
+    """USD for one Messages API call, from the usage it reported and *table*'s prices."""
+    p = table.price(model)
     return (
         usage.input_tokens * p.input_per_mtok
         + usage.output_tokens * p.output_per_mtok
@@ -95,7 +121,8 @@ def embedding_cost(model: str, tokens: int) -> float:
     return tokens * _price(model).input_per_mtok / _TOKENS_PER_MTOK
 
 
-def price_table(models: Iterable[str]) -> dict[str, object]:
-    """The prices of *models*, with the table's date, for a results header."""
-    return {"date": PRICE_TABLE_DATE, "unit": "USD per million tokens",
-            "models": {m: asdict(_price(m)) for m in dict.fromkeys(models)}}
+def price_table(models: Iterable[str],
+                table: PriceTable = TABLE_2026_10_05) -> dict[str, object]:
+    """The prices of *models* in *table*, with the table's date, for a results header."""
+    return {"date": table.date, "unit": "USD per million tokens",
+            "models": {m: asdict(table.price(m)) for m in dict.fromkeys(models)}}

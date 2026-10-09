@@ -35,10 +35,17 @@ class CachedAnswerModel:
         self._inner = inner
         self._dir = cache_dir
 
+    def _path(self, request: ModelRequest) -> Path:
+        return self._dir / request.model / request.effort / f"{request.cache_key()}.json"
+
+    def contains(self, request: ModelRequest) -> bool:
+        """Whether *request* would be answered from the cache, with no call."""
+        return self._path(request).exists()
+
     def complete(self, request: ModelRequest) -> ApiResponse:
         """The stored response to *request* (``from_cache`` set), or a fresh one, then stored."""
         key = request.cache_key()
-        path = self._dir / request.model / request.effort / f"{key}.json"
+        path = self._path(request)
         if path.exists():
             return _read(path, request, key)
         response = self._inner.complete(request)
