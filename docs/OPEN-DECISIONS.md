@@ -18,9 +18,12 @@ Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstra
 ## After the first graph arm
 - `benchmarks/results.md`: ARCHITECTURE.md says CI regenerates it. Deferred at the Step 6 grilling (2026-10-06): decide whether a local command or CI writes it once there is more than one arm to compare.
 
-## Step 8 — extraction
-- Reject any fact whose evidence span doesn't appear verbatim (whitespace-normalised) in its chunk; report the rejection rate.
-- Rewrites: when a node or edge is written again, the latest batch's property values win, and an `EVIDENCED_BY` edge keeps its first span (Step 7 ticket 03, user decision 2026-10-07). Revisit when `confidence` is added: should a lower-confidence rewrite replace a higher-confidence value?
+## Step 9 — entity resolution
+- Map `MetricValue.concept` to XBRL tags from EDGAR companyfacts? A new EDGAR data source; propose before building (Step 8 grilling, 2026-10-09).
+
+## After Step 8
+- Haiku 5.5 at effort `high` as a cheaper extractor, run as an indexing-cost ablation with its own 30-triple review.
+- Whether retrieval filters out `uncertain` evidence: decide in Step 11 from the review's accuracy per confidence level.
 
 ## Step 11 — graph retrieval arms
 - Neo4j Community has no read-only roles (docs/research/neo4j-driver-and-constraints.md), so GRAPH-LAYER.md's "read-only credentials" are not available. Decide the guards for text-to-Cypher: READ transactions, rejecting any generated query whose `EXPLAIN` type is not read-only, and an allowlist of Cypher clauses.

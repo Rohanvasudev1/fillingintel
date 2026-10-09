@@ -188,6 +188,8 @@ Two rules that determine whether this works:
 
 **Stop condition:** extraction over one 10-K, manual accuracy check on 30 triples at or above ~85%, zero ontology violations reaching the write path.
 
+_Note (2026-10-09): the prompt lives at `prompts/extract/v1.md`, following the `prompts/answer/v1.md` convention. "At or above ~85%" applies to the last review round; every round is reported._
+
 ### Step 9. Entity resolution
 
 Order matters, and the LLM comes last:
