@@ -19,6 +19,10 @@ from tests.neo4j_fixtures import (
     wipe_except_marker,
 )
 
+# The :GraphMeta of a graph built under ontology version 1 (Step 7), as the local
+# Neo4j still holds it until Step 10.
+VERSION_1_SCHEMA_SHA256 = "9f2687c2aa33872bdf77b64c3b0d80b773cdeac7f7b67dc981892f9bcc57fb37"
+
 EXTRACTED_LABELS = [
     "Organization", "Segment", "Product", "RiskFactor", "Regulation",
     "LegalProceeding", "Agreement", "Facility", "Person", "MetricValue",
@@ -179,8 +183,9 @@ def test_same_schema_under_another_name_is_reported_missing_and_extra(neo4j_driv
 
 @pytest.mark.parametrize(
     ("version", "sha256"),
-    [(ONTOLOGY_VERSION + 1, SCHEMA_TEXT_SHA256), (ONTOLOGY_VERSION, "0" * 64)],
-    ids=["other-version", "other-hash"],
+    [(ONTOLOGY_VERSION + 1, SCHEMA_TEXT_SHA256), (ONTOLOGY_VERSION, "0" * 64),
+     (1, VERSION_1_SCHEMA_SHA256)],
+    ids=["other-version", "other-hash", "version-1"],
 )
 def test_graph_meta_from_another_ontology_is_refused_unchanged(neo4j_driver, version, sha256):
     _run(neo4j_driver,

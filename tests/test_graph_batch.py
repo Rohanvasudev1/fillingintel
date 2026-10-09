@@ -16,6 +16,7 @@ from tests.graph_test_data import (
     PERIOD,
     QUOTES,
     SUPPLY_CHUNK,
+    TEST_PROMPT,
     TSMC,
     edge_evidence,
 )
@@ -61,7 +62,7 @@ def _drop_prop(record, name):
 def _samsung():
     return NodeRecord(
         "Organization", {"key": "org:samsung", "name": "Samsung Electronics Co., Ltd."},
-        (Evidence(SUPPLY_CHUNK, "Samsung Electronics Co"),),
+        (Evidence(SUPPLY_CHUNK, "Samsung Electronics Co", "stated", TEST_PROMPT),),
     )
 
 
@@ -79,7 +80,8 @@ def test_an_empty_batch_has_no_violations():
 
 def test_an_unknown_label_is_rejected(graph_test_batch):
     batch = _with_node(graph_test_batch, NodeRecord(
-        "Supplier", {"key": "org:tsmc", "name": "TSMC"}, (Evidence(SUPPLY_CHUNK, "TSMC"),),
+        "Supplier", {"key": "org:tsmc", "name": "TSMC"},
+        (Evidence(SUPPLY_CHUNK, "TSMC", "stated", TEST_PROMPT),),
     ))
     assert _rules(batch) == [Rule.UNKNOWN_LABEL]
 
@@ -87,7 +89,7 @@ def test_an_unknown_label_is_rejected(graph_test_batch):
 def test_a_label_holding_cypher_is_rejected_as_unknown(graph_test_batch):
     batch = _with_node(graph_test_batch, NodeRecord(
         "Organization`) DETACH DELETE n //", {"key": "x", "name": "x"},
-        (Evidence(SUPPLY_CHUNK, "TSMC"),),
+        (Evidence(SUPPLY_CHUNK, "TSMC", "stated", TEST_PROMPT),),
     ))
     assert _rules(batch) == [Rule.UNKNOWN_LABEL]
 
@@ -202,7 +204,8 @@ def test_an_extracted_node_without_evidence_is_rejected(graph_test_batch):
 
 def test_node_evidence_with_a_blank_span_is_rejected(graph_test_batch):
     batch = _replace_node(
-        graph_test_batch, "Segment", lambda n: replace(n, evidence=(Evidence(SUPPLY_CHUNK, ""),)),
+        graph_test_batch, "Segment",
+        lambda n: replace(n, evidence=(Evidence(SUPPLY_CHUNK, "", "stated", TEST_PROMPT),)),
     )
     assert _rules(batch) == [Rule.MISSING_EVIDENCE]
 
@@ -210,7 +213,7 @@ def test_node_evidence_with_a_blank_span_is_rejected(graph_test_batch):
 def test_a_structural_node_with_evidence_is_rejected(graph_test_batch):
     batch = _replace_node(
         graph_test_batch, "Company",
-        lambda n: replace(n, evidence=(Evidence(SUPPLY_CHUNK, "TSMC"),)),
+        lambda n: replace(n, evidence=(Evidence(SUPPLY_CHUNK, "TSMC", "stated", TEST_PROMPT),)),
     )
     assert _rules(batch) == [Rule.UNEXPECTED_EVIDENCE]
 
@@ -227,7 +230,8 @@ def test_an_evidenced_by_edge_in_a_batch_is_rejected(graph_test_batch):
 def test_an_extracted_edge_with_no_chunk_ids_is_rejected(graph_test_batch):
     batch = _replace_edge(
         graph_test_batch, "SUPPLIES",
-        lambda e: _set_props(e, chunk_ids=[], evidence_spans=[]),
+        lambda e: _set_props(e, chunk_ids=[], evidence_spans=[], confidences=[],
+                             extract_prompts=[]),
     )
     assert _rules(batch) == [Rule.MISSING_EVIDENCE]
 
@@ -237,7 +241,7 @@ def test_an_extracted_edge_without_evidence_properties_is_rejected(graph_test_ba
         graph_test_batch, "SUPPLIES",
         lambda e: replace(e, properties={}),
     )
-    assert _rules(batch) == [Rule.MISSING_PROPERTY, Rule.MISSING_PROPERTY]
+    assert _rules(batch) == [Rule.MISSING_PROPERTY] * 4
 
 
 def test_spans_of_a_different_length_from_chunk_ids_are_rejected(graph_test_batch):
@@ -267,7 +271,7 @@ def test_a_structural_edge_with_chunk_ids_is_rejected(graph_test_batch):
     batch = _replace_edge(
         graph_test_batch, "FILED", lambda e: _set_props(e, **edge_evidence(SUPPLY_CHUNK)),
     )
-    assert _rules(batch) == [Rule.UNKNOWN_PROPERTY, Rule.UNKNOWN_PROPERTY]
+    assert _rules(batch) == [Rule.UNKNOWN_PROPERTY] * 4
 
 
 def test_an_edge_citing_a_chunk_in_neither_the_batch_nor_the_graph_is_rejected(
@@ -284,7 +288,9 @@ def test_an_edge_citing_a_chunk_in_neither_the_batch_nor_the_graph_is_rejected(
 def test_node_evidence_citing_an_unknown_chunk_is_rejected(graph_test_batch):
     batch = _replace_node(
         graph_test_batch, "Segment",
-        lambda n: replace(n, evidence=(Evidence(UNKNOWN_CHUNK_ID, "Compute"),)),
+        lambda n: replace(
+            n, evidence=(Evidence(UNKNOWN_CHUNK_ID, "Compute", "stated", TEST_PROMPT),),
+        ),
     )
     assert _rules(batch) == [Rule.UNKNOWN_CHUNK]
 
@@ -299,6 +305,99 @@ def test_a_batch_may_cite_chunks_and_nodes_already_in_the_graph():
     ) == []
 
 
+# ── confidence and prompt version (ontology version 2) ─────────────────────────
+
+def _replace_evidence(batch, label, **changes):
+    """*batch* with the first *label* node's single piece of evidence changed."""
+    return _replace_node(
+        batch, label, lambda n: replace(n, evidence=(replace(n.evidence[0], **changes),)),
+    )
+
+
+def test_an_extracted_edge_without_confidences_is_rejected(graph_test_batch):
+    batch = _replace_edge(graph_test_batch, "SUPPLIES", lambda e: _drop_prop(e, "confidences"))
+    assert _rules(batch) == [Rule.MISSING_PROPERTY]
+
+
+def test_an_extracted_edge_without_extract_prompts_is_rejected(graph_test_batch):
+    batch = _replace_edge(
+        graph_test_batch, "SUPPLIES", lambda e: _drop_prop(e, "extract_prompts"),
+    )
+    assert _rules(batch) == [Rule.MISSING_PROPERTY]
+
+
+def test_confidences_of_a_different_length_from_chunk_ids_are_rejected(graph_test_batch):
+    batch = _replace_edge(
+        graph_test_batch, "SUPPLIES", lambda e: _set_props(e, confidences=["stated"] * 2),
+    )
+    assert _rules(batch) == [Rule.EVIDENCE_LENGTH_MISMATCH]
+
+
+def test_extract_prompts_of_a_different_length_from_chunk_ids_are_rejected(graph_test_batch):
+    batch = _replace_edge(
+        graph_test_batch, "SUPPLIES", lambda e: _set_props(e, extract_prompts=[]),
+    )
+    assert _rules(batch) == [Rule.EVIDENCE_LENGTH_MISMATCH]
+
+
+def test_an_edge_confidence_outside_the_enum_is_rejected(graph_test_batch):
+    batch = _replace_edge(
+        graph_test_batch, "SUPPLIES", lambda e: _set_props(e, confidences=["certain"]),
+    )
+    assert _rules(batch) == [Rule.DISALLOWED_VALUE]
+
+
+def test_confidence_is_compared_exactly(graph_test_batch):
+    # The extractor lower-cases the model's enum values; the write path takes them as given.
+    batch = _replace_edge(
+        graph_test_batch, "SUPPLIES", lambda e: _set_props(e, confidences=["Stated"]),
+    )
+    assert _rules(batch) == [Rule.DISALLOWED_VALUE]
+
+
+def test_a_node_evidence_confidence_outside_the_enum_is_rejected(graph_test_batch):
+    batch = _replace_evidence(graph_test_batch, "Segment", confidence="certain")
+    assert _rules(batch) == [Rule.DISALLOWED_VALUE]
+
+
+def test_node_evidence_without_a_confidence_is_rejected(graph_test_batch):
+    batch = _replace_evidence(graph_test_batch, "Segment", confidence=None)
+    assert _rules(batch) == [Rule.MISSING_EVIDENCE]
+
+
+def test_a_blank_confidence_on_an_edge_is_rejected(graph_test_batch):
+    batch = _replace_edge(
+        graph_test_batch, "SUPPLIES", lambda e: _set_props(e, confidences=[" "]),
+    )
+    assert _rules(batch) == [Rule.MISSING_EVIDENCE]
+
+
+def test_node_evidence_without_an_extract_prompt_is_rejected(graph_test_batch):
+    batch = _replace_evidence(graph_test_batch, "Segment", extract_prompt=None)
+    assert _rules(batch) == [Rule.MISSING_EVIDENCE]
+
+
+def test_a_blank_prompt_version_on_node_evidence_is_rejected(graph_test_batch):
+    batch = _replace_evidence(graph_test_batch, "Segment", extract_prompt="  ")
+    assert _rules(batch) == [Rule.MISSING_EVIDENCE]
+
+
+def test_a_blank_prompt_version_on_an_edge_is_rejected(graph_test_batch):
+    batch = _replace_edge(
+        graph_test_batch, "SUPPLIES", lambda e: _set_props(e, extract_prompts=[""]),
+    )
+    assert _rules(batch) == [Rule.MISSING_EVIDENCE]
+
+
+def test_every_confidence_level_is_accepted(graph_test_batch):
+    for level in ("stated", "implied", "uncertain"):
+        batch = _replace_edge(
+            graph_test_batch, "SUPPLIES", lambda e, level=level: _set_props(e, confidences=[level]),
+        )
+        batch = _replace_evidence(batch, "Segment", confidence=level)
+        assert _rules(batch) == [], level
+
+
 # ── several at once ────────────────────────────────────────────────────────────
 
 def test_every_violation_in_a_batch_is_reported(graph_test_batch):
@@ -308,6 +407,7 @@ def test_every_violation_in_a_batch_is_reported(graph_test_batch):
     batch = _with_edge(batch, EdgeRecord("SUPPLIES", PERIOD, NVIDIA, edge_evidence(EXPORT_CHUNK)))
     batch = _with_edge(batch, EdgeRecord("HAS_SEGMENT", NVIDIA, COMPUTE, {
         "chunk_ids": [CUSTOMERS_CHUNK, UNKNOWN_CHUNK_ID], "evidence_spans": ["22%"],
+        "confidences": ["stated", "stated"], "extract_prompts": [TEST_PROMPT, TEST_PROMPT],
     }))
 
     violations = check_batch(batch)

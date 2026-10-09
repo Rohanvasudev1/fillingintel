@@ -1,4 +1,4 @@
-"""The ontology as text for prompts, and its hash (Step 7).
+"""The ontology as text for prompts, and its hash (Step 7; version 2 since Step 8).
 
 Generated from graph.ontology in the module's own order: labels, then edge
 types. The text is never edited by hand; a run records SCHEMA_TEXT_SHA256 to
@@ -8,12 +8,28 @@ from __future__ import annotations
 
 import hashlib
 
-from graph.ontology import EDGE_TYPES, LABELS, ONTOLOGY_VERSION, EdgeDef, LabelDef, Prop
+from graph.ontology import (
+    EDGE_TYPES,
+    LABELS,
+    ONTOLOGY_VERSION,
+    EdgeDef,
+    LabelDef,
+    Prop,
+    PropType,
+)
+
+
+def _allowed(prop: Prop) -> str:
+    if not prop.values:
+        return ""
+    choices = f"{', '.join(prop.values[:-1])} or {prop.values[-1]}"
+    return f" (each {choices})" if prop.type is PropType.LIST_STRING else f" ({choices})"
 
 
 def _properties(props: tuple[Prop, ...]) -> str:
     return ", ".join(
-        f"{p.name}: {p.type}" + ("" if p.required else " (optional)") for p in props
+        f"{p.name}: {p.type}{_allowed(p)}" + ("" if p.required else " (optional)")
+        for p in props
     )
 
 

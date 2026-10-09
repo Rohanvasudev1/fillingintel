@@ -1,4 +1,4 @@
-"""The guarded write path into the graph (Step 7).
+"""The guarded write path into the graph (Step 7; ontology version 2 since Step 8).
 
 write_batch() is the one way into the graph. In one write transaction it:
 1. refuses a graph without :GraphMeta or built under another ontology;
@@ -10,10 +10,11 @@ write_batch() is the one way into the graph. In one write transaction it:
 Nodes merge on their key properties; a node written again takes the batch's
 property values. Edges merge on (start, type, end), plus `role` where the type
 has one, so one person's two roles at a company stay two edges. An extracted
-edge written again gets the batch's new chunk IDs appended with their spans;
-chunk IDs it already lists are skipped (ADR-0004). Node evidence accumulates
-the same way: one EVIDENCED_BY edge per (node, chunk), and the span written
-first is kept.
+edge written again gets the batch's new chunk IDs appended with their spans,
+confidences and prompt versions at the same index; chunk IDs it already lists
+are skipped (ADR-0004). Node evidence accumulates the same way: one
+EVIDENCED_BY edge per (node, chunk), and the span, confidence and prompt
+version written first are kept. (Step 10 replaces this first-wins rule.)
 
 Labels, edge types and property keys reach Cypher only from the ontology,
 through graph.cypher.quoted(); every value is a parameter. Dynamic labels are
@@ -31,8 +32,11 @@ from graph.batch import (
     CHUNK,
     CHUNK_ID,
     CHUNK_IDS,
-    EVIDENCE_SPANS,
+    CONFIDENCE,
+    EVIDENCE_LISTS,
+    EVIDENCE_SPAN,
     EVIDENCED_BY,
+    EXTRACT_PROMPT,
     ONTOLOGY_VERSION_PROPERTY,
     Batch,
     EdgeRecord,
@@ -56,10 +60,14 @@ from graph.ontology import (
 )
 
 _IDENTITY_PROPERTIES = ("role",)
-_EVIDENCE_PROPERTIES = (CHUNK_IDS, EVIDENCE_SPANS)
 # Property names as they appear in Cypher text.
-_CHUNK_ID, _CHUNK_IDS, _SPANS, _VERSION = (
-    quoted(CHUNK_ID), quoted(CHUNK_IDS), quoted(EVIDENCE_SPANS), quoted(ONTOLOGY_VERSION_PROPERTY),
+_CHUNK_ID, _CHUNK_IDS, _VERSION = (
+    quoted(CHUNK_ID), quoted(CHUNK_IDS), quoted(ONTOLOGY_VERSION_PROPERTY),
+)
+# Appends each evidence list's entries at the indexes in `fresh`, keeping the lists parallel.
+_APPEND_EVIDENCE = ", ".join(
+    f"r.{quoted(name)} = coalesce(r.{quoted(name)}, []) + [i IN fresh | row.{quoted(name)}[i]]"
+    for name in EVIDENCE_LISTS
 )
 
 T = TypeVar("T")
@@ -202,23 +210,21 @@ def _edge_query(edge_type: str, start: str, end: str) -> str:
     )
     if definition.kind is Kind.EXTRACTED:
         query += (
-            "WITH r, row, [i IN range(0, size(row.chunk_ids) - 1) "
-            f"WHERE NOT row.chunk_ids[i] IN coalesce(r.{_CHUNK_IDS}, [])] AS fresh "
-            f"SET r.{_CHUNK_IDS} = coalesce(r.{_CHUNK_IDS}, []) + [i IN fresh | row.chunk_ids[i]], "
-            f"r.{_SPANS} = coalesce(r.{_SPANS}, []) + [i IN fresh | row.evidence_spans[i]] "
+            f"WITH r, row, [i IN range(0, size(row.{_CHUNK_IDS}) - 1) "
+            f"WHERE NOT row.{_CHUNK_IDS}[i] IN coalesce(r.{_CHUNK_IDS}, [])] AS fresh "
+            f"SET {_APPEND_EVIDENCE} "
         )
     return query + "RETURN count(*) AS written"
 
 
 def _edge_row(edge: EdgeRecord) -> dict:
     definition = EDGE_TYPES_BY_NAME[edge.type]
-    plain = {k: v for k, v in edge.properties.items() if k not in _EVIDENCE_PROPERTIES}
+    plain = {k: v for k, v in edge.properties.items() if k not in EVIDENCE_LISTS}
     return {
         "start": edge.start.key_dict(),
         "end": edge.end.key_dict(),
         "props": _db_properties(definition.properties, plain),
-        "chunk_ids": list(edge.properties.get(CHUNK_IDS, ())),
-        "evidence_spans": list(edge.properties.get(EVIDENCE_SPANS, ())),
+        **{name: list(edge.properties.get(name, ())) for name in EVIDENCE_LISTS},
     }
 
 
@@ -230,7 +236,8 @@ def _merge_edges(
 
 def _merge_node_evidence(tx: ManagedTransaction, label: str, nodes: list[NodeRecord]) -> None:
     rows = [
-        {"key": key_values(label, n.properties), "chunk_id": e.chunk_id, "span": e.span}
+        {"key": key_values(label, n.properties), "chunk_id": e.chunk_id, "span": e.span,
+         "confidence": e.confidence, "extract_prompt": e.extract_prompt}
         for n in nodes for e in n.evidence
     ]
     _run_rows(tx, (
@@ -238,6 +245,8 @@ def _merge_node_evidence(tx: ManagedTransaction, label: str, nodes: list[NodeRec
         f"MATCH (n:{quoted(label)} {_key_map(label, 'row.key')}) "
         f"MATCH (c:{quoted(CHUNK)} {{{_CHUNK_ID}: row.chunk_id}}) "
         f"MERGE (n)-[e:{quoted(EVIDENCED_BY)}]->(c) "
-        f"ON CREATE SET e.`evidence_span` = row.span, e.{_VERSION} = $version "
+        f"ON CREATE SET e.{quoted(EVIDENCE_SPAN)} = row.span, "
+        f"e.{quoted(CONFIDENCE)} = row.confidence, "
+        f"e.{quoted(EXTRACT_PROMPT)} = row.extract_prompt, e.{_VERSION} = $version "
         "RETURN count(*) AS written"
     ), rows)

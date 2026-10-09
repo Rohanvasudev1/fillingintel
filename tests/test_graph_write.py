@@ -21,6 +21,8 @@ from graph.write import BatchRejected, write_batch
 from tests.graph_test_data import (
     COMPUTE,
     CUSTOMERS_CHUNK,
+    EXPORT_CHUNK,
+    EXPORT_CONTROLS,
     HUANG,
     MDA_CUSTOMERS_CHUNK,
     MDA_SEGMENTS_CHUNK,
@@ -31,6 +33,7 @@ from tests.graph_test_data import (
     QUOTES,
     SEGMENTS_CHUNK,
     SUPPLY_CHUNK,
+    TEST_PROMPT,
     TOP_CUSTOMER_SHARE,
     TSMC,
     edge_evidence,
@@ -100,14 +103,16 @@ def test_edges_and_node_evidence_carry_ontology_version_and_their_evidence(writt
     [supplies] = _edges(written, "SUPPLIES")
     assert supplies["p"] == {
         "chunk_ids": [SUPPLY_CHUNK], "evidence_spans": [QUOTES[SUPPLY_CHUNK]],
+        "confidences": ["stated"], "extract_prompts": [TEST_PROMPT],
         "ontology_version": ONTOLOGY_VERSION,
     }
-    [evidenced] = _run(written, "MATCH (:Organization {key: $key})-[e:EVIDENCED_BY]->"
+    [evidenced] = _run(written, "MATCH (:Regulation {key: $key})-[e:EVIDENCED_BY]->"
                                 "(c:Chunk) RETURN properties(e) AS p, c.chunk_id AS chunk",
-                       key="org:tsmc")
-    assert evidenced == {"p": {"evidence_span": QUOTES[SUPPLY_CHUNK],
+                       key=EXPORT_CONTROLS.key_dict()["key"])
+    assert evidenced == {"p": {"evidence_span": QUOTES[EXPORT_CHUNK],
+                               "confidence": "implied", "extract_prompt": TEST_PROMPT,
                                "ontology_version": ONTOLOGY_VERSION},
-                         "chunk": SUPPLY_CHUNK}
+                         "chunk": EXPORT_CHUNK}
     assert [f["p"] for f in _edges(written, "FILED")] == [
         {"ontology_version": ONTOLOGY_VERSION}
     ] * 2
@@ -151,9 +156,10 @@ def test_a_rejected_batch_leaves_an_existing_graph_unchanged(written):
     before = _snapshot(written)
     batch = Batch(
         nodes=(NodeRecord("Organization", {"key": "org:samsung", "name": "Samsung"},
-                          (Evidence(SUPPLY_CHUNK, "Samsung"),)),),
+                          (Evidence(SUPPLY_CHUNK, "Samsung", "stated", TEST_PROMPT),)),),
         edges=(EdgeRecord("SUPPLIES", NodeRef.of("Organization", key="org:samsung"), NVIDIA,
-                          {"chunk_ids": [f"{NVDA_10K}:9999"], "evidence_spans": ["x"]}),),
+                          {"chunk_ids": [f"{NVDA_10K}:9999"], "evidence_spans": ["x"],
+                           "confidences": ["stated"], "extract_prompts": [TEST_PROMPT]}),),
     )
     with pytest.raises(BatchRejected) as exc:
         write_batch(written, batch)
@@ -168,7 +174,7 @@ def test_a_database_error_mid_batch_rolls_the_whole_batch_back(written):
     before = _snapshot(written)
     batch = Batch(nodes=(
         NodeRecord("Organization", {"key": "org:samsung", "name": "Samsung"},
-                   (Evidence(SUPPLY_CHUNK, "Samsung"),)),
+                   (Evidence(SUPPLY_CHUNK, "Samsung", "stated", TEST_PROMPT),)),
         NodeRecord("Organization", {"key": "org:tsmc-2", "name": "Taiwan Semiconductor "
                                     "Manufacturing Company Limited"},
                    (evidence(SUPPLY_CHUNK),)),
@@ -184,9 +190,11 @@ def test_a_graph_without_graph_meta_is_refused(neo4j_driver, graph_test_batch):
     assert _snapshot(neo4j_driver) == ([], [])
 
 
-def test_a_graph_built_under_another_ontology_is_refused(graph_driver, graph_test_batch):
-    _run(graph_driver, "MATCH (m:GraphMeta) SET m.ontology_version = $v",
-         v=ONTOLOGY_VERSION + 1)
+@pytest.mark.parametrize("version", [1, ONTOLOGY_VERSION + 1], ids=["version-1", "newer"])
+def test_a_graph_built_under_another_ontology_is_refused(
+    graph_driver, graph_test_batch, version,
+):
+    _run(graph_driver, "MATCH (m:GraphMeta) SET m.ontology_version = $v", v=version)
     with pytest.raises(GraphMetaMismatch):
         write_batch(graph_driver, graph_test_batch)
     assert _run(graph_driver, "MATCH (n) WHERE NOT n:GraphMeta AND NOT n:`"
@@ -204,6 +212,7 @@ def test_a_new_chunk_on_an_existing_edge_is_appended_with_its_span(written):
     [edge] = _edges(written, "HAS_SEGMENT")
     assert edge["p"]["chunk_ids"] == [SEGMENTS_CHUNK, MDA_SEGMENTS_CHUNK]
     assert edge["p"]["evidence_spans"] == [QUOTES[SEGMENTS_CHUNK], QUOTES[MDA_SEGMENTS_CHUNK]]
+    assert edge["p"]["confidences"] == ["stated", "stated"]
 
     before = _snapshot(written)
     write_batch(written, Batch(edges=(
@@ -221,6 +230,25 @@ def test_only_the_new_chunks_of_a_mixed_list_are_appended(written):
     [edge] = _edges(written, "HAS_SEGMENT")
     assert edge["p"]["chunk_ids"] == [SEGMENTS_CHUNK, MDA_SEGMENTS_CHUNK]
     assert len(edge["p"]["evidence_spans"]) == 2
+
+
+def test_an_appended_chunk_keeps_its_own_confidence_and_prompt_version(written):
+    later_prompt = "extract/v2@89abcdef"
+    write_batch(written, Batch(edges=(
+        EdgeRecord("HAS_SEGMENT", NVIDIA, COMPUTE, {
+            "chunk_ids": [SEGMENTS_CHUNK, MDA_SEGMENTS_CHUNK],
+            "evidence_spans": [QUOTES[SEGMENTS_CHUNK], QUOTES[MDA_SEGMENTS_CHUNK]],
+            "confidences": ["uncertain", "implied"],
+            "extract_prompts": [later_prompt, later_prompt],
+        }),
+    )))
+
+    [edge] = _edges(written, "HAS_SEGMENT")
+    # The chunk already on the edge keeps its first evidence; only the new one is appended.
+    assert edge["p"]["chunk_ids"] == [SEGMENTS_CHUNK, MDA_SEGMENTS_CHUNK]
+    assert edge["p"]["evidence_spans"] == [QUOTES[SEGMENTS_CHUNK], QUOTES[MDA_SEGMENTS_CHUNK]]
+    assert edge["p"]["confidences"] == ["stated", "implied"]
+    assert edge["p"]["extract_prompts"] == [TEST_PROMPT, later_prompt]
 
 
 def test_the_same_edge_twice_in_one_batch_is_one_edge(graph_driver, graph_test_batch):
@@ -282,7 +310,7 @@ def test_a_property_value_holding_cypher_is_stored_as_plain_data(written):
     nodes_before = len(_snapshot(written)[0])
     batch = Batch(nodes=(
         NodeRecord("Organization", {"key": CYPHER, "name": CYPHER},
-                   (Evidence(SUPPLY_CHUNK, "TSMC"),)),
+                   (Evidence(SUPPLY_CHUNK, "TSMC", "stated", TEST_PROMPT),)),
     ))
     write_batch(written, batch)
 
@@ -295,7 +323,7 @@ def test_a_label_holding_cypher_is_rejected_before_any_query(written):
     before = _snapshot(written)
     batch = Batch(nodes=(
         NodeRecord(f"Organization`) {CYPHER}", {"key": "k", "name": "n"},
-                   (Evidence(SUPPLY_CHUNK, "TSMC"),)),
+                   (Evidence(SUPPLY_CHUNK, "TSMC", "stated", TEST_PROMPT),)),
     ))
     with pytest.raises(BatchRejected) as exc:
         write_batch(written, batch)

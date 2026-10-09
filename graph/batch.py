@@ -1,9 +1,11 @@
-"""Batches of graph writes and the pure check they must pass (Step 7).
+"""Batches of graph writes and the pure check they must pass (Step 7; version 2 in Step 8).
 
 A batch holds nodes and edges as plain typed records. check_batch() returns
 every way the batch breaks the ontology or the evidence rules (ADR-0004),
 with no database call: the caller says which chunks and endpoint nodes are
-already in the graph.
+already in the graph. Each piece of evidence carries a span, a confidence
+and the extract prompt version, on the node's Evidence or at one index of an
+extracted edge's four evidence lists.
 """
 from __future__ import annotations
 
@@ -14,15 +16,21 @@ from datetime import date, datetime
 from enum import StrEnum
 from types import MappingProxyType
 
-from graph.ontology import EDGE_TYPES_BY_NAME, LABELS_BY_NAME, Kind, Prop, PropType
+from graph.ontology import EDGE_EVIDENCE, EDGE_TYPES_BY_NAME, LABELS_BY_NAME, Kind, Prop, PropType
 
 # Set by the write path on every node and edge, never by the caller.
 ONTOLOGY_VERSION_PROPERTY = "ontology_version"
 CHUNK = "Chunk"
 CHUNK_ID = "chunk_id"
 EVIDENCED_BY = "EVIDENCED_BY"
-CHUNK_IDS = "chunk_ids"
-EVIDENCE_SPANS = "evidence_spans"
+# An extracted edge's evidence: parallel lists, one entry per chunk, named in the ontology.
+EVIDENCE_LISTS = tuple(p.name for p in EDGE_EVIDENCE)
+CHUNK_IDS, EVIDENCE_SPANS, CONFIDENCES, EXTRACT_PROMPTS = EVIDENCE_LISTS
+# The single-value forms on EVIDENCED_BY, which carry a node's evidence.
+_NODE_EVIDENCE = {p.name: p for p in EDGE_TYPES_BY_NAME[EVIDENCED_BY].properties}
+EVIDENCE_SPAN = _NODE_EVIDENCE["evidence_span"].name
+CONFIDENCE = _NODE_EVIDENCE["confidence"].name
+EXTRACT_PROMPT = _NODE_EVIDENCE["extract_prompt"].name
 
 
 class Rule(StrEnum):
@@ -35,6 +43,7 @@ class Rule(StrEnum):
     BAD_REFERENCE = "bad_reference"
     MISSING_PROPERTY = "missing_property"
     WRONG_TYPE = "wrong_type"
+    DISALLOWED_VALUE = "disallowed_value"
     UNKNOWN_PROPERTY = "unknown_property"
     RESERVED_PROPERTY = "reserved_property"
     MISSING_EVIDENCE = "missing_evidence"
@@ -68,10 +77,16 @@ class NodeRef:
 
 @dataclass(frozen=True, slots=True)
 class Evidence:
-    """One chunk an extracted node was read from, with the quote that names it."""
+    """One chunk an extracted node was read from, with the quote that names it.
+
+    `confidence` is one of CONFIDENCE_LEVELS; `extract_prompt` is the version of
+    the prompt that produced it, such as `extract/v1@0123abcd`.
+    """
 
     chunk_id: str
     span: str
+    confidence: str
+    extract_prompt: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -208,6 +223,15 @@ def _property_violations(
         elif not _has_type(value, prop.type):
             yield Violation(item, Rule.WRONG_TYPE,
                             f"{prop.name} must be {prop.type}, got {type(value).__name__}")
+        else:
+            yield from _value_violations(item, prop, value)
+
+
+def _value_violations(item: str, prop: Prop, value: object) -> Iterator[Violation]:
+    """A violation for each value of *prop* outside its allowed values, if it has any."""
+    for v in prop.disallowed(value):
+        yield Violation(item, Rule.DISALLOWED_VALUE,
+                        f"{prop.name} {v!r} is not one of {', '.join(prop.values)}")
 
 
 def _node_violations(
@@ -226,17 +250,24 @@ def _node_violations(
         return
     if not node.evidence:
         yield Violation(item, Rule.MISSING_EVIDENCE, "an extracted node needs evidence")
-    yield from _evidence_violations(
-        item, [e.chunk_id for e in node.evidence], [e.span for e in node.evidence], known_chunks,
-    )
+    yield from _evidence_violations(item, [e.chunk_id for e in node.evidence], {
+        "an evidence span": [e.span for e in node.evidence],
+        "a confidence": [e.confidence for e in node.evidence],
+        "an extract prompt version": [e.extract_prompt for e in node.evidence],
+    }, known_chunks)
+    for e in node.evidence:
+        yield from _value_violations(item, _NODE_EVIDENCE[CONFIDENCE], e.confidence)
 
 
 def _evidence_violations(
-    item: str, chunk_ids: list[object], spans: list[object], known_chunks: frozenset[object],
+    item: str, chunk_ids: list[object], texts: Mapping[str, list[object]],
+    known_chunks: frozenset[object],
 ) -> Iterator[Violation]:
-    for span in spans:
-        if not _is_text(span):
-            yield Violation(item, Rule.MISSING_EVIDENCE, "an evidence span is blank")
+    """Blank evidence values in *texts* (what each is -> its values), and bad chunk IDs."""
+    for what, values in texts.items():
+        for value in values:
+            if not _is_text(value):
+                yield Violation(item, Rule.MISSING_EVIDENCE, f"{what} is blank")
     seen: set[object] = set()
     for chunk_id in chunk_ids:
         if chunk_id in seen:
@@ -286,12 +317,22 @@ def _edge_violations(
 def _edge_evidence_violations(
     item: str, props: Mapping[str, object], known_chunks: frozenset[object],
 ) -> Iterator[Violation]:
-    chunk_ids, spans = props.get(CHUNK_IDS), props.get(EVIDENCE_SPANS)
-    if not isinstance(chunk_ids, list | tuple) or not isinstance(spans, list | tuple):
-        return  # reported as a missing or wrongly typed property
+    lists: dict[str, list[object]] = {}
+    for name in EVIDENCE_LISTS:
+        value = props.get(name)
+        if not isinstance(value, list | tuple):
+            return  # reported as a missing or wrongly typed property
+        lists[name] = list(value)
+    chunk_ids = lists[CHUNK_IDS]
     if not chunk_ids:
         yield Violation(item, Rule.MISSING_EVIDENCE, f"an extracted edge needs {CHUNK_IDS}")
-    elif len(chunk_ids) != len(spans):
-        yield Violation(item, Rule.EVIDENCE_LENGTH_MISMATCH,
-                        f"{len(chunk_ids)} {CHUNK_IDS} but {len(spans)} {EVIDENCE_SPANS}")
-    yield from _evidence_violations(item, list(chunk_ids), list(spans), known_chunks)
+    else:
+        for name, values in lists.items():
+            if len(values) != len(chunk_ids):
+                yield Violation(item, Rule.EVIDENCE_LENGTH_MISMATCH,
+                                f"{len(chunk_ids)} {CHUNK_IDS} but {len(values)} {name}")
+    yield from _evidence_violations(item, chunk_ids, {
+        "an evidence span": lists[EVIDENCE_SPANS],
+        "a confidence": lists[CONFIDENCES],
+        "an extract prompt version": lists[EXTRACT_PROMPTS],
+    }, known_chunks)
