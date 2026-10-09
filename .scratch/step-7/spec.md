@@ -1,6 +1,6 @@
 # Step 7: Ontology as code
 
-Status: ready-for-agent
+Status: done (2026-10-07; tickets 01–04 in PRs #12–#15, ticket 05 in its own PR)
 Sources: RUNBOOK Step 7, docs/GRAPH-LAYER.md (Ontology), ADR-0004, docs/research/neo4j-driver-and-constraints.md, and the grilling session of 2026-10-07, whose decisions are in CLAUDE.md Decisions (Step 7 entries).
 
 ## Problem Statement

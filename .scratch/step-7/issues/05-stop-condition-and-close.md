@@ -4,11 +4,11 @@
 
 **Blocked by:** 04 (validate_graph() and `python -m graph.validate`)
 
-**Status:** ready-for-agent
+**Status:** done (2026-10-07)
 
-- [ ] The local Neo4j shows the constraints in `SHOW CONSTRAINTS` and the `:GraphMeta` node; `python -m graph.validate` exits 0 on it. Commands and output go in BUILD-LOG with the commit.
-- [ ] The broken-graph demonstration on `neo4j-test` exits 4 with the violation shown, and the instance is wiped afterwards.
-- [ ] RUNBOOK gains "Step 7 — outcome" naming the PRs and CI runs.
-- [ ] Ticket statuses 01–05 and the spec's status updated; OPEN-DECISIONS and CLAUDE.md Decisions checked for anything the tickets settled or raised.
-- [ ] BUILD-LOG entry dated, ending with "Next session starts with" (Step 8 via `/grill-with-docs`).
-- [ ] `uv run ruff check .` passes.
+- [x] The local Neo4j shows the constraints in `SHOW CONSTRAINTS` and the `:GraphMeta` node; `python -m graph.validate` exits 0 on it. Commands and output go in BUILD-LOG with the commit.
+- [x] The broken-graph demonstration on `neo4j-test` exits 4 with the violation shown, and the instance is wiped afterwards.
+- [x] RUNBOOK gains "Step 7 — outcome" naming the PRs and CI runs.
+- [x] Ticket statuses 01–05 and the spec's status updated; OPEN-DECISIONS and CLAUDE.md Decisions checked for anything the tickets settled or raised.
+- [x] BUILD-LOG entry dated, ending with "Next session starts with" (Step 8 via `/grill-with-docs`).
+- [x] `uv run ruff check .` passes.

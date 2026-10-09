@@ -168,6 +168,16 @@ Write the constraints: uniqueness on `Company.cik`, `Filing.accession_no`; and t
 
 **Stop condition:** schema module exists, database constraints applied, a `validate_graph()` function that fails loudly on any unevidenced node or edge.
 
+#### Step 7 — outcome (met 2026-10-07)
+
+Built as five tickets, each through its own PR; the CI runs named are the push-to-`main` runs after each merge (spec: `.scratch/step-7/spec.md`; decisions: ADR-0004 and CLAUDE.md Decisions, Step 7 entries):
+- **Ontology.** `graph/ontology.py` defines 14 labels (4 structural, 10 extracted) and 20 edge types with their endpoints and typed properties. The schema text for Step 8's prompt and its SHA-256 are generated from it (`ONTOLOGY_VERSION = 1`, hash `9f2687c2…57fb37`). PR #12, CI run 37627699575.
+- **Constraints.** `apply_constraints()` derives 14 uniqueness constraints from the ontology, reads `SHOW CONSTRAINTS` back, fails on a missing or extra one, and records the version and hash on one `:GraphMeta` node. A `neo4j-test` service runs locally and in CI. PR #13, CI run 37636783415.
+- **Write path.** `write_batch()` checks a whole batch against the ontology and evidence rules before any database call and writes nothing if anything fails, listing every violation. PR #14, CI run 37642667516.
+- **Validation.** `validate_graph()` and `python -m graph.validate` read the whole graph back and run ten checks, including that every extracted node and edge cites an existing chunk and that each Chunk node is in Postgres under the same filing. Exit 4 on any violation. PR #15, CI run 37649669109.
+
+The stop condition is met. On the local Neo4j, `apply_constraints()` created the 14 constraints and `:GraphMeta`, and `python -m graph.validate` exited 0 on the empty graph, with the Postgres check run. On `neo4j-test`, the valid test graph passed; deleting TSMC's `EVIDENCED_BY` edge exited 4 under `node_evidence`, and removing the `SUPPLIES` edge's `chunk_ids` exited 4 under `edge_properties`, each naming the item (BUILD-LOG, 2026-10-07, ticket 05). Every other kind of broken graph is one of the 17 broken-case tests in `tests/test_graph_validate.py`, each failing exactly its own check (PR #15). Ticket 05 also stopped the validator flooding stderr with Neo4j's "does not exist" notifications.
+
 ### Step 8. Extraction
 
 Prompt 1 in `prompts/extract.v1.md`. Feed it one chunk at a time along with the allowed labels and relation types. It returns candidate triples with `evidence_span` and `confidence`.
