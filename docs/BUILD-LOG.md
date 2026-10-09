@@ -1281,6 +1281,39 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 1. Merge this ticket's PR once CI is green.
 2. `/implement .scratch/step-8/issues/02-extract-filing.md`.
 
+## 2026-10-09 — Step 8 ticket 02: `extract_filing()`
+
+- **What changed.** A new `extract/` package turns a filing's chunks into checked write-path records. `extract_filing(filing, chunks, model, prompt)` sends each chunk on its own through the existing Anthropic client (`claude-sonnet-5-5`, effort `high`, `max_tokens` 8,000, structured output, one cache breakpoint after the system prompt). It then checks every candidate in code and merges per filing. Last, it runs `check_batch()` over the whole filing as a dry run. The returned `ExtractionRun` holds the records, rejections by reason, flags, conflicts, per-chunk failures, token usage and the batch-check result. Modules: `spans`, `keys`, `output_schema`, `filers`, `prompt`, `request`, `fields`, `check`, `merge`, `outcomes`, `pipeline`. Prompt v1 is `prompts/extract/v1.md`. With the current ontology its version is `extract/v1@6a0f055a`, and its system prompt is 3,306 cl100k tokens.
+- **Markdown escapes (user decision).** The parsed text prints `Co\., Ltd\.`. The span check drops those escapes on both sides, and the stored span is the chunk's own text. The first recorded replies showed the model copying the escapes into names (`Samsung Electronics Co\., Ltd\.`), so escapes are also dropped from every text value the model returns. Recorded in CLAUDE.md and the spec.
+- **Recorded replies.** Four real Sonnet replies for NVDA FY2026 chunks are stored under `tests/fixtures/anthropic/extract_*.json`, recorded with the user's yes: 0029 (a risk factor), 0123 (segment note), 0012 (suppliers and competitors) and 0089 (comprehensive income). The four calls cost about $0.17. Replayed through `extract_filing()`, they give 41 nodes and 62 edges, with no rejections, flags, failures or batch-check violations. Output tokens were 350, 5,033, 6,222 and 2,268. The suppliers reply used 78% of the 8,000-token cap, so ticket 03's full run should watch for `max_tokens` failures. All MetricValues and HAS_SEGMENT edges from tables came back `implied`.
+- **Judgement calls**, recorded in CLAUDE.md Decisions:
+  - `PERSISTS_AS` is left out of the output schema, since one chunk cannot evidence it.
+  - A MetricValue needs exactly one MEASURES subject in its own reply.
+  - The period in a MetricValue key is escaped but not normalized, as the spec writes `{period}`.
+  - The prompt-version hash covers the rendered system prompt, the user template and the output schema.
+  - Undefined properties are ignored.
+  - A reused local ID counts as `dangling_local_id`.
+  - Unknown all-caps references count as `unknown_filer_reference`.
+- **Tests first.** Each group failed before its code existed: spans and keys, the schema, prompt and request, the rules (one hand-broken reply per rejection reason, each leaving the rest of the chunk intact), merging and conflicts. The fixes from review were also test-first.
+- **Code review** (`mattpocock-skills:code-review`, both axes). Fixed:
+  - `merge` no longer appends to a list it was passed;
+  - `CheckedNode.properties` is frozen;
+  - every read of a local ID, type or reference goes through `fields`, so escapes are handled the same way everywhere;
+  - `Rejection.kind` is an enum;
+  - an escaped backslash keeps one backslash;
+  - a bad user-template placeholder fails when the prompt loads, not on each chunk;
+  - one chunk naming an item twice gives one entry and no conflict;
+  - a MetricValue whose subject was rejected gets `endpoint_node_rejected`;
+  - the metric period is no longer normalized;
+  - a recorded reply is now merged with another chunk in a test.
+
+  Kept: a name differing only in case across chunks is still a conflict (spec story 39 names "a name" as a single-valued property). Kept: the copied CIK table in `extract/filers.py`, which avoids importing edgartools; a test keeps it equal to `ingest.corpus.CIKS`.
+- **Evidence.** `uv run ruff check .` is clean. Full suite against the local Postgres: 1238 passed, 15 skipped (the Neo4j tests, which need `NEO4J_TEST_URI`, and the local-data tests; this worktree has no `data/`). All extract tests run offline under pytest-socket. CI result is on the PR.
+
+**Next session starts with**
+1. Merge this ticket's PR once CI is green.
+2. `/implement .scratch/step-8/issues/03-extract-run-command.md`.
+
 ---
 
 ## Findings worth telling

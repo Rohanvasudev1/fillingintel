@@ -1,0 +1,45 @@
+{
+  "recorded": "real API response, recorded by scripts/capture_extract_responses.py",
+  "chunk_id": "0001045810-26-000021:0089",
+  "prompt_version": "extract/v1@6a0f055a",
+  "api_ms": 17437.362709082663,
+  "response": {
+    "id": "msg_011Cfrg9XB2j5SUTi7a9bp7E",
+    "container": null,
+    "content": [
+      {
+        "signature": "CAQSng8KEAgSGAI4AUIIdGhpbmtpbmcSDAF2dNjigfJzxJdtYhoMiL4k6XBh9cFYv27VIjArHgDuINASwvNExejaH2CFikEdnkzlfWtsgMOKj+Vd/77VzIFIWa7pHaI5oOaOHRQquw4hbFNEcM4XpaNxQ1pTmVqsbrGEltKne0O59FkRM2v89nwHwQBi5Kwt1HhwQYRkxO3z9YTrKLnoBcj/1bC7Nap+hopizAm+EObW+4Gz7TvpuV+oNZZDQ8vlg/TzLJXKgj78hNrqUd4EcZvG+7doMEQpDpPOJ6cfEysQUJ7rS+wELT8L6VHad4IXCQdhC/k5LIKTevd4BMP24ibmu+GLSabJ/upSLgIux4id8RouMyIQM7IwhFnE8QtQbPhWguW0o5W5CZ6QBI+6NegQZOCSjmZwvhqEvMc/Yl2XAyONZEDHktgUzoXVGM5DB6+koix423DWvyqHI46P2hyAofZuKWT2EjyNTWrp14r88THq7rBpSQN7mUctYHKRRnpA6cObbDzFZisXI5b/v8hXHHXq5LAQTTSZkxUvVupCWHGJNOiUD1thkIX5ammwGyLNd6NxP46E5NCybfoNMvVysSY6il9wxMzbVeJku1wNuloUppvNVT3ek7qoVHv7jbEtq9Y5MAibuj4KKWBsaOMG3Lk0Ro8tPxP9PDUrKU7KS69vKR5nptMH+ejbCk9UcHpSE8Jdd6/Abvli/uEQt/i/MGqTnEdVuxk1FV2P852+sLIrQgquUtKLz7CFu7a5dmJtUttkK5UtRVGgLtaIv8h/orH8zZ8awm8LGvhN3lj0q86Upk2AdYlJhvE5g+ZRK2vP0WwtolD+Lr5RaHbqAD/waY4dtkrW9k2yt46jkzsoSJPFRJ81ANS/3jAh9ugYJ0KFq0nfO2+wonL2IBrMujlIiAElHyaBMgR/EcIqEMOs36KQIwuexGI7i6CwoV9CcXfvg1M3EZjPmUzpOc9NNKspRNxihdst1G2++aI+xmx7xtB2cV5ECpwhvkZP65PfadNGpGkPpaVhduG7elMTaEIuC+QjQxSViP4DbuNKGWeHH5NFRdQWmPlu9eT0fKcjMHvdpNrAWFCObN/isPcQrak7KrSVDytMGLSMw+HgKlfxI9qng2dBRhEVmMlrRwHT9wZgnsfpks+OwaW3vkUp2E0A6oiPxvkKb8IdO0jS6Syvu27xeDLJm7z+4I6qaXuVe+XJn1S3zgHsqY2R9YfzuPHmUcVJpawEC/PGKLvH9+cv07G9GR7JV9L9RyFFtkRIZF+ZbGd4oC3LmyNz5lEAQzaU+Jx98DxPWOjSMy+OcoVVw2MXK7zqRxPTWno1aJjmpFQQF6YqxL+l9WrgLuoSkyPTFofVzYMhQkDl2avY+RoRYgXuiBKEyPRVkLkVNNAQdX3lNGC1+8DuXhrXp+N5RHDGohbFKD8J0Jr196Ta9IyNv3TwKbu5Yeo8R6/9laKPcj9alAvvyU2FRzMxrfjAwDY5G9TliI5jbCNl5YQaa873Ke0UlFQ21pt5k0jid9QmYxMNXhz7xAIRvY2zT48+VDgxKrV2XkA3YWIIs0X6EYtX6fnkOB/fWB+Dns/OG9a+T6ZdG581hCCM+VBTVCEr76ckI0rpMg/clAA71cCBpEM8yahsxN/qu04tvHLuB281asGYxLiTrGjZPp43kyO0fzKR+ZF1RGL1eFWAkm36yBWOsjWnmm/LGo2VE5Lq/EBdtOo3XpvEXYbw14SanG6yJNaA8Jlzwr11HVb2sNUpR9Uba5n1iymOkON9oReTS+escNTWVZOqDqpA3jE/ucQ0/ymVnYcylfh8SH5zmlamPmnMF3DXTq8PDLtQ9xnVtUF/cEaoFvrmjaJXnxb+Vgv6sCqA1SFnc+CBkeaiQFa478i+M3wTHuw1OAA4xSuCg737YN0xB3brp+l6oOTiMsFent/L+Or9yxdfx1lyecu5FHbDrETbx3aJuTmwHJ2pk0rw8p01i67i89YsH1Pn8OhItlbao+FVgpj5w4RpdZHTRwH2/3ZLsUQ44k3NsZ7LyxwA3I+jL88AyLjyYWemZbtmU+VrtAY3ke4dqsTenmnRzHpAi3iBPjBEmBKSARF2GOx7Nxe4wDvjEgSHXsNB2nGowq1DIY06Cs6zAu4Vug86I/MJoPJYza8ZAgImkyuZ0uQfju8uFJjH3X7szqaeeqRkgBtN8aa/Dso2oMPpPWQ+4I1daEg9eVLxxIS9Bpl/MMmM88tHHbBmXl8akjE1NTneryn0joroBgltui7/vpvN/v10oVp0nK6vQfj/wVLHDfk3RP8cKCuupA8Rp8DSUWoduTgm601kpAGnkIl9Ja/y1d3L64SIaJlApTi9Jo2Swld9y2hGAA2/sUGTn/YH4QsNJxnFZWM2bLgQOakHUEM6Q6Y2pmbc/GBgs+ayNFx1/+QU4C6H3rstHvdtu9NlbsullD2/iw9TvfAyfkfYbVIrRs0yY7zamHNaOB0O+IYBB/rByK8wwSoreft/dt5Ytmidp2ZrrCZ+AX9ogo4xXBRHEJSs72AvoM5VWitL4F1J+hft/tep0LXrbxlYhLs+prg3ckSC8QNHAcedITIGOzDq1WSmy2kYAQ==",
+        "thinking": "",
+        "type": "thinking"
+      },
+      {
+        "citations": null,
+        "text": "{\"nodes\":[{\"id\":\"n1\",\"label\":\"MetricValue\",\"name\":\"Net income\",\"value\":120067,\"unit\":\"USD millions\",\"period\":\"FY2026\",\"evidence_span\":\"| Net income | $ | 120,067 | $ | 72,880 | $ | 29,760 |\",\"confidence\":\"implied\"},{\"id\":\"n2\",\"label\":\"MetricValue\",\"name\":\"Net income\",\"value\":72880,\"unit\":\"USD millions\",\"period\":\"FY2025\",\"evidence_span\":\"| Net income | $ | 120,067 | $ | 72,880 | $ | 29,760 |\",\"confidence\":\"implied\"},{\"id\":\"n3\",\"label\":\"MetricValue\",\"name\":\"Net income\",\"value\":29760,\"unit\":\"USD millions\",\"period\":\"FY2024\",\"evidence_span\":\"| Net income | $ | 120,067 | $ | 72,880 | $ | 29,760 |\",\"confidence\":\"implied\"},{\"id\":\"n4\",\"label\":\"MetricValue\",\"name\":\"Total comprehensive income\",\"value\":120217,\"unit\":\"USD millions\",\"period\":\"FY2026\",\"evidence_span\":\"| Total comprehensive income | $ | 120,217 | $ | 72,881 | $ | 29,830 |\",\"confidence\":\"implied\"},{\"id\":\"n5\",\"label\":\"MetricValue\",\"name\":\"Total comprehensive income\",\"value\":72881,\"unit\":\"USD millions\",\"period\":\"FY2025\",\"evidence_span\":\"| Total comprehensive income | $ | 120,217 | $ | 72,881 | $ | 29,830 |\",\"confidence\":\"implied\"},{\"id\":\"n6\",\"label\":\"MetricValue\",\"name\":\"Total comprehensive income\",\"value\":29830,\"unit\":\"USD millions\",\"period\":\"FY2024\",\"evidence_span\":\"| Total comprehensive income | $ | 120,217 | $ | 72,881 | $ | 29,830 |\",\"confidence\":\"implied\"}],\"triples\":[{\"start\":\"THIS_FILING\",\"type\":\"REPORTS\",\"end\":\"n1\",\"role\":null,\"stake\":null,\"evidence_span\":\"| Net income | $ | 120,067 | $ | 72,880 | $ | 29,760 |\",\"confidence\":\"implied\"},{\"start\":\"n1\",\"type\":\"MEASURES\",\"end\":\"FILER\",\"role\":null,\"stake\":null,\"evidence_span\":\"| Net income | $ | 120,067 | $ | 72,880 | $ | 29,760 |\",\"confidence\":\"implied\"},{\"start\":\"THIS_FILING\",\"type\":\"REPORTS\",\"end\":\"n2\",\"role\":null,\"stake\":null,\"evidence_span\":\"| Net income | $ | 120,067 | $ | 72,880 | $ | 29,760 |\",\"confidence\":\"implied\"},{\"start\":\"n2\",\"type\":\"MEASURES\",\"end\":\"FILER\",\"role\":null,\"stake\":null,\"evidence_span\":\"| Net income | $ | 120,067 | $ | 72,880 | $ | 29,760 |\",\"confidence\":\"implied\"},{\"start\":\"THIS_FILING\",\"type\":\"REPORTS\",\"end\":\"n3\",\"role\":null,\"stake\":null,\"evidence_span\":\"| Net income | $ | 120,067 | $ | 72,880 | $ | 29,760 |\",\"confidence\":\"implied\"},{\"start\":\"n3\",\"type\":\"MEASURES\",\"end\":\"FILER\",\"role\":null,\"stake\":null,\"evidence_span\":\"| Net income | $ | 120,067 | $ | 72,880 | $ | 29,760 |\",\"confidence\":\"implied\"},{\"start\":\"THIS_FILING\",\"type\":\"REPORTS\",\"end\":\"n4\",\"role\":null,\"stake\":null,\"evidence_span\":\"| Total comprehensive income | $ | 120,217 | $ | 72,881 | $ | 29,830 |\",\"confidence\":\"implied\"},{\"start\":\"n4\",\"type\":\"MEASURES\",\"end\":\"FILER\",\"role\":null,\"stake\":null,\"evidence_span\":\"| Total comprehensive income | $ | 120,217 | $ | 72,881 | $ | 29,830 |\",\"confidence\":\"implied\"},{\"start\":\"THIS_FILING\",\"type\":\"REPORTS\",\"end\":\"n5\",\"role\":null,\"stake\":null,\"evidence_span\":\"| Total comprehensive income | $ | 120,217 | $ | 72,881 | $ | 29,830 |\",\"confidence\":\"implied\"},{\"start\":\"n5\",\"type\":\"MEASURES\",\"end\":\"FILER\",\"role\":null,\"stake\":null,\"evidence_span\":\"| Total comprehensive income | $ | 120,217 | $ | 72,881 | $ | 29,830 |\",\"confidence\":\"implied\"},{\"start\":\"THIS_FILING\",\"type\":\"REPORTS\",\"end\":\"n6\",\"role\":null,\"stake\":null,\"evidence_span\":\"| Total comprehensive income | $ | 120,217 | $ | 72,881 | $ | 29,830 |\",\"confidence\":\"implied\"},{\"start\":\"n6\",\"type\":\"MEASURES\",\"end\":\"FILER\",\"role\":null,\"stake\":null,\"evidence_span\":\"| Total comprehensive income | $ | 120,217 | $ | 72,881 | $ | 29,830 |\",\"confidence\":\"implied\"}]}",
+        "type": "text"
+      }
+    ],
+    "diagnostics": null,
+    "model": "claude-sonnet-5-5",
+    "role": "assistant",
+    "stop_details": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 6837,
+      "inference_geo": "global",
+      "input_tokens": 560,
+      "output_tokens": 2268,
+      "output_tokens_details": {
+        "thinking_tokens": 583
+      },
+      "server_tool_use": null,
+      "service_tier": "standard"
+    }
+  }
+}

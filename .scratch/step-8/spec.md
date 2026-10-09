@@ -157,8 +157,8 @@ The stop condition is met when:
   - RiskFactor: `{accession_no}:{norm(title)}`.
   - MetricValue: `{accession_no}:{subject key}:{norm(concept)}:{period}`, where the subject key is the CIK for a filer or the built key for a Segment or Product.
 
-  The exact separator escaping must make keys unambiguous; a test covers a name containing the separator.
-- **Span check.** Both sides go through NFKC, curly single and double quotes to ASCII, en and em dashes to `-`, and whitespace collapsed to one space and trimmed. Then a case-sensitive substring test. The span check uses the text `resolve()` returns.
+  The exact separator escaping must make keys unambiguous; a test covers a name containing the separator. Implemented (ticket 02): `%` and `:` in names, concepts and periods are percent-encoded; a subject key keeps its own separators, which stays unambiguous because the accession number before it has none and the two parts after it are escaped. The period is escaped but not normalized.
+- **Span check.** Both sides go through NFKC, curly single and double quotes to ASCII, en and em dashes to `-`, and whitespace collapsed to one space and trimmed. Then a case-sensitive substring test. The span check uses the text `resolve()` returns. Amended 2026-10-09 (user decision, ticket 02): markdown escapes (a backslash before ASCII punctuation) are dropped on both sides too, and from every text value the model returns, so names and keys never carry them. A match stores the chunk's own text for the span.
 - **Rejection reasons.** These are a closed enum, each counted:
   - unknown label;
   - unknown edge type;
@@ -206,7 +206,7 @@ The stop condition is met when:
   These are model replies, not filings; the rule that fixtures are real filings concerns filing text, and the filing text here is real.
 - **Span normalization.** Tests use quotes taken from the fixture chunks: curly quotes, em dashes and line-wrapped whitespace must match, a changed word or changed case must not.
 - **Conflicts.** Two chunks give different stakes or names at different confidence levels, covering winner, tie to latest, and the count.
-- **Schema derivation.** The generated schema stays inside the structured-output limits and lists exactly the ontology's labels and edge types.
+- **Schema derivation.** The generated schema stays inside the structured-output limits and lists exactly the ontology's labels and edge types. Amended 2026-10-09 (ticket 02): exactly the extracted labels and the extracted edge types one chunk can evidence; `PERSISTS_AS` is left out (Step 10).
 - **Ontology version 2.** These extend `tests/test_ontology.py`, `tests/test_graph_batch.py`, `tests/test_graph_write.py` and `tests/test_graph_validate.py`. New broken cases each break one thing: a missing `confidences` list, a list of the wrong length, a confidence outside the enum, an `EVIDENCED_BY` without `extract_prompt`.
 - **Review.** Driven with injected `ask`, `out` and a fake clock, as `eval.review`'s tests are. Tests cover:
   - the seeded stratified sample, with at least one per type present;
