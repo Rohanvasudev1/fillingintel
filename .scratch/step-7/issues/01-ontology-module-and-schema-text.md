@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** done (2026-10-07; PR pending)
+**Status:** done (2026-10-07, PR #12)
 
 - [x] The ontology lists the 4 structural labels (Company, Filing, Period, Chunk) and the 10 extracted labels, each with kind, keys, required properties and types, and a description.
 - [x] The ontology lists the 20 edge types, each with kind, allowed start and end labels, required properties (`role` on `INVOLVED_IN` and `HOLDS_ROLE_AT`; optional `stake` on `OWNS`) and a description. `COMPETES_WITH` is marked symmetric.

@@ -9,6 +9,7 @@ The test marker node is not an ontology label, so the `unmarked` fixture
 removes it for each test and puts it back afterwards; validate_graph() has no
 test-only exclusion.
 """
+import logging
 from contextlib import nullcontext
 
 import psycopg
@@ -97,6 +98,14 @@ def test_the_valid_test_graph_passes(valid_graph):
 
 def test_an_empty_graph_with_graph_meta_passes(empty_graph):
     assert validate_graph(empty_graph).ok
+
+
+def test_validation_logs_no_server_notifications(empty_graph, caplog):
+    # An empty graph lacks every label the checks name: ~700 warnings per run before.
+    with caplog.at_level(logging.INFO, logger="neo4j.notifications"):
+        validate_graph(empty_graph)
+
+    assert not [r for r in caplog.records if r.name == "neo4j.notifications"]
 
 
 def test_the_report_lists_every_check_it_ran(valid_graph):

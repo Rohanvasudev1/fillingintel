@@ -1238,6 +1238,29 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 **Next session starts with**
 1. Merge this ticket's PR. Next is ticket 05 (stop condition and close): apply the constraints to the local Neo4j, run `python -m graph.validate` there, show it failing on broken graphs, and record the run here.
 
+## 2026-10-07 — Step 7 ticket 05: stop condition and close
+
+- **Local Neo4j (the real graph), at 275effc.** Before anything, it held 0 nodes, 0 edges, 0 constraints and 0 non-lookup indexes.
+  1. `uv run --env-file .env python -m graph.validate` exited 4: `graph_meta: 1 failed: no :GraphMeta node; run apply_constraints() before using the graph`. Every other check was ok, and the Postgres check ran.
+  2. `apply_constraints(driver_from_env())` succeeded. `SHOW CONSTRAINTS` lists 14 UNIQUENESS constraints: `agreement_key_unique`, `chunk_chunk_id_unique`, `company_cik_unique`, `facility_key_unique`, `filing_accession_no_unique`, `legal_proceeding_key_unique`, `metric_value_key_unique`, `organization_key_unique`, `period_cik_fiscal_period_unique` (on `cik`, `fiscal_period`), `person_key_unique`, `product_key_unique`, `regulation_key_unique`, `risk_factor_key_unique` and `segment_key_unique`. `:GraphMeta` is `{ontology_version: 1, schema_sha256: 9f2687c2aa33872bdf77b64c3b0d80b773cdeac7f7b67dc981892f9bcc57fb37}`.
+  3. `python -m graph.validate` exited 0 with all ten checks ok, `Postgres check: ran` and `The graph is valid.`
+
+  Runs 1 and 3 also printed 702 Neo4j notification warnings (700 KB) to stderr, one per check query naming a label, edge type or property the graph lacks. See the fix below. After the fix, run 3 at 275effc+dirty gave the same report and exit 0, with an empty stderr.
+- **Broken graphs on `neo4j-test`.** Script: `.scratch/step-7/broken_graph_demo.py`, committed as a record. Run it with `PYTHONPATH=. uv run --env-file .env python .scratch/step-7/broken_graph_demo.py`. It reads the eight cited chunks' text and sections from the local Postgres and builds the shared test graph from `tests/graph_test_data.py`. Before each run it wipes the instance, removes the test marker (an unknown label to the validator, as in the tests), applies the constraints and writes the graph. It then runs `python -m graph.validate` with `NEO4J_*` pointed at `neo4j-test`, with the final code (275effc+dirty):
+  - valid test graph: exit 0;
+  - `MATCH (:Organization {key: 'org:tsmc'})-[e:EVIDENCED_BY]->() DELETE e`: exit 4, `node_evidence: 1 failed: Organization(key='org:tsmc'): an extracted node needs an EVIDENCED_BY edge`;
+  - `MATCH ()-[r:SUPPLIES]->() REMOVE r.chunk_ids, r.evidence_spans`: exit 4, `edge_properties: 1 failed: Organization(key='org:tsmc')-[SUPPLIES]->Company(cik='1045810'): chunk_ids is missing; evidence_spans is missing`. That this lands under `edge_properties` rather than `edge_evidence` is by design: both are required properties of an extracted edge, so their absence fails the property check, and `edge_evidence` checks the lists that are present (known chunks, one span each).
+
+  Afterwards it printed `neo4j-test wiped: 1 node(s) left (the test marker)`. The other broken kinds are the 17 broken-case tests from ticket 04.
+- **Fix: notification flood.** `validate_graph()`'s read session now sets `notifications_disabled_classifications=[UNRECOGNIZED]`, which drops only the "does not exist" notifications; deprecation and performance ones still log. Test first: `test_validation_logs_no_server_notifications` failed with the warnings in `caplog`, then passed. My first version turned all notifications off; the Spec review pointed out that this would hide deprecations too, so I narrowed it.
+- **Records.** RUNBOOK gains "Step 7 — outcome". Ticket statuses 01–05 and the spec's status are done, and the boxes of tickets 02–04 are ticked: each BUILD-LOG entry above records its tests, review and CI. CLAUDE.md Decisions gains a validator line (the marker stays a test concern; the notification filter) and corrects `NEO4J_URI` to `NEO4J_TEST_URI` in the Step 7 tests line. OPEN-DECISIONS: checked; the tickets settled nothing there and raised nothing new. The Step 8 rewrite question stays open.
+- **Code review** (`mattpocock-skills:code-review`, both axes). Standards: no hard violations. Fixed: the test now matches only the `neo4j.notifications` logger, the demo uses `EXIT_OK` and `EXIT_VIOLATIONS`, and a duplicated comment is gone. Kept: the demo imports test helpers, since it exists to show the test graph outside pytest. Spec: fixed the notification scope, RUNBOOK wording (push-to-`main` runs, the 17 broken-case tests), and the ticket box and spec status that claimed this PR before it existed. Recorded here: the commit and code state of each run, the marker removal, and why the `SUPPLIES` break shows under `edge_properties`.
+- **Evidence.** `uv run ruff check .` is clean. Full suite against the local `neo4j-test` and Postgres: 1447 passed, 1 skipped (the documented pointer-section skip), with `data/` linked in for the run.
+
+**Next session starts with**
+1. Merge this ticket's PR. Step 7 is closed.
+2. Step 8 (extraction), starting with `/grill-with-docs`. The rewrite question in OPEN-DECISIONS (does a lower-confidence rewrite replace a higher-confidence value?) belongs to that grilling.
+
 ---
 
 ## Findings worth telling
