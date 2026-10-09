@@ -39,6 +39,7 @@ from opentelemetry.util.types import AttributeValue
 
 from ingest.voyage import QUERY_INPUT, Embedding
 from retrieve.answer import Answer
+from retrieve.answer_model import TokenUsage
 from retrieve.arm import RetrievedChunk
 from retrieve.question_filter import QuestionFilter
 
@@ -239,14 +240,14 @@ def generation_attributes(answer: Answer,
     if answer.stop_reason is not None:
         attributes[SpanAttributes.LLM_FINISH_REASON] = answer.stop_reason
     if not answer.from_cache:
-        attributes.update(_token_counts(answer))
+        attributes.update(token_count_attributes(answer.usage))
     if messages is not None:
         attributes.update(_message_attributes(answer, messages))
     return attributes
 
 
-def _token_counts(answer: Answer) -> dict[str, AttributeValue]:
-    usage = answer.usage
+def token_count_attributes(usage: TokenUsage) -> dict[str, AttributeValue]:
+    """A call's reported token counts, the prompt count including cache reads and writes."""
     prompt = (usage.input_tokens + usage.cache_read_input_tokens
               + usage.cache_creation_input_tokens)
     return {
@@ -261,12 +262,21 @@ def _token_counts(answer: Answer) -> dict[str, AttributeValue]:
 
 def _message_attributes(answer: Answer, messages: tuple[str, str]) -> dict[str, AttributeValue]:
     system, user = messages
-    attributes: dict[str, AttributeValue] = {
+    return {
         SpanAttributes.OUTPUT_VALUE: answer.text,
         SpanAttributes.OUTPUT_MIME_TYPE: _TEXT,
+        **message_attributes(system, user, answer.raw_text),
     }
+
+
+def message_attributes(system: str, user: str, assistant: str) -> dict[str, AttributeValue]:
+    """The system and user messages sent and the assistant's reply, as OpenInference messages.
+
+    Only for spans recorded with text capture on.
+    """
+    attributes: dict[str, AttributeValue] = {}
     inputs = (("system", system), ("user", user))
-    outputs = (("assistant", answer.raw_text),)
+    outputs = (("assistant", assistant),)
     for key, items in ((SpanAttributes.LLM_INPUT_MESSAGES, inputs),
                        (SpanAttributes.LLM_OUTPUT_MESSAGES, outputs)):
         for i, (role, content) in enumerate(items):

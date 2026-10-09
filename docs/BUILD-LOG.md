@@ -1316,6 +1316,44 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 
 ---
 
+## 2026-10-09 — Step 8 ticket 03: `python -m extract.run`
+
+- **What changed.** `python -m extract.run --accession <no> [--max-cost USD]` extracts one filing. It reads the filing and its chunk texts from Postgres, prints a cost estimate, runs `extract_filing()` 4 calls at a time, and writes `data/extract/{accession}-run{N}.jsonl` (gitignored) and `benchmarks/extraction/{accession}-run{N}.json`. New modules: `extract/run.py`, `extract/report.py`, `extract/estimate.py`, `extract/tracing.py`. Other changes:
+  - `extract_filing()` takes `workers`; each call runs in a copy of the caller's context, and the result is the same as one at a time.
+  - `ingest/store.py` gains `get_filing_summary()` and `filing_chunk_texts()`. The second uses the same SQL expression as `resolve()`, and a test checks the texts match.
+  - `CachedAnswerModel.contains()` lets the estimate count only calls the cache will not answer, so a rerun estimates $0.
+  - `extract/` is in `git_state()`'s dirty list.
+- **Exit codes.** 0 complete; 2 bad arguments; 3 could not run (missing `ANTHROPIC_API_KEY` or `DATABASE_URL`, `ANTHROPIC_BASE_URL` set, Postgres unreachable, unknown accession, an unpriced model, estimate over the cap, a cache or file error); 4 a failed chunk or a `check_batch()` violation, with the report's status `incomplete`.
+- **Prices.** `retrieve/pricing.py` now holds dated tables. `TABLE_2026_10_05` is unchanged and stays the default, so past costs do not move. `TABLE_2026_10_09` has Sonnet 5.5 cache reads at $0.10 per MTok and is used by extraction. The report records the table and its date.
+- **Estimate.** cl100k counts × 1.3 for input. Output is assumed at 2,500 tokens a call, the research note's figure with thinking. The first call on each worker is priced as a cache write and later calls as reads. Dry run on the NVDA FY2026 10-K (`--max-cost 0`, no call made): 132 chunks, estimate $3.63.
+- **Report.** Commit, prompt version and hashes, model, effort, `max_tokens`, ontology version, chunk count, candidates, nodes, edges, rejections (count, rate, by reason, up to 3 examples each), flags, conflicts, failed chunks, violations, calls made and replayed, tokens (input, cache read, cache write, output), `cost_usd` over every reply used and `cost_this_run_usd` over fresh calls only, and the estimate. Each node and edge line in the candidates file carries an `item` string matching the flags' `item`, for ticket 04's review tool.
+- **Tracing.** One CHAIN span per run, and an LLM span per chunk call with model, settings, prompt version, chunk ID, cache hit and cost. Token counts appear only on calls actually made. Chunk and reply text appear only under `FILINGINTEL_TRACE_TEXT=true`. `retrieve/tracing.py` now exposes `token_count_attributes()` and `message_attributes()` for this; answer spans are unchanged.
+- **Tests first.** Pricing, provenance, estimate, concurrency and command tests failed before their code existed. The command tests replay ticket 02's four recorded replies through a counting fake behind the real response cache, over a throwaway schema. A cached rerun makes zero calls.
+- **Code review** (`mattpocock-skills:code-review`, both axes plus SQL). The new queries are parameterized and served by `UNIQUE (accession_no, ordinal)` and the filings primary key. Fixed:
+  - ValueErrors (an unpriced model, a bad chunk list) and a run-number OSError no longer escape as tracebacks; they exit 3;
+  - a failed report write removes the candidates file;
+  - the report is written with mode `x`, like the candidates file;
+  - an `item` field on node and edge lines;
+  - a rejection rate;
+  - `RunStatus` enum;
+  - explicit model, effort and `max_tokens` on `RunInfo`;
+  - an `Extract` Protocol;
+  - the estimate built from sums.
+
+  Kept, as judgement calls:
+  - `FilingSummary` in `ingest/store.py` repeats `FilingInfo`'s fields, so `ingest` need not import `extract`;
+  - only Anthropic costs take a table argument, since nothing else has a new price;
+  - `substr()` reads the filing text once per chunk row, which is fine at 132 chunks.
+- **Found in passing.** The agent shell sets `ANTHROPIC_BASE_URL`, so the guard refuses there; the dry run used `env -u ANTHROPIC_BASE_URL`. `.env` does not set it.
+- **Evidence.** `uv run ruff check .` is clean. Full suite against the local Postgres: 1270 passed, 15 skipped (Neo4j tests without `NEO4J_TEST_URI`, and local-data tests). CI result is on the PR.
+
+**Next session starts with**
+1. Merge this ticket's PR once CI is green.
+2. The first real run, from the main checkout so it uses the shared response cache (about $3.63, needs the user's yes): `uv run --env-file .env python -m extract.run --accession 0001045810-26-000021`. Watch for `max_tokens` failures (ticket 02 saw a reply use 78% of the cap).
+3. `/implement .scratch/step-8/issues/04-extract-review-command.md`.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.

@@ -9,8 +9,8 @@ _GIT_TIMEOUT_SECONDS = 10
 # Untracked files here change what the code does (a new module); elsewhere they
 # are scratch output (.coverage, spikes/) and do not make a run "dirty".
 _CODE_PATHS = (
-    "ingest", "db", "eval", "retrieve", "prompts", "graph", "tests", "scripts", "pyproject.toml",
-    "uv.lock",
+    "ingest", "db", "eval", "retrieve", "prompts", "graph", "extract", "tests", "scripts",
+    "pyproject.toml", "uv.lock",
 )
 
 

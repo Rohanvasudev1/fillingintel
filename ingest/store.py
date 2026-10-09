@@ -76,6 +76,18 @@ _RESOLVE = cast(
     f"SELECT {_CHUNK_TEXT} FROM chunks c JOIN filings f ON f.accession_no = c.accession_no"
     " WHERE c.chunk_id = %s",
 )
+# The same text resolve() returns, for every chunk of one filing; the
+# (accession_no, ordinal) unique index serves the filter and the order.
+_FILING_CHUNK_TEXTS = cast(
+    LiteralString,
+    f"SELECT c.chunk_id, c.section, {_CHUNK_TEXT}"
+    " FROM chunks c JOIN filings f ON f.accession_no = c.accession_no"
+    " WHERE c.accession_no = %s ORDER BY c.ordinal",
+)
+_FILING_SUMMARY: LiteralString = (
+    "SELECT accession_no, cik, company_name, form_type, fiscal_period FROM filings"
+    " WHERE accession_no = %s"
+)
 _STORED_OFFSETS: LiteralString = (
     "SELECT chunk_id, char_start, char_end FROM chunks WHERE accession_no = %s ORDER BY ordinal"
 )
@@ -177,6 +189,22 @@ class FilingRow(NamedTuple):
     form_type: str
     fiscal_period: str
     report_date: date
+
+
+class FilingSummary(NamedTuple):
+    accession_no: str
+    cik: str
+    company_name: str
+    form_type: str
+    fiscal_period: str
+
+
+class ChunkText(NamedTuple):
+    """A chunk's ID, section and the text ``resolve()`` returns for it."""
+
+    chunk_id: str
+    section: str
+    text: str
 
 
 class EmbeddingGaps(NamedTuple):
@@ -317,6 +345,17 @@ def resolve(conn: psycopg.Connection, chunk_id: str) -> str:
     if row is None:
         raise ChunkNotFound(chunk_id)
     return row[0]
+
+
+def get_filing_summary(conn: psycopg.Connection, accession_no: str) -> FilingSummary | None:
+    """The stored filing's metadata, or None when *accession_no* is not loaded."""
+    row = conn.execute(_FILING_SUMMARY, (accession_no,)).fetchone()
+    return None if row is None else FilingSummary(*row)
+
+
+def filing_chunk_texts(conn: psycopg.Connection, accession_no: str) -> list[ChunkText]:
+    """Every stored chunk of one filing in ordinal order, with its ``resolve()`` text."""
+    return [ChunkText(*row) for row in conn.execute(_FILING_CHUNK_TEXTS, (accession_no,))]
 
 
 def stored_offsets(conn: psycopg.Connection, accession_no: str) -> list[tuple[str, int, int]]:
