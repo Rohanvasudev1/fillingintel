@@ -1361,6 +1361,23 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 
 ---
 
+## 2026-10-09 — Step 8 ticket 04: `python -m extract.review`
+
+- **What.** The review tool, in four modules: `extract/review_sample.py` reads the candidates file and draws the seeded, stratified sample; `extract/review_round.py` reads and appends round files and builds the summary (Wilson 95% interval); `extract/review_display.py` prints triples, chunks and the summary; `extract/review.py` runs the round and the command. Round files go to `benchmarks/extraction/{accession_no}-round{N}.jsonl`, one line per judgment, skip and miss-check chunk, closed by a summary line.
+- **Choices beyond the ticket** (recorded as a spec amendment): one evidence entry per edge, drawn with the seed, is what gets judged; a slot whose type runs out after skips draws from any type and records its slot type; skips are not excluded from later rounds; `--run` picks a run; a round resumes only on the candidates file it started on (checked by SHA-256).
+- **Sample for round 1** (loaded from the real run 1 file, nothing judged): 571 edges, quotas MEASURES 8, REPORTS 8, DISCLOSES 3, and 1 for each of the other 11 types.
+- **Code review** (`mattpocock-skills:code-review`). Spec: no gaps; the interface and the choices above are now in the spec. Standards: no hard violations. Fixed: round-file lines are checked for their fields (a hand-edited line gives exit 3, not a traceback); the 15-second threshold is one constant; the numbered-file scan, `Out` alias and timestamp are shared; the reason and note prompts say Ctrl-D quits. Kept: `ReviewEdge` holds both the endpoint objects (written to the round file) and their item names (for flags and display).
+- **Evidence.** `uv run ruff check .` is clean; 24 review tests, each shown failing first. Full suite against the local Postgres: 1294 passed, 15 skipped. CI result is on the PR.
+
+**Next session starts with**
+1. Merge this ticket's PR once CI is green.
+2. The user runs review round 1 on NVDA run 1 (agents never run it). From the main checkout, after merging:
+   `uv run --env-file .env python -m extract.review --reviewer "<name>" --accession 0001045810-26-000021`
+   Pass bar: 26 of 30. Check the four operating-income conflicts noted in ticket 03 if they come up.
+3. Then `/implement .scratch/step-8/issues/05-stop-condition-and-close.md`.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.
