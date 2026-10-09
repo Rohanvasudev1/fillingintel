@@ -1,4 +1,4 @@
-"""The shared valid test graph (Step 7).
+"""The shared valid test graph (Step 7; ontology version 2 since Step 8).
 
 Structural nodes for the NVIDIA FY2026 and AMD FY2025 10-K fixtures, Chunk
 nodes with the real chunk IDs the chunker gives those filings, and
@@ -6,7 +6,9 @@ hand-written extracted nodes and edges that quote them: TSMC as NVIDIA's
 foundry, the Compute & Networking segment, Jen-Hsun Huang's two roles, export
 controls, the share of revenue from the largest direct customer, and AMD
 naming NVIDIA as a competitor. Every quote is checked to be a substring of its
-chunk's text, so a bad quote or a chunker change fails the fixture.
+chunk's text, so a bad quote or a chunker change fails the fixture. Every
+piece of evidence carries a confidence level and the prompt version
+TEST_PROMPT; the Regulation node's name is only implied by its quote.
 """
 from __future__ import annotations
 
@@ -35,6 +37,8 @@ CUSTOMERS_CHUNK = _chunk(36)
 MDA_SEGMENTS_CHUNK = _chunk(61)
 MDA_CUSTOMERS_CHUNK = _chunk(67)
 AMD_COMPETITION_CHUNK = _chunk(14, AMD_10K)
+
+TEST_PROMPT = "extract/v1@0123abcd"
 
 QUOTES = {
     SEGMENTS_CHUNK: "The Compute & Networking segment includes our Data Center accelerated "
@@ -65,14 +69,23 @@ TOP_CUSTOMER_SHARE = NodeRef.of(
 )
 
 
-def evidence(chunk_id: str) -> Evidence:
+def evidence(
+    chunk_id: str, confidence: str = "stated", prompt: str = TEST_PROMPT,
+) -> Evidence:
     """The node evidence for *chunk_id*, quoting QUOTES."""
-    return Evidence(chunk_id, QUOTES[chunk_id])
+    return Evidence(chunk_id, QUOTES[chunk_id], confidence, prompt)
 
 
-def edge_evidence(*chunk_ids: str) -> dict[str, list[str]]:
-    """chunk_ids and evidence_spans properties for an extracted edge, quoting QUOTES."""
-    return {"chunk_ids": list(chunk_ids), "evidence_spans": [QUOTES[c] for c in chunk_ids]}
+def edge_evidence(
+    *chunk_ids: str, confidence: str = "stated", prompt: str = TEST_PROMPT,
+) -> dict[str, list[str]]:
+    """The four evidence lists of an extracted edge, quoting QUOTES."""
+    return {
+        "chunk_ids": list(chunk_ids),
+        "evidence_spans": [QUOTES[c] for c in chunk_ids],
+        "confidences": [confidence] * len(chunk_ids),
+        "extract_prompts": [prompt] * len(chunk_ids),
+    }
 
 
 def _accession_no(chunk_id: str) -> str:
@@ -118,7 +131,7 @@ def _extracted_nodes() -> tuple[NodeRecord, ...]:
                    (evidence(OFFICERS_CHUNK),)),
         NodeRecord("Regulation", {"key": EXPORT_CONTROLS.key_dict()["key"],
                                   "name": "U.S. export controls"},
-                   (evidence(EXPORT_CHUNK),)),
+                   (evidence(EXPORT_CHUNK, confidence="implied"),)),
         NodeRecord("MetricValue", {
             "key": TOP_CUSTOMER_SHARE.key_dict()["key"],
             "concept": "share of total revenue from the largest direct customer",

@@ -17,6 +17,7 @@ import pytest
 
 from graph.connection import DATABASE
 from graph.constraints import apply_constraints
+from graph.ontology import ONTOLOGY_VERSION
 from graph.validate import (
     EXAMPLE_LIMIT,
     EXIT_OK,
@@ -37,6 +38,7 @@ from tests.graph_test_data import (
     NVDA_10K,
     NVDA_CIK,
     SEGMENTS_CHUNK,
+    TEST_PROMPT,
 )
 from tests.neo4j_fixtures import MARKER_LABEL, TEST_ENV_PREFIX
 
@@ -139,7 +141,7 @@ BROKEN = {
     "disallowed endpoint": (
         "MATCH (p:Period {cik: $cik}), (o:Organization) "
         "CREATE (p)-[:SUPPLIES {chunk_ids: [$chunk], evidence_spans: ['TSMC'], "
-        "ontology_version: 1}]->(o)",
+        "confidences: ['stated'], extract_prompts: [$prompt], ontology_version: $version}]->(o)",
         Check.ENDPOINTS,
     ),
     "missing property": (
@@ -166,6 +168,43 @@ BROKEN = {
         "MATCH ()-[r:SUPPLIES]->() SET r.evidence_spans = r.evidence_spans + ['TSMC']",
         Check.EDGE_EVIDENCE,
     ),
+    "missing confidences": (
+        "MATCH ()-[r:SUPPLIES]->() REMOVE r.confidences", Check.EDGE_PROPERTIES,
+    ),
+    "missing extract_prompts": (
+        "MATCH ()-[r:SUPPLIES]->() REMOVE r.extract_prompts", Check.EDGE_PROPERTIES,
+    ),
+    "confidences and chunks of different lengths": (
+        "MATCH ()-[r:SUPPLIES]->() SET r.confidences = r.confidences + ['stated']",
+        Check.EDGE_EVIDENCE,
+    ),
+    "extract_prompts and chunks of different lengths": (
+        "MATCH ()-[r:SUPPLIES]->() SET r.extract_prompts = []", Check.EDGE_EVIDENCE,
+    ),
+    "edge confidence outside the enum": (
+        "MATCH ()-[r:SUPPLIES]->() SET r.confidences = ['certain']", Check.EDGE_PROPERTIES,
+    ),
+    "node evidence confidence outside the enum": (
+        "MATCH (:Regulation)-[e:EVIDENCED_BY]->() SET e.confidence = 'certain'",
+        Check.EDGE_PROPERTIES,
+    ),
+    "EVIDENCED_BY without confidence": (
+        "MATCH (:Regulation)-[e:EVIDENCED_BY]->() REMOVE e.confidence", Check.EDGE_PROPERTIES,
+    ),
+    "EVIDENCED_BY without extract_prompt": (
+        "MATCH (:Regulation)-[e:EVIDENCED_BY]->() REMOVE e.extract_prompt",
+        Check.EDGE_PROPERTIES,
+    ),
+    "blank prompt version on node evidence": (
+        "MATCH (:Regulation)-[e:EVIDENCED_BY]->() SET e.extract_prompt = ' '",
+        Check.EDGE_PROPERTIES,
+    ),
+    "blank confidence on an edge": (
+        "MATCH ()-[r:SUPPLIES]->() SET r.confidences = ['']", Check.EDGE_EVIDENCE,
+    ),
+    "blank prompt version on an edge": (
+        "MATCH ()-[r:SUPPLIES]->() SET r.extract_prompts = ['']", Check.EDGE_EVIDENCE,
+    ),
     "Filing without FILED": (
         "MATCH ()-[r:FILED]->(:Filing {accession_no: $amd}) DELETE r", Check.STRUCTURE,
     ),
@@ -178,7 +217,7 @@ BROKEN = {
     "Chunk PART_OF another filing": (
         "MATCH (c:Chunk {chunk_id: $chunk})-[r:PART_OF]->() DELETE r "
         "WITH c MATCH (f:Filing {accession_no: $amd}) "
-        "CREATE (c)-[:PART_OF {ontology_version: 1}]->(f)",
+        "CREATE (c)-[:PART_OF {ontology_version: $version}]->(f)",
         Check.STRUCTURE,
     ),
     "wrong GraphMeta": (
@@ -193,7 +232,7 @@ BROKEN = {
 @pytest.mark.parametrize("query, check", BROKEN.values(), ids=BROKEN.keys())
 def test_each_broken_case_fails_exactly_its_check(valid_graph, query, check):
     _run(valid_graph, query, cik=NVDA_CIK, chunk=SEGMENTS_CHUNK, unknown=UNKNOWN_CHUNK,
-         amd=AMD_10K)
+         amd=AMD_10K, prompt=TEST_PROMPT, version=ONTOLOGY_VERSION)
 
     assert _failures(valid_graph) == {check: 1}
 
@@ -202,8 +241,8 @@ def test_a_chunk_unknown_to_postgres_fails_the_postgres_check(valid_graph, postg
     _run(valid_graph,
          "MATCH (f:Filing {accession_no: $nvda}) "
          "CREATE (:Chunk {chunk_id: $unknown, accession_no: $nvda, section: 'item_1', "
-         "ontology_version: 1})-[:PART_OF {ontology_version: 1}]->(f)",
-         nvda=NVDA_10K, unknown=UNKNOWN_CHUNK)
+         "ontology_version: $version})-[:PART_OF {ontology_version: $version}]->(f)",
+         nvda=NVDA_10K, unknown=UNKNOWN_CHUNK, version=ONTOLOGY_VERSION)
 
     assert _failures(valid_graph) == {}
     assert _failures(valid_graph, postgres) == {Check.POSTGRES: 1}
@@ -214,12 +253,13 @@ def test_a_chunk_unknown_to_postgres_fails_the_postgres_check(valid_graph, postg
 MOVE_CHUNK_TO_AMD = (
     "MATCH (c:Chunk {chunk_id: $chunk})-[r:PART_OF]->() DELETE r "
     "WITH c MATCH (f:Filing {accession_no: $amd}) SET c.accession_no = $amd "
-    "CREATE (c)-[:PART_OF {ontology_version: 1}]->(f)"
+    "CREATE (c)-[:PART_OF {ontology_version: $version}]->(f)"
 )
 
 
 def test_a_chunk_under_another_filing_fails_the_postgres_check(valid_graph, postgres):
-    _run(valid_graph, MOVE_CHUNK_TO_AMD, chunk=EXPORT_CHUNK, amd=AMD_10K)
+    _run(valid_graph, MOVE_CHUNK_TO_AMD, chunk=EXPORT_CHUNK, amd=AMD_10K,
+         version=ONTOLOGY_VERSION)
 
     assert _failures(valid_graph) == {}
     assert _failures(valid_graph, postgres) == {Check.POSTGRES: 1}
@@ -295,7 +335,8 @@ def test_command_runs_the_postgres_check_when_database_url_is_set(
 
 def test_command_exits_4_when_the_postgres_check_fails(valid_graph, graph_env, postgres):
     graph_env.setenv("DATABASE_URL", "postgresql://unused")
-    _run(valid_graph, MOVE_CHUNK_TO_AMD, chunk=EXPORT_CHUNK, amd=AMD_10K)
+    _run(valid_graph, MOVE_CHUNK_TO_AMD, chunk=EXPORT_CHUNK, amd=AMD_10K,
+         version=ONTOLOGY_VERSION)
 
     assert main([], connect_postgres=lambda url: nullcontext(postgres)) == EXIT_VIOLATIONS
 

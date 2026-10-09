@@ -1261,6 +1261,26 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 1. Merge this ticket's PR. Step 7 is closed.
 2. Step 8 (extraction), starting with `/grill-with-docs`. The rewrite question in OPEN-DECISIONS (does a lower-confidence rewrite replace a higher-confidence value?) belongs to that grilling.
 
+## 2026-10-09 — Step 8 ticket 01: ontology version 2
+
+- **What changed.** `ONTOLOGY_VERSION` is 2. Every piece of evidence now records the extractor's confidence (`stated`, `implied` or `uncertain`) and the extract prompt version. Extracted edges gain `confidences` and `extract_prompts`, lists parallel to `chunk_ids` and `evidence_spans`; `EVIDENCED_BY` gains `confidence` and `extract_prompt`. Nodes carry neither. A `Prop` can now list its allowed values. The schema text prints them, for example `confidences: LIST<STRING> (each stated, implied or uncertain)`, and the new schema hash is `f484740282253d5e48e9d350d06ba8a7b6950ded0dbdb3867740e96ff88083c4`. `Evidence` takes `confidence` and `extract_prompt`. `check_batch()` has a new rule, `disallowed_value`. The write path appends a new chunk's confidence and prompt version at the same index as its span. `validate_graph()` checks the four list lengths, the allowed values and blank entries. ADR-0004 gains a dated extension note; its decision is unchanged.
+- **Rule codes.** A missing list is `missing_property`. A list whose length differs from `chunk_ids` is `evidence_length_mismatch`. A blank span, confidence or prompt version is `missing_evidence`, on nodes and edges alike. A non-blank confidence outside the three levels is `disallowed_value`, and the comparison is case-sensitive: lower-casing the model's output is the extractor's job (ticket 02). In `validate_graph()`, problems with `EVIDENCED_BY`'s own properties land under `edge_properties` and problems inside an edge's lists under `edge_evidence`, as in Step 7.
+- **Tests first.** The rule tests were written before the code and failed: `Evidence` took two fields, `CONFIDENCE_LEVELS` did not exist, and a version-1 `:GraphMeta` was still accepted. New cases: 13 in `check_batch()`, 11 raw-Cypher broken graphs for `validate_graph()` (each fails exactly its own check), the per-index append in the write path, and a refused version-1 `:GraphMeta` in both `write_batch()` and `apply_constraints()`. The shared test graph is at version 2 and still checks every span against its chunk's text. Its Regulation node's evidence is `implied`.
+- **Local Neo4j.** Left alone. It still holds the version-1 `:GraphMeta` from Step 7, so `write_batch()`, `apply_constraints()` and `python -m graph.validate` refuse it until it is cleared. Clearing it is the user's step at the start of Step 10 (`MATCH (m:GraphMeta) DELETE m`, then `apply_constraints()`). Step 8 writes nothing to Neo4j.
+- **Code review** (`mattpocock-skills:code-review`, both axes, with the Cypher checks). Spec: no defects. It noted that this BUILD-LOG entry and CI were still to come. It also suggested dropping "uncalibrated" from the `Confidence` docstring. I kept the word, because the Step 8 Decisions entry labels confidence "uncalibrated". Standards: no hard violations, and no new index or constraint is needed. The judgement calls I fixed:
+  - the last two property names written as raw Cypher literals (`chunk_ids` in the append, `evidence_span` on `EVIDENCED_BY`) now go through `quoted()`;
+  - the evidence names are derived from the ontology's `EDGE_EVIDENCE` and `EVIDENCED_BY` definitions instead of being repeated as strings;
+  - the allowed-value check is one method, `Prop.disallowed()`, shared by `check_batch()` and `validate_graph()`;
+  - a missing confidence is `missing_evidence`, as a missing prompt version is;
+  - a renamed property now fails at import with a `KeyError` that names it, not a bare `StopIteration`.
+
+  Kept: `Evidence.confidence` stays `str`, not the `Confidence` enum. Records are checked at the write-path boundary, and a `StrEnum` value is a `str`, so the extractor can pass either. Kept: the parallel checks in `batch.py` and `validate.py`, which follow ADR-0004's write-time and read-back design.
+- **Evidence.** `uv run ruff check .` is clean. Full suite after the review fixes, against the local `neo4j-test` and Postgres: 1144 passed, 15 skipped. This worktree has no `data/`. Of the skips, 12 in `test_corpus_local.py` need `data/raw/` and 1 in `test_snapshot.py` needs the local query cache. None of the skips are graph tests. CI result is on the PR.
+
+**Next session starts with**
+1. Merge this ticket's PR once CI is green.
+2. `/implement .scratch/step-8/issues/02-extract-filing.md`.
+
 ---
 
 ## Findings worth telling

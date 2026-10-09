@@ -1,4 +1,4 @@
-"""validate_graph() and `python -m graph.validate` (Step 7).
+"""validate_graph() and `python -m graph.validate` (Step 7; ontology version 2 since Step 8).
 
 The write path checks each batch before it lands; validate_graph() reads the
 whole graph back and checks the same ontology and evidence rules (ADR-0004)
@@ -37,7 +37,16 @@ from neo4j import (
 from neo4j.exceptions import DriverError, Neo4jError
 from neo4j.time import Date
 
-from graph.batch import CHUNK, CHUNK_ID, CHUNK_IDS, EVIDENCE_SPANS, EVIDENCED_BY
+from graph.batch import (
+    CHUNK,
+    CHUNK_ID,
+    CHUNK_IDS,
+    CONFIDENCES,
+    EVIDENCE_LISTS,
+    EVIDENCE_SPANS,
+    EVIDENCED_BY,
+    EXTRACT_PROMPTS,
+)
 from graph.connection import DATABASE, GraphSettingsMissing, driver_from_env
 from graph.constraints import GRAPH_META, GRAPH_META_QUERY, graph_meta_problem
 from graph.cypher import quoted
@@ -230,6 +239,9 @@ def _property_problems(props: tuple[Prop, ...], values: Mapping[str, object]) ->
                 problems.append(f"{prop.name} is missing")
         elif not _stored_as(value, prop.type):
             problems.append(f"{prop.name} must be {prop.type}, got {type(value).__name__}")
+        elif bad := prop.disallowed(value):
+            problems.append(f"{prop.name} {', '.join(map(repr, bad))} not one of "
+                            f"{', '.join(prop.values)}")
         elif prop.name == "ontology_version" and value != ONTOLOGY_VERSION:
             problems.append(f"ontology_version is {value}, the code is {ONTOLOGY_VERSION}")
     return problems
@@ -243,23 +255,35 @@ def _node_property_findings(tx: ManagedTransaction) -> Iterator[Finding]:
                 yield Finding(Check.NODE_PROPERTIES, f"{_node_name(r, 'n')}: {'; '.join(problems)}")
 
 
+# Evidence lists whose entries must not be blank, and how a problem names an entry.
+_BLANK_EVIDENCE = {
+    EVIDENCE_SPANS: "an evidence span", CONFIDENCES: "a confidence",
+    EXTRACT_PROMPTS: "an extract prompt version",
+}
+
+
 def _evidence_problems(props: Mapping[str, object], chunks: frozenset[str]) -> list[str]:
-    chunk_ids, spans = props.get(CHUNK_IDS), props.get(EVIDENCE_SPANS)
-    if not _stored_as(chunk_ids, PropType.LIST_STRING) or not _stored_as(
-        spans, PropType.LIST_STRING,
-    ):
-        return []  # reported by the edge property check
+    lists: dict[str, list[str]] = {}
+    for name in EVIDENCE_LISTS:
+        value = props.get(name)
+        if not isinstance(value, list) or not _stored_as(value, PropType.LIST_STRING):
+            return []  # reported by the edge property check
+        lists[name] = value
+    chunk_ids = lists[CHUNK_IDS]
     problems = []
     if not chunk_ids:
         problems.append(f"{CHUNK_IDS} is empty")
-    if len(chunk_ids) != len(spans):
-        problems.append(f"{len(chunk_ids)} {CHUNK_IDS} but {len(spans)} {EVIDENCE_SPANS}")
+    problems += [
+        f"{len(chunk_ids)} {CHUNK_IDS} but {len(values)} {name}"
+        for name, values in lists.items() if len(values) != len(chunk_ids)
+    ]
     if dangling := [c for c in chunk_ids if c not in chunks]:
         problems.append(f"no Chunk node for {', '.join(map(repr, dangling))}")
     if len(set(chunk_ids)) != len(chunk_ids):
         problems.append(f"a chunk is listed twice in {CHUNK_IDS}")
-    if any(not s.strip() for s in spans):
-        problems.append("an evidence span is blank")
+    for name, what in _BLANK_EVIDENCE.items():
+        if any(not v.strip() for v in lists[name]):
+            problems.append(f"{what} is blank")
     return problems
 
 

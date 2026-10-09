@@ -15,3 +15,6 @@ Decided on 2026-10-07 in the Step 7 grilling.
 - "Which edges came from chunk X?" cannot use an index: no Neo4j index matches one element of a list property. It scans every edge of that type, which is cheap at 24 filings and would need revisiting at a much larger corpus.
 - Deleting or re-chunking a filing means removing its chunk IDs from edge lists, and deleting edges whose lists become empty. Step 10 owns this.
 - Questions about change between filings (risk factors, figures) compare per-filing nodes. Other edges answer them only through the filings of their evidence chunks.
+
+## Extension, 2026-10-09 (Step 8, ontology version 2)
+Each piece of evidence also records the extractor's confidence (`stated`, `implied` or `uncertain`) and the extract prompt version that produced it. Extracted edges gain two more parallel lists, `confidences` and `extract_prompts`, one entry per chunk in `chunk_ids`; `EVIDENCED_BY` gains `confidence` and `extract_prompt`. Nodes carry neither. The write path and `validate_graph()` check the four lists' lengths and the confidence values. The decision above is unchanged.

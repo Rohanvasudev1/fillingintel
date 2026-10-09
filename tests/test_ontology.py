@@ -1,4 +1,4 @@
-"""Tests for the ontology module and its schema text (Step 7)."""
+"""Tests for the ontology module and its schema text (Step 7; version 2 in Step 8)."""
 import dataclasses
 import hashlib
 import re
@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from graph.ontology import (
+    CONFIDENCE_LEVELS,
     EDGE_TYPES,
     EDGE_TYPES_BY_NAME,
     LABELS,
@@ -23,6 +24,7 @@ CLAUDE_MD = Path(__file__).resolve().parent.parent / "CLAUDE.md"
 # description changes the schema text: bump ONTOLOGY_VERSION and add its pin here.
 PINNED_SCHEMA_SHA256 = {
     1: "9f2687c2aa33872bdf77b64c3b0d80b773cdeac7f7b67dc981892f9bcc57fb37",
+    2: "f484740282253d5e48e9d350d06ba8a7b6950ded0dbdb3867740e96ff88083c4",
 }
 
 STRUCTURAL_LABELS = ["Company", "Filing", "Period", "Chunk"]
@@ -31,6 +33,7 @@ EXTRACTED_LABELS = [
     "LegalProceeding", "Agreement", "Facility", "Person", "MetricValue",
 ]
 STRUCTURAL_EDGES = {"FILED", "COVERS_PERIOD", "PART_OF", "EVIDENCED_BY"}
+EDGE_EVIDENCE_LISTS = ("chunk_ids", "evidence_spans", "confidences", "extract_prompts")
 
 REQUIRED_NODE_PROPERTIES = {
     "Company": {"cik", "name", "ticker"},
@@ -152,19 +155,43 @@ def test_extracted_edges_require_evidence_lists():
     for d in EDGE_TYPES:
         required = _props_by_name(d)
         if d.kind is Kind.EXTRACTED:
-            assert required["chunk_ids"].type is PropType.LIST_STRING, d.name
-            assert required["evidence_spans"].type is PropType.LIST_STRING, d.name
+            for name in EDGE_EVIDENCE_LISTS:
+                assert required[name].type is PropType.LIST_STRING, (d.name, name)
+            assert required["confidences"].values == CONFIDENCE_LEVELS, d.name
         else:
-            assert "chunk_ids" not in required and "evidence_spans" not in required, d.name
+            assert not set(EDGE_EVIDENCE_LISTS) & set(required), d.name
 
 
-def test_evidenced_by_requires_one_span():
+def test_evidenced_by_requires_a_span_a_confidence_and_a_prompt_version():
     required = _props_by_name(EDGE_TYPES_BY_NAME["EVIDENCED_BY"])
-    assert required["evidence_span"].type is PropType.STRING
+    for name in ("evidence_span", "confidence", "extract_prompt"):
+        assert required[name].type is PropType.STRING, name
+    assert required["confidence"].values == CONFIDENCE_LEVELS
+
+
+def test_confidence_levels():
+    assert CONFIDENCE_LEVELS == ("stated", "implied", "uncertain")
+
+
+def test_only_confidence_properties_restrict_their_values():
+    restricted = {
+        (d.name, p.name) for d in (*LABELS, *EDGE_TYPES) for p in d.properties if p.values
+    }
+    extracted_edges = {d.name for d in EDGE_TYPES if d.kind is Kind.EXTRACTED}
+    assert restricted == {("EVIDENCED_BY", "confidence")} | {
+        (name, "confidences") for name in extracted_edges
+    }
+
+
+def test_nodes_carry_no_confidence_or_prompt_version():
+    for d in LABELS:
+        names = {p.name for p in d.properties}
+        assert not names & {"confidence", "confidences", "extract_prompt", "extract_prompts"}
 
 
 def test_role_and_stake():
-    shared = {"ontology_version", "chunk_ids", "evidence_spans", "evidence_span"}
+    shared = {"ontology_version", *EDGE_EVIDENCE_LISTS,
+              "evidence_span", "confidence", "extract_prompt"}
     edge_specific = {d.name: {p.name for p in d.properties} - shared for d in EDGE_TYPES}
     assert {n: props for n, props in edge_specific.items() if props} == {
         "INVOLVED_IN": {"role"}, "HOLDS_ROLE_AT": {"role"}, "OWNS": {"stake"},
@@ -242,6 +269,14 @@ def test_schema_text_carries_properties_endpoints_and_descriptions():
     assert "metric_value" not in text  # labels keep their own spelling
     assert "value: FLOAT" in text
     assert "stake: FLOAT (optional)" in text
+    assert "confidences: LIST<STRING> (each stated, implied or uncertain)" in text
+    assert "extract_prompts: LIST<STRING>," in text
+    assert "confidence: STRING (stated, implied or uncertain)" in text
+    assert "extract_prompt: STRING," in text
+
+
+def test_ontology_is_version_2():
+    assert ONTOLOGY_VERSION == 2
 
 
 def test_schema_text_is_the_same_on_every_call():

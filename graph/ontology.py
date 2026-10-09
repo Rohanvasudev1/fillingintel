@@ -1,4 +1,4 @@
-"""The graph ontology as frozen data (Step 7).
+"""The graph ontology as frozen data (Step 7; version 2 since Step 8).
 
 Every node label and edge type the graph may hold is defined here, with its
 kind, keys, properties, allowed endpoints and a one-line description written
@@ -10,7 +10,11 @@ ONTOLOGY_VERSION (tests/test_ontology.py pins the hash).
 Structural labels and edges come from EDGAR metadata; their evidence is the
 filing record. Extracted ones are read from filing text and carry chunk
 evidence (ADR-0004): extracted nodes through EVIDENCED_BY edges, extracted
-edges through their own chunk_ids and evidence_spans lists.
+edges through their own chunk_ids and evidence_spans lists. Version 2 adds,
+per piece of evidence, the extractor's confidence (one of CONFIDENCE_LEVELS)
+and the extract prompt version: confidence and extract_prompt on EVIDENCED_BY,
+and confidences and extract_prompts lists parallel to chunk_ids on extracted
+edges. Nodes carry neither.
 """
 from __future__ import annotations
 
@@ -18,7 +22,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from types import MappingProxyType
 
-ONTOLOGY_VERSION = 1
+ONTOLOGY_VERSION = 2
 
 
 class Kind(StrEnum):
@@ -26,6 +30,17 @@ class Kind(StrEnum):
 
     STRUCTURAL = "structural"
     EXTRACTED = "extracted"
+
+
+class Confidence(StrEnum):
+    """How sure the extractor was of one piece of evidence; "uncalibrated" until reviewed."""
+
+    STATED = "stated"
+    IMPLIED = "implied"
+    UNCERTAIN = "uncertain"
+
+
+CONFIDENCE_LEVELS: tuple[str, ...] = tuple(c.value for c in Confidence)
 
 
 class PropType(StrEnum):
@@ -40,11 +55,25 @@ class PropType(StrEnum):
 
 @dataclass(frozen=True, slots=True)
 class Prop:
-    """One property of a label or edge type."""
+    """One property of a label or edge type.
+
+    `values`, when set, are the only values allowed: for a list, for each item.
+    """
 
     name: str
     type: PropType
     required: bool = True
+    values: tuple[str, ...] = ()
+
+    def disallowed(self, value: object) -> list[object]:
+        """The items of *value* (one value or a list) outside `values`, if it has any.
+
+        Blank items are left to the required-property and evidence checks.
+        """
+        if not self.values:
+            return []
+        items = value if isinstance(value, list | tuple) else [value]
+        return [v for v in items if v not in self.values and isinstance(v, str) and v.strip()]
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,9 +103,12 @@ class EdgeDef:
 _VERSION = Prop("ontology_version", PropType.INTEGER)
 _KEY = Prop("key", PropType.STRING)
 _NAME = Prop("name", PropType.STRING)
-_EDGE_EVIDENCE = (
+# An extracted edge's evidence: parallel lists, one entry per chunk (ADR-0004).
+EDGE_EVIDENCE: tuple[Prop, ...] = (
     Prop("chunk_ids", PropType.LIST_STRING),
     Prop("evidence_spans", PropType.LIST_STRING),
+    Prop("confidences", PropType.LIST_STRING, values=CONFIDENCE_LEVELS),
+    Prop("extract_prompts", PropType.LIST_STRING),
 )
 
 
@@ -165,7 +197,7 @@ def _extracted_edge(
     props: tuple[Prop, ...] = (), symmetric: bool = False,
 ) -> EdgeDef:
     return EdgeDef(
-        name, Kind.EXTRACTED, starts, ends, (*props, *_EDGE_EVIDENCE, _VERSION),
+        name, Kind.EXTRACTED, starts, ends, (*props, *EDGE_EVIDENCE, _VERSION),
         description, symmetric,
     )
 
@@ -180,8 +212,11 @@ EDGE_TYPES: tuple[EdgeDef, ...] = (
     _structural_edge("PART_OF", ("Chunk",), ("Filing",), "The filing the chunk was cut from."),
     _structural_edge(
         "EVIDENCED_BY", _EXTRACTED_LABEL_NAMES, ("Chunk",),
-        "A chunk the node was read from, with the quote that names it.",
-        (Prop("evidence_span", PropType.STRING),),
+        "A chunk the node was read from, with the quote that names it, the extractor's "
+        "confidence and the extract prompt version.",
+        (Prop("evidence_span", PropType.STRING),
+         Prop("confidence", PropType.STRING, values=CONFIDENCE_LEVELS),
+         Prop("extract_prompt", PropType.STRING)),
     ),
     _extracted_edge(
         "HAS_SEGMENT", ("Company",), ("Segment",), "The filer reports this business segment.",
