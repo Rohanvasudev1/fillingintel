@@ -63,9 +63,12 @@ def edge_lines(chunks: Mapping[str, str], counts: Mapping[str, int],
     return lines
 
 
-def node_line(key: str, name: str, chunk_id: str, span: str) -> dict:
-    return {"kind": "node", "item": f"Organization(key='{key}')", "label": "Organization",
-            "properties": {"key": key, "name": name},
+def node_line(key: str, name: str | None, chunk_id: str, span: str,
+              label: str = "Organization", **properties: object) -> dict:
+    """A node line; a MetricValue has no name (pass None), only its concept."""
+    named = {"name": name} if name is not None else {}
+    return {"kind": "node", "item": f"{label}(key='{key}')", "label": label,
+            "properties": {"key": key, **named, **properties},
             "evidence": [{"chunk_id": chunk_id, "span": span, "confidence": "stated",
                           "extract_prompt": PROMPT}]}
 

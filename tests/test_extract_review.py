@@ -13,6 +13,7 @@ from extract.prompt import load_prompt
 from extract.report import candidate_lines
 from extract.report import write_candidates as report_candidates
 from extract.review import EXIT_RUN_ERROR, EXIT_USAGE, main, review
+from extract.review_display import show_chunk
 from extract.review_round import wilson
 from extract.review_sample import load_candidates, quotas
 from retrieve.answer_model import ApiResponse
@@ -287,3 +288,33 @@ def test_a_round_file_line_missing_a_field_is_refused(candidates, chunks, tmp_pa
     path.write_text("\n".join([lines[0], json.dumps(broken)]) + "\n", encoding="utf-8")
     with pytest.raises(ValueError, match="line 2"):
         _review(candidates, chunks, tmp_path, Reviewer(["c"]))
+
+
+def _metric_candidates(tmp_path, chunks):
+    """One MEASURES edge from a MetricValue shaped as in the real run: concept, no name."""
+    line = edge_lines(chunks, {"MEASURES": 1})[0]
+    chunk_id = line["properties"]["chunk_ids"][0]
+    key = "0001045810-26-000021:1045810:turnover rate:FY2026"
+    line = {**line, "start": {"label": "MetricValue", "key": {"key": key}},
+            "end": {"label": "Company", "key": {"cik": "1045810"}},
+            "item": f"MetricValue(key='{key}')-[MEASURES]->Company(cik='1045810')"}
+    metric = node_line(key, None, chunk_id, span_of(chunks[chunk_id]), label="MetricValue",
+                       concept="turnover rate", value=3.7, unit="percent", period="FY2026")
+    return load_candidates(write_candidates(tmp_path / "x", [line, metric])), chunk_id
+
+
+def test_an_endpoints_own_properties_are_shown(tmp_path, chunks):
+    candidates, _ = _metric_candidates(tmp_path, chunks)
+    person = Reviewer(["c"] + ["n"] * 5)
+    _review(candidates, chunks, tmp_path, person)
+    triple = person.text.split("Miss check")[0]
+    for part in ('"turnover rate"', "value=3.7", "unit='percent'", "period='FY2026'"):
+        assert part in triple
+    assert "concept=" not in triple  # shown as the name, not repeated
+
+
+def test_the_miss_check_shows_metric_values(tmp_path, chunks):
+    candidates, chunk_id = _metric_candidates(tmp_path, chunks)
+    person = Reviewer([])
+    show_chunk(person.out, candidates, chunk_id, chunks[chunk_id], "Miss check [1/5]")
+    assert "value=3.7" in person.text and "period='FY2026'" in person.text

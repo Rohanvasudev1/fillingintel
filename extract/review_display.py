@@ -8,13 +8,17 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 
-from extract.review_sample import Candidates, EvidenceEntry, ReviewEdge
+from extract.review_sample import Candidates, EvidenceEntry, NodeProperties, ReviewEdge
 from extract.spans import find_span
 
 Out = Callable[..., None]
 RULE = "-" * 72
 MARK_START = ">>>"
 MARK_END = "<<<"
+KEY = "key"
+NAME_FIELDS = ("name", "title", "concept")  # the first a node has is shown as its name
+INDENT = "  "
+LABEL_WIDTH = 12  # "properties: " and the other field labels line up at this width
 
 
 def highlight(text: str, span: str) -> str | None:
@@ -26,9 +30,34 @@ def highlight(text: str, span: str) -> str | None:
     return f"{text[:at]}{MARK_START}{exact}{MARK_END}{text[at + len(exact):]}"
 
 
-def _node(item: str, names: Mapping[str, str]) -> str:
-    name = names.get(item)
-    return f'"{name}"  {item}' if name else item
+def _name_field(properties: NodeProperties) -> str | None:
+    """The property shown as the node's name: the first of NAME_FIELDS it holds as text."""
+    return next((f for f in NAME_FIELDS if isinstance(properties.get(f), str)), None)
+
+
+def _node(item: str, nodes: Mapping[str, NodeProperties]) -> str:
+    """The node's name (when the run holds the node) and its item."""
+    properties = nodes.get(item, {})
+    field = _name_field(properties)
+    return f'"{properties[field]}"  {item}' if field else item
+
+
+def _node_details(item: str, nodes: Mapping[str, NodeProperties]) -> str:
+    """The node's properties besides its key and name, e.g. value=3.7, unit='percent'."""
+    properties = nodes.get(item, {})
+    hidden = (KEY, _name_field(properties))
+    return ", ".join(f"{k}={v!r}" for k, v in sorted(properties.items()) if k not in hidden)
+
+
+def _field(label: str, value: str) -> str:
+    return f"{INDENT}{label:<{LABEL_WIDTH}}{value}"
+
+
+def _endpoint(out: Out, label: str, item: str, nodes: Mapping[str, NodeProperties]) -> None:
+    """One endpoint line, and under it the node's other properties when it has any."""
+    out(_field(label, _node(item, nodes)))
+    if details := _node_details(item, nodes):
+        out(_field("", details))
 
 
 def _flags(candidates: Candidates, edge: ReviewEdge, chunk_id: str) -> list[str]:
@@ -41,16 +70,16 @@ def show_triple(out: Out, candidates: Candidates, edge: ReviewEdge, evidence: Ev
                 text: str, position: str) -> None:
     out(RULE)
     out(f"{position}  {edge.type}")
-    out(f"  start:      {_node(edge.start_item, candidates.names)}")
-    out(f"  end:        {_node(edge.end_item, candidates.names)}")
+    _endpoint(out, "start:", edge.start_item, candidates.nodes)
+    _endpoint(out, "end:", edge.end_item, candidates.nodes)
     shown = ", ".join(f"{k}={v!r}" for k, v in sorted(edge.properties.items()))
-    out(f"  properties: {shown or '(none)'}")
-    out(f"  confidence: {evidence.confidence}   (uncalibrated)")
-    out(f"  flags:      {', '.join(_flags(candidates, edge, evidence.chunk_id)) or '(none)'}")
+    out(_field("properties:", shown or "(none)"))
+    out(_field("confidence:", f"{evidence.confidence}   (uncalibrated)"))
+    out(_field("flags:", ", ".join(_flags(candidates, edge, evidence.chunk_id)) or "(none)"))
     others = len(edge.evidence) - 1
-    out(f"  chunk:      {evidence.chunk_id}"
+    out(_field("chunk:", evidence.chunk_id)
         + (f"   (also read from {others} other chunk{'s' * (others > 1)})" if others else ""))
-    out(f"  span:       {evidence.span}")
+    out(_field("span:", evidence.span))
     out(RULE)
     marked = highlight(text, evidence.span)
     if marked is None:
@@ -71,9 +100,10 @@ def show_chunk(out: Out, candidates: Candidates, chunk_id: str, text: str,
     if not found:
         out("No triples were extracted from this chunk.")
     for edge, ev in found:
-        out(f"- {_node(edge.start_item, candidates.names)} -[{edge.type}]-> "
-            f"{_node(edge.end_item, candidates.names)}  ({ev.confidence})")
-        out(f"    span: {ev.span}")
+        out(f"- {edge.type}  ({ev.confidence})")
+        _endpoint(out, "start:", edge.start_item, candidates.nodes)
+        _endpoint(out, "end:", edge.end_item, candidates.nodes)
+        out(_field("span:", ev.span))
     out(RULE)
 
 
