@@ -84,6 +84,22 @@ _Avoid_: fact, edge, before validation
 The chunk or chunks a node or edge was read from. A node or edge with no evidence is rejected.
 _Avoid_: source, provenance, when meaning the chunk pointer itself
 
+**Evidence span**:
+The quote from a chunk that states a node or edge. It must appear verbatim in the chunk's text after whitespace, quote and dash normalization, or the candidate is rejected.
+_Avoid_: snippet, excerpt, citation
+
+**Confidence**:
+The extractor's own rating of one piece of evidence: `stated` (the span says it outright), `implied` (it needs the chunk's surrounding text) or `uncertain`. It belongs to the evidence, not to the node or edge, and stays "uncalibrated" until review results show what each level is worth.
+_Avoid_: score, probability, strength
+
+**Filer reference**:
+A fixed name the extractor uses for a structural node it cannot see: this filing, the filer, or one of the other two filers by ticker. Code maps it to the accession number or CIK.
+_Avoid_: entity ID, placeholder
+
+**Review round**:
+One pass in which the user judges a fresh random sample of 30 validated edges from one extraction run against their chunks. Its accuracy is the only extraction accuracy reported.
+_Avoid_: spot check, audit
+
 ## Retrieval
 
 **Arm**:

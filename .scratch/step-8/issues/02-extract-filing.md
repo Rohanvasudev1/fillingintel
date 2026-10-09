@@ -1,0 +1,19 @@
+# 02: `extract_filing()`: from chunks to checked records
+
+**What to build:** the extraction pipeline as one function. Given a filing's metadata, its chunks (ID and `resolve()` text), a model and a loaded extract prompt, `extract_filing()` sends each chunk with the ontology's schema text, receives structured output, and returns an immutable run result: merged write-path records, rejections with reasons, flags, conflicts, per-chunk failures, token usage and the `check_batch()` result for the whole filing. Code, never the model, maps filer references, builds keys and checks evidence spans (spec: Implementation Decisions; user stories 9, 14–45).
+
+**Blocked by:** 01 (Ontology version 2)
+
+**Status:** ready-for-agent
+
+- [ ] Prompt v1 in the versioned prompts folder next to the answer prompt, loaded with version, text and hash; the prompt version string is `extract/v1@<hash8>`. It carries the generated schema text, the filer references (`THIS_FILING`, `FILER`, `NVDA`, `AMD`, `INTC`), the confidence definitions, the "emit nothing the chunk doesn't state" rule, the forward-looking rule (a disclosure, never a reported figure), and the MetricValue limit (named subject, period and unit).
+- [ ] The structured-output JSON schema is derived from the ontology, with labels and edge types as enums. A test checks it lists exactly the ontology's types and stays inside the limits in docs/research/claude-extraction-structured-output.md (no numeric or length bounds, `minItems` 0 or 1, at most 24 optional and 16 union-typed parameters).
+- [ ] The request implements the existing `ModelRequest` protocol: `claude-sonnet-5-5`, `output_config` with the schema and effort `high`, `max_tokens` 8,000, no sampling settings, no tool use, one cache breakpoint after the system prompt. It goes through the existing Anthropic client and response cache; the reply text is parsed and validated locally.
+- [ ] Recorded real Sonnet replies for 4 chunks of the NVDA FY2026 fixture (a risk factor, a segment note, a Business paragraph naming suppliers, a statement table), captured once with the network on after asking the user, and replayed offline. From them: filer references map to the CIK and accession number, keys follow the spec's rules (including a name containing the separator), and the records pass `check_batch()`.
+- [ ] Span check against the chunk text: NFKC, curly quotes and dashes to ASCII, collapsed whitespace, case-sensitive substring. Tests use quotes from the fixture chunks: curly quotes, dashes and line breaks match; a changed word or changed case does not.
+- [ ] Hand-written broken replies, one rule each, each rejected with its own reason and leaving the rest of the chunk intact: unknown label, unknown edge type, forbidden endpoint pair, unknown filer reference, dangling local node ID, span not found, structural label emitted, missing required property, wrong property type. A rejected node takes every candidate triple touching it with it ("endpoint node rejected"). A reply that isn't valid JSON, and an API error, become per-chunk failures and the other chunks still run.
+- [ ] Flags, counted and kept: name not in its own span; confidence `uncertain`. Enum values are matched without regard to case.
+- [ ] The same node or edge from several chunks merges into one record with one evidence entry per chunk. A single-valued property that differs takes the most confident value (`stated` > `implied` > `uncertain`, ties to the later chunk), and each disagreement is a conflict holding both values.
+- [ ] Any `check_batch()` violation on the merged records is reported as an extractor bug, never hidden.
+- [ ] The function makes no file writes and no network calls of its own; all tests run offline under pytest-socket.
+- [ ] Rule tests written first and shown failing (`/tdd`). Code review with `mattpocock-skills:code-review`. `uv run ruff check .` and `uv run --env-file .env pytest` pass, and CI is green.
