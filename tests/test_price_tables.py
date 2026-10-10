@@ -6,6 +6,7 @@ from retrieve.pricing import (
     PRICE_TABLE_DATE,
     TABLE_2026_10_05,
     TABLE_2026_10_09,
+    TABLE_2026_10_10,
     anthropic_cost,
     price_table,
 )
@@ -38,3 +39,22 @@ def test_a_header_names_the_table_it_used():
 def test_a_model_missing_from_the_new_table_is_refused():
     with pytest.raises(ValueError, match="2026-10-09"):
         anthropic_cost("gpt-6-luna", USAGE, TABLE_2026_10_09)
+
+
+HAIKU = "claude-haiku-5-5"
+
+
+def test_the_haiku_table_prices_haiku_at_its_short_prompt_rates():
+    assert TABLE_2026_10_10.date == "2026-10-10"
+    assert anthropic_cost(HAIKU, USAGE, TABLE_2026_10_10) == pytest.approx(
+        (1000 * 0.10 + 500 * 0.50 + 2000 * 0.01 + 400 * 0.125) / 1_000_000
+    )
+
+
+def test_the_haiku_table_keeps_sonnet_at_its_2026_10_09_prices():
+    assert TABLE_2026_10_10.price(SONNET) == TABLE_2026_10_09.price(SONNET)
+
+
+def test_the_2026_10_09_table_is_unchanged_and_has_no_haiku():
+    with pytest.raises(ValueError, match="2026-10-09"):
+        anthropic_cost(HAIKU, USAGE, TABLE_2026_10_09)

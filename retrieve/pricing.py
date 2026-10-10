@@ -11,6 +11,9 @@ prices, before the account's free-token allowance.
 ``TABLE_2026_10_09`` corrects Sonnet 5.5 cache reads to $0.10 per MTok
 (docs/research/claude-extraction-structured-output.md, section 2) and is used
 by extraction, the first caller that reads the prompt cache.
+``TABLE_2026_10_10`` adds Haiku 5.5 for extraction (Step 9, user decision
+2026-10-10). Haiku 5.5 has two price tiers; the table holds the one for prompts
+up to 100,000 tokens, which every extraction prompt is far below.
 """
 from __future__ import annotations
 
@@ -66,6 +69,12 @@ TABLE_2026_10_05 = PriceTable(PRICE_TABLE_DATE, PRICES)
 TABLE_2026_10_09 = PriceTable("2026-10-09", MappingProxyType({
     "claude-sonnet-5-5": TokenPrice(2.00, _ANTHROPIC_SOURCE, output_per_mtok=10.00,
                                     cache_write_per_mtok=2.50, cache_read_per_mtok=0.10),
+}))
+
+TABLE_2026_10_10 = PriceTable("2026-10-10", MappingProxyType({
+    "claude-haiku-5-5": TokenPrice(0.10, _ANTHROPIC_SOURCE, output_per_mtok=0.50,
+                                   cache_write_per_mtok=0.125, cache_read_per_mtok=0.01),
+    "claude-sonnet-5-5": TABLE_2026_10_09.price("claude-sonnet-5-5"),
 }))
 
 

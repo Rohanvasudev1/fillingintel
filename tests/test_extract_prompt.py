@@ -89,8 +89,8 @@ def test_a_user_template_with_an_unknown_placeholder_is_refused(tmp_path, monkey
 
 def test_request_parameters():
     params = build_request(load_prompt(), FILING, CHUNK).params()
-    assert params["model"] == EXTRACT_MODEL == "claude-sonnet-5-5"
-    assert params["max_tokens"] == EXTRACT_MAX_TOKENS == 8_000
+    assert params["model"] == EXTRACT_MODEL == "claude-haiku-5-5"
+    assert params["max_tokens"] == EXTRACT_MAX_TOKENS == 16_000
     assert params["output_config"] == {
         "effort": "high",
         "format": {"type": "json_schema", "schema": output_schema()},

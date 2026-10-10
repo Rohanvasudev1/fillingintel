@@ -3,8 +3,10 @@
 Input is counted with cl100k_base and scaled by 1.3, because Claude's tokenizer
 counts about 30% more tokens for the same text (pricing page, quoted in
 docs/research/claude-extraction-structured-output.md). Output cannot be counted
-before the call; each call is assumed to return 2,500 tokens, the research
-note's figure for triples plus thinking. The system prompt is the one cache
+before the call; each call is assumed to return 3,000 tokens. Step 8 assumed
+2,500 (the research note's figure for Sonnet); Sonnet's run 1 averaged 1,359,
+and Haiku used 1.1 to 2.2 times Sonnet's output on the chunks smoke-tested in
+Step 9, so 3,000 allows for about twice Sonnet's average. The system prompt is the one cache
 breakpoint: the first call on each worker is priced as a cache write, since
 calls that start together cannot read what the others are still writing, and
 every later call as a cache read.
@@ -18,11 +20,11 @@ from dataclasses import dataclass
 from extract.request import ExtractRequest
 from ingest.chunker import count_tokens
 from retrieve.answer_model import TokenUsage
-from retrieve.pricing import TABLE_2026_10_09, PriceTable, anthropic_cost
+from retrieve.pricing import TABLE_2026_10_10, PriceTable, anthropic_cost
 
 CLAUDE_TOKEN_FACTOR = 1.3
-ASSUMED_OUTPUT_TOKENS = 2_500
-EXTRACTION_PRICES = TABLE_2026_10_09
+ASSUMED_OUTPUT_TOKENS = 3_000
+EXTRACTION_PRICES = TABLE_2026_10_10
 
 
 @dataclass(frozen=True, slots=True)
