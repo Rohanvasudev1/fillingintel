@@ -107,6 +107,10 @@ class Reviewer:
     def clock(self) -> float:
         return self.now
 
+    def replace_answers(self, answers: Iterable[str]) -> None:
+        """Script a new sitting's answers in place of whatever the old script had left."""
+        self._answers = iter(list(answers))
+
     def ask(self, prompt: str) -> str:
         self.prompts.append(prompt)
         self.now += self.pace

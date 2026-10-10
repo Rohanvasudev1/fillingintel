@@ -1,4 +1,4 @@
-"""Tests for the ontology module and its schema text (Step 7; version 2 in Step 8)."""
+"""Tests for the ontology module and its schema text (Step 7; version 2 in Step 8, 3 in Step 9)."""
 import dataclasses
 import hashlib
 import re
@@ -10,6 +10,7 @@ from graph.ontology import (
     CONFIDENCE_LEVELS,
     EDGE_TYPES,
     EDGE_TYPES_BY_NAME,
+    FILER_SCOPED_LABELS,
     LABELS,
     LABELS_BY_NAME,
     ONTOLOGY_VERSION,
@@ -25,12 +26,18 @@ CLAUDE_MD = Path(__file__).resolve().parent.parent / "CLAUDE.md"
 PINNED_SCHEMA_SHA256 = {
     1: "9f2687c2aa33872bdf77b64c3b0d80b773cdeac7f7b67dc981892f9bcc57fb37",
     2: "f484740282253d5e48e9d350d06ba8a7b6950ded0dbdb3867740e96ff88083c4",
+    3: "ab2c4e455dcc0407371c1ba87c0e3f50caa5df174846d1176326b85eabae8bd9",
 }
 
 STRUCTURAL_LABELS = ["Company", "Filing", "Period", "Chunk"]
 EXTRACTED_LABELS = [
-    "Organization", "Segment", "Product", "RiskFactor", "Regulation",
+    "Organization", "Segment", "MarketPlatform", "Product", "RiskFactor", "Regulation",
     "LegalProceeding", "Agreement", "Facility", "Person", "MetricValue",
+]
+# Extracted labels one node spans filings for; they carry an optional aliases list (ADR-0005).
+CROSS_FILING_LABELS = [
+    "Organization", "Segment", "MarketPlatform", "Product", "Regulation",
+    "LegalProceeding", "Agreement", "Facility", "Person",
 ]
 STRUCTURAL_EDGES = {"FILED", "COVERS_PERIOD", "PART_OF", "EVIDENCED_BY"}
 EDGE_EVIDENCE_LISTS = ("chunk_ids", "evidence_spans", "confidences", "extract_prompts")
@@ -42,10 +49,7 @@ REQUIRED_NODE_PROPERTIES = {
     "Chunk": {"chunk_id", "accession_no", "section"},
     "RiskFactor": {"key", "title"},
     "MetricValue": {"key", "concept", "value", "unit", "period"},
-    **{name: {"key", "name"} for name in [
-        "Organization", "Segment", "Product", "Regulation", "LegalProceeding",
-        "Agreement", "Facility", "Person",
-    ]},
+    **{name: {"key", "name"} for name in CROSS_FILING_LABELS},
 }
 
 KEYS = {
@@ -100,7 +104,30 @@ def test_community_waits_for_step_12():
 def test_label_required_properties(name):
     required = set(_props_by_name(LABELS_BY_NAME[name]))
     assert required == REQUIRED_NODE_PROPERTIES[name] | {"ontology_version"}
-    assert not _props_by_name(LABELS_BY_NAME[name], required=False)
+
+
+@pytest.mark.parametrize("name", STRUCTURAL_LABELS + EXTRACTED_LABELS)
+def test_only_cross_filing_labels_have_an_optional_aliases_list(name):
+    optional = _props_by_name(LABELS_BY_NAME[name], required=False)
+    if name in CROSS_FILING_LABELS:
+        assert set(optional) == {"aliases"}
+        assert optional["aliases"].type is PropType.LIST_STRING
+    else:
+        assert not optional
+
+
+def test_market_platform_and_segment_descriptions():
+    assert LABELS_BY_NAME["MarketPlatform"].description == (
+        "A market a filer reports revenue by that is not a reportable segment, such as "
+        "NVIDIA's Gaming."
+    )
+    assert "reportable segment, as the filer's segment note defines it" in (
+        LABELS_BY_NAME["Segment"].description
+    )
+
+
+def test_segment_and_market_platform_keys_are_scoped_by_filer():
+    assert FILER_SCOPED_LABELS == ("Segment", "MarketPlatform")
 
 
 @pytest.mark.parametrize("name", STRUCTURAL_LABELS + EXTRACTED_LABELS)
@@ -129,9 +156,9 @@ def test_property_types():
 
 # --- edge types -----------------------------------------------------------
 
-def test_twenty_edge_types_with_their_kinds():
-    assert len(EDGE_TYPES) == 20
-    assert len(EDGE_TYPES_BY_NAME) == 20
+def test_twenty_one_edge_types_with_their_kinds():
+    assert len(EDGE_TYPES) == 21
+    assert len(EDGE_TYPES_BY_NAME) == 21
     for d in EDGE_TYPES:
         expected = Kind.STRUCTURAL if d.name in STRUCTURAL_EDGES else Kind.EXTRACTED
         assert d.kind is expected, d.name
@@ -144,6 +171,19 @@ def test_edge_endpoints_match_claude_md():
         d = EDGE_TYPES_BY_NAME[name]
         assert set(d.starts) == starts, name
         assert set(d.ends) == ends, name
+
+
+def test_market_platform_endpoints():
+    edges = EDGE_TYPES_BY_NAME
+    assert (edges["HAS_MARKET_PLATFORM"].starts, edges["HAS_MARKET_PLATFORM"].ends) == (
+        ("Company",), ("MarketPlatform",))
+    assert "MarketPlatform" in edges["MEASURES"].ends
+    assert "MarketPlatform" in edges["AFFECTS"].ends
+    assert "MarketPlatform" in edges["OFFERS"].starts
+    assert "MarketPlatform" not in edges["HAS_SEGMENT"].ends
+    others = {d.name for d in EDGE_TYPES
+              if "MarketPlatform" in (*d.starts, *d.ends)} - {"EVIDENCED_BY"}
+    assert others == {"HAS_MARKET_PLATFORM", "MEASURES", "AFFECTS", "OFFERS"}
 
 
 def test_endpoints_are_known_labels():
@@ -275,8 +315,8 @@ def test_schema_text_carries_properties_endpoints_and_descriptions():
     assert "extract_prompt: STRING," in text
 
 
-def test_ontology_is_version_2():
-    assert ONTOLOGY_VERSION == 2
+def test_ontology_is_version_3():
+    assert ONTOLOGY_VERSION == 3
 
 
 def test_schema_text_is_the_same_on_every_call():

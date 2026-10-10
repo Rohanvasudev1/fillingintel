@@ -23,7 +23,7 @@ SEGMENT_NOTE = f"{NVDA_10K}:0123"
 PLATFORM = f"{NVDA_10K}:0005"
 EXPORT_RISK = f"{NVDA_10K}:0041"
 SEGMENT_SPAN = "The Compute & Networking segment includes our Data Center accelerated computing"
-COMPUTE = NodeRef.of("Segment", key="Segment:compute & networking")
+COMPUTE = NodeRef.of("Segment", key="Segment:1045810:compute & networking")
 MELLANOX = NodeRef.of("Organization", key="Organization:mellanox")
 NVIDIA = NodeRef.of("Company", cik="1045810")
 

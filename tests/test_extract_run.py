@@ -1,4 +1,4 @@
-"""`python -m extract.run`: guards, cost cap, files, exit codes, cache and tracing (Step 8).
+"""`python -m extract.run`: guards, cost caps, files, exit codes, cache and tracing (Step 8).
 
 The database tests load four chunks of the NVDA FY2026 10-K fixture into a
 throwaway schema and answer them with the real Sonnet replies recorded for
@@ -13,6 +13,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
+import extract.run as run_module
 from extract.pipeline import extract_filing
 from extract.prompt import load_prompt
 from extract.run import EXIT_INCOMPLETE, EXIT_OK, EXIT_RUN_ERROR, main
@@ -25,6 +26,7 @@ from retrieve.answer_model import AnswerModelError, ApiResponse
 from retrieve.tracing import TEXT_ENV
 from tests.anthropic_fixtures import FIXTURES
 from tests.conftest import throwaway_schema
+from tests.extract_fakes import body
 from tests.graph_test_data import NVDA_10K
 
 RECORDED = ("extract_risk_factor", "extract_segment_note", "extract_suppliers",
@@ -329,3 +331,86 @@ def test_a_model_without_a_price_exits_3_before_any_call(env, conn, recorded, tm
     assert _main(tmp_path, model, conn) == EXIT_RUN_ERROR
     assert model.calls == 0
     assert "no price" in capsys.readouterr().err
+
+
+# ── 10-Qs and the total spend (Step 9) ────────────────────────────────────────
+
+EMPTY_REPLY = {"nodes": [], "triples": []}
+
+
+def _past_report(reports, name, cost, ontology_version=ONTOLOGY_VERSION):
+    reports.mkdir(parents=True, exist_ok=True)
+    (reports / name).write_text(json.dumps(
+        {"ontology_version": ontology_version, "cost_this_run_usd": cost}), encoding="utf-8")
+
+
+def test_help_text_names_no_form_type(capsys):
+    with pytest.raises(SystemExit):
+        main(["--help"])
+    assert "10-K" not in capsys.readouterr().out
+    assert "10-K" not in (run_module.__doc__ or "")
+
+
+@pytest.fixture(scope="module")
+def tenq(nvda_10q_meta, nvda_10q_filing):
+    """A throwaway schema holding the first three chunks of the NVDA 10-Q fixture."""
+    chunks = tuple(chunk_filing(nvda_10q_filing)[:3])
+    with throwaway_schema() as connection:
+        record = ParsedRecord(meta=nvda_10q_meta, filing=nvda_10q_filing, parser_commit="test")
+        load_filing(connection, record, chunks)
+        yield connection, nvda_10q_meta.accession_no, chunks
+
+
+def test_a_10q_is_extracted(env, tenq, tmp_path):
+    connection, accession, chunks = tenq
+    model = CountingModel({c.chunk_id: body(EMPTY_REPLY) for c in chunks})
+    code = main(["--accession", accession], open_model=lambda: nullcontext(model),
+                connect=lambda url: nullcontext(connection),
+                candidates_dir=tmp_path / "extract", reports_dir=tmp_path / "reports",
+                response_cache=tmp_path / "responses", tracing=lambda environ: None)
+    assert code == EXIT_OK and model.calls == 3
+    report = _report_of(tmp_path, accession)
+    assert (report["accession_no"], report["status"]) == (accession, "complete")
+
+
+def _report_of(tmp_path, accession, run=1):
+    return json.loads((tmp_path / "reports" / f"{accession}-run{run}.json").read_text())
+
+
+def test_the_total_so_far_is_shown_before_the_run(env, conn, recorded, tmp_path, capsys):
+    reports = tmp_path / "reports"
+    _past_report(reports, "0000002488-26-000018-run1.json", 3.25)
+    _past_report(reports, "0000050863-26-000011-run1.json", 1.5)
+    _past_report(reports, "0001045810-26-000021-run0.json", 2.23, ontology_version=2)
+    assert _main(tmp_path, CountingModel(recorded), conn) == EXIT_OK
+    out = capsys.readouterr().out
+    assert "$4.75 spent so far" in out
+    assert "total cap $40.00" in out
+
+
+def test_a_run_that_would_pass_the_total_cap_exits_3_before_any_call(env, conn, recorded,
+                                                                    tmp_path, capsys):
+    _past_report(tmp_path / "reports", "0000002488-26-000018-run1.json", 39.999)
+    model = CountingModel(recorded)
+    assert _main(tmp_path, model, conn) == EXIT_RUN_ERROR
+    assert model.calls == 0
+    err = capsys.readouterr().err
+    assert "$40.00" in err and "--allow-over-total" in err
+    assert not (tmp_path / "reports" / f"{NVDA_10K}-run1.json").exists()
+
+
+def test_the_flag_lets_a_run_pass_the_total_cap(env, conn, recorded, tmp_path):
+    _past_report(tmp_path / "reports", "0000002488-26-000018-run1.json", 39.999)
+    model = CountingModel(recorded)
+    assert _main(tmp_path, model, conn, ["--allow-over-total"]) == EXIT_OK
+    assert model.calls == len(recorded)
+
+
+def test_an_unreadable_past_report_exits_3(env, conn, recorded, tmp_path, capsys):
+    reports = tmp_path / "reports"
+    reports.mkdir()
+    (reports / "0000002488-26-000018-run1.json").write_text("{not json", encoding="utf-8")
+    model = CountingModel(recorded)
+    assert _main(tmp_path, model, conn) == EXIT_RUN_ERROR
+    assert model.calls == 0
+    assert "0000002488-26-000018-run1.json" in capsys.readouterr().err

@@ -1,14 +1,16 @@
-"""The shared valid test graph (Step 7; ontology version 2 since Step 8).
+"""The shared valid test graph (Step 7; ontology version 3 since Step 9).
 
 Structural nodes for the NVIDIA FY2026 and AMD FY2025 10-K fixtures, Chunk
 nodes with the real chunk IDs the chunker gives those filings, and
 hand-written extracted nodes and edges that quote them: TSMC as NVIDIA's
-foundry, the Compute & Networking segment, Jen-Hsun Huang's two roles, export
+foundry, the Compute & Networking segment and the Data Center market
+platform, Jen-Hsun Huang's two roles, export
 controls, the share of revenue from the largest direct customer, and AMD
 naming NVIDIA as a competitor. Every quote is checked to be a substring of its
 chunk's text, so a bad quote or a chunker change fails the fixture. Every
 piece of evidence carries a confidence level and the prompt version
-TEST_PROMPT; the Regulation node's name is only implied by its quote.
+TEST_PROMPT; the Regulation node's name is only implied by its quote. TSMC
+carries an aliases list, as entity resolution will give it.
 """
 from __future__ import annotations
 
@@ -61,7 +63,8 @@ AMD = NodeRef.of("Company", cik=AMD_CIK)
 AMD_FILING = NodeRef.of("Filing", accession_no=AMD_10K)
 AMD_PERIOD = NodeRef.of("Period", cik=AMD_CIK, fiscal_period="FY2025")
 TSMC = NodeRef.of("Organization", key="org:tsmc")
-COMPUTE = NodeRef.of("Segment", key="segment:nvda:compute-networking")
+COMPUTE = NodeRef.of("Segment", key=f"Segment:{NVDA_CIK}:compute & networking")
+DATA_CENTER = NodeRef.of("MarketPlatform", key=f"MarketPlatform:{NVDA_CIK}:data center")
 HUANG = NodeRef.of("Person", key="person:jen-hsun-huang")
 EXPORT_CONTROLS = NodeRef.of("Regulation", key="regulation:us-export-controls")
 TOP_CUSTOMER_SHARE = NodeRef.of(
@@ -123,9 +126,13 @@ def _structural_nodes(sections: Mapping[str, str]) -> tuple[NodeRecord, ...]:
 def _extracted_nodes() -> tuple[NodeRecord, ...]:
     return (
         NodeRecord("Organization", {"key": TSMC.key_dict()["key"],
-                                    "name": "Taiwan Semiconductor Manufacturing Company Limited"},
+                                    "name": "Taiwan Semiconductor Manufacturing Company Limited",
+                                    "aliases": ["TSMC"]},
                    (evidence(SUPPLY_CHUNK),)),
         NodeRecord("Segment", {"key": COMPUTE.key_dict()["key"], "name": "Compute & Networking"},
+                   (evidence(SEGMENTS_CHUNK),)),
+        NodeRecord("MarketPlatform", {"key": DATA_CENTER.key_dict()["key"],
+                                      "name": "Data Center"},
                    (evidence(SEGMENTS_CHUNK),)),
         NodeRecord("Person", {"key": HUANG.key_dict()["key"], "name": "Jen-Hsun Huang"},
                    (evidence(OFFICERS_CHUNK),)),
@@ -154,6 +161,7 @@ def _edges() -> tuple[EdgeRecord, ...]:
         ),
         EdgeRecord("SUPPLIES", TSMC, NVIDIA, edge_evidence(SUPPLY_CHUNK)),
         EdgeRecord("HAS_SEGMENT", NVIDIA, COMPUTE, edge_evidence(SEGMENTS_CHUNK)),
+        EdgeRecord("HAS_MARKET_PLATFORM", NVIDIA, DATA_CENTER, edge_evidence(SEGMENTS_CHUNK)),
         EdgeRecord("SUBJECT_TO", NVIDIA, EXPORT_CONTROLS, edge_evidence(EXPORT_CHUNK)),
         EdgeRecord("HOLDS_ROLE_AT", HUANG, NVIDIA,
                    {"role": "President", **edge_evidence(OFFICERS_CHUNK)}),

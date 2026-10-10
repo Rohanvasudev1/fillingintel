@@ -36,6 +36,7 @@ EXPECTED_CONSTRAINTS = {
     "chunk_chunk_id_unique": ("Chunk", ["chunk_id"]),
     "organization_key_unique": ("Organization", ["key"]),
     "segment_key_unique": ("Segment", ["key"]),
+    "market_platform_key_unique": ("MarketPlatform", ["key"]),
     "product_key_unique": ("Product", ["key"]),
     "risk_factor_key_unique": ("RiskFactor", ["key"]),
     "regulation_key_unique": ("Regulation", ["key"]),

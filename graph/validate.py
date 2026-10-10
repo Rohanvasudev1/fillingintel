@@ -1,4 +1,4 @@
-"""validate_graph() and `python -m graph.validate` (Step 7; ontology version 2 since Step 8).
+"""validate_graph() and `python -m graph.validate` (Step 7; ontology version 3 since Step 9).
 
 The write path checks each batch before it lands; validate_graph() reads the
 whole graph back and checks the same ontology and evidence rules (ADR-0004)
@@ -46,6 +46,7 @@ from graph.batch import (
     EVIDENCE_SPANS,
     EVIDENCED_BY,
     EXTRACT_PROMPTS,
+    key_problem,
 )
 from graph.connection import DATABASE, GraphSettingsMissing, driver_from_env
 from graph.constraints import GRAPH_META, GRAPH_META_QUERY, graph_meta_problem
@@ -251,6 +252,8 @@ def _node_property_findings(tx: ManagedTransaction) -> Iterator[Finding]:
     for d in LABELS:
         for r in tx.run(f"MATCH (n:{quoted(d.name)}) {_NODE_RETURN}, properties(n) AS props"):
             problems = _property_problems(d.properties, r["props"])
+            if (problem := key_problem(d.name, r["props"].get("key"))) is not None:
+                problems.append(problem)
             if problems:
                 yield Finding(Check.NODE_PROPERTIES, f"{_node_name(r, 'n')}: {'; '.join(problems)}")
 

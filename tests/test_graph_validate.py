@@ -220,6 +220,30 @@ BROKEN = {
         "CREATE (c)-[:PART_OF {ontology_version: $version}]->(f)",
         Check.STRUCTURE,
     ),
+    "MarketPlatform as the end of HAS_SEGMENT": (
+        "MATCH (a:Company {cik: $cik}), (m:MarketPlatform) "
+        "CREATE (a)-[:HAS_SEGMENT {chunk_ids: [$chunk], evidence_spans: ['Data Center'], "
+        "confidences: ['stated'], extract_prompts: [$prompt], ontology_version: $version}]->(m)",
+        Check.ENDPOINTS,
+    ),
+    "AFFECTS to an unlisted label": (
+        "MATCH (c:Chunk {chunk_id: $chunk}), (o:Organization) "
+        "CREATE (r:RiskFactor {key: 'risk', title: 'Risk', ontology_version: $version})"
+        "-[:EVIDENCED_BY {evidence_span: 'Data Center', confidence: 'stated', "
+        "extract_prompt: $prompt, ontology_version: $version}]->(c) "
+        "CREATE (r)-[:AFFECTS {chunk_ids: [$chunk], evidence_spans: ['Data Center'], "
+        "confidences: ['stated'], extract_prompts: [$prompt], ontology_version: $version}]->(o)",
+        Check.ENDPOINTS,
+    ),
+    "Segment key without a CIK": (
+        "MATCH (s:Segment) SET s.key = 'Segment:compute & networking'", Check.NODE_PROPERTIES,
+    ),
+    "aliases not a list": (
+        "MATCH (o:Organization) SET o.aliases = 'TSMC'", Check.NODE_PROPERTIES,
+    ),
+    "aliases holding a number": (
+        "MATCH (o:Organization) SET o.aliases = [3]", Check.NODE_PROPERTIES,
+    ),
     "wrong GraphMeta": (
         "MATCH (m:GraphMeta) SET m.ontology_version = 0", Check.GRAPH_META,
     ),

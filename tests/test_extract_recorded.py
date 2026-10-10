@@ -1,9 +1,11 @@
-"""extract_filing() on real Sonnet replies, replayed offline (Step 8).
+"""extract_filing() on real Sonnet replies to prompt v1, replayed offline (Step 8).
 
 Four chunks of the NVDA FY2026 10-K fixture, recorded once by
 scripts/capture_extract_responses.py: a risk factor (0029), the segment note
 (0123), the Business paragraph naming suppliers (0012) and a statement table
-(0089). The replies are what the model really returned for prompt v1.
+(0089). The replies are what the model really returned for prompt v1 under
+ontology version 2; they are replayed with prompt v1 under the current ontology,
+whose prompt hash differs. Replies to prompt v2 are in test_extract_recorded_v2.
 """
 import json
 
@@ -23,6 +25,9 @@ NVIDIA = NodeRef.of("Company", cik="1045810")
 AMD = NodeRef.of("Company", cik="2488")
 INTEL = NodeRef.of("Company", cik="50863")
 FILING = NodeRef.of("Filing", accession_no=NVDA_10K)
+# The version the replies were recorded under (ontology 2). Prompt v1 under the
+# current ontology hashes differently, so this is pinned, not computed.
+V1_RECORDED_UNDER = "extract/v1@6a0f055a"
 
 
 class _Replay:
@@ -43,7 +48,7 @@ def recorded():
 def run(recorded, nvda_chunks):
     bodies = {r["chunk_id"]: r["response"] for r in recorded}
     chunks = [nvda_chunks[r["chunk_id"]] for r in recorded]
-    return extract_filing(NVDA_FILING, chunks, _Replay(bodies), load_prompt())
+    return extract_filing(NVDA_FILING, chunks, _Replay(bodies), load_prompt("v1"))
 
 
 def _node(run, label, key):
@@ -54,8 +59,8 @@ def _edges(run, edge_type):
     return {(e.start, e.end) for e in run.edges if e.type == edge_type}
 
 
-def test_recorded_with_the_current_prompt(recorded):
-    assert {r["prompt_version"] for r in recorded} == {load_prompt().prompt_version}
+def test_recorded_with_prompt_v1(recorded):
+    assert {r["prompt_version"] for r in recorded} == {V1_RECORDED_UNDER}
 
 
 def test_every_chunk_completes_and_passes_the_batch_check(run):
@@ -79,7 +84,8 @@ def test_keys_follow_the_rules(run):
     samsung = _node(run, "Organization", "Organization:samsung electronics co., ltd.")
     assert samsung.properties["name"] == "Samsung Electronics Co., Ltd."
     segment_revenue = _node(
-        run, "MetricValue", f"{NVDA_10K}:Segment:compute & networking:revenue:FY2026")
+        run, "MetricValue",
+        f"{NVDA_10K}:Segment:1045810:compute & networking:revenue:FY2026")
     assert (segment_revenue.properties["value"], segment_revenue.properties["unit"]) == (
         193479.0, "USD millions")
     net_income = _node(run, "MetricValue", f"{NVDA_10K}:1045810:net income:FY2026")
