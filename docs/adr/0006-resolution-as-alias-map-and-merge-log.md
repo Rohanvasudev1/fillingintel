@@ -7,3 +7,7 @@ Decided on 2026-10-10 in the Step 9 grilling.
 ## Considered options
 - **Rewrite keys in the extract files.** Simpler to load, but a wrong merge could not be undone without extracting again, and the merge's evidence would be lost.
 - **Merge nodes in Neo4j.** Couples resolution to the write path before Step 10 exists, and a reversal means unpicking merged evidence lists.
+
+## Amendment (2026-10-10, ticket 02, user decision)
+
+The alias map lists only keys that belong to an active merge. A key absent from it is its own canonical key, so `replay()` needs nothing but the log. A filer extracted as an Organization maps to the key `Company:{cik}`, which always wins the canonical choice in its group.
