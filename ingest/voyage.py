@@ -3,9 +3,12 @@
 API facts from https://docs.voyageai.com/reference/embeddings-api (read 2026-10-05):
 POST ``/v1/embeddings`` with a bearer key; ``input_type`` is ``query`` or
 ``document``; ``truncation`` defaults to true, so it is always sent as false; the
-response gives one ``usage.total_tokens`` per request, not per input.  Each call
-here therefore embeds one text, so the token count the API reports belongs to
-exactly one chunk.
+response gives one ``usage.total_tokens`` per request, not per input.  Each chunk
+and query call here therefore embeds one text, so the token count the API
+reports belongs to exactly one chunk.  ``embed_batch`` (Step 9, entity names)
+sends many short texts in one request with one ``input_type``; its token count
+covers the whole batch.  voyage-4-large takes up to 1,000 texts and 120K tokens
+per request (docs/research/entity-resolution.md, section 2.3).
 
 The key is held only in the request header.  It never goes into a log line, an
 exception message or a returned value.
@@ -16,7 +19,7 @@ import logging
 import math
 import os
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from types import MappingProxyType, TracebackType
 from typing import Literal, Protocol
@@ -32,6 +35,7 @@ BACKOFF_SECONDS = 2.0  # doubled after each failed attempt
 MAX_RETRY_AFTER_SECONDS = 120.0
 _RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
 _ERROR_BODY_CHARS = 300
+MAX_BATCH_TEXTS = 1_000
 
 InputType = Literal["query", "document"]
 QUERY_INPUT: InputType = "query"
@@ -69,6 +73,21 @@ class Embedding:
     from_cache: bool = False  # True when read from the query cache, not the API
 
 
+@dataclass(frozen=True)
+class BatchEmbedding:
+    """The vectors of one batch, in input order, and the token count Voyage reported for it."""
+
+    vectors: tuple[tuple[float, ...], ...]
+    total_tokens: int
+
+
+class BatchEmbedder(Protocol):
+    """Embeds many texts in one request with one ``input_type``."""
+
+    def embed_batch(self, texts: Sequence[str], model: str,
+                    input_type: InputType) -> BatchEmbedding: ...
+
+
 class Embedder(Protocol):
     """Embeds chunk text.  ``VoyageClient`` is the real one; tests replay recorded responses."""
 
@@ -101,21 +120,33 @@ class _Response(BaseModel):
 
 def _parse(body: object, model: str) -> Embedding:
     """Validate a one-input response against what was asked for."""
+    batch = _parse_batch(body, model, 1)
+    return Embedding(vector=batch.vectors[0], api_token_count=batch.total_tokens)
+
+
+def _parse_batch(body: object, model: str, count: int) -> BatchEmbedding:
+    """Validate a response to *count* inputs; the vectors come back in input order."""
     try:
         response = _Response.model_validate(body)
     except ValidationError as exc:
         raise VoyageError(f"unexpected response shape: {exc.error_count()} errors") from exc
     if response.model != model:
         raise VoyageError(f"asked for {model}, response is from {response.model}")
-    if len(response.data) != 1 or response.data[0].index != 0:
-        raise VoyageError(f"expected one embedding, got {len(response.data)}")
-    vector = response.data[0].embedding
+    items = sorted(response.data, key=lambda item: item.index)
+    if [item.index for item in items] != list(range(count)):
+        noun = "one embedding" if count == 1 else f"{count} embeddings"
+        raise VoyageError(f"expected {noun}, got {len(response.data)}")
+    return BatchEmbedding(vectors=tuple(_vector(item.embedding, model) for item in items),
+                          total_tokens=response.usage.total_tokens)
+
+
+def _vector(vector: list[float], model: str) -> tuple[float, ...]:
     expected = MODELS[model].dimensions
     if len(vector) != expected:
         raise VoyageError(f"{model} vector has {len(vector)} dimensions, expected {expected}")
     if not all(math.isfinite(x) for x in vector):
         raise VoyageError("vector holds a non-finite value")
-    return Embedding(vector=tuple(vector), api_token_count=response.usage.total_tokens)
+    return tuple(vector)
 
 
 class VoyageClient:
@@ -167,11 +198,17 @@ class VoyageClient:
         """Embed one question with ``input_type`` query and truncation off."""
         return self._embed(text, model, QUERY_INPUT)
 
+    def embed_batch(self, texts: Sequence[str], model: str,
+                    input_type: InputType) -> BatchEmbedding:
+        """Embed *texts* in one request with one ``input_type`` and truncation off."""
+        if not texts:
+            return BatchEmbedding(vectors=(), total_tokens=0)
+        if len(texts) > MAX_BATCH_TEXTS:
+            raise ValueError(f"a batch holds at most {MAX_BATCH_TEXTS} texts, not {len(texts)}")
+        return _parse_batch(self._post(_payload(texts, model, input_type)), model, len(texts))
+
     def _embed(self, text: str, model: str, input_type: InputType) -> Embedding:
-        if model not in MODELS:
-            raise ValueError(f"unknown Voyage model {model!r}; known: {sorted(MODELS)}")
-        payload = {"input": [text], "model": model, "input_type": input_type, "truncation": False}
-        return _parse(self._post(payload), model)
+        return _parse(self._post(_payload([text], model, input_type)), model)
 
     def _post(self, payload: dict[str, object]) -> object:
         """POST with backoff on 429, 5xx and transport errors; honours ``Retry-After``."""
@@ -204,6 +241,12 @@ class VoyageClient:
         if response.status_code not in _RETRY_STATUSES:
             raise VoyageError(problem)
         return _Retry(problem, _retry_after(response))
+
+
+def _payload(texts: Sequence[str], model: str, input_type: InputType) -> dict[str, object]:
+    if model not in MODELS:
+        raise ValueError(f"unknown Voyage model {model!r}; known: {sorted(MODELS)}")
+    return {"input": list(texts), "model": model, "input_type": input_type, "truncation": False}
 
 
 @dataclass(frozen=True)
