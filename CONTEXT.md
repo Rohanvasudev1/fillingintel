@@ -65,6 +65,14 @@ _Avoid_: organization, issuer
 Any other company or body a filing names, such as a supplier, customer, competitor, partner or acquired business. Its role comes from its edges, not its label.
 _Avoid_: supplier, competitor, subsidiary, when used as a type
 
+**Segment**:
+A reportable business segment of a filer, as its segment note defines it (NVIDIA: Compute & Networking, Graphics).
+_Avoid_: division, business unit, market platform
+
+**Market platform**:
+A market a filer reports revenue by that is not a reportable segment (NVIDIA: Data Center, Gaming, Professional Visualization, Automotive).
+_Avoid_: segment, end market
+
 **Structural node**:
 A node taken from EDGAR metadata rather than from text: a Company, Filing, Period or Chunk. Its evidence is the filing record.
 
@@ -99,6 +107,44 @@ _Avoid_: entity ID, placeholder
 **Review round**:
 One pass in which the user judges a fresh random sample of 30 validated edges from one extraction run against their chunks. Its accuracy is the only extraction accuracy reported.
 _Avoid_: spot check, audit
+
+## Entity resolution
+
+**Entity resolution**:
+Deciding which extracted nodes of one label name the same real-world thing, so the graph holds one node for it.
+_Avoid_: deduplication, entity linking
+
+**Same entity**:
+Two nodes refer to one real-world thing at the same level: `Groq` and `Groq, Inc.`, or a parent and the subsidiary name a filing uses interchangeably with it. A product family and its member (`Blackwell`, `GB200`) are different entities.
+_Avoid_: similar, related
+
+**Canonical key**:
+The node key a set of same-entity nodes resolves to. Extracted keys are never rewritten; they point at it.
+_Avoid_: master record, golden record
+
+**Alias map**:
+The mapping from every extracted node key to its canonical key, rebuilt by replaying the merge log.
+_Avoid_: lookup table, synonym list
+
+**Merge log**:
+The append-only record of every merge and split, each with its deciding evidence and method (deterministic, LLM or user). A merge is undone by appending a split.
+_Avoid_: audit trail, history
+
+**Candidate pair**:
+Two same-label nodes that a cheap rule (normalized name, string similarity, acronym, shared rare word or embedding neighbour) sends to the adjudicator. Only candidate pairs cost an LLM call.
+_Avoid_: block, match
+
+**Adjudicator**:
+The model that judges a candidate pair `same`, `related` (family member, parent and subsidiary, or variant), `distinct` or `unsure`, quoting evidence from both nodes' chunks. Only `same` with verified quotes merges.
+_Avoid_: matcher, resolver, when meaning the model alone
+
+**Labeller**:
+The agent that labels pairs for tuning and scoring the resolver. It runs on a different model family from the adjudicator and never sees the resolver's output.
+_Avoid_: annotator, judge
+
+**Labelled pair**:
+A pair of same-label nodes judged same or different by the labeller, an agent on a different model from the resolver. The 100 labelled pairs score the resolver and are never used to tune it; every score on them carries the label "agent-labelled".
+_Avoid_: gold pair, ground truth
 
 ## Retrieval
 
