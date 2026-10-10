@@ -127,7 +127,7 @@ class ClaudeAdjudicator:
                        others: set[str]) -> Failure | None:
         if chunk_id in own and find_span(quote, self._texts[chunk_id]) is not None:
             return None
-        if chunk_id in others or any(find_span(quote, self._texts[c]) for c in others):
+        if chunk_id in others or any(find_span(quote, self._texts[c]) is not None for c in others):
             return Failure.QUOTE_FROM_OTHER_NODE
         return Failure.QUOTE_NOT_FOUND
 

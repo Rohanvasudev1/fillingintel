@@ -275,9 +275,9 @@ def test_a_cached_adjudication_makes_zero_calls(run_main, tmp_path, claude):
     assert report["cost_this_run_usd"] == 0.0 and report["cost_replayed_usd"] > 0
 
 
-def test_a_failed_call_appends_nothing_and_fails_the_check(run_main, tmp_path, capsys):
+def test_a_failed_call_appends_nothing_and_cannot_finish(run_main, tmp_path, capsys):
     broken = FakeClaude(error=AnswerModelError("Anthropic API call failed (HTTP 529)"))
-    assert run_main(open_model=lambda: nullcontext(broken)) == EXIT_CHECK_FAILED
+    assert run_main(open_model=lambda: nullcontext(broken)) == EXIT_RUN_ERROR
     assert not (tmp_path / "out" / "merge_log.jsonl").exists()
     report = _report(tmp_path, 1)
     assert report["provenance"]["status"] == "incomplete"

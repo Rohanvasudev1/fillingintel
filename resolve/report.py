@@ -19,7 +19,7 @@ from resolve.candidates import ScoredPair
 from resolve.config import ResolveConfig
 from resolve.decisions import HeldBackGroup, PairDecision
 from resolve.estimate import CostEstimate
-from resolve.log import MergeEvent, Stamp
+from resolve.log import MergeEvent, Method, Stamp
 from resolve.nodes import InputFile
 from resolve.pipeline import Resolution
 from resolve.prompt import ResolvePrompt
@@ -137,7 +137,7 @@ def build_adjudication(result: Resolution, info: AdjudicationInfo) -> dict[str, 
         "answers": dict(result.counts.answers),
         "not_merged_by_reason": dict(result.counts.failures),
         "merging_decisions": sum(d.merges for d in decisions),
-        "llm_merges": sum(m.method.value == "llm" for m in result.proposed),
+        "llm_merges": sum(m.method is Method.LLM for m in result.proposed),
         "held_back_groups": len(result.held_back),
         "tokens_this_run": {"input": usage.input_tokens, "output": usage.output_tokens,
                             "cache_read": usage.cache_read_input_tokens,

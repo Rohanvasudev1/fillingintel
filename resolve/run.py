@@ -29,10 +29,10 @@ traced.
 Exit codes: 0 done; 2 bad input (bad arguments, no candidates file, a
 malformed candidates file or merge log); 3 could not run (a setting missing,
 ``ANTHROPIC_BASE_URL`` set, Postgres unreachable or a chunk missing, the
-estimate over ``--max-cost``, a Voyage, cache or file error); 4 checks failed
-(the alias map on disk is not the replay of the merge log on disk, so one was
-edited by hand; or an adjudicator call failed, in which case the report is
-written but nothing is appended to the log, and a rerun tries again).
+estimate over ``--max-cost``, a Voyage, cache or file error, or an
+adjudicator call failed: the report is then written but nothing is appended
+to the log, and a rerun tries again); 4 checks failed (the alias map on disk
+is not the replay of the merge log on disk, so one was edited by hand).
 """
 from __future__ import annotations
 
@@ -273,9 +273,8 @@ def _resolve(inputs: _Inputs, embedder: VoyageNodeEmbedder | None,
     try:
         return resolve_nodes(inputs.nodes, embedder, adjudicator, config, log=inputs.log,
                              stamp=stamp, workers=WORKERS)
-    except (VoyageError, CacheError, OSError) as exc:
-        raise _Stop(EXIT_RUN_ERROR, f"could not resolve: {exc}") from exc
-    except ValueError as exc:  # a vector missing, empty or miscounted; a chunk text missing
+    # ValueError: a vector missing, empty or miscounted, or a chunk text missing
+    except (VoyageError, CacheError, OSError, ValueError) as exc:
         raise _Stop(EXIT_RUN_ERROR, f"could not resolve: {exc}") from exc
 
 
@@ -345,7 +344,7 @@ def _write(inputs: _Inputs, out_dir: Path, result: Resolution, stamp: Stamp,
     if failed:
         print(f"{failed} adjudicator calls failed; nothing was appended to the merge log. "
               "Rerun to try them again.", file=sys.stderr)
-        return EXIT_CHECK_FAILED
+        return EXIT_RUN_ERROR
     return EXIT_OK
 
 

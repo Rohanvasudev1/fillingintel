@@ -67,8 +67,8 @@ def group_decisions(decisions: Sequence[PairDecision], joined: Iterable[Iterable
 
     A group with no merging decision is left alone. A group holding a `related`
     or `distinct` decision between two of its keys, or more than *max_names*
-    keys (a filer's Company key aside), is held back with every decision among
-    its keys; the rest come back as clean groups.
+    keys, is held back with every decision among its keys; the rest come back
+    as clean groups.
     """
     merging = [d for d in decisions if d.merges]
     clean: list[DecisionGroup] = []
@@ -94,7 +94,6 @@ def _hold_reason(keys: Sequence[str], inside: Sequence[PairDecision], max_names:
     if against:
         reasons.append(f"contradiction: {against} related or distinct "
                        f"{'pair' if against == 1 else 'pairs'} inside the group")
-    names = sum(not k.startswith(COMPANY_PREFIX) for k in keys)
-    if names > max_names:
-        reasons.append(f"{names} names, more than {max_names}")
+    if len(keys) > max_names:
+        reasons.append(f"{len(keys)} names, more than {max_names}")
     return "; ".join(reasons)
