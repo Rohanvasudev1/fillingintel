@@ -1378,6 +1378,24 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 
 ---
 
+## 2026-10-09 — Step 8: review round 1 not counted; metric values shown in review
+
+- **Round 1** (NVDA run 1, user's review, commit 2056122). File: `benchmarks/extraction/0001045810-26-000021-round1.jsonl`, committed as it was written. The tool's summary says 30 of 30 correct and 0 of 5 miss-check chunks missing anything, but **this round is not a measurement and gives no accuracy figure**, for two reasons:
+  - Pace: median 0.8 s per answer, 29 of 30 under 15 s. Only the first answer (46.5 s) left time to read the span. The "take another look?" prompt fired on all 29 fast answers and was declined each time (`looked_again` false on every line).
+  - A display bug: the triple view showed an endpoint's name but none of its other properties. 16 of the 30 edges were REPORTS or MEASURES, so their MetricValue's value, unit and period could not be checked.
+- **Fix.** The triple view and the miss-check view now print each endpoint's properties besides its key and name (for a MetricValue, whose name is its concept: value, unit, period). Tests `test_an_endpoints_own_properties_are_shown` and `test_the_miss_check_shows_metric_values`, each shown failing first. `Candidates.names` became `Candidates.nodes` (each node's properties).
+- **Code review** (`mattpocock-skills:code-review`). Spec: the miss-check view lacked the values (fixed) and the declined prompts were unreported (added above). Standards: no hard violations. Fixed: the name rule is one helper, field labels share one width constant, a `NodeProperties` alias names the node mapping, and the test MetricValue now has a concept and no name, as in the real run.
+- **Round 1's edges stay excluded.** Round 2 does not redraw them: they are 30 of 571, the rest is still a random sample, and seeing them again could anchor on the earlier answers. Reversible as a spec amendment if the user prefers.
+- **Decision (user, 2026-10-09).** Round 1 stays in git, labelled here as not counted. Round 2 draws 30 fresh edges from run 1, and its result is the first accuracy figure. The user plans 30 to 60 s per triple and skips anything they can't check.
+- **Evidence.** `uv run ruff check .` is clean; 26 review tests pass. Full suite against the local Postgres: 1296 passed, 15 skipped. CI result is on the PR. CI result is on the PR.
+
+**Next session starts with**
+1. Merge this PR once CI is green.
+2. The user runs review round 2 from the main checkout's Terminal panel (same command as for round 1). Pass bar 26 of 30.
+3. Then `/implement .scratch/step-8/issues/05-stop-condition-and-close.md`.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.
@@ -1388,3 +1406,4 @@ Short versions of the stories from this build so far, for interviews and write-u
 - **"Present" is not "correct".** The first Step 2b result said all required sections were present on all 6 filings. Running 24 showed some were 69-character table-of-contents rows and one was the exhibit list. Acceptance checks need to test content, not existence.
 - **Reviewing the agent's tests, not just its code.** Several agent-written tests would have passed while proving nothing: a loose rate-limit threshold, a circular round-trip test, and fixtures written by the same agent as the parser. Catching these is part of the job.
 - **A schema's key order changed what the judge wrote.** Sorting a JSON schema's keys for a stable hash put the verdict ahead of its reason. The judge, which writes fields in schema order, then left every reason blank. Keeping the declared order brought the reasoning back. Small serialization choices can change what an LLM produces.
+- **A pace check caught a rubber-stamp review.** The first extraction review came back 30 of 30 correct, with a median of under a second per answer. The tool logs how long each judgment takes, so the round was set aside rather than reported, and it also exposed that the review screen hid the metric values being judged. A human-in-the-loop number is only as good as the evidence that the human looked.

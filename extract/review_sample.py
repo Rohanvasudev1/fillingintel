@@ -34,6 +34,7 @@ from graph.batch import (
     NodeRef,
 )
 
+NodeProperties = Mapping[str, object]
 SEED = 8  # Step 8; rounds differ through the round number in the draw
 
 
@@ -68,7 +69,7 @@ class Candidates:
     file_name: str
     sha256: str
     edges: tuple[ReviewEdge, ...]
-    names: Mapping[str, str]  # node item -> its name or title
+    nodes: Mapping[str, NodeProperties]  # node item -> its properties
     flags: tuple[tuple[str, str, str], ...]  # (item, chunk_id, reason)
 
 
@@ -108,27 +109,26 @@ def _edge(line: Mapping[str, object]) -> ReviewEdge:
     )
 
 
-def _name(line: Mapping[str, object]) -> str | None:
+def _node_properties(line: Mapping[str, object]) -> NodeProperties:
     properties = line["properties"]
     if not isinstance(properties, Mapping):
         raise ValueError("a node needs a properties object")
-    return next((properties[f] for f in ("name", "title", "concept")
-                 if isinstance(properties.get(f), str)), None)
+    return MappingProxyType(dict(properties))
 
 
 def load_candidates(path: Path) -> Candidates:
-    """The edges, node names and flags in *path*; ValueError names a malformed line."""
+    """The edges, node properties and flags in *path*; ValueError names a malformed line."""
     raw = path.read_bytes()
     edges: list[ReviewEdge] = []
-    names: dict[str, str] = {}
+    nodes: dict[str, NodeProperties] = {}
     flags: list[tuple[str, str, str]] = []
     for number, text in enumerate(raw.decode("utf-8").splitlines(), start=1):
         try:
             line = json.loads(text)
             if line["kind"] == "edge":
                 edges.append(_edge(line))
-            elif line["kind"] == "node" and (name := _name(line)) is not None:
-                names[str(line["item"])] = name
+            elif line["kind"] == "node":
+                nodes[str(line["item"])] = _node_properties(line)
             elif line["kind"] == "flag":
                 flags.append((str(line["item"]), str(line["chunk_id"]), str(line["reason"])))
         except (ValueError, KeyError, TypeError) as exc:
@@ -139,7 +139,7 @@ def load_candidates(path: Path) -> Candidates:
     return Candidates(
         accession_no=path.name.split("-run")[0], file_name=path.name,
         sha256=hashlib.sha256(raw).hexdigest(), edges=tuple(edges),
-        names=MappingProxyType(names), flags=tuple(flags),
+        nodes=MappingProxyType(nodes), flags=tuple(flags),
     )
 
 
