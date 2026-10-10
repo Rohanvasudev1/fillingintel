@@ -1,12 +1,15 @@
-"""One extraction call per chunk, as a `ModelRequest` (Step 8).
+"""One extraction call per chunk, as a `ModelRequest` (Step 8; model changed in Step 9).
 
 The request goes through the existing Anthropic client and response cache. It
-carries `claude-sonnet-5-5` at effort `high`, `max_tokens` 8,000 (thinking plus
-the reply), structured output with the schema derived from the ontology, no
-sampling settings and no tools. The system prompt is one block with the only
-cache breakpoint, since it is identical on every call; the chunk is in the
-user message. The cache key hashes the whole request, so a prompt edit misses
-the response cache by construction.
+carries `claude-haiku-5-5` at effort `high` (Step 8 used `claude-sonnet-5-5`;
+switched for cost, user decision 2026-10-10), `max_tokens` 16,000 (thinking plus
+the reply; Haiku used 13,737 on chunk 0012 of the NVDA 10-K, where 8,000 cut it
+off; 16,000 is the most the SDK sends without streaming), structured output
+with the schema derived from the ontology, no sampling settings and no tools.
+The system prompt is one block with the only cache breakpoint, since it is
+identical on every call; the chunk is in the user message. The cache key
+hashes the whole request, so a prompt or model change misses the response cache
+by construction.
 """
 from __future__ import annotations
 
@@ -20,9 +23,9 @@ from extract.output_schema import output_schema
 from extract.prompt import ExtractPrompt
 from retrieve.answer_model import Effort
 
-EXTRACT_MODEL = "claude-sonnet-5-5"
+EXTRACT_MODEL = "claude-haiku-5-5"
 EXTRACT_EFFORT: Effort = "high"
-EXTRACT_MAX_TOKENS = 8_000
+EXTRACT_MAX_TOKENS = 16_000
 
 
 @dataclass(frozen=True, slots=True)

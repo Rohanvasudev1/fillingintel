@@ -66,8 +66,8 @@ The stop condition is met when these numbers are measured and written into the R
 10. As the researcher, I want the v2 prompt to tell the model the difference between a reportable segment and a market platform, so that run 1's mislabelling does not recur.
 11. As the researcher, I want the extractor to fill the filer's CIK into Segment and MarketPlatform keys in code, so that the model never builds keys.
 12. As the researcher, I want `extract.run` to accept 10-Q filings, so that all 24 corpus filings can be extracted.
-13. As the researcher, I want each run's estimate checked against `--max-cost` as before, so that no single run costs more than $10 by surprise.
-14. As the researcher, I want a record of total extraction spend across Step 9's runs, so that I can see the $40 cap is respected.
+13. As the researcher, I want each run's estimate checked against `--max-cost` as before, so that no single run costs more than $10 by surprise. (Amended 2026-10-10: `--max-cost` $1 per run.)
+14. As the researcher, I want a record of total extraction spend across Step 9's runs, so that I can see the $40 cap is respected. (Amended 2026-10-10: $5.)
 15. As the researcher, I want NVDA FY2026 re-extracted under v2 before anything else, so that the filing already reviewed shows whether the market-platform fix works.
 16. As the researcher, I want AMD's FY2025 10-K extracted second, so that the prompt is tested on a filer it was not written against.
 
@@ -240,12 +240,13 @@ Modules, organised by job:
 - A user override command for held-back groups. The log's `user` method allows one later.
 - Any human check of the labeller's labels (user decision, 2026-10-10).
 - B-cubed or other cluster metrics.
-- The Haiku extractor ablation and filtering retrieval by confidence (OPEN-DECISIONS).
+- Filtering retrieval by confidence (OPEN-DECISIONS). (Amended 2026-10-10: Haiku 5.5 became the extractor, see Further Notes.)
 - New tickers or data sources.
 
 ## Further Notes
 
-- **Cost.** Extraction is capped at $40 in total. NVDA's run 1 cost $2.23, and 10-Qs are shorter than 10-Ks. Adjudication covers a few hundred candidate pairs at most; run 1's lexical rules alone flagged 49 of 2,139 pairs. Labelling is about 200 calls. Both should cost a few dollars, and the estimates are shown before each run.
+- **Amendment, 2026-10-10 (user decision): Haiku 5.5 extractor and a $5 cap.** Sonnet 5.5's estimate for the 24 runs was $54 (about $33 expected); the user capped Step 9 extraction at $5. All 24 runs use `claude-haiku-5-5` at effort `high`, `max_tokens` 16,000 (a smoke check used 13,737 on NVDA chunk 0012), priced from the 2026-10-10 table. `TOTAL_CAP_USD` is $5 and each run passes `--max-cost 1`. Review round 3 on AMD is the quality check for Haiku plus v2, reported on its own. If it falls under about 85%, the fix may be the prompt or the model; Sonnet for all 24 would not fit in $5, so that choice goes to the user.
+- **Cost (before the amendment).** Extraction is capped at $40 in total. NVDA's run 1 cost $2.23, and 10-Qs are shorter than 10-Ks. Adjudication covers a few hundred candidate pairs at most; run 1's lexical rules alone flagged 49 of 2,139 pairs. Labelling is about 200 calls. Both should cost a few dollars, and the estimates are shown before each run.
 - **Intervals at n=100 are wide.** 45 of 50 correct has a Wilson interval of 0.79 to 0.96, and 0 matches in 15 random pairs bounds that stratum's match rate only below about 0.20. Report the raw counts beside the weighted figures.
 - **Order of work:** ontology v3 → prompt v2 and 10-Q support → NVDA again → AMD → review round 3 (the user, about 35 minutes) → the other 21 filings → resolution, tuning set, freeze → scoring set → score → README. A round 3 under about 85% loops back to the prompt.
 - **Agent-labelled.** The RUNBOOK asks for hand labels. The user chose an agent labeller from another model family, with no human check. CLAUDE.md records this, and the README states it next to the number.

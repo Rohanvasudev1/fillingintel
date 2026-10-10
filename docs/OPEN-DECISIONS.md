@@ -19,7 +19,6 @@ Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstra
 - `benchmarks/results.md`: ARCHITECTURE.md says CI regenerates it. Deferred at the Step 6 grilling (2026-10-06): decide whether a local command or CI writes it once there is more than one arm to compare.
 
 ## After Step 8
-- Haiku 5.5 at effort `high` as a cheaper extractor, run as an indexing-cost ablation with its own 30-triple review.
 - Whether retrieval filters out `uncertain` evidence: decide in Step 11 from the review's accuracy per confidence level.
 
 ## Lookup arm

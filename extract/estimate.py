@@ -18,11 +18,11 @@ from dataclasses import dataclass
 from extract.request import ExtractRequest
 from ingest.chunker import count_tokens
 from retrieve.answer_model import TokenUsage
-from retrieve.pricing import TABLE_2026_10_09, PriceTable, anthropic_cost
+from retrieve.pricing import TABLE_2026_10_10, PriceTable, anthropic_cost
 
 CLAUDE_TOKEN_FACTOR = 1.3
 ASSUMED_OUTPUT_TOKENS = 2_500
-EXTRACTION_PRICES = TABLE_2026_10_09
+EXTRACTION_PRICES = TABLE_2026_10_10
 
 
 @dataclass(frozen=True, slots=True)
