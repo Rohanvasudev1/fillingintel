@@ -1,6 +1,7 @@
 """Total extraction spend, summed over the committed run reports (Step 9).
 
-Step 9's extraction runs are capped at TOTAL_CAP_USD in all. The total is the
+Step 9's extraction runs are capped at TOTAL_CAP_USD in all ($5, user decision
+2026-10-10; it was $40 before the switch to Haiku 5.5). The total is the
 sum of `cost_this_run_usd` (what the run's cache misses cost) over every run
 report in the reports folder (benchmarks/extraction, committed) built under the
 current ontology version; Step 8's run, under version 2, falls outside it. A
@@ -18,7 +19,7 @@ from pathlib import Path
 
 from graph.ontology import ONTOLOGY_VERSION
 
-TOTAL_CAP_USD = 40.0
+TOTAL_CAP_USD = 5.0
 _RUN_REPORT = re.compile(r"\d{10}-\d{2}-\d{6}-run\d+\.json")
 
 

@@ -5,15 +5,15 @@ Usage (needs ``ANTHROPIC_API_KEY`` and ``DATABASE_URL``, with
 network)::
 
     uv run --env-file .env python -m extract.run --accession 0001045810-26-000021
-    uv run --env-file .env python -m extract.run --accession <no> --max-cost 5
+    uv run --env-file .env python -m extract.run --accession <no> --max-cost 0.5
     uv run --env-file .env python -m extract.run --accession <no> --allow-over-total
 
 The command reads the filing and its chunk texts (the text ``resolve()``
 returns) from Postgres, prints a cost estimate for the calls not already in the
-response cache and stops if it is over ``--max-cost`` (default $10). It also
+response cache and stops if it is over ``--max-cost`` (default $1). It also
 prints the extraction spend so far (``extract.spend``: the committed run
 reports under this ontology version) and stops if this run would take the total
-past $40, unless ``--allow-over-total`` is given. It then
+past $5, unless ``--allow-over-total`` is given. It then
 runs ``extract_filing()`` 4 calls at a time and writes the candidates file
 (``data/extract/``, gitignored) and the run report (``benchmarks/extraction/``,
 committed). A rerun with the same prompt replays every reply from the cache.
@@ -83,7 +83,7 @@ EXIT_USAGE = 2
 EXIT_RUN_ERROR = 3
 EXIT_INCOMPLETE = 4
 WORKERS = 4
-DEFAULT_MAX_COST_USD = 10.0
+DEFAULT_MAX_COST_USD = 1.0
 DATABASE_ENV = "DATABASE_URL"
 BASE_URL_ENV = "ANTHROPIC_BASE_URL"
 TRACER_NAME = "filingintel.extract"

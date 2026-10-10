@@ -9,7 +9,7 @@ from extract.request import build_request
 from ingest.chunker import count_tokens
 from tests.extract_fakes import NVDA_FILING, nvda_chunks  # noqa: F401 (fixture)
 
-IN, WRITE, READ, OUT = 2.00, 2.50, 0.10, 10.00  # Sonnet 5.5, 2026-10-09 table
+IN, WRITE, READ, OUT = 0.10, 0.125, 0.01, 0.50  # Haiku 5.5 up to 100K, 2026-10-10 table
 
 
 @pytest.fixture(scope="module")
@@ -38,7 +38,7 @@ def test_one_request_writes_the_system_prompt_to_the_cache(requests):
     assert estimate.output_tokens == ASSUMED_OUTPUT_TOKENS
     assert estimate.usd == pytest.approx(
         (system * WRITE + user * IN + ASSUMED_OUTPUT_TOKENS * OUT) / 1_000_000)
-    assert estimate.price_table_date == "2026-10-09"
+    assert estimate.price_table_date == "2026-10-10"
 
 
 def test_the_first_call_on_each_worker_writes_and_later_calls_read(requests):

@@ -2,7 +2,9 @@
 
 The database tests load four chunks of the NVDA FY2026 10-K fixture into a
 throwaway schema and answer them with the real Sonnet replies recorded for
-ticket 02, served by a counting fake behind the real response cache.
+ticket 02, served by a counting fake behind the real response cache. The
+requests name the current extractor (Haiku 5.5); the fake ignores the model, so
+the reports and spans say Haiku while the bodies are Sonnet's.
 """
 import json
 from contextlib import nullcontext
@@ -157,7 +159,7 @@ def test_a_complete_run_writes_candidates_and_a_report_and_exits_0(env, conn, re
     assert report["prompt"]["version"] == prompt.version
     assert report["prompt"]["sha256"] == prompt.sha256
     assert report["prompt"]["prompt_version"] == prompt.prompt_version
-    assert (report["model"], report["effort"]) == ("claude-sonnet-5-5", "high")
+    assert (report["model"], report["effort"]) == ("claude-haiku-5-5", "high")
     assert report["ontology_version"] == ONTOLOGY_VERSION
     assert report["chunk_count"] == len(recorded)
     assert report["failed_chunks"] == []
@@ -166,7 +168,7 @@ def test_a_complete_run_writes_candidates_and_a_report_and_exits_0(env, conn, re
     assert set(report["tokens"]) == {"input", "cache_read", "cache_write", "output"}
     assert report["tokens"]["output"] > 0
     assert report["cost_usd"] > 0
-    assert report["price_table"]["date"] == "2026-10-09"
+    assert report["price_table"]["date"] == "2026-10-10"
     assert report["commit"]
     assert {"rejections", "flags", "conflicts"} <= set(report)
 
@@ -256,7 +258,7 @@ def test_each_chunk_call_is_an_llm_span_under_the_run(env, conn, recorded, tmp_p
     for span in chunks:
         assert span.parent.span_id == root.context.span_id
         assert span.attributes["openinference.span.kind"] == "LLM"
-        assert span.attributes["llm.model_name"] == "claude-sonnet-5-5"
+        assert span.attributes["llm.model_name"] == "claude-haiku-5-5"
         assert span.attributes["filingintel.cache_hit"] is False
         assert span.attributes["filingintel.cost_usd"] > 0
         assert span.attributes["llm.token_count.completion"] > 0
@@ -379,23 +381,23 @@ def _report_of(tmp_path, accession, run=1):
 
 def test_the_total_so_far_is_shown_before_the_run(env, conn, recorded, tmp_path, capsys):
     reports = tmp_path / "reports"
-    _past_report(reports, "0000002488-26-000018-run1.json", 3.25)
-    _past_report(reports, "0000050863-26-000011-run1.json", 1.5)
+    _past_report(reports, "0000002488-26-000018-run1.json", 0.25)
+    _past_report(reports, "0000050863-26-000011-run1.json", 0.5)
     _past_report(reports, "0001045810-26-000021-run0.json", 2.23, ontology_version=2)
     assert _main(tmp_path, CountingModel(recorded), conn) == EXIT_OK
     out = capsys.readouterr().out
-    assert "$4.75 spent so far" in out
-    assert "total cap $40.00" in out
+    assert "$0.75 spent so far" in out
+    assert "total cap $5.00" in out
 
 
 def test_a_run_that_would_pass_the_total_cap_exits_3_before_any_call(env, conn, recorded,
                                                                     tmp_path, capsys):
-    _past_report(tmp_path / "reports", "0000002488-26-000018-run1.json", 39.999)
+    _past_report(tmp_path / "reports", "0000002488-26-000018-run1.json", 4.999)
     model = CountingModel(recorded)
     assert _main(tmp_path, model, conn) == EXIT_RUN_ERROR
     assert model.calls == 0
     err = capsys.readouterr().err
-    assert "$40.00" in err and "--allow-over-total" in err
+    assert "$5.00" in err and "--allow-over-total" in err
     assert not (tmp_path / "reports" / f"{NVDA_10K}-run1.json").exists()
 
 
@@ -414,3 +416,8 @@ def test_an_unreadable_past_report_exits_3(env, conn, recorded, tmp_path, capsys
     assert _main(tmp_path, model, conn) == EXIT_RUN_ERROR
     assert model.calls == 0
     assert "0000002488-26-000018-run1.json" in capsys.readouterr().err
+
+
+def test_the_default_per_run_cap_is_one_dollar():
+    assert run_module.DEFAULT_MAX_COST_USD == 1.0
+    assert run_module._parse_args(["--accession", NVDA_10K]).max_cost == 1.0
