@@ -190,6 +190,15 @@ Two rules that determine whether this works:
 
 _Note (2026-10-09): the prompt lives at `prompts/extract/v1.md`, following the `prompts/answer/v1.md` convention. "At or above ~85%" applies to the last review round; every round is reported._
 
+#### Step 8 — outcome (met 2026-10-10)
+
+Built as five tickets (spec: `.scratch/step-8/spec.md`; CI runs are the push-to-`main` runs after each merge): ontology version 2 (PR #18, run 37929427237), `extract_filing()` (PR #19, run 37934921491), `python -m extract.run` (PR #20, run 37941057081), `python -m extract.review` (PR #21, run 37952153329) and a review display fix (PR #22, run 38078840571).
+- **Extraction.** Prompt `extract/v1@6a0f055a` over the whole NVDA FY2026 10-K: 132 of 132 chunks, 1,217 candidates, 0 rejected, 389 nodes and 571 edges after merging, 4 conflicts, $2.23 (`benchmarks/extraction/0001045810-26-000021-run1.json`).
+- **Zero violations reaching the write path.** `check_batch()` reported none over the whole filing.
+- **Manual accuracy.** Review round 2: 30 of 30 judged correct by the user, Wilson 95% interval 88.6% to 100%, median 18.7 s per answer. Round 1 (also 30 of 30) is not counted: median 0.8 s per answer, and the review screen then hid metric values. The miss check was not measured in either round (answers of 0.8 to 5.3 s per chunk).
+
+The stop condition is met on the user's judgment. An agent second look flagged four of round 2's triples as wrong; the user reviewed the flags and kept all four correct (BUILD-LOG, 2026-10-10). Two of them raise an ontology question for Step 9: the run made NVIDIA's market platforms (Data Center, Gaming, Professional Visualization, Automotive) Segment nodes, while the ontology defines Segment as a reportable segment (OPEN-DECISIONS).
+
 ### Step 9. Entity resolution
 
 Order matters, and the LLM comes last:

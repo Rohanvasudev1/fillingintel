@@ -4,7 +4,7 @@
 
 **Blocked by:** 01 (Ontology version 2)
 
-**Status:** ready-for-agent
+**Status:** done (2026-10-09, PR #19)
 
 - [x] Prompt v1 in the versioned prompts folder next to the answer prompt, loaded with version, text and hash; the prompt version string is `extract/v1@<hash8>`. It carries the generated schema text, the filer references (`THIS_FILING`, `FILER`, `NVDA`, `AMD`, `INTC`), the confidence definitions, the "emit nothing the chunk doesn't state" rule, the forward-looking rule (a disclosure, never a reported figure), and the MetricValue limit (named subject, period and unit).
 - [x] The structured-output JSON schema is derived from the ontology, with labels and edge types as enums. A test checks it lists exactly the ontology's types and stays inside the limits in docs/research/claude-extraction-structured-output.md (no numeric or length bounds, `minItems` 0 or 1, at most 24 optional and 16 union-typed parameters).

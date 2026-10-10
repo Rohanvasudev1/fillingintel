@@ -1396,6 +1396,24 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 
 ---
 
+## 2026-10-10 — Step 8 ticket 05: stop condition met, Step 8 closed
+
+- **Run.** One run, prompt `extract/v1@6a0f055a` (no revision), NVDA FY2026 10-K, commit c816d0d: 132 of 132 chunks, no failed chunks, zero `check_batch()` violations. 1,217 candidates, 0 rejected (rejection rate 0.0, no reason with a count). 389 nodes, 571 edges, 4 conflicts (one case-only; three NVIDIA operating-income values where the segment note disagrees with the income statement). Cost $2.23 (2026-10-09 prices). Report: `benchmarks/extraction/0001045810-26-000021-run1.json`.
+- **Round 1** (2026-10-09, commit 2056122): 30 of 30 marked correct, **not counted** (median 0.8 s per answer; metric values hidden by a display bug fixed in PR #22). See the 2026-10-09 entry.
+- **Round 2** (2026-10-10, commit d4cf18e, user's review): **30 of 30 correct, accuracy 100%, Wilson 95% interval 88.6% to 100%.** By confidence level (uncalibrated): stated 13 of 13, implied 14 of 14, uncertain 3 of 3. Median 18.7 s per answer (7.7 to 45.1 s), 10 answers under 15 s, no second looks taken, no skips. File: `benchmarks/extraction/0001045810-26-000021-round2.jsonl`.
+  - Edge types judged: REPORTS 8, MEASURES 8, DISCLOSES 3, and one each of the other 11 types.
+  - **Miss check not measured.** The 5 "nothing missing" answers took 5.3, 1.2, 0.8, 0.8 and 0.8 s, too fast to read a chunk. No miss rate is reported (OPEN-DECISIONS).
+- **Agent second look** (labelled as such; not a judgment). Before recording, the agent flagged four of round 2's triples as wrong by the written standard: HAS_SEGMENT NVIDIA → "Data Center" and MEASURES Professional Visualization revenue growth → Segment "Professional Visualization" (market platforms, while the ontology defines Segment as a reportable segment); SUBJECT_TO H100 → the August 2022 export rule (the span does not name the rule); HOLDS_ROLE_AT Colette Kress as "Executive Vice President" (the filing adds "and Chief Financial Officer"). The user reviewed all four and kept them correct. Had they been marked wrong the round would be 26 of 30 (70% to 95%), still at the bar. The Segment question and the review standard for the other two are in OPEN-DECISIONS.
+- **Stop condition** (RUNBOOK Step 8): extraction over one 10-K, done; last round at or above about 85%, met (30 of 30 on the user's judgment); zero ontology violations reaching the write path, met. No prompt revision was needed, so `prompts/extract/v1.md` is the only version.
+- **Step 10 note.** The local Neo4j still holds the version-1 `:GraphMeta` node from Step 7. The user must clear it at the start of Step 10, since `apply_constraints()` refuses a graph at another ontology version.
+- **Evidence.** Docs and records only in this ticket; no code changed. CI result is on the PR.
+
+**Next session starts with**
+1. Merge this PR once CI is green.
+2. Step 9 (entity resolution): `/grill-with-docs`, starting with the Segment-versus-market-platform question and the XBRL tag proposal in OPEN-DECISIONS.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.

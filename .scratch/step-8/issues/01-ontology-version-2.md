@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** done (PR pending)
+**Status:** done (2026-10-09, PR #18)
 
 - [x] The ontology defines the four new required properties and the confidence enum; the generated schema text lists them, and the pinned schema hash test is updated to version 2.
 - [x] The batch check rejects, one test per case: a missing `confidences` or `extract_prompts` list; a list whose length differs from `chunk_ids`; a confidence outside the enum (on an edge and on node evidence); an `EVIDENCED_BY` without `extract_prompt`; a blank prompt version.
