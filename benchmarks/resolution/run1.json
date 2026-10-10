@@ -1,0 +1,4741 @@
+{
+  "provenance": {
+    "run": 1,
+    "commit": "5235dd7",
+    "created_at": "2026-10-10T20:58:01+00:00",
+    "config_hash": "2870f2920973894a358eafb68ae948432b1459682762476ec8e246217d2c131e",
+    "config": {
+      "fuzzy_cutoff": 90.0,
+      "top_k": 3,
+      "rare_word_max_keys": 3,
+      "rare_word_min_length": 3,
+      "embedding_model": "voyage-4-large",
+      "embed_text": "label_name",
+      "embed_input_type": "document"
+    },
+    "ontology_version": 2,
+    "embedding_model": "voyage-4-large",
+    "embedding_input_type": "document",
+    "inputs": [
+      {
+        "file": "0001045810-26-000021-run1.jsonl",
+        "sha256": "aa242bfbe16e73b987ae27202747da076642bc4fd8b4555e1aebc627740ce44f"
+      }
+    ]
+  },
+  "counts": {
+    "nodes_by_label": {
+      "Agreement": 9,
+      "Facility": 1,
+      "LegalProceeding": 6,
+      "MetricValue": 175,
+      "Organization": 39,
+      "Person": 16,
+      "Product": 42,
+      "Regulation": 27,
+      "RiskFactor": 68,
+      "Segment": 6
+    },
+    "pairs_scored_by_label": {
+      "Agreement": 36,
+      "LegalProceeding": 15,
+      "MetricValue": 21,
+      "Organization": 741,
+      "Person": 120,
+      "Product": 861,
+      "Regulation": 351,
+      "Segment": 15
+    },
+    "candidates_by_label": {
+      "Agreement": 20,
+      "LegalProceeding": 11,
+      "MetricValue": 21,
+      "Organization": 89,
+      "Person": 36,
+      "Product": 95,
+      "Regulation": 65,
+      "Segment": 11
+    },
+    "candidates_by_rule": {
+      "normalized_equal": 4,
+      "fuzzy": 30,
+      "acronym": 2,
+      "rare_word": 37,
+      "embedding": 311,
+      "same_facts": 21
+    },
+    "candidates_by_rule_alone": {
+      "normalized_equal": 0,
+      "fuzzy": 6,
+      "acronym": 0,
+      "rare_word": 9,
+      "embedding": 276,
+      "same_facts": 21
+    },
+    "merges": {
+      "proposed": 2,
+      "new": 2,
+      "by_rule": {
+        "normalized_equal": 2
+      }
+    },
+    "pending": 344,
+    "pending_by_label": {
+      "Agreement": 20,
+      "LegalProceeding": 11,
+      "MetricValue": 21,
+      "Organization": 85,
+      "Person": 36,
+      "Product": 95,
+      "Regulation": 65,
+      "Segment": 11
+    },
+    "alias_map_keys": 5
+  },
+  "embedding": {
+    "texts": 146,
+    "calls": 0,
+    "tokens": 0,
+    "cost_usd": 0.0,
+    "price_table": {
+      "date": "2026-10-05",
+      "unit": "USD per million tokens",
+      "models": {
+        "voyage-4-large": {
+          "input_per_mtok": 0.12,
+          "source": "https://docs.voyageai.com/docs/pricing",
+          "output_per_mtok": 0.0,
+          "cache_write_per_mtok": 0.0,
+          "cache_read_per_mtok": 0.0
+        }
+      }
+    }
+  },
+  "merges": [
+    {
+      "merge_id": "m-fd9d6f1b2e0f9763",
+      "new": true,
+      "label": "Organization",
+      "canonical": "Organization:groq",
+      "members": {
+        "Organization:groq": 1,
+        "Organization:groq, inc": 1,
+        "Organization:groq, inc.": 1
+      },
+      "method": "deterministic",
+      "rule": "normalized_equal"
+    },
+    {
+      "merge_id": "m-afe161e082cb6581",
+      "new": true,
+      "label": "Organization",
+      "canonical": "Organization:microsoft",
+      "members": {
+        "Organization:microsoft": 2,
+        "Organization:microsoft corporation": 1
+      },
+      "method": "deterministic",
+      "rule": "normalized_equal"
+    }
+  ],
+  "pending": [
+    {
+      "key_a": "Agreement:agreement with microsoft for the xbox",
+      "key_b": "Agreement:license agreement with groq",
+      "label": "Agreement",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 68.29,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7184
+    },
+    {
+      "key_a": "Agreement:agreement with microsoft for the xbox",
+      "key_b": "Agreement:mellanox acquisition",
+      "label": "Agreement",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 28.07,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7331
+    },
+    {
+      "key_a": "Agreement:agreement with microsoft for the xbox",
+      "key_b": "Agreement:our agreement with microsoft",
+      "label": "Agreement",
+      "rules": [
+        "embedding",
+        "fuzzy",
+        "rare_word"
+      ],
+      "fuzzy": 92.31,
+      "acronym": false,
+      "shared_rare_words": [
+        "microsoft"
+      ],
+      "embedding_rank": 1,
+      "cosine": 0.8442
+    },
+    {
+      "key_a": "Agreement:agreements to guarantee partners’ facility lease obligations",
+      "key_b": "Agreement:indenture, dated as of september 16, 2016",
+      "label": "Agreement",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 32.65,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.5395
+    },
+    {
+      "key_a": "Agreement:agreements to guarantee partners’ facility lease obligations",
+      "key_b": "Agreement:license agreement with groq",
+      "label": "Agreement",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 46.51,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7004
+    },
+    {
+      "key_a": "Agreement:agreements to guarantee partners’ facility lease obligations",
+      "key_b": "Agreement:non‐exclusive license agreement with groq",
+      "label": "Agreement",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 52.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.6809
+    },
+    {
+      "key_a": "Agreement:agreements to guarantee partners’ facility lease obligations",
+      "key_b": "Agreement:our agreement with microsoft",
+      "label": "Agreement",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 43.68,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7019
+    },
+    {
+      "key_a": "Agreement:indenture, dated as of september 16, 2016",
+      "key_b": "Agreement:license agreement with groq",
+      "label": "Agreement",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 33.33,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.5531
+    },
+    {
+      "key_a": "Agreement:indenture, dated as of september 16, 2016",
+      "key_b": "Agreement:non‐exclusive license agreement with groq",
+      "label": "Agreement",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 32.5,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.5376
+    },
+    {
+      "key_a": "Agreement:intellectual property license arrangement with groq",
+      "key_b": "Agreement:investment and partnership agreement with openai",
+      "label": "Agreement",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 54.55,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7785
+    },
+    {
+      "key_a": "Agreement:intellectual property license arrangement with groq",
+      "key_b": "Agreement:license agreement with groq",
+      "label": "Agreement",
+      "rules": [
+        "embedding",
+        "rare_word"
+      ],
+      "fuzzy": 77.27,
+      "acronym": false,
+      "shared_rare_words": [
+        "groq",
+        "license"
+      ],
+      "embedding_rank": 1,
+      "cosine": 0.9483
+    },
+    {
+      "key_a": "Agreement:intellectual property license arrangement with groq",
+      "key_b": "Agreement:mellanox acquisition",
+      "label": "Agreement",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 28.17,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7816
+    },
+    {
+      "key_a": "Agreement:intellectual property license arrangement with groq",
+      "key_b": "Agreement:non‐exclusive license agreement with groq",
+      "label": "Agreement",
+      "rules": [
+        "embedding",
+        "rare_word"
+      ],
+      "fuzzy": 67.39,
+      "acronym": false,
+      "shared_rare_words": [
+        "groq",
+        "license"
+      ],
+      "embedding_rank": 2,
+      "cosine": 0.9272
+    },
+    {
+      "key_a": "Agreement:investment and partnership agreement with openai",
+      "key_b": "Agreement:license agreement with groq",
+      "label": "Agreement",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 68.29,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7743
+    },
+    {
+      "key_a": "Agreement:investment and partnership agreement with openai",
+      "key_b": "Agreement:non‐exclusive license agreement with groq",
+      "label": "Agreement",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 53.93,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7609
+    },
+    {
+      "key_a": "Agreement:license agreement with groq",
+      "key_b": "Agreement:mellanox acquisition",
+      "label": "Agreement",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 25.53,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7726
+    },
+    {
+      "key_a": "Agreement:license agreement with groq",
+      "key_b": "Agreement:non‐exclusive license agreement with groq",
+      "label": "Agreement",
+      "rules": [
+        "embedding",
+        "fuzzy",
+        "rare_word"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [
+        "groq",
+        "license"
+      ],
+      "embedding_rank": 1,
+      "cosine": 0.9566
+    },
+    {
+      "key_a": "Agreement:license agreement with groq",
+      "key_b": "Agreement:our agreement with microsoft",
+      "label": "Agreement",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 68.29,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.758
+    },
+    {
+      "key_a": "Agreement:mellanox acquisition",
+      "key_b": "Agreement:non‐exclusive license agreement with groq",
+      "label": "Agreement",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 32.79,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7498
+    },
+    {
+      "key_a": "Agreement:mellanox acquisition",
+      "key_b": "Agreement:our agreement with microsoft",
+      "label": "Agreement",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 25.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7434
+    },
+    {
+      "key_a": "LegalProceeding:horanic v. huang, et al.",
+      "key_b": "LegalProceeding:in re nvidia corporation consolidated derivative litigation",
+      "label": "LegalProceeding",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 32.5,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7381
+    },
+    {
+      "key_a": "LegalProceeding:horanic v. huang, et al.",
+      "key_b": "LegalProceeding:in re nvidia corporation securities litigation",
+      "label": "LegalProceeding",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 29.85,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7307
+    },
+    {
+      "key_a": "LegalProceeding:horanic v. huang, et al.",
+      "key_b": "LegalProceeding:securities class action lawsuit",
+      "label": "LegalProceeding",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 30.77,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7032
+    },
+    {
+      "key_a": "LegalProceeding:in re nvidia corporation consolidated derivative litigation",
+      "key_b": "LegalProceeding:in re nvidia corporation securities litigation",
+      "label": "LegalProceeding",
+      "rules": [
+        "embedding",
+        "rare_word"
+      ],
+      "fuzzy": 86.42,
+      "acronym": false,
+      "shared_rare_words": [
+        "corporation",
+        "litigation",
+        "nvidia"
+      ],
+      "embedding_rank": 1,
+      "cosine": 0.9566
+    },
+    {
+      "key_a": "LegalProceeding:in re nvidia corporation consolidated derivative litigation",
+      "key_b": "LegalProceeding:securities class action lawsuit",
+      "label": "LegalProceeding",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 35.56,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.826
+    },
+    {
+      "key_a": "LegalProceeding:in re nvidia corporation securities litigation",
+      "key_b": "LegalProceeding:internal revenue service examination of fiscal years 2023 and 2024",
+      "label": "LegalProceeding",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 42.86,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.6527
+    },
+    {
+      "key_a": "LegalProceeding:in re nvidia corporation securities litigation",
+      "key_b": "LegalProceeding:ongoing inquiry into competition in those markets",
+      "label": "LegalProceeding",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 48.42,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.6585
+    },
+    {
+      "key_a": "LegalProceeding:in re nvidia corporation securities litigation",
+      "key_b": "LegalProceeding:securities class action lawsuit",
+      "label": "LegalProceeding",
+      "rules": [
+        "embedding",
+        "rare_word"
+      ],
+      "fuzzy": 54.55,
+      "acronym": false,
+      "shared_rare_words": [
+        "securities"
+      ],
+      "embedding_rank": 1,
+      "cosine": 0.852
+    },
+    {
+      "key_a": "LegalProceeding:internal revenue service examination of fiscal years 2023 and 2024",
+      "key_b": "LegalProceeding:ongoing inquiry into competition in those markets",
+      "label": "LegalProceeding",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 36.52,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.667
+    },
+    {
+      "key_a": "LegalProceeding:internal revenue service examination of fiscal years 2023 and 2024",
+      "key_b": "LegalProceeding:securities class action lawsuit",
+      "label": "LegalProceeding",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 37.11,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7048
+    },
+    {
+      "key_a": "LegalProceeding:ongoing inquiry into competition in those markets",
+      "key_b": "LegalProceeding:securities class action lawsuit",
+      "label": "LegalProceeding",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 37.5,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7431
+    },
+    {
+      "key_a": "0001045810-26-000021:1045810:cash dividends paid to shareholders:FY2026",
+      "key_b": "0001045810-26-000021:1045810:cash dividends paid:FY2026",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "0001045810-26-000021:1045810:cash dividends paid to shareholders:FY2026",
+      "key_b": "0001045810-26-000021:1045810:revenue recognized that was included in the prior year end deferred revenue balance:FY2026",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 34.55,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "0001045810-26-000021:1045810:cash dividends paid:FY2026",
+      "key_b": "0001045810-26-000021:1045810:revenue recognized that was included in the prior year end deferred revenue balance:FY2026",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 25.53,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "0001045810-26-000021:1045810:consolidated inventories balance:FY2026",
+      "key_b": "0001045810-26-000021:1045810:income tax expense:FY2026",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 36.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "0001045810-26-000021:1045810:consolidated outstanding inventory purchase and long-term supply and capacity obligations balance:FY2026",
+      "key_b": "0001045810-26-000021:1045810:manufacturing, supply, and capacity commitments:FY2026",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 59.38,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "0001045810-26-000021:1045810:depreciation expense:FY2025",
+      "key_b": "0001045810-26-000021:1045810:product warranty liabilities:FY2025",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 29.17,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "0001045810-26-000021:1045810:gross margin:FY2025",
+      "key_b": "0001045810-26-000021:1045810:gross margins:FY2025",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 96.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "0001045810-26-000021:1045810:gross margin:FY2026",
+      "key_b": "0001045810-26-000021:1045810:gross margins:FY2026",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 96.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "0001045810-26-000021:1045810:income tax as a percentage of income before income tax:FY2026",
+      "key_b": "0001045810-26-000021:1045810:income tax expense as a percent of income before income tax:FY2026",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 85.71,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "0001045810-26-000021:1045810:operating expenses:FY2025",
+      "key_b": "0001045810-26-000021:1045810:total operating expenses:FY2025",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "0001045810-26-000021:1045810:operating expenses:FY2026",
+      "key_b": "0001045810-26-000021:1045810:total operating expenses:FY2026",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "0001045810-26-000021:1045810:revenue from customers headquartered outside of the united states as share of total revenue:FY2025",
+      "key_b": "0001045810-26-000021:1045810:revenue from sales to customers headquartered outside of the united states as a share of total revenue:FY2025",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "0001045810-26-000021:1045810:revenue from customers headquartered outside of the united states as share of total revenue:FY2026",
+      "key_b": "0001045810-26-000021:1045810:revenue from sales outside the united states, as a percentage of revenue:FY2026",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 82.24,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "0001045810-26-000021:1045810:revenue from customers headquartered outside of the united states as share of total revenue:FY2026",
+      "key_b": "0001045810-26-000021:1045810:revenue from sales to customers headquartered outside of the united states as a share of total revenue:FY2026",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "0001045810-26-000021:1045810:revenue from sales outside the united states, as a percentage of revenue:FY2026",
+      "key_b": "0001045810-26-000021:1045810:revenue from sales to customers headquartered outside of the united states as a share of total revenue:FY2026",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 90.43,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "0001045810-26-000021:1045810:revenue:FY2024",
+      "key_b": "0001045810-26-000021:1045810:total revenue:FY2024",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "0001045810-26-000021:1045810:revenue:FY2025",
+      "key_b": "0001045810-26-000021:1045810:total revenue:FY2025",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "0001045810-26-000021:1045810:revenue:FY2026",
+      "key_b": "0001045810-26-000021:1045810:total revenue:FY2026",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "0001045810-26-000021:1045810:sales to another direct customer as a percentage of total revenue:FY2026",
+      "key_b": "0001045810-26-000021:1045810:sales to another direct customer as share of total revenue:FY2026",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 94.55,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "0001045810-26-000021:1045810:sales to one direct customer as a percentage of total revenue:FY2026",
+      "key_b": "0001045810-26-000021:1045810:sales to one direct customer as share of total revenue:FY2026",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 94.12,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "0001045810-26-000021:Product:h20:charge for excess inventory and purchase obligations associated with h20:FY2026-Q1",
+      "key_b": "0001045810-26-000021:Product:h20:h20 charge for excess inventory and purchase obligations:FY2026-Q1",
+      "label": "MetricValue",
+      "rules": [
+        "same_facts"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": null,
+      "cosine": null
+    },
+    {
+      "key_a": "Organization:alibaba group",
+      "key_b": "Organization:amazon, inc.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 31.58,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8118
+    },
+    {
+      "key_a": "Organization:alibaba group",
+      "key_b": "Organization:baidu, inc.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 33.33,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8353
+    },
+    {
+      "key_a": "Organization:alibaba group",
+      "key_b": "Organization:cyberspace administration of china",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 29.79,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7503
+    },
+    {
+      "key_a": "Organization:alibaba group",
+      "key_b": "Organization:huawei",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 21.05,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8256
+    },
+    {
+      "key_a": "Organization:alphabet inc.",
+      "key_b": "Organization:baidu, inc.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 15.38,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8366
+    },
+    {
+      "key_a": "Organization:alphabet inc.",
+      "key_b": "Organization:groq, inc",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 0.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.824
+    },
+    {
+      "key_a": "Organization:alphabet inc.",
+      "key_b": "Organization:groq, inc.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 0.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.816
+    },
+    {
+      "key_a": "Organization:alphabet inc.",
+      "key_b": "Organization:tesla, inc.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 30.77,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7845
+    },
+    {
+      "key_a": "Organization:amazon, inc.",
+      "key_b": "Organization:microsoft",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 26.67,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8102
+    },
+    {
+      "key_a": "Organization:amazon, inc.",
+      "key_b": "Organization:microsoft corporation",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 26.67,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8094
+    },
+    {
+      "key_a": "Organization:amazon, inc.",
+      "key_b": "Organization:tesla, inc.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 18.18,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7768
+    },
+    {
+      "key_a": "Organization:ambarella, inc.",
+      "key_b": "Organization:broadcom",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 35.29,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8542
+    },
+    {
+      "key_a": "Organization:ambarella, inc.",
+      "key_b": "Organization:groq, inc",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 15.38,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8472
+    },
+    {
+      "key_a": "Organization:ambarella, inc.",
+      "key_b": "Organization:groq, inc.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 15.38,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8465
+    },
+    {
+      "key_a": "Organization:ambarella, inc.",
+      "key_b": "Organization:marvell technology, inc",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 44.44,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8539
+    },
+    {
+      "key_a": "Organization:ambarella, inc.",
+      "key_b": "Organization:tesla, inc.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 42.86,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7747
+    },
+    {
+      "key_a": "Organization:arista networks",
+      "key_b": "Organization:cisco systems, inc.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 35.71,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8892
+    },
+    {
+      "key_a": "Organization:arista networks",
+      "key_b": "Organization:groq, inc.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 21.05,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8381
+    },
+    {
+      "key_a": "Organization:arista networks",
+      "key_b": "Organization:lumentum holdings inc.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 31.25,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8252
+    },
+    {
+      "key_a": "Organization:arista networks",
+      "key_b": "Organization:mellanox",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 26.09,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8813
+    },
+    {
+      "key_a": "Organization:baidu, inc.",
+      "key_b": "Organization:cyberspace administration of china",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 10.26,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7389
+    },
+    {
+      "key_a": "Organization:baidu, inc.",
+      "key_b": "Organization:huawei",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 36.36,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8454
+    },
+    {
+      "key_a": "Organization:baidu, inc.",
+      "key_b": "Organization:huawei technologies co. ltd.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 16.67,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8364
+    },
+    {
+      "key_a": "Organization:broadcom",
+      "key_b": "Organization:marvell technology, inc",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 23.08,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.9
+    },
+    {
+      "key_a": "Organization:broadcom",
+      "key_b": "Organization:mellanox",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 25.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8754
+    },
+    {
+      "key_a": "Organization:broadcom",
+      "key_b": "Organization:micron technology, inc.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 32.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8413
+    },
+    {
+      "key_a": "Organization:broadcom",
+      "key_b": "Organization:qualcomm incorporated",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 50.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8768
+    },
+    {
+      "key_a": "Organization:cisco systems, inc.",
+      "key_b": "Organization:computershare trust company, n.a.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 31.25,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.75
+    },
+    {
+      "key_a": "Organization:cisco systems, inc.",
+      "key_b": "Organization:hewlett packard enterprise company",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 20.51,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8331
+    },
+    {
+      "key_a": "Organization:cisco systems, inc.",
+      "key_b": "Organization:huawei technologies co. ltd.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 31.25,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.837
+    },
+    {
+      "key_a": "Organization:cisco systems, inc.",
+      "key_b": "Organization:mellanox",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 9.52,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8334
+    },
+    {
+      "key_a": "Organization:city of westland police and fire retirement system",
+      "key_b": "Organization:computershare trust company, n.a.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 31.88,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.6434
+    },
+    {
+      "key_a": "Organization:city of westland police and fire retirement system",
+      "key_b": "Organization:cooley llp",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 21.43,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.6386
+    },
+    {
+      "key_a": "Organization:city of westland police and fire retirement system",
+      "key_b": "Organization:pricewaterhousecoopers llp",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 27.78,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.6365
+    },
+    {
+      "key_a": "Organization:computershare trust company, n.a.",
+      "key_b": "Organization:cooley llp",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 24.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7896
+    },
+    {
+      "key_a": "Organization:computershare trust company, n.a.",
+      "key_b": "Organization:pricewaterhousecoopers llp",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 39.02,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7547
+    },
+    {
+      "key_a": "Organization:cooley llp",
+      "key_b": "Organization:french competition authority",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 23.53,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.6695
+    },
+    {
+      "key_a": "Organization:cooley llp",
+      "key_b": "Organization:groq, inc",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 20.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8062
+    },
+    {
+      "key_a": "Organization:cooley llp",
+      "key_b": "Organization:groq, inc.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 20.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8088
+    },
+    {
+      "key_a": "Organization:cooley llp",
+      "key_b": "Organization:pricewaterhousecoopers llp",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 28.57,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8299
+    },
+    {
+      "key_a": "Organization:cyberspace administration of china",
+      "key_b": "Organization:huawei",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 15.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7189
+    },
+    {
+      "key_a": "Organization:fabrinet",
+      "key_b": "Organization:lumentum holdings inc.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 32.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8738
+    },
+    {
+      "key_a": "Organization:fabrinet",
+      "key_b": "Organization:mellanox",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 25.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.83
+    },
+    {
+      "key_a": "Organization:fabrinet",
+      "key_b": "Organization:wistron corporation",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 26.67,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8341
+    },
+    {
+      "key_a": "Organization:french competition authority",
+      "key_b": "Organization:organization for economic cooperation and development",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 37.04,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7183
+    },
+    {
+      "key_a": "Organization:french competition authority",
+      "key_b": "Organization:pricewaterhousecoopers llp",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 36.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.6562
+    },
+    {
+      "key_a": "Organization:groq",
+      "key_b": "Organization:openai",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 20.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7793
+    },
+    {
+      "key_a": "Organization:groq, inc",
+      "key_b": "Organization:openai",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 20.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7829
+    },
+    {
+      "key_a": "Organization:groq, inc.",
+      "key_b": "Organization:openai",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 20.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7817
+    },
+    {
+      "key_a": "Organization:hewlett packard enterprise company",
+      "key_b": "Organization:huawei",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 18.75,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8436
+    },
+    {
+      "key_a": "Organization:hewlett packard enterprise company",
+      "key_b": "Organization:huawei technologies co. ltd.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 26.67,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8557
+    },
+    {
+      "key_a": "Organization:hewlett packard enterprise company",
+      "key_b": "Organization:pricewaterhousecoopers llp",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 33.33,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7568
+    },
+    {
+      "key_a": "Organization:hon hai precision industry co., ltd.",
+      "key_b": "Organization:huawei",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 25.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8438
+    },
+    {
+      "key_a": "Organization:hon hai precision industry co., ltd.",
+      "key_b": "Organization:huawei technologies co. ltd.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 40.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8628
+    },
+    {
+      "key_a": "Organization:hon hai precision industry co., ltd.",
+      "key_b": "Organization:wistron corporation",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 36.36,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8766
+    },
+    {
+      "key_a": "Organization:huawei",
+      "key_b": "Organization:huawei technologies co. ltd.",
+      "label": "Organization",
+      "rules": [
+        "embedding",
+        "fuzzy",
+        "rare_word"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [
+        "huawei"
+      ],
+      "embedding_rank": 1,
+      "cosine": 0.9636
+    },
+    {
+      "key_a": "Organization:huawei",
+      "key_b": "Organization:microsoft",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 13.33,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8109
+    },
+    {
+      "key_a": "Organization:huawei",
+      "key_b": "Organization:qualcomm incorporated",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 28.57,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8514
+    },
+    {
+      "key_a": "Organization:huawei",
+      "key_b": "Organization:samsung",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 15.38,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8802
+    },
+    {
+      "key_a": "Organization:huawei",
+      "key_b": "Organization:wistron corporation",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 30.77,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8558
+    },
+    {
+      "key_a": "Organization:huawei technologies co. ltd.",
+      "key_b": "Organization:samsung electronics co., ltd.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 31.58,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8487
+    },
+    {
+      "key_a": "Organization:huawei technologies co. ltd.",
+      "key_b": "Organization:wistron corporation",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 30.77,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8487
+    },
+    {
+      "key_a": "Organization:lockheed missiles and space company",
+      "key_b": "Organization:microsoft",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 16.67,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7407
+    },
+    {
+      "key_a": "Organization:lockheed missiles and space company",
+      "key_b": "Organization:microsoft corporation",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 16.67,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7361
+    },
+    {
+      "key_a": "Organization:lockheed missiles and space company",
+      "key_b": "Organization:qualcomm incorporated",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 22.86,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7348
+    },
+    {
+      "key_a": "Organization:lumentum holdings inc.",
+      "key_b": "Organization:mellanox",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 24.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8181
+    },
+    {
+      "key_a": "Organization:marvell technology, inc",
+      "key_b": "Organization:mellanox",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 46.15,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8881
+    },
+    {
+      "key_a": "Organization:marvell technology, inc",
+      "key_b": "Organization:micron technology, inc.",
+      "label": "Organization",
+      "rules": [
+        "embedding",
+        "rare_word"
+      ],
+      "fuzzy": 74.29,
+      "acronym": false,
+      "shared_rare_words": [
+        "technology"
+      ],
+      "embedding_rank": 1,
+      "cosine": 0.9075
+    },
+    {
+      "key_a": "Organization:marvell technology, inc",
+      "key_b": "Organization:qualcomm incorporated",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 30.77,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.858
+    },
+    {
+      "key_a": "Organization:marvell technology, inc",
+      "key_b": "Organization:taiwan semiconductor manufacturing company limited",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 30.77,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8348
+    },
+    {
+      "key_a": "Organization:micron technology, inc.",
+      "key_b": "Organization:renesas electronics corporation",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 38.89,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8411
+    },
+    {
+      "key_a": "Organization:micron technology, inc.",
+      "key_b": "Organization:sk hynix inc.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 16.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.9091
+    },
+    {
+      "key_a": "Organization:micron technology, inc.",
+      "key_b": "Organization:taiwan semiconductor manufacturing company limited",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 35.29,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8372
+    },
+    {
+      "key_a": "Organization:microsoft",
+      "key_b": "Organization:openai",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 13.33,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7915
+    },
+    {
+      "key_a": "Organization:microsoft",
+      "key_b": "Organization:samsung",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 25.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8187
+    },
+    {
+      "key_a": "Organization:microsoft corporation",
+      "key_b": "Organization:samsung",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 25.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8061
+    },
+    {
+      "key_a": "Organization:openai",
+      "key_b": "Organization:organization for economic cooperation and development",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 20.34,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.682
+    },
+    {
+      "key_a": "Organization:organization for economic cooperation and development",
+      "key_b": "Organization:pricewaterhousecoopers llp",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 29.33,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.6753
+    },
+    {
+      "key_a": "Organization:renesas electronics corporation",
+      "key_b": "Organization:samsung electronics co., ltd.",
+      "label": "Organization",
+      "rules": [
+        "rare_word"
+      ],
+      "fuzzy": 78.95,
+      "acronym": false,
+      "shared_rare_words": [
+        "electronics"
+      ],
+      "embedding_rank": 6,
+      "cosine": 0.8265
+    },
+    {
+      "key_a": "Organization:renesas electronics corporation",
+      "key_b": "Organization:sk hynix inc.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 29.63,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8523
+    },
+    {
+      "key_a": "Organization:renesas electronics corporation",
+      "key_b": "Organization:wistron corporation",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 30.77,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8368
+    },
+    {
+      "key_a": "Organization:samsung",
+      "key_b": "Organization:samsung electronics co., ltd.",
+      "label": "Organization",
+      "rules": [
+        "embedding",
+        "fuzzy",
+        "rare_word"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [
+        "samsung"
+      ],
+      "embedding_rank": 1,
+      "cosine": 0.9465
+    },
+    {
+      "key_a": "Organization:samsung",
+      "key_b": "Organization:sk hynix inc.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 13.33,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8691
+    },
+    {
+      "key_a": "Organization:samsung electronics co., ltd.",
+      "key_b": "Organization:sk hynix inc.",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 29.63,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.9002
+    },
+    {
+      "key_a": "Organization:sk hynix inc.",
+      "key_b": "Organization:taiwan semiconductor manufacturing company limited",
+      "label": "Organization",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 19.05,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8418
+    },
+    {
+      "key_a": "Person:a. brooke seawell",
+      "key_b": "Person:colette m. kress",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 25.81,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7644
+    },
+    {
+      "key_a": "Person:a. brooke seawell",
+      "key_b": "Person:dawn hudson",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 22.22,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7615
+    },
+    {
+      "key_a": "Person:a. brooke seawell",
+      "key_b": "Person:mark a. stevens",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 53.33,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7326
+    },
+    {
+      "key_a": "Person:aarti shah",
+      "key_b": "Person:ajay k. puri",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 38.1,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8148
+    },
+    {
+      "key_a": "Person:aarti shah",
+      "key_b": "Person:debora shoquist",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 32.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7585
+    },
+    {
+      "key_a": "Person:aarti shah",
+      "key_b": "Person:melissa b. lora",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 33.33,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7318
+    },
+    {
+      "key_a": "Person:ajay k. puri",
+      "key_b": "Person:jen-hsun huang",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 16.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.654
+    },
+    {
+      "key_a": "Person:ajay k. puri",
+      "key_b": "Person:mark a. stevens",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 32.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7338
+    },
+    {
+      "key_a": "Person:ajay k. puri",
+      "key_b": "Person:timothy s. teter",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 23.08,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7378
+    },
+    {
+      "key_a": "Person:colette m. kress",
+      "key_b": "Person:dawn hudson",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 15.38,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7541
+    },
+    {
+      "key_a": "Person:colette m. kress",
+      "key_b": "Person:debora shoquist",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 26.67,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8133
+    },
+    {
+      "key_a": "Person:colette m. kress",
+      "key_b": "Person:mark a. stevens",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 27.59,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7777
+    },
+    {
+      "key_a": "Person:colette m. kress",
+      "key_b": "Person:melissa b. lora",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 34.48,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8081
+    },
+    {
+      "key_a": "Person:dawn hudson",
+      "key_b": "Person:debora shoquist",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 46.15,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.797
+    },
+    {
+      "key_a": "Person:debora shoquist",
+      "key_b": "Person:melissa b. lora",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 48.28,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8102
+    },
+    {
+      "key_a": "Person:donald robertson",
+      "key_b": "Person:harvey c. jones",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 33.33,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7189
+    },
+    {
+      "key_a": "Person:donald robertson",
+      "key_b": "Person:mark a. stevens",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 33.33,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7253
+    },
+    {
+      "key_a": "Person:donald robertson",
+      "key_b": "Person:stephen c. neal",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 40.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7279
+    },
+    {
+      "key_a": "Person:harvey c. jones",
+      "key_b": "Person:jen-hsun huang",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 42.86,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.6082
+    },
+    {
+      "key_a": "Person:harvey c. jones",
+      "key_b": "Person:john o. dabiri",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 44.44,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.6753
+    },
+    {
+      "key_a": "Person:harvey c. jones",
+      "key_b": "Person:mark a. stevens",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 50.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7866
+    },
+    {
+      "key_a": "Person:harvey c. jones",
+      "key_b": "Person:stephen c. neal",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 35.71,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.814
+    },
+    {
+      "key_a": "Person:harvey c. jones",
+      "key_b": "Person:tench coxe",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 33.33,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.6993
+    },
+    {
+      "key_a": "Person:harvey c. jones",
+      "key_b": "Person:timothy s. teter",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 27.59,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7702
+    },
+    {
+      "key_a": "Person:jen-hsun huang",
+      "key_b": "Person:timothy s. teter",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 20.69,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.6105
+    },
+    {
+      "key_a": "Person:john o. dabiri",
+      "key_b": "Person:mark a. stevens",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 29.63,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.6864
+    },
+    {
+      "key_a": "Person:john o. dabiri",
+      "key_b": "Person:timothy s. teter",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 28.57,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.6719
+    },
+    {
+      "key_a": "Person:mark a. stevens",
+      "key_b": "Person:mr. teter",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 54.55,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7596
+    },
+    {
+      "key_a": "Person:mark a. stevens",
+      "key_b": "Person:stephen c. neal",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 57.14,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8407
+    },
+    {
+      "key_a": "Person:mark a. stevens",
+      "key_b": "Person:timothy s. teter",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 27.59,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8257
+    },
+    {
+      "key_a": "Person:melissa b. lora",
+      "key_b": "Person:timothy s. teter",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 27.59,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7344
+    },
+    {
+      "key_a": "Person:mr. teter",
+      "key_b": "Person:stephen c. neal",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 36.36,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7765
+    },
+    {
+      "key_a": "Person:mr. teter",
+      "key_b": "Person:tench coxe",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 33.33,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.6818
+    },
+    {
+      "key_a": "Person:mr. teter",
+      "key_b": "Person:timothy s. teter",
+      "label": "Person",
+      "rules": [
+        "embedding",
+        "rare_word"
+      ],
+      "fuzzy": 76.92,
+      "acronym": false,
+      "shared_rare_words": [
+        "teter"
+      ],
+      "embedding_rank": 1,
+      "cosine": 0.8712
+    },
+    {
+      "key_a": "Person:stephen c. neal",
+      "key_b": "Person:timothy s. teter",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 34.48,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8371
+    },
+    {
+      "key_a": "Person:tench coxe",
+      "key_b": "Person:timothy s. teter",
+      "label": "Person",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 32.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7102
+    },
+    {
+      "key_a": "Product:a100",
+      "key_b": "Product:blackwell computing platform",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 6.25,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8355
+    },
+    {
+      "key_a": "Product:a100",
+      "key_b": "Product:h100",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 75.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.9201
+    },
+    {
+      "key_a": "Product:a100",
+      "key_b": "Product:nvidia blackwell ultra platform",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 5.71,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8396
+    },
+    {
+      "key_a": "Product:blackwell",
+      "key_b": "Product:blackwell computing platform",
+      "label": "Product",
+      "rules": [
+        "fuzzy"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 11,
+      "cosine": 0.664
+    },
+    {
+      "key_a": "Product:blackwell",
+      "key_b": "Product:clara",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 28.57,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7548
+    },
+    {
+      "key_a": "Product:blackwell",
+      "key_b": "Product:cosmos",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 13.33,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.709
+    },
+    {
+      "key_a": "Product:blackwell",
+      "key_b": "Product:nvidia blackwell architecture",
+      "label": "Product",
+      "rules": [
+        "fuzzy"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 24,
+      "cosine": 0.6122
+    },
+    {
+      "key_a": "Product:blackwell",
+      "key_b": "Product:nvidia blackwell geforce rtx 50 series",
+      "label": "Product",
+      "rules": [
+        "fuzzy"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 35,
+      "cosine": 0.5793
+    },
+    {
+      "key_a": "Product:blackwell",
+      "key_b": "Product:nvidia blackwell ultra platform",
+      "label": "Product",
+      "rules": [
+        "fuzzy"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 20,
+      "cosine": 0.626
+    },
+    {
+      "key_a": "Product:blackwell",
+      "key_b": "Product:rubin",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 14.29,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7496
+    },
+    {
+      "key_a": "Product:blackwell computing platform",
+      "key_b": "Product:nvidia blackwell architecture",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 49.12,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.9498
+    },
+    {
+      "key_a": "Product:blackwell computing platform",
+      "key_b": "Product:nvidia blackwell ultra platform",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 78.26,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.9461
+    },
+    {
+      "key_a": "Product:blackwell computing platform",
+      "key_b": "Product:nvidia data center platform",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 50.91,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8917
+    },
+    {
+      "key_a": "Product:blackwell computing platform",
+      "key_b": "Product:nvidia rubin platform",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 57.14,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8476
+    },
+    {
+      "key_a": "Product:clara",
+      "key_b": "Product:grace",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 40.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7858
+    },
+    {
+      "key_a": "Product:clara",
+      "key_b": "Product:rubin",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 20.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7584
+    },
+    {
+      "key_a": "Product:cosmos",
+      "key_b": "Product:grace",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 18.18,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7652
+    },
+    {
+      "key_a": "Product:cosmos",
+      "key_b": "Product:omniverse",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 40.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7836
+    },
+    {
+      "key_a": "Product:cosmos",
+      "key_b": "Product:rubin",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 0.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7642
+    },
+    {
+      "key_a": "Product:cuda",
+      "key_b": "Product:geforce",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 18.18,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8984
+    },
+    {
+      "key_a": "Product:cuda",
+      "key_b": "Product:geforce gpus",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 25.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8999
+    },
+    {
+      "key_a": "Product:cuda",
+      "key_b": "Product:nvidia cuda",
+      "label": "Product",
+      "rules": [
+        "embedding",
+        "fuzzy",
+        "rare_word"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [
+        "cuda"
+      ],
+      "embedding_rank": 1,
+      "cosine": 0.9757
+    },
+    {
+      "key_a": "Product:cuda",
+      "key_b": "Product:nvidia rubin platform",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 16.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8455
+    },
+    {
+      "key_a": "Product:cuda",
+      "key_b": "Product:nvlink",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 0.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8655
+    },
+    {
+      "key_a": "Product:cuda",
+      "key_b": "Product:nvlink fusion",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 11.76,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8421
+    },
+    {
+      "key_a": "Product:drive",
+      "key_b": "Product:drive hyperion",
+      "label": "Product",
+      "rules": [
+        "embedding",
+        "fuzzy",
+        "rare_word"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [
+        "drive"
+      ],
+      "embedding_rank": 1,
+      "cosine": 0.8661
+    },
+    {
+      "key_a": "Product:drive",
+      "key_b": "Product:grace",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 40.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7703
+    },
+    {
+      "key_a": "Product:drive",
+      "key_b": "Product:nvidia drive",
+      "label": "Product",
+      "rules": [
+        "embedding",
+        "fuzzy",
+        "rare_word"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [
+        "drive"
+      ],
+      "embedding_rank": 2,
+      "cosine": 0.7893
+    },
+    {
+      "key_a": "Product:drive hyperion",
+      "key_b": "Product:h100",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 11.11,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7975
+    },
+    {
+      "key_a": "Product:drive hyperion",
+      "key_b": "Product:hopper hgx",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 41.67,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.792
+    },
+    {
+      "key_a": "Product:drive hyperion",
+      "key_b": "Product:nvidia drive",
+      "label": "Product",
+      "rules": [
+        "embedding",
+        "rare_word"
+      ],
+      "fuzzy": 58.82,
+      "acronym": false,
+      "shared_rare_words": [
+        "drive"
+      ],
+      "embedding_rank": 3,
+      "cosine": 0.7961
+    },
+    {
+      "key_a": "Product:gaming gpus",
+      "key_b": "Product:geforce",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 11.11,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.9242
+    },
+    {
+      "key_a": "Product:gaming gpus",
+      "key_b": "Product:geforce gpus",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 53.33,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.956
+    },
+    {
+      "key_a": "Product:gaming gpus",
+      "key_b": "Product:geforce rtx gpus",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 53.33,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.9356
+    },
+    {
+      "key_a": "Product:gb200",
+      "key_b": "Product:gb300",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 80.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.9251
+    },
+    {
+      "key_a": "Product:gb200",
+      "key_b": "Product:h100",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 44.44,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8189
+    },
+    {
+      "key_a": "Product:gb200",
+      "key_b": "Product:h200",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 66.67,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8698
+    },
+    {
+      "key_a": "Product:gb300",
+      "key_b": "Product:h100",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 44.44,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7988
+    },
+    {
+      "key_a": "Product:gb300",
+      "key_b": "Product:h200",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 44.44,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8076
+    },
+    {
+      "key_a": "Product:geforce",
+      "key_b": "Product:geforce gpus",
+      "label": "Product",
+      "rules": [
+        "embedding",
+        "fuzzy"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.9734
+    },
+    {
+      "key_a": "Product:geforce",
+      "key_b": "Product:geforce now",
+      "label": "Product",
+      "rules": [
+        "embedding",
+        "fuzzy"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8648
+    },
+    {
+      "key_a": "Product:geforce",
+      "key_b": "Product:geforce rtx gpus",
+      "label": "Product",
+      "rules": [
+        "embedding",
+        "fuzzy"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.9498
+    },
+    {
+      "key_a": "Product:geforce",
+      "key_b": "Product:nvidia blackwell geforce rtx 50 series",
+      "label": "Product",
+      "rules": [
+        "fuzzy"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 7,
+      "cosine": 0.8715
+    },
+    {
+      "key_a": "Product:geforce",
+      "key_b": "Product:nvidia cuda",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 11.11,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8999
+    },
+    {
+      "key_a": "Product:geforce",
+      "key_b": "Product:nvidia rtx",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 11.76,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.9556
+    },
+    {
+      "key_a": "Product:geforce gpus",
+      "key_b": "Product:geforce now",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 77.78,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8611
+    },
+    {
+      "key_a": "Product:geforce gpus",
+      "key_b": "Product:geforce rtx gpus",
+      "label": "Product",
+      "rules": [
+        "embedding",
+        "fuzzy"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.9795
+    },
+    {
+      "key_a": "Product:geforce gpus",
+      "key_b": "Product:networking products",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 45.16,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7499
+    },
+    {
+      "key_a": "Product:geforce gpus",
+      "key_b": "Product:nvidia cuda",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 17.39,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.9098
+    },
+    {
+      "key_a": "Product:geforce gpus",
+      "key_b": "Product:nvidia rtx",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 9.09,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.9502
+    },
+    {
+      "key_a": "Product:geforce now",
+      "key_b": "Product:nvidia vgpu software",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 25.81,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8553
+    },
+    {
+      "key_a": "Product:geforce rtx gpus",
+      "key_b": "Product:nvidia blackwell geforce rtx 50 series",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 81.48,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.9035
+    },
+    {
+      "key_a": "Product:geforce rtx gpus",
+      "key_b": "Product:nvidia rtx",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 46.15,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.9621
+    },
+    {
+      "key_a": "Product:geforce rtx gpus",
+      "key_b": "Product:quadro/nvidia rtx gpus",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 66.67,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.9484
+    },
+    {
+      "key_a": "Product:geforce rtx gpus",
+      "key_b": "Product:rtx pro gpus",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 80.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.9515
+    },
+    {
+      "key_a": "Product:h100",
+      "key_b": "Product:h20",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 57.14,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.6734
+    },
+    {
+      "key_a": "Product:h100",
+      "key_b": "Product:h200",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 75.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8789
+    },
+    {
+      "key_a": "Product:h100",
+      "key_b": "Product:hopper hgx",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 14.29,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8264
+    },
+    {
+      "key_a": "Product:h20",
+      "key_b": "Product:h200",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 85.71,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7507
+    },
+    {
+      "key_a": "Product:h20",
+      "key_b": "Product:rubin",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 0.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.6711
+    },
+    {
+      "key_a": "Product:h200",
+      "key_b": "Product:hopper hgx",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 14.29,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8024
+    },
+    {
+      "key_a": "Product:networking products",
+      "key_b": "Product:nvidia data center platform",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 30.43,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7629
+    },
+    {
+      "key_a": "Product:networking products",
+      "key_b": "Product:nvlink",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 24.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7602
+    },
+    {
+      "key_a": "Product:nvidia ai enterprise",
+      "key_b": "Product:nvidia data center platform",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 59.57,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8971
+    },
+    {
+      "key_a": "Product:nvidia ai enterprise",
+      "key_b": "Product:nvidia nemo",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 70.59,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8603
+    },
+    {
+      "key_a": "Product:nvidia ai enterprise",
+      "key_b": "Product:nvidia nemotron",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 57.14,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8877
+    },
+    {
+      "key_a": "Product:nvidia ai enterprise",
+      "key_b": "Product:nvidia nim",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 75.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.9018
+    },
+    {
+      "key_a": "Product:nvidia ai enterprise",
+      "key_b": "Product:nvidia vgpu software",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 50.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.878
+    },
+    {
+      "key_a": "Product:nvidia ai enterprise",
+      "key_b": "Product:omniverse",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 34.48,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8132
+    },
+    {
+      "key_a": "Product:nvidia blackwell architecture",
+      "key_b": "Product:nvidia blackwell geforce rtx 50 series",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 71.11,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.9128
+    },
+    {
+      "key_a": "Product:nvidia blackwell architecture",
+      "key_b": "Product:nvidia blackwell ultra platform",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 71.11,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.95
+    },
+    {
+      "key_a": "Product:nvidia blackwell geforce rtx 50 series",
+      "key_b": "Product:nvidia rtx",
+      "label": "Product",
+      "rules": [
+        "embedding",
+        "fuzzy"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.9068
+    },
+    {
+      "key_a": "Product:nvidia blackwell ultra platform",
+      "key_b": "Product:nvidia data center platform",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 72.41,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8932
+    },
+    {
+      "key_a": "Product:nvidia cuda",
+      "key_b": "Product:nvidia drive",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 70.59,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8824
+    },
+    {
+      "key_a": "Product:nvidia drive",
+      "key_b": "Product:nvidia nemotron",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 66.67,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8811
+    },
+    {
+      "key_a": "Product:nvidia drive",
+      "key_b": "Product:nvidia nim",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 75.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.898
+    },
+    {
+      "key_a": "Product:nvidia drive",
+      "key_b": "Product:nvidia rubin platform",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 66.67,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8573
+    },
+    {
+      "key_a": "Product:nvidia nemo",
+      "key_b": "Product:nvidia nemotron",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 84.62,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.9265
+    },
+    {
+      "key_a": "Product:nvidia nemo",
+      "key_b": "Product:nvidia nim",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 85.71,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.9138
+    },
+    {
+      "key_a": "Product:nvidia nemotron",
+      "key_b": "Product:nvidia nim",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 75.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.9397
+    },
+    {
+      "key_a": "Product:nvidia nemotron",
+      "key_b": "Product:nvidia omniverse",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 64.52,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.863
+    },
+    {
+      "key_a": "Product:nvidia nemotron",
+      "key_b": "Product:omniverse",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 25.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8136
+    },
+    {
+      "key_a": "Product:nvidia nim",
+      "key_b": "Product:nvidia omniverse",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 75.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8589
+    },
+    {
+      "key_a": "Product:nvidia nim",
+      "key_b": "Product:nvlink",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 37.5,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8537
+    },
+    {
+      "key_a": "Product:nvidia nim",
+      "key_b": "Product:nvlink fusion",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 43.48,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8578
+    },
+    {
+      "key_a": "Product:nvidia omniverse",
+      "key_b": "Product:omniverse",
+      "label": "Product",
+      "rules": [
+        "embedding",
+        "fuzzy",
+        "rare_word"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [
+        "omniverse"
+      ],
+      "embedding_rank": 1,
+      "cosine": 0.9263
+    },
+    {
+      "key_a": "Product:nvidia rtx",
+      "key_b": "Product:quadro/nvidia rtx",
+      "label": "Product",
+      "rules": [
+        "embedding",
+        "fuzzy"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.9497
+    },
+    {
+      "key_a": "Product:nvidia rtx",
+      "key_b": "Product:quadro/nvidia rtx gpus",
+      "label": "Product",
+      "rules": [
+        "fuzzy"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 4,
+      "cosine": 0.937
+    },
+    {
+      "key_a": "Product:nvidia rubin platform",
+      "key_b": "Product:rubin",
+      "label": "Product",
+      "rules": [
+        "fuzzy",
+        "rare_word"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [
+        "rubin"
+      ],
+      "embedding_rank": 8,
+      "cosine": 0.6862
+    },
+    {
+      "key_a": "Product:nvidia vgpu software",
+      "key_b": "Product:quadro/nvidia rtx gpus",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 52.38,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8801
+    },
+    {
+      "key_a": "Product:nvidia vgpu software",
+      "key_b": "Product:rtx pro gpus",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 18.75,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8743
+    },
+    {
+      "key_a": "Product:nvlink",
+      "key_b": "Product:nvlink fusion",
+      "label": "Product",
+      "rules": [
+        "embedding",
+        "fuzzy",
+        "rare_word"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [
+        "nvlink"
+      ],
+      "embedding_rank": 1,
+      "cosine": 0.9609
+    },
+    {
+      "key_a": "Product:quadro/nvidia rtx",
+      "key_b": "Product:quadro/nvidia rtx gpus",
+      "label": "Product",
+      "rules": [
+        "embedding",
+        "fuzzy",
+        "rare_word"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [
+        "quadro"
+      ],
+      "embedding_rank": 1,
+      "cosine": 0.9851
+    },
+    {
+      "key_a": "Product:quadro/nvidia rtx",
+      "key_b": "Product:rtx pro gpus",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 48.28,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.9527
+    },
+    {
+      "key_a": "Product:quadro/nvidia rtx gpus",
+      "key_b": "Product:rtx pro gpus",
+      "label": "Product",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 80.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.9667
+    },
+    {
+      "key_a": "Regulation:25%25 tariff",
+      "key_b": "Regulation:export control rules",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 20.69,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.5729
+    },
+    {
+      "key_a": "Regulation:25%25 tariff",
+      "key_b": "Regulation:inflation reduction act of 2022",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 30.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.5791
+    },
+    {
+      "key_a": "Regulation:25%25 tariff",
+      "key_b": "Regulation:obbba",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 14.29,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.6044
+    },
+    {
+      "key_a": "Regulation:ai diffusion ifr",
+      "key_b": "Regulation:connected vehicle restrictions",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 30.43,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.6956
+    },
+    {
+      "key_a": "Regulation:ai diffusion ifr",
+      "key_b": "Regulation:eu ai act",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 36.36,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8532
+    },
+    {
+      "key_a": "Regulation:ai diffusion ifr",
+      "key_b": "Regulation:european union code of practice for general purpose artificial intelligence",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 24.18,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8064
+    },
+    {
+      "key_a": "Regulation:ai diffusion ifr",
+      "key_b": "Regulation:gain ai act",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 37.04,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.842
+    },
+    {
+      "key_a": "Regulation:ai diffusion ifr",
+      "key_b": "Regulation:two-pillar framework led by the organization for economic cooperation and development",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 25.74,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.6847
+    },
+    {
+      "key_a": "Regulation:august 2022 usg export restrictions and export licensing requirements targeting china’s semiconductor and supercomputing industries",
+      "key_b": "Regulation:connected vehicle restrictions",
+      "label": "Regulation",
+      "rules": [
+        "rare_word"
+      ],
+      "fuzzy": 57.14,
+      "acronym": false,
+      "shared_rare_words": [
+        "restrictions"
+      ],
+      "embedding_rank": 13,
+      "cosine": 0.6115
+    },
+    {
+      "key_a": "Regulation:august 2022 usg export restrictions and export licensing requirements targeting china’s semiconductor and supercomputing industries",
+      "key_b": "Regulation:export restrictions and export licensing requirements targeting china’s semiconductor and supercomputing industries",
+      "label": "Regulation",
+      "rules": [
+        "embedding",
+        "fuzzy",
+        "rare_word"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [
+        "chinas",
+        "industries",
+        "restrictions",
+        "semiconductor",
+        "supercomputing",
+        "targeting"
+      ],
+      "embedding_rank": 1,
+      "cosine": 0.9381
+    },
+    {
+      "key_a": "Regulation:august 2022 usg export restrictions and export licensing requirements targeting china’s semiconductor and supercomputing industries",
+      "key_b": "Regulation:inflation reduction act of 2022",
+      "label": "Regulation",
+      "rules": [
+        "rare_word"
+      ],
+      "fuzzy": 32.0,
+      "acronym": false,
+      "shared_rare_words": [
+        "2022"
+      ],
+      "embedding_rank": 8,
+      "cosine": 0.6428
+    },
+    {
+      "key_a": "Regulation:august 2022 usg export restrictions and export licensing requirements targeting china’s semiconductor and supercomputing industries",
+      "key_b": "Regulation:new and updated licensing requirements for exports to china and country groups d%3a1, d%3a4, and d%3a5",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 55.72,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8378
+    },
+    {
+      "key_a": "Regulation:august 2022 usg export restrictions and export licensing requirements targeting china’s semiconductor and supercomputing industries",
+      "key_b": "Regulation:october 2023 usg licensing requirements for exports to china and country groups d%3a1, d%3a4, and d%3a5",
+      "label": "Regulation",
+      "rules": [
+        "embedding",
+        "rare_word"
+      ],
+      "fuzzy": 61.17,
+      "acronym": false,
+      "shared_rare_words": [
+        "usg"
+      ],
+      "embedding_rank": 2,
+      "cosine": 0.8677
+    },
+    {
+      "key_a": "Regulation:august 2022 usg export restrictions and export licensing requirements targeting china’s semiconductor and supercomputing industries",
+      "key_b": "Regulation:unilateral worldwide controls restricting gpus and associated products",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 43.39,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8518
+    },
+    {
+      "key_a": "Regulation:california consumer privacy act of 2018",
+      "key_b": "Regulation:gdpr",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 9.3,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8348
+    },
+    {
+      "key_a": "Regulation:california consumer privacy act of 2018",
+      "key_b": "Regulation:general data protection regulation",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 32.88,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8323
+    },
+    {
+      "key_a": "Regulation:california consumer privacy act of 2018",
+      "key_b": "Regulation:u.k. gdpr",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 13.04,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7795
+    },
+    {
+      "key_a": "Regulation:connected vehicle restrictions",
+      "key_b": "Regulation:economic sanctions and export control measures",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 42.11,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.6899
+    },
+    {
+      "key_a": "Regulation:connected vehicle restrictions",
+      "key_b": "Regulation:export control rules",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 44.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.714
+    },
+    {
+      "key_a": "Regulation:connected vehicle restrictions",
+      "key_b": "Regulation:export restrictions and export licensing requirements targeting china’s semiconductor and supercomputing industries",
+      "label": "Regulation",
+      "rules": [
+        "rare_word"
+      ],
+      "fuzzy": 57.14,
+      "acronym": false,
+      "shared_rare_words": [
+        "restrictions"
+      ],
+      "embedding_rank": 9,
+      "cosine": 0.6288
+    },
+    {
+      "key_a": "Regulation:delaware general corporation law",
+      "key_b": "Regulation:european union code of practice for general purpose artificial intelligence",
+      "label": "Regulation",
+      "rules": [
+        "rare_word"
+      ],
+      "fuzzy": 41.12,
+      "acronym": false,
+      "shared_rare_words": [
+        "general"
+      ],
+      "embedding_rank": 20,
+      "cosine": 0.5507
+    },
+    {
+      "key_a": "Regulation:delaware general corporation law",
+      "key_b": "Regulation:foreign corrupt practices act",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 39.34,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7131
+    },
+    {
+      "key_a": "Regulation:delaware general corporation law",
+      "key_b": "Regulation:general data protection regulation",
+      "label": "Regulation",
+      "rules": [
+        "rare_word"
+      ],
+      "fuzzy": 57.58,
+      "acronym": false,
+      "shared_rare_words": [
+        "general"
+      ],
+      "embedding_rank": 9,
+      "cosine": 0.6516
+    },
+    {
+      "key_a": "Regulation:delaware general corporation law",
+      "key_b": "Regulation:regulation fd",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 26.67,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7454
+    },
+    {
+      "key_a": "Regulation:delaware general corporation law",
+      "key_b": "Regulation:section 10(b) of the securities exchange act of 1934",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 30.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7331
+    },
+    {
+      "key_a": "Regulation:economic sanctions and export control measures",
+      "key_b": "Regulation:export control rules",
+      "label": "Regulation",
+      "rules": [
+        "embedding",
+        "rare_word"
+      ],
+      "fuzzy": 82.35,
+      "acronym": false,
+      "shared_rare_words": [
+        "control"
+      ],
+      "embedding_rank": 1,
+      "cosine": 0.9125
+    },
+    {
+      "key_a": "Regulation:economic sanctions and export control measures",
+      "key_b": "Regulation:export restrictions and export licensing requirements targeting china’s semiconductor and supercomputing industries",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 44.3,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8146
+    },
+    {
+      "key_a": "Regulation:economic sanctions and export control measures",
+      "key_b": "Regulation:two-pillar framework led by the organization for economic cooperation and development",
+      "label": "Regulation",
+      "rules": [
+        "rare_word"
+      ],
+      "fuzzy": 51.91,
+      "acronym": false,
+      "shared_rare_words": [
+        "economic"
+      ],
+      "embedding_rank": 8,
+      "cosine": 0.6588
+    },
+    {
+      "key_a": "Regulation:economic sanctions and export control measures",
+      "key_b": "Regulation:unilateral worldwide controls restricting gpus and associated products",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 41.38,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8047
+    },
+    {
+      "key_a": "Regulation:eu ai act",
+      "key_b": "Regulation:european union code of practice for general purpose artificial intelligence",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 21.43,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8829
+    },
+    {
+      "key_a": "Regulation:eu ai act",
+      "key_b": "Regulation:gain ai act",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 80.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8883
+    },
+    {
+      "key_a": "Regulation:eu ai act",
+      "key_b": "Regulation:gdpr",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 0.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8504
+    },
+    {
+      "key_a": "Regulation:eu ai act",
+      "key_b": "Regulation:general data protection regulation",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 37.21,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8364
+    },
+    {
+      "key_a": "Regulation:eu ai act",
+      "key_b": "Regulation:inflation reduction act of 2022",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 50.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7055
+    },
+    {
+      "key_a": "Regulation:eu ai act",
+      "key_b": "Regulation:network and information security directive",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 35.29,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.728
+    },
+    {
+      "key_a": "Regulation:eu ai act",
+      "key_b": "Regulation:two-pillar framework led by the organization for economic cooperation and development",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 17.02,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.6947
+    },
+    {
+      "key_a": "Regulation:eu ai act",
+      "key_b": "Regulation:u.k. gdpr",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 25.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7928
+    },
+    {
+      "key_a": "Regulation:european union code of practice for general purpose artificial intelligence",
+      "key_b": "Regulation:gain ai act",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 20.93,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8119
+    },
+    {
+      "key_a": "Regulation:european union code of practice for general purpose artificial intelligence",
+      "key_b": "Regulation:general data protection regulation",
+      "label": "Regulation",
+      "rules": [
+        "rare_word"
+      ],
+      "fuzzy": 47.71,
+      "acronym": false,
+      "shared_rare_words": [
+        "general"
+      ],
+      "embedding_rank": 4,
+      "cosine": 0.77
+    },
+    {
+      "key_a": "Regulation:export control rules",
+      "key_b": "Regulation:export restrictions and export licensing requirements targeting china’s semiconductor and supercomputing industries",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 46.15,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.8191
+    },
+    {
+      "key_a": "Regulation:export control rules",
+      "key_b": "Regulation:foreign corrupt practices act",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 40.82,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7493
+    },
+    {
+      "key_a": "Regulation:export control rules",
+      "key_b": "Regulation:unilateral worldwide controls restricting gpus and associated products",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 35.56,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8282
+    },
+    {
+      "key_a": "Regulation:export restrictions and export licensing requirements targeting china’s semiconductor and supercomputing industries",
+      "key_b": "Regulation:new and updated licensing requirements for exports to china and country groups d%3a1, d%3a4, and d%3a5",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 58.38,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.819
+    },
+    {
+      "key_a": "Regulation:export restrictions and export licensing requirements targeting china’s semiconductor and supercomputing industries",
+      "key_b": "Regulation:october 2023 usg licensing requirements for exports to china and country groups d%3a1, d%3a4, and d%3a5",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 57.89,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.813
+    },
+    {
+      "key_a": "Regulation:export restrictions and export licensing requirements targeting china’s semiconductor and supercomputing industries",
+      "key_b": "Regulation:unilateral worldwide controls restricting gpus and associated products",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 45.09,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8546
+    },
+    {
+      "key_a": "Regulation:foreign corrupt practices act",
+      "key_b": "Regulation:regulation fd",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 33.33,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7466
+    },
+    {
+      "key_a": "Regulation:foreign corrupt practices act",
+      "key_b": "Regulation:section 404 of the sarbanes-oxley act",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 45.45,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7418
+    },
+    {
+      "key_a": "Regulation:foreign corrupt practices act",
+      "key_b": "Regulation:two-pillar framework led by the organization for economic cooperation and development",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 33.33,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.6771
+    },
+    {
+      "key_a": "Regulation:gain ai act",
+      "key_b": "Regulation:inflation reduction act of 2022",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 42.86,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7439
+    },
+    {
+      "key_a": "Regulation:gain ai act",
+      "key_b": "Regulation:obbba",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 12.5,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.6902
+    },
+    {
+      "key_a": "Regulation:gain ai act",
+      "key_b": "Regulation:one big beautiful bill act",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 54.05,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7197
+    },
+    {
+      "key_a": "Regulation:gdpr",
+      "key_b": "Regulation:general data protection regulation",
+      "label": "Regulation",
+      "rules": [
+        "acronym",
+        "embedding"
+      ],
+      "fuzzy": 15.79,
+      "acronym": true,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.9573
+    },
+    {
+      "key_a": "Regulation:gdpr",
+      "key_b": "Regulation:network and information security directive",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 8.7,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.784
+    },
+    {
+      "key_a": "Regulation:gdpr",
+      "key_b": "Regulation:obbba",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 0.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7048
+    },
+    {
+      "key_a": "Regulation:gdpr",
+      "key_b": "Regulation:regulation fd",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 23.53,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7495
+    },
+    {
+      "key_a": "Regulation:gdpr",
+      "key_b": "Regulation:u.k. gdpr",
+      "label": "Regulation",
+      "rules": [
+        "embedding",
+        "fuzzy",
+        "rare_word"
+      ],
+      "fuzzy": 100.0,
+      "acronym": false,
+      "shared_rare_words": [
+        "gdpr"
+      ],
+      "embedding_rank": 1,
+      "cosine": 0.9055
+    },
+    {
+      "key_a": "Regulation:general data protection regulation",
+      "key_b": "Regulation:network and information security directive",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 39.47,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7922
+    },
+    {
+      "key_a": "Regulation:general data protection regulation",
+      "key_b": "Regulation:regulation fd",
+      "label": "Regulation",
+      "rules": [
+        "rare_word"
+      ],
+      "fuzzy": 86.96,
+      "acronym": false,
+      "shared_rare_words": [
+        "regulation"
+      ],
+      "embedding_rank": 8,
+      "cosine": 0.6976
+    },
+    {
+      "key_a": "Regulation:general data protection regulation",
+      "key_b": "Regulation:u.k. gdpr",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 24.39,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.8912
+    },
+    {
+      "key_a": "Regulation:inflation reduction act of 2022",
+      "key_b": "Regulation:one big beautiful bill act",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 42.11,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7038
+    },
+    {
+      "key_a": "Regulation:new and updated licensing requirements for exports to china and country groups d%3a1, d%3a4, and d%3a5",
+      "key_b": "Regulation:october 2023 usg licensing requirements for exports to china and country groups d%3a1, d%3a4, and d%3a5",
+      "label": "Regulation",
+      "rules": [
+        "embedding",
+        "fuzzy",
+        "rare_word"
+      ],
+      "fuzzy": 92.11,
+      "acronym": false,
+      "shared_rare_words": [
+        "china",
+        "country",
+        "exports",
+        "groups"
+      ],
+      "embedding_rank": 1,
+      "cosine": 0.9373
+    },
+    {
+      "key_a": "Regulation:obbba",
+      "key_b": "Regulation:one big beautiful bill act",
+      "label": "Regulation",
+      "rules": [
+        "acronym",
+        "embedding"
+      ],
+      "fuzzy": 19.35,
+      "acronym": true,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.7049
+    },
+    {
+      "key_a": "Regulation:regulation fd",
+      "key_b": "Regulation:section 10(b) of the securities exchange act of 1934",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 22.95,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8014
+    },
+    {
+      "key_a": "Regulation:regulation fd",
+      "key_b": "Regulation:section 404 of the sarbanes-oxley act",
+      "label": "Regulation",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 32.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7274
+    },
+    {
+      "key_a": "Regulation:section 10(b) of the securities exchange act of 1934",
+      "key_b": "Regulation:section 404 of the sarbanes-oxley act",
+      "label": "Regulation",
+      "rules": [
+        "embedding",
+        "rare_word"
+      ],
+      "fuzzy": 68.24,
+      "acronym": false,
+      "shared_rare_words": [
+        "section"
+      ],
+      "embedding_rank": 2,
+      "cosine": 0.7373
+    },
+    {
+      "key_a": "Segment:automotive",
+      "key_b": "Segment:data center",
+      "label": "Segment",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 19.05,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7297
+    },
+    {
+      "key_a": "Segment:automotive",
+      "key_b": "Segment:gaming",
+      "label": "Segment",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 37.5,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.76
+    },
+    {
+      "key_a": "Segment:automotive",
+      "key_b": "Segment:graphics",
+      "label": "Segment",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 22.22,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7149
+    },
+    {
+      "key_a": "Segment:compute & networking",
+      "key_b": "Segment:data center",
+      "label": "Segment",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 30.3,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.9152
+    },
+    {
+      "key_a": "Segment:compute & networking",
+      "key_b": "Segment:gaming",
+      "label": "Segment",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 35.71,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7582
+    },
+    {
+      "key_a": "Segment:compute & networking",
+      "key_b": "Segment:graphics",
+      "label": "Segment",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 20.0,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7183
+    },
+    {
+      "key_a": "Segment:data center",
+      "key_b": "Segment:gaming",
+      "label": "Segment",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 11.76,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.778
+    },
+    {
+      "key_a": "Segment:data center",
+      "key_b": "Segment:professional visualization",
+      "label": "Segment",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 27.03,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 3,
+      "cosine": 0.7184
+    },
+    {
+      "key_a": "Segment:gaming",
+      "key_b": "Segment:graphics",
+      "label": "Segment",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 42.86,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.8121
+    },
+    {
+      "key_a": "Segment:gaming",
+      "key_b": "Segment:professional visualization",
+      "label": "Segment",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 18.75,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 2,
+      "cosine": 0.7377
+    },
+    {
+      "key_a": "Segment:graphics",
+      "key_b": "Segment:professional visualization",
+      "label": "Segment",
+      "rules": [
+        "embedding"
+      ],
+      "fuzzy": 23.53,
+      "acronym": false,
+      "shared_rare_words": [],
+      "embedding_rank": 1,
+      "cosine": 0.848
+    }
+  ],
+  "adjudication": {},
+  "labels_and_scoring": {}
+}

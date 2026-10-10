@@ -1,0 +1,68 @@
+"""The adjudicator's per-pair decision record and the adjudicator seam (Step 9).
+
+Ticket 02 fixes these shapes; ticket 03 fills them from claude-sonnet-5-5
+replies. A decision merges only when the answer is `same` and both quotes were
+found in their own node's chunks.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass
+from enum import StrEnum
+from typing import Protocol
+
+from resolve.candidates import ScoredPair
+from resolve.nodes import ResolveNode
+
+
+class Answer(StrEnum):
+    SAME = "same"
+    RELATED = "related"
+    DISTINCT = "distinct"
+    UNSURE = "unsure"
+
+
+class RelatedKind(StrEnum):
+    FAMILY_MEMBER = "family_member"
+    PARENT_SUBSIDIARY = "parent_subsidiary"
+    VARIANT = "variant"
+
+
+@dataclass(frozen=True, slots=True)
+class PairDecision:
+    """One adjudicated candidate pair (key_a < key_b, as in ScoredPair)."""
+
+    decision_id: str
+    key_a: str
+    key_b: str
+    label: str
+    answer: Answer | None  # None when no usable reply came back
+    related_kind: RelatedKind | None
+    quote_a: str | None
+    chunk_id_a: str | None
+    quote_b: str | None
+    chunk_id_b: str | None
+    reason: str
+    quotes_verified: bool
+    failure: str | None  # why the decision cannot merge, counted by reason in the report
+    prompt_version: str
+
+    @property
+    def merges(self) -> bool:
+        return self.answer is Answer.SAME and self.quotes_verified and self.failure is None
+
+
+class Adjudicator(Protocol):
+    """Judges one candidate pair from both nodes' names, evidence and chunk text."""
+
+    prompt_version: str
+
+    def judge(self, pair: ScoredPair, a: ResolveNode, b: ResolveNode) -> PairDecision: ...
+
+
+@dataclass(frozen=True, slots=True)
+class HeldBackGroup:
+    """A group of `same` decisions not merged: a contradiction inside it, or too many names."""
+
+    keys: tuple[str, ...]
+    reason: str
+    decisions: tuple[PairDecision, ...]
