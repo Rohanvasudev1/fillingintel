@@ -4,7 +4,7 @@
 
 **Blocked by:** 01, and the Haiku extractor PR (amendment 2026-10-10).
 
-**Amendment, 2026-10-10 (user decision):** every run uses `claude-haiku-5-5` at effort `high`, `max_tokens` 16,000; Step 9 extraction is capped at $5 in all (`TOTAL_CAP_USD`), each run with `--max-cost 1`. Round 3 judges Haiku plus v2 and is reported on its own, not against round 2 (Sonnet, v1). Runs in parallel with 03 and 04.
+**Amendment, 2026-10-10 (user decision):** every run uses `claude-haiku-5-5` at effort `high` (`max_tokens` 16,000 after a smoke check); Step 9 extraction is capped at $5 in all (`TOTAL_CAP_USD`), and `--max-cost` defaults to $1. Round 3 judges Haiku plus v2 and is reported on its own, not against round 2 (Sonnet, v1). Runs in parallel with 03 and 04.
 
 **Parallel-safety:** no code changes. Writes only run outputs (gitignored `data/extract/`) and committed reports and round files under `benchmarks/extraction/`.
 

@@ -2,7 +2,9 @@
 
 The database tests load four chunks of the NVDA FY2026 10-K fixture into a
 throwaway schema and answer them with the real Sonnet replies recorded for
-ticket 02, served by a counting fake behind the real response cache.
+ticket 02, served by a counting fake behind the real response cache. The
+requests name the current extractor (Haiku 5.5); the fake ignores the model, so
+the reports and spans say Haiku while the bodies are Sonnet's.
 """
 import json
 from contextlib import nullcontext
@@ -414,3 +416,8 @@ def test_an_unreadable_past_report_exits_3(env, conn, recorded, tmp_path, capsys
     assert _main(tmp_path, model, conn) == EXIT_RUN_ERROR
     assert model.calls == 0
     assert "0000002488-26-000018-run1.json" in capsys.readouterr().err
+
+
+def test_the_default_per_run_cap_is_one_dollar():
+    assert run_module.DEFAULT_MAX_COST_USD == 1.0
+    assert run_module._parse_args(["--accession", NVDA_10K]).max_cost == 1.0

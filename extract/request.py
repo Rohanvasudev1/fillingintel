@@ -2,10 +2,11 @@
 
 The request goes through the existing Anthropic client and response cache. It
 carries `claude-haiku-5-5` at effort `high` (Step 8 used `claude-sonnet-5-5`;
-switched for cost, user decision 2026-10-10), `max_tokens` 16,000 (thinking plus
-the reply; Haiku used 13,737 on chunk 0012 of the NVDA 10-K, where 8,000 cut it
-off; 16,000 is the most the SDK sends without streaming), structured output
-with the schema derived from the ontology, no sampling settings and no tools.
+see CLAUDE.md, Step 9). `max_tokens` is 16,000, for thinking plus the reply:
+Haiku used 13,737 on chunk 0012 of the NVDA 10-K, where 8,000 cut it off. It
+matches the answer model's cap and stays under the SDK's non-streaming limit.
+The request has structured output with the schema derived from the ontology,
+no sampling settings and no tools.
 The system prompt is one block with the only cache breakpoint, since it is
 identical on every call; the chunk is in the user message. The cache key
 hashes the whole request, so a prompt or model change misses the response cache

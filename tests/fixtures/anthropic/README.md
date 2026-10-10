@@ -39,5 +39,9 @@ again, with `ANTHROPIC_API_KEY` in `.env`:
 
     uv run --env-file .env python scripts/capture_extract_responses.py
 
+The extractor became `claude-haiku-5-5` in Step 9 (2026-10-10). These replies predate the
+switch; the run tests replay them under Haiku requests, since the fake does not check the
+model.
+
 The script needs no database: it rebuilds the chunks from the gzipped fixture. A prompt change
 fails `test_recorded_with_the_current_prompt` until the responses are recorded again.

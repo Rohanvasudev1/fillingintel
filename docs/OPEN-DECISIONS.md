@@ -19,6 +19,7 @@ Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstra
 - `benchmarks/results.md`: ARCHITECTURE.md says CI regenerates it. Deferred at the Step 6 grilling (2026-10-06): decide whether a local command or CI writes it once there is more than one arm to compare.
 
 ## After Step 8
+- Haiku 5.5 against Sonnet 5.5 extraction quality is not compared: Step 9 switched the extractor to Haiku for cost (2026-10-10) and round 3 judges Haiku with prompt v2 only. A comparison would need a Sonnet run under v2 and its own review round.
 - Whether retrieval filters out `uncertain` evidence: decide in Step 11 from the review's accuracy per confidence level.
 
 ## Lookup arm
