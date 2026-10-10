@@ -1412,6 +1412,23 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 1. Merge this PR once CI is green.
 2. Step 9 (entity resolution): `/grill-with-docs`, starting with the Segment-versus-market-platform question and the XBRL tag proposal in OPEN-DECISIONS.
 
+## 2026-10-10 — Step 9 ticket 02: deterministic resolution and candidate pairs
+
+- **Built.** A new `resolve` package: match keys (NFKC, casefold, punctuation rules, a hand-written legal-suffix list stripped from the end but never past the first word), a filer-name table, cheap scores on every same-label pair, candidate rules, deterministic merges, the merge log with `replay()`, and `python -m resolve.run` (exits 0/2/3/4). `ingest/voyage.py` gains `embed_batch()`. `retrieve/query_cache.py` gains `CachedBatchEmbedder`, keyed by model, input type and text hash in `data/cache/entity_embeddings/`, as the research note (section 2.3) recommends. `rapidfuzz==3.14.6` is now direct, and `resolve/` is in `git_state()`'s +dirty list. The shapes tickets 03 and 04 build on are fixed: `PairDecision`, `Adjudicator`, `HeldBackGroup`, `Resolution`, `ResolveConfig` with its hash, and empty `adjudication` and `labels_and_scoring` report sections.
+- **Run on NVDA run 1** (commit 5235dd7, config `2870f292…` with defaults fuzzy 90, top_k 3, rare word in at most 3 match keys, "Label: name" embedded as `document`, ontology version 2). Report: `benchmarks/resolution/run1.json`.
+  - 389 nodes. 2,160 pairs scored (RiskFactors are never paired). 348 candidate pairs.
+  - Rule counts (pairs where the rule fired / pairs where it fired alone): normalized_equal 4 / 0, fuzzy 30 / 6, acronym 2 / 0, rare_word 37 / 9, embedding 311 / 276, same_facts (MetricValue) 21 / 21.
+  - 2 deterministic merges: Groq ×3 and Microsoft ×2. The alias map has 5 keys.
+  - 344 pending pairs await the adjudicator: Product 95, Organization 85, Regulation 65, Person 36, MetricValue 21, Agreement 20, LegalProceeding 11, Segment 11.
+  - Embedding: 146 names, 2 batched calls, 897 tokens, $0.0001 at list price (inside the free allowance). A rerun made 0 calls.
+- **What the numbers say.** Top-3 neighbours on ~146 names is the bulk of the candidates (276 pairs only it found), and most are plainly distinct (Broadcom / Qualcomm, A100 / H100). Without embeddings the lexical rules give 72 candidates. The embedding rule did find Mr. Teter → Timothy S. Teter as nearest Person, which fuzzy missed (rare_word caught it too). k, a possible cosine floor and the rare-word cutoff are ticket 06's tuning; at k=3 adjudication would cost about 344 calls on one filing.
+- **Review fixes** (`mattpocock-skills:code-review`). Spec: Segments and MarketPlatforms are per filer (ADR-0005), so they now pair only within one filer, and two companies' "Gaming" never merge (tests added red first). Committed outputs regenerated from the clean commit instead of `+dirty`. Standards: I/O errors on the log or alias map exit 3; a bad vector exits 3; duplicate path constants and unused embedder methods removed; `merges_by_rule` no longer prints "None" for decision-based merges.
+- **Evidence.** Rule, replay, batch and pipeline tests written first and shown failing. `uv run ruff check .` clean; `uv run --env-file .env pytest`: 1,404 passed, 15 skipped (7 min 26 s). CI result is on the PR. Recorded real vectors for 17 names in `tests/fixtures/voyage/entity_vectors.json.gz`.
+
+**Next session starts with**
+1. Merge this PR once CI is green.
+2. Ticket 03 (adjudicator and groups), after ticket 01 lands. First settle the two open questions from this ticket: whether the alias map lists only merged keys (absent means itself), and whether a filer Company always wins the canonical choice. Both need a line in CLAUDE.md or ADR-0006.
+
 ---
 
 ## Findings worth telling
