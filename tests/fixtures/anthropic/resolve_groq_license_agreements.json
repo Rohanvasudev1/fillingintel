@@ -1,0 +1,63 @@
+{
+  "recorded": "real API response, recorded by scripts/capture_resolve_responses.py",
+  "prompt_version": "resolve/v1@6cf68829",
+  "node_a": {
+    "key": "Agreement:license agreement with groq",
+    "label": "Agreement",
+    "name": "license agreement with Groq",
+    "evidence": [
+      {
+        "chunk_id": "0001045810-26-000021:0070",
+        "span": "license agreement with Groq"
+      }
+    ],
+    "metric": null
+  },
+  "node_b": {
+    "key": "Agreement:non‐exclusive license agreement with groq",
+    "label": "Agreement",
+    "name": "non‑exclusive license agreement with Groq",
+    "evidence": [
+      {
+        "chunk_id": "0001045810-26-000021:0102",
+        "span": "we entered into a non‑exclusive license agreement with Groq, Inc\\., or Groq, for its language processing unit technology"
+      }
+    ],
+    "metric": null
+  },
+  "api_ms": 3997.36912499975,
+  "response": {
+    "id": "msg_011CfuJeRTjvP2xpNznTz1uc",
+    "container": null,
+    "content": [
+      {
+        "citations": null,
+        "text": "{\"answer\":\"same\",\"related_kind\":null,\"quote_a\":\"the execution of a non\\\\-exclusive license agreement with Groq\",\"chunk_id_a\":\"0001045810-26-000021:0070\",\"quote_b\":\"we entered into a non‑exclusive license agreement with Groq, Inc\\\\., or Groq, for its language processing unit technology\",\"chunk_id_b\":\"0001045810-26-000021:0102\",\"reason\":\"Both passages describe NVIDIA's single non-exclusive license agreement with Groq (Groq, Inc.) in fiscal 2026. Node A is the same agreement, described in the liquidity discussion, and Node B is the agreement as described in Note 2.\"}",
+        "type": "text"
+      }
+    ],
+    "diagnostics": null,
+    "model": "claude-sonnet-5-5",
+    "role": "assistant",
+    "stop_details": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1505
+      },
+      "cache_creation_input_tokens": 1505,
+      "cache_read_input_tokens": 0,
+      "inference_geo": "global",
+      "input_tokens": 2734,
+      "output_tokens": 228,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": null,
+      "service_tier": "standard"
+    }
+  }
+}

@@ -1460,6 +1460,34 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 
 ---
 
+## 2026-10-10 — Step 9 ticket 03: adjudicator and groups
+
+- **Adjudicator** (`resolve/adjudicate.py`, `resolve/request.py`, `resolve/output_schema.py`). claude-sonnet-5-5 at effort `high`, `max_tokens` 8,000, structured output, no sampling settings, through the Anthropic client and response cache. The pins (provider, model, effort, output cap, the 2026-10-09 price table) are constants in `resolve/request.py`, and every report records them. The request carries both names, the label, evidence spans and the text `resolve()` returns for each node's first 3 evidence chunks. A chunk both nodes cite is sent once. Quotes are checked with `extract.spans.find_span` against the chunks sent for the node they quote. Not merged, counted by reason: `quote_not_found`, `quote_from_other_node`, `unsure`, `distinct`, `related:{kind}`, `invalid_reply` (a related answer without a kind, a kind on another answer, broken JSON, a cut-off reply) and `call_failed`.
+- **Prompt `resolve/v1`** (`prompts/resolve/v1.md`, file SHA-256 `403e2d11…`, version `resolve/v1@6cf68829`, which also covers the user template and schema). It states CONTEXT.md's same-entity rule.
+- **Groups** (`resolve.groups.group_decisions`). Union-find runs over the decisions that merge, joined with the deterministic groups they touch. A group is held back when it holds any `related` or `distinct` pair, or has more than 5 keys (Company keys included). Held-back groups go into the report with every decision among their keys. Each clean group becomes one `llm` merge event that names its decision IDs, the quotes and the prompt version. Decision IDs hash the pair, prompt version, model and effort, so a rerun appends nothing.
+- **`python -m resolve.run`** now needs `ANTHROPIC_API_KEY` and `DATABASE_URL`, and refuses `ANTHROPIC_BASE_URL`. It runs the deterministic pass, reads the pending pairs' chunks from Postgres, prints an estimate for the uncached calls, and stops over `--max-cost` (default $10) with exit 3. It then adjudicates 4 at a time under a Phoenix CHAIN span, with one LLM span per call. The report's `adjudication` section has settings, prompt, estimate, answers, reasons, tokens, cost this run, cost replayed, held-back groups, related pairs and every decision. If any call failed, nothing is appended to the log, the report says `incomplete`, and the command exits 3; a rerun tries again.
+- **Recorded replies** (ten calls with the user's go-ahead, $0.10 against a $0.26 estimate, `scripts/capture_resolve_responses.py`). The first try was refused by the API (HTTP 400, no charge): an enum with `null` inside a `["string", "null"]` type is invalid, so `related_kind` is now `anyOf`. Seven pairs came back `same` with verified quotes: two Groq agreement pairs, Huawei, GDPR / General Data Protection Regulation, OBBBA, Teter, Revenue / Total revenue. GDPR / U.K. GDPR came back `related` (variant); Blackwell / GB200 and GeForce / GeForce NOW came back `related` (family member). Output was 193 to 295 tokens, with no thinking blocks.
+- **Tests first.** The group and reply-check tests failed (`NotImplementedError`, then a missing module) before the code existed.
+- **Code review** (`mattpocock-skills:code-review`). Fixed:
+  - a failed call now exits 3, not 4;
+  - the 5-name rule counts every key, as the ticket says;
+  - two `except` branches with the same body were merged;
+  - `Method.LLM` replaced a string.
+
+  Left as they are, with reasons:
+  - `_in_order`, the traced-model wrapper and the run scaffolding repeat their `extract/` counterparts, since the ticket limits this change to `resolve/` and a shared helper would edit extract modules;
+  - `resolve.run` runs `resolve_nodes()` twice (once to find the pending pairs for the estimate), which costs one more scoring pass and no API calls;
+  - the adjudicator pins are not in `ResolveConfig`, so `config_hash` does not move with the model, but each decision ID and merge event records the prompt version, and decision IDs hash the model and effort.
+- **Decision needed.** Both reviewers flagged that the prompt's worked examples (Blackwell / GB200, GDPR / U.K. GDPR, GeForce NOW, Mr. Teter, Revenue / Total revenue) are run 1 pairs. The recorded replies may echo the prompt, and adjudicator accuracy would be inflated if those pairs reach ticket 04's scoring set. Recommendation: ticket 06 swaps them for invented examples while tuning the prompt, and ticket 04 leaves the run 1 example pairs out of the scoring draw.
+- **Also flagged.** Only the first 3 evidence chunks per node are sent and checked (`MAX_CHUNKS_PER_NODE`), to bound cost. This departs from the ticket's "each node's evidence spans". Ticket 06 can measure whether it costs recall.
+- **Evidence.** `uv run ruff check .` is clean. Full suite against the local Postgres and the Neo4j test service: 1522 passed, 15 skipped after the review fixes. CI result is on the PR.
+
+**Next session starts with**
+1. Merge this PR once CI is green, and decide on the prompt-examples question above.
+2. Ticket 05's extraction runs, then ticket 04 (labeller and sampling) and ticket 06. A real `resolve.run` over all 24 filings waits for those runs. With run 1 alone and `top_k` 3 it would send about 340 pairs (the estimate prints first).
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.

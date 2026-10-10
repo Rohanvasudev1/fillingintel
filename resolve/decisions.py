@@ -12,6 +12,7 @@ from typing import Protocol
 
 from resolve.candidates import ScoredPair
 from resolve.nodes import ResolveNode
+from retrieve.answer_model import TokenUsage
 
 
 class Answer(StrEnum):
@@ -25,6 +26,21 @@ class RelatedKind(StrEnum):
     FAMILY_MEMBER = "family_member"
     PARENT_SUBSIDIARY = "parent_subsidiary"
     VARIANT = "variant"
+
+
+class Failure(StrEnum):
+    """Why a decision does not merge. A `related` answer counts as `related:{kind}`."""
+
+    CALL_FAILED = "call_failed"  # the API call raised; a rerun tries again
+    INVALID_REPLY = "invalid_reply"  # cut off, refused, not JSON or not the schema's shape
+    QUOTE_NOT_FOUND = "quote_not_found"
+    QUOTE_FROM_OTHER_NODE = "quote_from_other_node"
+    UNSURE = "unsure"
+    DISTINCT = "distinct"
+
+
+def related_failure(kind: RelatedKind) -> str:
+    return f"related:{kind.value}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,6 +61,8 @@ class PairDecision:
     quotes_verified: bool
     failure: str | None  # why the decision cannot merge, counted by reason in the report
     prompt_version: str
+    usage: TokenUsage | None = None  # None when no reply came back
+    from_cache: bool = False
 
     @property
     def merges(self) -> bool:
