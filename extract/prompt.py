@@ -1,4 +1,4 @@
-"""The versioned extract prompt (Step 8), shaped like the answer prompt.
+"""The versioned extract prompt (Step 8; v2 since Step 9), shaped like the answer prompt.
 
 Each version is one file, `prompts/extract/{version}.md`, with a `# System`
 part holding `$ontology` and a `# User` template. A published file is frozen:
@@ -26,9 +26,10 @@ from graph.schema_text import schema_text
 from ingest.provenance import REPO_ROOT
 
 PROMPTS_DIR = REPO_ROOT / "prompts" / "extract"
-CURRENT_VERSION = "v1"
+CURRENT_VERSION = "v2"
 PUBLISHED = MappingProxyType({
     "v1": "4b83bf9bbe7767aa81567e8983d298f2948accacca124b493ec3e7eb96ffd49d",
+    "v2": "df67f16a26dfa2ac60a7cb8eb0f5e82fad1c3dd1fc607b2214e233fb8383e601",
 })
 _PARTS = re.compile(r"\A# System\n(?P<system>.*?)\n# User\n(?P<user>.*)\Z", re.DOTALL)
 _HASH_CHARS = 8

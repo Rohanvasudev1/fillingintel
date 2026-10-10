@@ -9,12 +9,14 @@ from graph.batch import Batch, EdgeRecord, Evidence, NodeRecord, NodeRef, Rule, 
 from tests.graph_test_data import (
     COMPUTE,
     CUSTOMERS_CHUNK,
+    DATA_CENTER,
     EXPORT_CHUNK,
     FILING,
     NVDA_10K,
     NVIDIA,
     PERIOD,
     QUOTES,
+    SEGMENTS_CHUNK,
     SUPPLY_CHUNK,
     TEST_PROMPT,
     TSMC,
@@ -113,6 +115,60 @@ def test_a_disallowed_end_label_is_rejected(graph_test_batch):
         graph_test_batch, EdgeRecord("HAS_SEGMENT", NVIDIA, TSMC, edge_evidence(SUPPLY_CHUNK)),
     )
     assert _rules(batch) == [Rule.DISALLOWED_ENDPOINT]
+
+
+# ── ontology version 3: market platforms, filer-scoped keys, aliases ──────────────
+
+def test_a_market_platform_as_the_end_of_has_segment_is_rejected(graph_test_batch):
+    batch = _with_edge(graph_test_batch, EdgeRecord(
+        "HAS_SEGMENT", NVIDIA, DATA_CENTER, edge_evidence(SEGMENTS_CHUNK)))
+    assert _rules(batch) == [Rule.DISALLOWED_ENDPOINT]
+
+
+def test_affects_to_an_unlisted_label_is_rejected(graph_test_batch):
+    risk = NodeRef.of("RiskFactor", key=f"{NVDA_10K}:export controls")
+    batch = _with_edge(graph_test_batch, EdgeRecord(
+        "AFFECTS", risk, TSMC, edge_evidence(EXPORT_CHUNK)))
+    violations = check_batch(batch, existing_nodes=frozenset({risk}))
+    assert [v.rule for v in violations] == [Rule.DISALLOWED_ENDPOINT]
+    assert "end label 'Organization'" in violations[0].message
+
+
+def test_a_segment_key_without_a_cik_is_rejected(graph_test_batch):
+    batch = _replace_node(graph_test_batch, "Segment",
+                          lambda n: _set_props(n, key="Segment:compute & networking"))
+    assert _rules(batch, existing_nodes=frozenset({COMPUTE})) == [Rule.BAD_KEY]
+
+
+def test_a_market_platform_key_under_another_label_is_rejected(graph_test_batch):
+    batch = _replace_node(graph_test_batch, "MarketPlatform",
+                          lambda n: _set_props(n, key="Segment:1045810:data center"))
+    assert _rules(batch, existing_nodes=frozenset({DATA_CENTER})) == [Rule.BAD_KEY]
+
+
+def test_other_labels_keep_their_own_key_formats(graph_test_batch):
+    batch = _replace_node(graph_test_batch, "Organization",
+                          lambda n: _set_props(n, key="Organization:1045810:tsmc"))
+    assert _rules(batch, existing_nodes=frozenset({TSMC})) == []
+
+
+def test_aliases_that_are_not_a_list_of_strings_are_rejected(graph_test_batch):
+    for bad in ("TSMC", ["TSMC", 3]):
+        batch = _replace_node(graph_test_batch, "Organization",
+                              lambda n, bad=bad: _set_props(n, aliases=bad))
+        assert _rules(batch) == [Rule.WRONG_TYPE], bad
+
+
+def test_aliases_may_be_left_out_or_empty(graph_test_batch):
+    left_out = _replace_node(graph_test_batch, "Organization", lambda n: _drop_prop(n, "aliases"))
+    empty = _replace_node(graph_test_batch, "Organization", lambda n: _set_props(n, aliases=[]))
+    assert _rules(left_out) == [] and _rules(empty) == []
+
+
+def test_aliases_are_not_defined_for_per_filing_labels(graph_test_batch):
+    batch = _replace_node(graph_test_batch, "MetricValue",
+                          lambda n: _set_props(n, aliases=["top customer share"]))
+    assert _rules(batch) == [Rule.UNKNOWN_PROPERTY]
 
 
 def test_an_endpoint_neither_in_the_batch_nor_the_graph_is_rejected(graph_test_batch):

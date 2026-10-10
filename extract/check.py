@@ -194,7 +194,7 @@ def _key_nodes(
     """Checked nodes by local ID; a MetricValue without one subject is rejected."""
     accession_no = ctx.filing.accession_no
     nodes = {
-        d.local_id: _checked(d, node_key(d.label, d.name, accession_no))
+        d.local_id: _checked(d, node_key(d.label, d.name, accession_no, ctx.filing.cik))
         for d in drafts if d.label != METRIC
     }
     rejections: list[Rejection] = []

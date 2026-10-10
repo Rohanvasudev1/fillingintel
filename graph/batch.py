@@ -1,22 +1,33 @@
-"""Batches of graph writes and the pure check they must pass (Step 7; version 2 in Step 8).
+"""Batches of graph writes and the pure check they must pass (Step 7; version 3 since Step 9).
 
 A batch holds nodes and edges as plain typed records. check_batch() returns
 every way the batch breaks the ontology or the evidence rules (ADR-0004),
 with no database call: the caller says which chunks and endpoint nodes are
 already in the graph. Each piece of evidence carries a span, a confidence
 and the extract prompt version, on the node's Evidence or at one index of an
-extracted edge's four evidence lists.
+extracted edge's four evidence lists. A Segment or MarketPlatform key must
+hold its filer's CIK (`{label}:{cik}:{name}`, ADR-0005).
 """
 from __future__ import annotations
 
 import math
+import re
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import StrEnum
 from types import MappingProxyType
 
-from graph.ontology import EDGE_EVIDENCE, EDGE_TYPES_BY_NAME, LABELS_BY_NAME, Kind, Prop, PropType
+from graph.ontology import (
+    EDGE_EVIDENCE,
+    EDGE_TYPES_BY_NAME,
+    FILER_SCOPED_LABELS,
+    KEY_SEPARATOR,
+    LABELS_BY_NAME,
+    Kind,
+    Prop,
+    PropType,
+)
 
 # Set by the write path on every node and edge, never by the caller.
 ONTOLOGY_VERSION_PROPERTY = "ontology_version"
@@ -51,6 +62,27 @@ class Rule(StrEnum):
     EVIDENCE_LENGTH_MISMATCH = "evidence_length_mismatch"
     DUPLICATE_CHUNK = "duplicate_chunk"
     UNKNOWN_CHUNK = "unknown_chunk"
+    BAD_KEY = "bad_key"
+
+
+# `{label}:{cik}:{name}`: a CIK is digits; the name part is whatever follows.
+_FILER_SCOPED_KEY = {
+    label: re.compile(rf"{re.escape(label + KEY_SEPARATOR)}[0-9]+{re.escape(KEY_SEPARATOR)}\S.*",
+                      re.DOTALL)
+    for label in FILER_SCOPED_LABELS
+}
+
+
+def key_problem(label: str, key: object) -> str | None:
+    """Why *key* is not a well-formed key for *label*, or None when it is.
+
+    Only filer-scoped labels have a fixed format; a missing or blank key is left
+    to the required-property check.
+    """
+    pattern = _FILER_SCOPED_KEY.get(label)
+    if pattern is None or not _is_text(key) or pattern.fullmatch(str(key)):
+        return None
+    return f"a {label} key is {label}:{{cik}}:{{name}}, got {key!r}"
 
 
 def _frozen(mapping: Mapping[str, object]) -> MappingProxyType[str, object]:
@@ -243,6 +275,8 @@ def _node_violations(
         yield Violation(item, Rule.UNKNOWN_LABEL, f"{node.label!r} is not an ontology label")
         return
     yield from _property_violations(item, definition.properties, node.properties)
+    if (problem := key_problem(node.label, node.properties.get("key"))) is not None:
+        yield Violation(item, Rule.BAD_KEY, problem)
     if definition.kind is Kind.STRUCTURAL:
         if node.evidence:
             yield Violation(item, Rule.UNEXPECTED_EVIDENCE,

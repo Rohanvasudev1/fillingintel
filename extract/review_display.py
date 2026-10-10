@@ -1,4 +1,4 @@
-"""What the review command prints: triples, chunks and the round summary (Step 8).
+"""What the review command prints: the standard, triples, chunks and the summary (Step 8).
 
 The evidence span is marked with >>> and <<< in the chunk text, at the place
 the span check matched it (extract.spans), so the reviewer reads the quote in
@@ -19,6 +19,23 @@ KEY = "key"
 NAME_FIELDS = ("name", "title", "concept")  # the first a node has is shown as its name
 INDENT = "  "
 LABEL_WIDTH = 12  # "properties: " and the other field labels line up at this width
+
+
+# How a triple is judged, as round 2 judged it (Step 9 grilling); shown before the first triple.
+REVIEW_STANDARD = (
+    "Review standard",
+    "- Correct means the right labels, direction and properties, and a span that states it. "
+    "Partly right is wrong.",
+    "- A span that names only one end is correct if the same chunk names the other.",
+    "- A shortened role is correct if it is the start of the full title and does not mislead.",
+)
+
+
+def show_standard(out: Out) -> None:
+    out(RULE)
+    for line in REVIEW_STANDARD:
+        out(line)
+    out(RULE)
 
 
 def highlight(text: str, span: str) -> str | None:

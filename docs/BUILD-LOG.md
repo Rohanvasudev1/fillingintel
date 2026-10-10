@@ -1414,6 +1414,35 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 
 ---
 
+## 2026-10-10 — Step 9 ticket 01: ontology version 3 and extract prompt v2
+
+- **Ontology version 3** (ADR-0005). MarketPlatform is a new extracted label ("a market a filer reports revenue by that is not a reportable segment"). Segment now reads "a reportable segment, as the filer's segment note defines it". `HAS_MARKET_PLATFORM` runs Company→MarketPlatform. MarketPlatform is also an allowed end of `MEASURES` and `AFFECTS` and a start of `OFFERS`. The nine cross-filing extracted labels gain an optional `aliases` list of strings; RiskFactor and MetricValue do not. Schema hash `ab2c4e45…`, pinned in tests/test_ontology.py. The Step 7 edge-type line in CLAUDE.md now lists the new endpoints, since a test parses it.
+- **Keys.** Segment and MarketPlatform keys are `{label}:{cik}:{norm(name)}`, built in `extract/keys.py` from the filing's CIK. A MetricValue on one of them carries that key. `check_batch()` and `validate_graph()` have a new `bad_key` rule: a Segment or MarketPlatform key must have that shape. It checks that the CIK is digits, not that it is the filer's.
+- **Broken cases**, each breaking one rule, in both the batch check and the Neo4j validator: a MarketPlatform as the end of `HAS_SEGMENT`; a Segment key without a CIK; `aliases` as a string or holding a number; `AFFECTS` from a RiskFactor to an Organization. Each batch test failed before the code was written.
+- **Prompt `extract/v2`** (`prompts/extract/v2.md`, file SHA-256 `df67f16a…`, now `CURRENT_VERSION`). It adds a "Segment versus MarketPlatform" section using NVIDIA's split as the example, and mentions market platforms in the risk factor and figure rules. v1 is unchanged. Its prompt hash moves with the ontology, so the v1 replay tests compare against the recorded `extract/v1@6a0f055a`.
+- **Recorded v2 replies** (two calls, with the user's permission): NVIDIA's FY2026 segment note (chunk 0125) and the NVDA FY2027-Q2 10-Q revenue-by-market-platform note (chunk 0032). Replayed offline:
+  - 10-K: 1 Segment (Compute & Networking) and 5 MarketPlatforms (Data Center, Gaming, Professional Visualization, Automotive, OEM and Other); 18 MetricValues.
+  - 10-Q: 1 Segment and 4 MarketPlatforms (Data Center, Hyperscale, AI Clouds, Industrial, & Enterprise, Edge Computing); 5 MetricValues.
+  - Every key holds CIK 1045810. No rejections, and `check_batch()` passes.
+  - Two things to watch in review round 3: "OEM and Other" became a MarketPlatform. Hyperscale and AI Clouds, Industrial, & Enterprise appear to be parts of Data Center, but they are separate MarketPlatform nodes.
+- **`extract.run`** takes any corpus filing; 10-Qs already worked, and a test now covers one. Before each run it prints the spend so far, summed over the run reports in `benchmarks/extraction/` built under ontology version 3 (`extract/spend.py`). Step 8's $2.23 run is version 2, so it is not counted. A local report not yet committed also counts, which errs high, and the recording calls above are not counted. A run that would take the total past $40 stops with exit 3 unless `--allow-over-total` is given. An unreadable report also stops with exit 3.
+- **`extract.review`** prints the review standard before the first triple of every sitting. A shortened role or a span naming one end is judged as round 2 judged it. Miss-check answers given in under 15 s get the same one-time "take another look?" prompt as triples, and each miss-check line now records `looked_again`.
+- **Code review** (`mattpocock-skills:code-review`). Fixed:
+  - the AFFECTS broken case had broken the start label, not the end;
+  - the key separator is now one constant, `graph.ontology.KEY_SEPARATOR`;
+  - the pinned v1 hash is now a named constant;
+  - a test helper was renamed.
+
+  Left as they are: the review suggested a `FilingInfo.from_meta` helper, but the field-by-field copies are only in a test and a script. The review read "give the node confidence implied" in v2 as a node property. In fact it names the node's `confidence` field in the model's reply, which v1 already defines.
+- **Not touched.** The local Neo4j still holds the version-1 `:GraphMeta` from Step 7. The user must clear it before Step 10, since `apply_constraints()` refuses a graph at another version.
+- **Evidence.** `uv run ruff check .` is clean. Full suite against the local Postgres and the Neo4j test service: 1357 passed, 15 skipped after the review fixes. CI result is on the PR.
+
+**Next session starts with**
+1. Merge this PR once CI is green.
+2. Ticket 02 (deterministic resolution) if it is not already done, then ticket 03. Ticket 05's runs start with NVDA FY2026 under v2: `env -u ANTHROPIC_BASE_URL uv run --env-file .env python -m extract.run --accession 0001045810-26-000021`.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.

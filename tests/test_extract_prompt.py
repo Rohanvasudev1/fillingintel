@@ -1,4 +1,4 @@
-"""The versioned extract prompt and the request built from it (Step 8)."""
+"""The versioned extract prompt and the request built from it (Step 8; v2 in Step 9)."""
 import json
 import re
 import shutil
@@ -7,7 +7,7 @@ import pytest
 
 from extract.filers import FilingInfo
 from extract.output_schema import output_schema
-from extract.prompt import PROMPTS_DIR, PromptError, load_prompt
+from extract.prompt import CURRENT_VERSION, PROMPTS_DIR, PUBLISHED, PromptError, load_prompt
 from extract.request import EXTRACT_MAX_TOKENS, EXTRACT_MODEL, ChunkInput, build_request
 from graph.schema_text import schema_text
 from retrieve.answer_model import AnthropicAnswerModel
@@ -25,6 +25,34 @@ def test_prompt_version_names_the_file_version_and_hash():
     assert prompt.version == "v1"
     assert re.fullmatch(r"extract/v1@[0-9a-f]{8}", prompt.prompt_version)
     assert prompt.prompt_version == f"extract/v1@{prompt.sha256[:8]}"
+
+
+def test_v2_is_the_current_prompt_and_v1_is_kept():
+    assert CURRENT_VERSION == "v2"
+    assert set(PUBLISHED) == {"v1", "v2"}
+    current = load_prompt()
+    assert current.version == "v2"
+    assert re.fullmatch(r"extract/v2@[0-9a-f]{8}", current.prompt_version)
+    assert load_prompt("v1").prompt_version != current.prompt_version
+
+
+def test_v2_explains_reportable_segments_and_market_platforms_with_nvidias_split():
+    system = load_prompt("v2").system
+    assert "Segment versus MarketPlatform" in system
+    for name in ("Compute & Networking", "Graphics", "Data Center", "Gaming",
+                 "Professional Visualization", "Automotive", "HAS_MARKET_PLATFORM"):
+        assert name in system, name
+    assert "MarketPlatform" not in load_prompt("v1").user_template
+
+
+def test_the_output_schema_offers_market_platforms():
+    schema = output_schema()["properties"]
+    assert "MarketPlatform" in schema["nodes"]["items"]["properties"]["label"]["enum"]
+    assert "HAS_MARKET_PLATFORM" in schema["triples"]["items"]["properties"]["type"]["enum"]
+
+
+def test_the_output_schema_never_asks_the_model_for_aliases():
+    assert "aliases" not in json.dumps(output_schema())
 
 
 def test_prompt_carries_the_generated_schema_text_and_filer_references():

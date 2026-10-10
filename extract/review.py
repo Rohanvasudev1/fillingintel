@@ -1,4 +1,4 @@
-"""Judge a run's extracted edges, one review round at a time (Step 8). The user runs this.
+"""Judge a run's extracted edges, one review round at a time (Step 8; Step 9). The user runs this.
 
 Usage (needs ``DATABASE_URL`` for the chunk texts; no network)::
 
@@ -8,11 +8,14 @@ Usage (needs ``DATABASE_URL`` for the chunk texts; no network)::
 A round draws 30 edges from the run's candidates file (``data/extract/``, the
 latest run unless ``--run`` is given), seeded and stratified by edge type
 (extract.review_sample), leaving out every edge judged in an earlier round of
-the filing. Each is shown with its chunk and the evidence span marked; answer
-correct, wrong (with a one-line reason) or skip. Correct means the right
+the filing. The review standard (extract.review_display.REVIEW_STANDARD) is
+shown first. Each edge is shown with its chunk and the evidence span marked;
+answer correct, wrong (with a one-line reason) or skip. Correct means the right
 labels, direction and properties and a span that states it; partly right is
 wrong. A skip does not count, and another edge is drawn. Then 5 whole chunks
-are shown with every triple read from them, for a miss check.
+are shown with every triple read from them, for a miss check. An answer, to a
+triple or a miss check, given in under 15 seconds is asked to take another
+look, once.
 
 Answers are written as they are given to
 ``benchmarks/extraction/{accession_no}-round{N}.jsonl`` (committed). Quit with
@@ -41,7 +44,7 @@ from pathlib import Path
 import psycopg
 
 from extract.report import CANDIDATES_DIR, REPORTS_DIR
-from extract.review_display import Out, show_chunk, show_summary, show_triple
+from extract.review_display import Out, show_chunk, show_standard, show_summary, show_triple
 from extract.review_round import (
     CORRECT,
     FAST_SECONDS,
@@ -149,6 +152,7 @@ def review(
     path = round_path(rounds_dir, candidates.accession_no, number)
     session = _Session(candidates, chunks, path, number, name, commit, seed, ask, out, clock)
     lines = current.lines if current else ()
+    show_standard(out)
     try:
         _judge_edges(session, sampler, [line for line in lines if line["kind"] == JUDGMENT])
         _miss_check(session, sampler, miss_chunks,
@@ -207,18 +211,8 @@ def _judge_one(session: _Session, sampler: Sampler, edge: ReviewEdge, slot: int,
         show_triple(session.out, session.candidates, edge, evidence, text, position)
 
     show()
-    start = session.clock()
-    looked_again = False
-    while True:
-        verdict = _ask_choice(session.ask, "[c]orrect, [w]rong, [s]kip, [q]uit: ", _VERDICTS)
-        seconds = session.clock() - start
-        if verdict == SKIP or looked_again or seconds >= FAST_SECONDS:
-            break
-        again = _ask(session.ask, f"That took {seconds:.0f} s. Take another look? [y/N]: ")
-        if not again.lower().startswith("y"):
-            break
-        looked_again = True
-        show()
+    verdict, seconds, looked_again = _paced_choice(
+        session, "[c]orrect, [w]rong, [s]kip, [q]uit: ", _VERDICTS, show, unpaced=(SKIP,))
     reason = (_ask_text(session.ask, "Reason it is wrong (one line; Ctrl-D quits): ")
               if verdict == WRONG else None)
     return session.line(
@@ -233,22 +227,48 @@ def _judge_one(session: _Session, sampler: Sampler, edge: ReviewEdge, slot: int,
     )
 
 
+def _paced_choice(session: _Session, prompt: str, choices: Mapping[str, str],
+                  show: Callable[[], None], unpaced: Sequence[str] = ()
+                  ) -> tuple[str, float, bool]:
+    """The answer to *prompt*, its seconds, and whether a fast answer was looked at again.
+
+    An answer under FAST_SECONDS, other than one in *unpaced*, is asked once to take
+    another look; a yes shows the item again and asks again.
+    """
+    start = session.clock()
+    looked_again = False
+    while True:
+        answer = _ask_choice(session.ask, prompt, choices)
+        seconds = session.clock() - start
+        if answer in unpaced or looked_again or seconds >= FAST_SECONDS:
+            return answer, seconds, looked_again
+        again = _ask(session.ask, f"That took {seconds:.0f} s. Take another look? [y/N]: ")
+        if not again.lower().startswith("y"):
+            return answer, seconds, looked_again
+        looked_again = True
+        show()
+
+
 def _miss_check(session: _Session, sampler: Sampler, count: int, done: set[str]) -> None:
     rng = random.Random(f"{sampler.rng_tag}:miss")
     chosen = rng.sample(sorted(session.chunks), min(count, len(session.chunks)))
     for i, chunk_id in enumerate(chosen, start=1):
         if chunk_id in done:
             continue
-        show_chunk(session.out, session.candidates, chunk_id, session.chunks[chunk_id],
-                   f"Miss check [{i}/{len(chosen)}]")
-        start = session.clock()
-        missing = _ask_choice(session.ask, "Anything important missing? [y]es, [n]o, [q]uit: ",
-                              {"y": "y", "n": "n"}) == "y"
-        seconds = session.clock() - start
+        def show(chunk_id: str = chunk_id, i: int = i) -> None:
+            show_chunk(session.out, session.candidates, chunk_id, session.chunks[chunk_id],
+                       f"Miss check [{i}/{len(chosen)}]")
+
+        show()
+        answer, seconds, looked_again = _paced_choice(
+            session, "Anything important missing? [y]es, [n]o, [q]uit: ",
+            {"y": "y", "n": "n"}, show)
+        missing = answer == "y"
         note = (_ask_text(session.ask, "What is missing (one line; Ctrl-D quits): ")
                 if missing else None)
         append_line(session.path, session.line(MISS_CHECK, chunk_id=chunk_id, missing=missing,
-                                                note=note, seconds=seconds))
+                                                note=note, seconds=seconds,
+                                                looked_again=looked_again))
 
 
 # ── Command ──────────────────────────────────────────────────────────────────

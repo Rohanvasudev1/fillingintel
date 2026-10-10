@@ -139,13 +139,13 @@ def test_skips_do_not_count_and_are_replaced(candidates, chunks, tmp_path):
 
 
 def test_a_fast_answer_asks_for_another_look_once(candidates, chunks, tmp_path):
-    person = Reviewer(["w", "y", "c", *["c", "n"] * 29, *["n"] * 5], pace=4.0)
+    person = Reviewer(["w", "y", "c", *["c", "n"] * 29, *["n", "n"] * 5], pace=4.0)
     _review(candidates, chunks, tmp_path, person)
     first = judgments(round_lines(tmp_path, 1))[0]
     assert first["verdict"] == "correct" and first["looked_again"] is True
     assert first["seconds"] == pytest.approx(12.0)
-    # asked once for the first triple, then once for each of the other 29
-    assert sum("another look" in p for p in person.prompts) == 30
+    # asked once for the first triple, once for each of the other 29, and once per miss check
+    assert sum("another look" in p for p in person.prompts) == 35
 
 
 def test_a_slow_answer_is_not_questioned(candidates, chunks, tmp_path):
@@ -200,6 +200,48 @@ def test_the_miss_check_shows_5_whole_chunks_and_needs_a_note_for_yes(candidates
         assert chunks[check["chunk_id"]] in person.text
     assert summary["miss_check"] == {"chunks": 5, "missing": 1, "rate": 0.2,
                                      "label": "directional"}
+
+
+def test_a_fast_miss_check_answer_asks_for_another_look_once(candidates, chunks, tmp_path):
+    person = Reviewer(["c"] * 30, pace=20.0)
+    _review(candidates, chunks, tmp_path, person)  # the triples, at a slow pace; then end of input
+    person.pace = 4.0
+    person.replace_answers(["n", "y", "y", "missing the supplier", *["n", "n"] * 4])
+    _review(candidates, chunks, tmp_path, person)
+    checks = [line for line in round_lines(tmp_path, 1) if line["kind"] == "miss_check"]
+    first = checks[0]
+    assert first["missing"] is True and first["note"] == "missing the supplier"
+    assert first["looked_again"] is True and first["seconds"] == pytest.approx(12.0)
+    assert all(c["looked_again"] is False for c in checks[1:])
+    miss_prompts = person.prompts[30:]
+    assert sum("another look" in p for p in miss_prompts) == 5
+
+
+def test_a_slow_miss_check_answer_is_not_questioned(candidates, chunks, tmp_path):
+    person = Reviewer(ALL_CORRECT, pace=15.0)
+    _review(candidates, chunks, tmp_path, person)
+    checks = [line for line in round_lines(tmp_path, 1) if line["kind"] == "miss_check"]
+    assert len(checks) == 5 and not any(c["looked_again"] for c in checks)
+
+
+def test_the_review_standard_is_shown_before_the_first_triple(candidates, chunks, tmp_path):
+    person = Reviewer(ALL_CORRECT)
+    _review(candidates, chunks, tmp_path, person)
+    text = person.text
+    standard = text.index("Review standard")
+    assert standard < text.index("[1/30]")
+    rules = text[standard:text.index("[1/30]")]
+    assert "names only one end" in rules and "same chunk names the other" in rules
+    assert "shortened role" in rules and "start of the full title" in rules
+    assert "does not mislead" in rules
+    assert text.count("Review standard") == 1
+
+
+def test_a_resumed_round_shows_the_review_standard_again(candidates, chunks, tmp_path):
+    _review(candidates, chunks, tmp_path, Reviewer(["c"] * 3))
+    person = Reviewer(ALL_CORRECT[3:])
+    _review(candidates, chunks, tmp_path, person)
+    assert person.text.index("Review standard") < person.text.index("[4/30]")
 
 
 def test_wilson_interval_at_26_of_30():

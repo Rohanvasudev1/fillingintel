@@ -1,4 +1,4 @@
-"""The graph ontology as frozen data (Step 7; version 2 since Step 8).
+"""The graph ontology as frozen data (Step 7; version 2 in Step 8, version 3 since Step 9).
 
 Every node label and edge type the graph may hold is defined here, with its
 kind, keys, properties, allowed endpoints and a one-line description written
@@ -15,6 +15,12 @@ per piece of evidence, the extractor's confidence (one of CONFIDENCE_LEVELS)
 and the extract prompt version: confidence and extract_prompt on EVIDENCED_BY,
 and confidences and extract_prompts lists parallel to chunk_ids on extracted
 edges. Nodes carry neither.
+
+Version 3 (ADR-0005) adds MarketPlatform, a market a filer reports revenue by
+that is not a reportable segment, with HAS_MARKET_PLATFORM from Company.
+Segment and MarketPlatform keys hold the filer's CIK (FILER_SCOPED_LABELS),
+and extracted labels one node spans filings for gain an optional `aliases`
+list, the names entity resolution merged into the node.
 """
 from __future__ import annotations
 
@@ -22,7 +28,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from types import MappingProxyType
 
-ONTOLOGY_VERSION = 2
+ONTOLOGY_VERSION = 3
 
 
 class Kind(StrEnum):
@@ -103,6 +109,7 @@ class EdgeDef:
 _VERSION = Prop("ontology_version", PropType.INTEGER)
 _KEY = Prop("key", PropType.STRING)
 _NAME = Prop("name", PropType.STRING)
+_ALIASES = Prop("aliases", PropType.LIST_STRING, required=False)
 # An extracted edge's evidence: parallel lists, one entry per chunk (ADR-0004).
 EDGE_EVIDENCE: tuple[Prop, ...] = (
     Prop("chunk_ids", PropType.LIST_STRING),
@@ -118,7 +125,9 @@ def _structural(
     return LabelDef(name, Kind.STRUCTURAL, keys, (*props, _VERSION), description)
 
 
-def _extracted(name: str, description: str, props: tuple[Prop, ...] = (_NAME,)) -> LabelDef:
+def _extracted(name: str, description: str, props: tuple[Prop, ...] = (_NAME, _ALIASES),
+               ) -> LabelDef:
+    """An extracted label; by default one node across filings, with a name and aliases."""
     return LabelDef(name, Kind.EXTRACTED, ("key",), (_KEY, *props, _VERSION), description)
 
 
@@ -152,7 +161,16 @@ LABELS: tuple[LabelDef, ...] = (
         "Any company or body a filing names other than the three filers, such as a "
         "supplier, customer, competitor, partner, subsidiary or acquired business.",
     ),
-    _extracted("Segment", "A reportable business segment of a filer."),
+    _extracted(
+        "Segment",
+        "A reportable segment, as the filer's segment note defines it, such as NVIDIA's "
+        "Compute & Networking.",
+    ),
+    _extracted(
+        "MarketPlatform",
+        "A market a filer reports revenue by that is not a reportable segment, such as "
+        "NVIDIA's Gaming.",
+    ),
     _extracted(
         "Product", "A named product, product family or chip architecture, such as Blackwell.",
     ),
@@ -182,6 +200,10 @@ LABELS: tuple[LabelDef, ...] = (
 )
 
 _EXTRACTED_LABEL_NAMES = tuple(d.name for d in LABELS if d.kind is Kind.EXTRACTED)
+# Joins the parts of an extracted node's key (built in extract.keys).
+KEY_SEPARATOR = ":"
+# Labels that belong to one filer: their keys hold its CIK, `{label}:{cik}:{name}`.
+FILER_SCOPED_LABELS: tuple[str, ...] = ("Segment", "MarketPlatform")
 _FIRMS = ("Company", "Organization")
 
 
@@ -222,14 +244,19 @@ EDGE_TYPES: tuple[EdgeDef, ...] = (
         "HAS_SEGMENT", ("Company",), ("Segment",), "The filer reports this business segment.",
     ),
     _extracted_edge(
-        "OFFERS", ("Company", "Segment"), ("Product",), "The filer or segment sells this product.",
+        "HAS_MARKET_PLATFORM", ("Company",), ("MarketPlatform",),
+        "The filer reports revenue by this market platform.",
+    ),
+    _extracted_edge(
+        "OFFERS", ("Company", "Segment", "MarketPlatform"), ("Product",),
+        "The filer, segment or market platform sells this product.",
     ),
     _extracted_edge(
         "DISCLOSES", ("Filing",), ("RiskFactor",), "The filing lists this risk factor.",
     ),
     _extracted_edge(
-        "AFFECTS", ("RiskFactor",), ("Segment", "Product"),
-        "The risk factor names this segment or product as exposed.",
+        "AFFECTS", ("RiskFactor",), ("Segment", "MarketPlatform", "Product"),
+        "The risk factor names this segment, market platform or product as exposed.",
     ),
     _extracted_edge(
         "PERSISTS_AS", ("RiskFactor",), ("RiskFactor",),
@@ -239,7 +266,7 @@ EDGE_TYPES: tuple[EdgeDef, ...] = (
         "REPORTS", ("Filing",), ("MetricValue",), "The filing states this figure.",
     ),
     _extracted_edge(
-        "MEASURES", ("MetricValue",), ("Company", "Segment", "Product"),
+        "MEASURES", ("MetricValue",), ("Company", "Segment", "MarketPlatform", "Product"),
         "The subject the figure is about.",
     ),
     _extracted_edge(

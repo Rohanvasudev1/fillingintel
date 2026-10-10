@@ -1,4 +1,4 @@
-"""Extract one 10-K by accession number and write its run report (Step 8).
+"""Extract one filing by accession number and write its run report (Step 8; Step 9).
 
 Usage (needs ``ANTHROPIC_API_KEY`` and ``DATABASE_URL``, with
 ``ANTHROPIC_BASE_URL`` unset; chunks not yet in the response cache need the
@@ -6,10 +6,14 @@ network)::
 
     uv run --env-file .env python -m extract.run --accession 0001045810-26-000021
     uv run --env-file .env python -m extract.run --accession <no> --max-cost 5
+    uv run --env-file .env python -m extract.run --accession <no> --allow-over-total
 
 The command reads the filing and its chunk texts (the text ``resolve()``
 returns) from Postgres, prints a cost estimate for the calls not already in the
-response cache and stops if it is over ``--max-cost`` (default $10). It then
+response cache and stops if it is over ``--max-cost`` (default $10). It also
+prints the extraction spend so far (``extract.spend``: the committed run
+reports under this ontology version) and stops if this run would take the total
+past $40, unless ``--allow-over-total`` is given. It then
 runs ``extract_filing()`` 4 calls at a time and writes the candidates file
 (``data/extract/``, gitignored) and the run report (``benchmarks/extraction/``,
 committed). A rerun with the same prompt replays every reply from the cache.
@@ -19,7 +23,8 @@ one LLM span per chunk call (``extract.tracing``). Unset, nothing is traced.
 
 Exit codes: 0 every chunk extracted and ``check_batch()`` found nothing;
 2 bad arguments; 3 could not run (a setting missing, Postgres unreachable, an
-unknown accession, an estimate over the cap, a cache or file error); 4 the run
+unknown accession, an estimate over either cap, an unreadable run report, a
+cache or file error); 4 the run
 finished incomplete (a failed chunk or a ``check_batch()`` violation).
 """
 from __future__ import annotations
@@ -54,7 +59,9 @@ from extract.report import (
     write_report,
 )
 from extract.request import ChunkInput, ExtractRequest, build_request
+from extract.spend import TOTAL_CAP_USD, spent_usd
 from extract.tracing import RUN_SPAN, TracedExtractModel, run_attributes
+from graph.ontology import ONTOLOGY_VERSION
 from ingest.provenance import REPO_ROOT, git_state
 from ingest.store import filing_chunk_texts, get_filing_summary
 from retrieve.answer_model import API_KEY_ENV, AnswerModel, AnthropicAnswerModel
@@ -119,12 +126,16 @@ def _cost_cap(value: str) -> float:
 
 
 def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Extract candidate graph records from a 10-K.")
+    parser = argparse.ArgumentParser(
+        description="Extract candidate graph records from one filing.")
     parser.add_argument("--accession", required=True, type=_accession,
                         help="the filing's accession number")
     parser.add_argument("--max-cost", type=_cost_cap, default=DEFAULT_MAX_COST_USD,
                         help=f"refuse a run estimated above this many USD "
                              f"(default {DEFAULT_MAX_COST_USD:g})")
+    parser.add_argument("--allow-over-total", action="store_true",
+                        help=f"run even if the total extraction spend would pass "
+                             f"${TOTAL_CAP_USD:g}")
     return parser.parse_args(argv)
 
 
@@ -201,7 +212,11 @@ def main(
         except PromptError as exc:
             raise _Stop(EXIT_RUN_ERROR, str(exc)) from exc
         filing, chunks = _read_filing(connect, url, args.accession)
-        return _run(args, filing, chunks, prompt, spans, open_model=open_model,
+        try:
+            spent = spent_usd(reports_dir)
+        except ValueError as exc:
+            raise _Stop(EXIT_RUN_ERROR, str(exc)) from exc
+        return _run(args, filing, chunks, prompt, spans, spent, open_model=open_model,
                     candidates_dir=candidates_dir, reports_dir=reports_dir,
                     response_cache=response_cache, extract=extract)
     except _Stop as stop:
@@ -213,7 +228,7 @@ def main(
 
 
 def _run(args: argparse.Namespace, filing: FilingInfo, chunks: Sequence[ChunkInput],
-         prompt: ExtractPrompt, spans: SpanRecorder, *, open_model: OpenModel,
+         prompt: ExtractPrompt, spans: SpanRecorder, spent: float, *, open_model: OpenModel,
          candidates_dir: Path, reports_dir: Path, response_cache: Path,
          extract: Extract) -> int:
     commit = git_state()
@@ -224,6 +239,7 @@ def _run(args: argparse.Namespace, filing: FilingInfo, chunks: Sequence[ChunkInp
             cached = CachedAnswerModel(inner, response_cache)
             estimate = _check_estimate([r for r in requests if not cached.contains(r)],
                                        filing, len(chunks), args.max_cost)
+            _check_total(estimate, spent, args.allow_over_total)
             model = TracedExtractModel(cached, spans, prompt.prompt_version, EXTRACTION_PRICES)
             with spans.span(RUN_SPAN, Kind.CHAIN, run_attributes(filing.accession_no)):
                 run = extract(filing, chunks, model, prompt, workers=WORKERS)
@@ -252,6 +268,17 @@ def _check_estimate(uncached: Sequence[ExtractRequest], filing: FilingInfo, chun
         raise _Stop(EXIT_RUN_ERROR, f"the estimate ${estimate.usd:.2f} is over "
                                     f"--max-cost ${max_cost:.2f}; no call was made")
     return estimate
+
+
+def _check_total(estimate: CostEstimate, spent: float, allow_over: bool) -> None:
+    """Prints the spend so far; stops when this run would take it past the total cap."""
+    after = spent + estimate.usd
+    print(f"${spent:.2f} spent so far under ontology version {ONTOLOGY_VERSION}; "
+          f"${after:.2f} after this run (total cap ${TOTAL_CAP_USD:.2f})")
+    if after > TOTAL_CAP_USD and not allow_over:
+        raise _Stop(EXIT_RUN_ERROR, f"this run would take the extraction total to ${after:.2f}, "
+                                    f"past ${TOTAL_CAP_USD:.2f}; no call was made (pass "
+                                    "--allow-over-total to run anyway)")
 
 
 def _display(path: Path) -> str:
