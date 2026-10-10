@@ -113,7 +113,8 @@ def test_a_run_writes_the_log_the_alias_map_and_the_report(tmp_path, candidates)
     assert report["counts"]["merges"] == {"proposed": 2, "new": 2, "by_rule": {
         "filer_table": 1, "normalized_equal": 1}}
     assert report["counts"]["pending_by_label"] == {"MetricValue": 1, "Regulation": 1}
-    assert report["adjudication"] == {} and report["labels_and_scoring"] == {}
+    assert report["adjudication"] == {}
+    assert report["labels_and_scoring"]["tuning"] == {"drawn": None, "labelled": 0, "same": 0}
 
 
 def test_a_rerun_on_unchanged_inputs_appends_nothing(tmp_path, candidates):

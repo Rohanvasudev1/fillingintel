@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from graph.ontology import ONTOLOGY_VERSION
@@ -38,6 +38,7 @@ class RunInfo:
     inputs: tuple[InputFile, ...]
     embedding: EmbeddingUse
     alias_map_keys: int
+    labels: Mapping[str, object] = field(default_factory=dict)  # resolve.labels.label_status
 
 
 def _merge(merge: MergeEvent, new: bool) -> dict[str, object]:
@@ -91,7 +92,7 @@ def build_report(result: Resolution, info: RunInfo) -> dict[str, object]:
         "merges": [_merge(m, m.merge_id in new_ids) for m in result.proposed],
         "pending": [_pair(p) for p in result.pending],
         "adjudication": {},  # ticket 03
-        "labels_and_scoring": {},  # ticket 04
+        "labels_and_scoring": dict(info.labels),
     }
 
 

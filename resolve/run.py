@@ -36,6 +36,8 @@ from ingest.voyage import BatchEmbedder, BatchEmbedding, VoyageClient, VoyageErr
 from resolve.candidates import is_named
 from resolve.config import ResolveConfig
 from resolve.embed import VoyageNodeEmbedder, embed_text
+from resolve.labeller import LABEL_NOTE
+from resolve.labels import LabelFileError, label_status
 from resolve.log import LogError, Stamp, append_events, read_log, replay
 from resolve.nodes import InputError, ResolveNode, load_nodes
 from resolve.paths import (
@@ -116,10 +118,13 @@ def _run(files: Sequence[Path], out_dir: Path, embed_cache: Path, open_client: O
         log = read_log(log_path)
         on_disk = read_alias_map(map_path)
         replayed = replay(log)
-    except (InputError, LogError, ValueError) as exc:
+        labels = {**label_status(out_dir), "note": f"{LABEL_NOTE}; scores: python -m "
+                                                   "resolve.score"}
+    except (InputError, LogError, LabelFileError, ValueError) as exc:
         raise _Stop(EXIT_USAGE, str(exc)) from exc
     except OSError as exc:
-        raise _Stop(EXIT_RUN_ERROR, f"cannot read the merge log or alias map: {exc}") from exc
+        raise _Stop(EXIT_RUN_ERROR, "cannot read the merge log, alias map or label files: "
+                                    f"{exc}") from exc
     if on_disk != replayed:
         raise _Stop(EXIT_CHECK_FAILED, f"{map_path.name} is not the replay of {log_path.name}; "
                                        "one was edited by hand")
@@ -142,7 +147,7 @@ def _run(files: Sequence[Path], out_dir: Path, embed_cache: Path, open_client: O
         info = RunInfo(run=int(report_path.stem.removeprefix("run")), stamp=stamp, config=config,
                        inputs=inputs, embedding=EmbeddingUse(len(set(texts)), cache.calls,
                                                              cache.tokens),
-                       alias_map_keys=len(aliases))
+                       alias_map_keys=len(aliases), labels=labels)
         write_report(report_path, build_report(result, info))
     except OSError as exc:
         raise _Stop(EXIT_RUN_ERROR, f"could not write the outputs: {exc}") from exc
