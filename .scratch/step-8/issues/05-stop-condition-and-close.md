@@ -4,12 +4,12 @@
 
 **Blocked by:** 03 (`python -m extract.run`), 04 (`python -m extract.review`)
 
-**Status:** ready-for-human
+**Status:** done (2026-10-10)
 
-- [ ] The agent shows the cost estimate and waits for the user's yes before the run.
-- [ ] The run covers every chunk with no failed chunks, and `check_batch()` reports zero violations on the whole filing.
-- [ ] Before each round, the agent explains what checking a triple means (right labels, direction, properties, a span that states it; partly right is wrong) and the expected time, about 35 minutes. Afterwards it reports the round's median answer time.
-- [ ] The last round scores at least 26 of 30. Every round is reported with its count, Wilson interval, accuracy per confidence level and miss rate, including failed rounds.
-- [ ] Each prompt revision is a new prompt file; earlier versions stay.
-- [ ] Run reports and round files are committed. BUILD-LOG gets a dated entry with the runs, rounds, rejection rates by reason, conflicts, cost and what each prompt revision changed, ending with "Next session starts with". The note says the local Neo4j's version-1 `:GraphMeta` must be cleared by the user at the start of Step 10.
-- [ ] MEMORY and CLAUDE.md are updated if anything was decided along the way.
+- [x] The agent shows the cost estimate and waits for the user's yes before the run.
+- [x] The run covers every chunk with no failed chunks, and `check_batch()` reports zero violations on the whole filing.
+- [x] Before each round, the agent explains what checking a triple means (right labels, direction, properties, a span that states it; partly right is wrong) and the expected time, about 35 minutes. Afterwards it reports the round's median answer time.
+- [x] The last round scores at least 26 of 30. Every round is reported with its count, Wilson interval, accuracy per confidence level and miss rate, including failed rounds.
+- [x] Each prompt revision is a new prompt file; earlier versions stay.
+- [x] Run reports and round files are committed. BUILD-LOG gets a dated entry with the runs, rounds, rejection rates by reason, conflicts, cost and what each prompt revision changed, ending with "Next session starts with". The note says the local Neo4j's version-1 `:GraphMeta` must be cleared by the user at the start of Step 10.
+- [x] MEMORY and CLAUDE.md are updated if anything was decided along the way.

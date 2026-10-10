@@ -4,7 +4,7 @@
 
 **Blocked by:** 02 (`extract_filing()`)
 
-**Status:** ready-for-agent
+**Status:** done (2026-10-09, PR #20)
 
 - [x] Stops at start, exit 3, when `ANTHROPIC_API_KEY` or `DATABASE_URL` is missing, when `ANTHROPIC_BASE_URL` is set, or when Postgres is unreachable. Bad arguments exit 2 (argparse).
 - [x] The cost estimate allows for Claude's tokenizer counting about 30% more than cl100k; an estimate over `--max-cost` (default $10) exits 3 before any call.

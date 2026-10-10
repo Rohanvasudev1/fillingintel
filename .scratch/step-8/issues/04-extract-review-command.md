@@ -4,7 +4,7 @@
 
 **Blocked by:** 03 (`python -m extract.run`)
 
-**Status:** ready-for-agent
+**Status:** done (2026-10-09, PRs #21 and #22)
 
 - [ ] Sample: 30 edges, random with a fixed seed, stratified by edge type in proportion to counts with at least one per type present; no edge judged in an earlier round of the same filing is drawn again. Skips don't count toward 30, and the sampler draws a replacement.
 - [ ] Each triple shows start node, edge type, end node, properties, confidence and flags, then the chunk text with the span highlighted.
