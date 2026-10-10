@@ -1,0 +1,436 @@
+{
+  "accession_no": "0001045810-26-000021",
+  "run": 2,
+  "status": "complete",
+  "commit": "f801baf",
+  "created_at": "2026-10-10T22:08:13+00:00",
+  "prompt": {
+    "version": "v2",
+    "path": "prompts/extract/v2.md",
+    "sha256": "34a82e2b107b550f9d2689fa43d20afb246bab0d4baeb15cf32170ce36c67d77",
+    "file_sha256": "df67f16a26dfa2ac60a7cb8eb0f5e82fad1c3dd1fc607b2214e233fb8383e601",
+    "prompt_version": "extract/v2@34a82e2b"
+  },
+  "model": "claude-haiku-5-5",
+  "effort": "high",
+  "max_tokens": 16000,
+  "ontology_version": 3,
+  "workers": 4,
+  "chunk_count": 132,
+  "candidates": 1504,
+  "nodes": 457,
+  "edges": 676,
+  "rejections": {
+    "total": 10,
+    "rate": 0.006648936170212766,
+    "by_reason": {
+      "endpoint_node_rejected": 6,
+      "span_not_found": 4
+    },
+    "examples": {
+      "span_not_found": [
+        {
+          "chunk_id": "0001045810-26-000021:0009",
+          "kind": "triple",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "start": "FILER",
+            "type": "OFFERS",
+            "end": "n4",
+            "role": null,
+            "stake": null,
+            "evidence_span": "NVIDIA AI Enterprise includes: NVIDIA NeMo, a complete solution for curating",
+            "confidence": "implied"
+          }
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0089",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n4",
+            "label": "MetricValue",
+            "name": "Other comprehensive income, net of tax",
+            "value": 150,
+            "unit": "USD millions",
+            "period": "FY2026",
+            "evidence_span": "Other comprehensive income, net of tax | 150 | 1 | 70",
+            "confidence": "implied"
+          }
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0089",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n5",
+            "label": "MetricValue",
+            "name": "Other comprehensive income, net of tax",
+            "value": 1,
+            "unit": "USD millions",
+            "period": "FY2025",
+            "evidence_span": "Other comprehensive income, net of tax | 150 | 1 | 70",
+            "confidence": "implied"
+          }
+        }
+      ],
+      "endpoint_node_rejected": [
+        {
+          "chunk_id": "0001045810-26-000021:0089",
+          "kind": "triple",
+          "message": "end node 'n4' was rejected",
+          "candidate": {
+            "start": "THIS_FILING",
+            "type": "REPORTS",
+            "end": "n4",
+            "role": null,
+            "stake": null,
+            "evidence_span": "Other comprehensive income, net of tax | 150 | 1 | 70",
+            "confidence": "implied"
+          }
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0089",
+          "kind": "triple",
+          "message": "start node 'n4' was rejected",
+          "candidate": {
+            "start": "n4",
+            "type": "MEASURES",
+            "end": "FILER",
+            "role": null,
+            "stake": null,
+            "evidence_span": "Other comprehensive income, net of tax | 150 | 1 | 70",
+            "confidence": "implied"
+          }
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0089",
+          "kind": "triple",
+          "message": "end node 'n5' was rejected",
+          "candidate": {
+            "start": "THIS_FILING",
+            "type": "REPORTS",
+            "end": "n5",
+            "role": null,
+            "stake": null,
+            "evidence_span": "Other comprehensive income, net of tax | 150 | 1 | 70",
+            "confidence": "implied"
+          }
+        }
+      ]
+    }
+  },
+  "flags": {
+    "name_not_in_span": 171,
+    "uncertain": 14
+  },
+  "conflicts": {
+    "total": 34,
+    "items": [
+      {
+        "item": "Regulation(key='Regulation:export controls')",
+        "property": "name",
+        "kept": "export controls",
+        "other": "Export controls",
+        "kept_chunk": "0001045810-26-000021:0015",
+        "other_chunk": "0001045810-26-000021:0014"
+      },
+      {
+        "item": "Agreement(key='Agreement:investment and partnership agreement with openai')",
+        "property": "name",
+        "kept": "Investment and partnership agreement with OpenAI",
+        "other": "investment and partnership agreement with OpenAI",
+        "kept_chunk": "0001045810-26-000021:0071",
+        "other_chunk": "0001045810-26-000021:0034"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:operating income:FY2026')",
+        "property": "value",
+        "kept": 130387.0,
+        "other": 139297.0,
+        "kept_chunk": "0001045810-26-000021:0063",
+        "other_chunk": "0001045810-26-000021:0066"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:net income:FY2026')",
+        "property": "value",
+        "kept": 55.6,
+        "other": 120067.0,
+        "kept_chunk": "0001045810-26-000021:0066",
+        "other_chunk": "0001045810-26-000021:0063"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:net income:FY2026')",
+        "property": "unit",
+        "kept": "percent",
+        "other": "USD millions",
+        "kept_chunk": "0001045810-26-000021:0066",
+        "other_chunk": "0001045810-26-000021:0063"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:net income:FY2026')",
+        "property": "value",
+        "kept": 55.6,
+        "other": 120067.0,
+        "kept_chunk": "0001045810-26-000021:0066",
+        "other_chunk": "0001045810-26-000021:0088"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:net income:FY2026')",
+        "property": "unit",
+        "kept": "percent",
+        "other": "USD millions",
+        "kept_chunk": "0001045810-26-000021:0066",
+        "other_chunk": "0001045810-26-000021:0088"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:net income:FY2026')",
+        "property": "value",
+        "kept": 55.6,
+        "other": 120067.0,
+        "kept_chunk": "0001045810-26-000021:0066",
+        "other_chunk": "0001045810-26-000021:0089"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:net income:FY2026')",
+        "property": "unit",
+        "kept": "percent",
+        "other": "USD millions",
+        "kept_chunk": "0001045810-26-000021:0066",
+        "other_chunk": "0001045810-26-000021:0089"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:net income:FY2026')",
+        "property": "value",
+        "kept": 55.6,
+        "other": 120067.0,
+        "kept_chunk": "0001045810-26-000021:0066",
+        "other_chunk": "0001045810-26-000021:0092"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:net income:FY2026')",
+        "property": "unit",
+        "kept": "percent",
+        "other": "USD millions",
+        "kept_chunk": "0001045810-26-000021:0066",
+        "other_chunk": "0001045810-26-000021:0092"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:net income:FY2026')",
+        "property": "value",
+        "kept": 120067.0,
+        "other": 55.6,
+        "kept_chunk": "0001045810-26-000021:0094",
+        "other_chunk": "0001045810-26-000021:0066"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:net income:FY2026')",
+        "property": "unit",
+        "kept": "USD millions",
+        "other": "percent",
+        "kept_chunk": "0001045810-26-000021:0094",
+        "other_chunk": "0001045810-26-000021:0066"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:operating income:FY2025')",
+        "property": "value",
+        "kept": 81453.0,
+        "other": 87960.0,
+        "kept_chunk": "0001045810-26-000021:0088",
+        "other_chunk": "0001045810-26-000021:0066"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:net income:FY2025')",
+        "property": "value",
+        "kept": 55.8,
+        "other": 72880.0,
+        "kept_chunk": "0001045810-26-000021:0066",
+        "other_chunk": "0001045810-26-000021:0088"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:net income:FY2025')",
+        "property": "unit",
+        "kept": "percent",
+        "other": "USD millions",
+        "kept_chunk": "0001045810-26-000021:0066",
+        "other_chunk": "0001045810-26-000021:0088"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:net income:FY2025')",
+        "property": "value",
+        "kept": 55.8,
+        "other": 72880.0,
+        "kept_chunk": "0001045810-26-000021:0066",
+        "other_chunk": "0001045810-26-000021:0089"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:net income:FY2025')",
+        "property": "unit",
+        "kept": "percent",
+        "other": "USD millions",
+        "kept_chunk": "0001045810-26-000021:0066",
+        "other_chunk": "0001045810-26-000021:0089"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:net income:FY2025')",
+        "property": "value",
+        "kept": 55.8,
+        "other": 72880.0,
+        "kept_chunk": "0001045810-26-000021:0066",
+        "other_chunk": "0001045810-26-000021:0092"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:net income:FY2025')",
+        "property": "unit",
+        "kept": "percent",
+        "other": "USD millions",
+        "kept_chunk": "0001045810-26-000021:0066",
+        "other_chunk": "0001045810-26-000021:0092"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:net income:FY2025')",
+        "property": "value",
+        "kept": 72880.0,
+        "other": 55.8,
+        "kept_chunk": "0001045810-26-000021:0094",
+        "other_chunk": "0001045810-26-000021:0066"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:net income:FY2025')",
+        "property": "unit",
+        "kept": "USD millions",
+        "other": "percent",
+        "kept_chunk": "0001045810-26-000021:0094",
+        "other_chunk": "0001045810-26-000021:0066"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:income tax expense:FY2026')",
+        "property": "value",
+        "kept": 21.4,
+        "other": 21383.0,
+        "kept_chunk": "0001045810-26-000021:0069",
+        "other_chunk": "0001045810-26-000021:0088"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:income tax expense:FY2026')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0001045810-26-000021:0069",
+        "other_chunk": "0001045810-26-000021:0088"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:income tax expense:FY2026')",
+        "property": "value",
+        "kept": 21.4,
+        "other": 15.1,
+        "kept_chunk": "0001045810-26-000021:0069",
+        "other_chunk": "0001045810-26-000021:0118"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:income tax expense:FY2026')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "percent",
+        "kept_chunk": "0001045810-26-000021:0069",
+        "other_chunk": "0001045810-26-000021:0118"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:income tax expense:FY2025')",
+        "property": "value",
+        "kept": 11.1,
+        "other": 11146.0,
+        "kept_chunk": "0001045810-26-000021:0069",
+        "other_chunk": "0001045810-26-000021:0088"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:income tax expense:FY2025')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0001045810-26-000021:0069",
+        "other_chunk": "0001045810-26-000021:0088"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:income tax expense:FY2025')",
+        "property": "value",
+        "kept": 11.1,
+        "other": 13.3,
+        "kept_chunk": "0001045810-26-000021:0069",
+        "other_chunk": "0001045810-26-000021:0119"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:income tax expense:FY2025')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "percent",
+        "kept_chunk": "0001045810-26-000021:0069",
+        "other_chunk": "0001045810-26-000021:0119"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:cash, cash equivalents, and marketable securities:FY2026')",
+        "property": "value",
+        "kept": 62.6,
+        "other": 62556.0,
+        "kept_chunk": "0001045810-26-000021:0070",
+        "other_chunk": "0001045810-26-000021:0069"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:cash, cash equivalents, and marketable securities:FY2026')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0001045810-26-000021:0070",
+        "other_chunk": "0001045810-26-000021:0069"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:income tax expense:FY2024')",
+        "property": "value",
+        "kept": 12.0,
+        "other": 4058.0,
+        "kept_chunk": "0001045810-26-000021:0119",
+        "other_chunk": "0001045810-26-000021:0088"
+      },
+      {
+        "item": "MetricValue(key='0001045810-26-000021:1045810:income tax expense:FY2024')",
+        "property": "unit",
+        "kept": "percent",
+        "other": "USD millions",
+        "kept_chunk": "0001045810-26-000021:0119",
+        "other_chunk": "0001045810-26-000021:0088"
+      }
+    ]
+  },
+  "failed_chunks": [],
+  "violations": [],
+  "calls": {
+    "made": 132,
+    "from_cache": 0
+  },
+  "tokens": {
+    "input": 142287,
+    "cache_read": 997760,
+    "cache_write": 31180,
+    "output": 388110
+  },
+  "cost_usd": 0.2221587999999999,
+  "cost_this_run_usd": 0.2221587999999999,
+  "estimate": {
+    "calls": 132,
+    "usd": 0.21853225999999995
+  },
+  "price_table": {
+    "date": "2026-10-10",
+    "unit": "USD per million tokens",
+    "models": {
+      "claude-haiku-5-5": {
+        "input_per_mtok": 0.1,
+        "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "output_per_mtok": 0.5,
+        "cache_write_per_mtok": 0.125,
+        "cache_read_per_mtok": 0.01
+      }
+    }
+  },
+  "candidates_file": "/Users/rohanvasudev/Downloads/GitHub/fillingintel/.claude/worktrees/extraction-runs-review-3-ee7782/data/extract/0001045810-26-000021-run2.jsonl"
+}
