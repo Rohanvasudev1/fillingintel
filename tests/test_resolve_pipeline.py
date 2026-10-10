@@ -151,9 +151,9 @@ def test_counts_by_label_rule_and_pending():
     assert counts.pending_by_label == {"Regulation": 1}
 
 
-def test_an_adjudicator_is_not_wired_yet():
-    with pytest.raises(NotImplementedError, match="ticket 03"):
-        resolve_nodes(GROQ, None, object(), NO_EMBEDDING, stamp=STAMP)
+def test_workers_below_one_are_refused():
+    with pytest.raises(ValueError, match="workers"):
+        resolve_nodes(GROQ, None, None, NO_EMBEDDING, stamp=STAMP, workers=0)
 
 
 def test_embedding_without_an_embedder_is_refused():

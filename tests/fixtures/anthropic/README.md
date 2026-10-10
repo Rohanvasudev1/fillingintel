@@ -41,3 +41,31 @@ again, with `ANTHROPIC_API_KEY` in `.env`:
 
 The script needs no database: it rebuilds the chunks from the gzipped fixture. A prompt change
 fails `test_recorded_with_the_current_prompt` until the responses are recorded again.
+
+## Adjudicator responses (Step 9)
+
+Ten adjudicator responses for pairs of nodes from NVDA run 1 (`0001045810-26-000021`), with
+chunk text from the NVDA FY2026 10-K fixture:
+
+- `resolve_groq_license_agreements.json` and `resolve_groq_ip_arrangement.json`: the Groq agreements
+- `resolve_huawei.json`: "Huawei" and "Huawei Technologies Co. Ltd."
+- `resolve_gdpr_long_name.json` and `resolve_gdpr_uk.json`: GDPR against its long name and against U.K. GDPR
+- `resolve_obbba.json`: OBBBA and the One Big Beautiful Bill Act
+- `resolve_teter.json`: "Mr. Teter" and "Timothy S. Teter"
+- `resolve_blackwell_gb200.json`: Blackwell and GB200
+- `resolve_geforce_now.json`: GeForce and GeForce NOW
+- `resolve_revenue.json`: Revenue and Total revenue for FY2026
+
+Each file holds both nodes as run 1 extracted them, the prompt version and the response body.
+
+**Status: real responses**, recorded on 2026-10-10 from `claude-sonnet-5-5` at effort `high`
+with resolve prompt v1 (`resolve/v1@6cf68829`). Seven answer `same`; GDPR / U.K. GDPR is
+`related` (variant); Blackwell / GB200 and GeForce / GeForce NOW are `related` (family
+member). Every quote passes the span check. Output tokens were 193 to 295, none has a
+thinking block, and the ten calls cost $0.10 (the estimate was $0.26). To record them
+again, with `ANTHROPIC_API_KEY` in `.env` and the run 1 candidates file:
+
+    env -u ANTHROPIC_BASE_URL uv run --env-file .env python scripts/capture_resolve_responses.py data/extract/0001045810-26-000021-run1.jsonl
+
+A prompt change fails `test_the_replies_were_recorded_with_the_current_prompt` until the
+responses are recorded again.
