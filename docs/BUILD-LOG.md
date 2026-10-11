@@ -1458,6 +1458,37 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 1. Merge this PR once CI is green.
 2. Ticket 02 (deterministic resolution) if it is not already done, then ticket 03. Ticket 05's runs start with NVDA FY2026 under v2: `env -u ANTHROPIC_BASE_URL uv run --env-file .env python -m extract.run --accession 0001045810-26-000021`.
 
+## 2026-10-10 — Step 9 ticket 04: labeller, sampling and scoring
+
+- **Strata and draws** (`resolve/sample.py`). Each scored pair falls in one stratum under a config. A pair is a candidate when some rule fired. It is near when no rule fired but its `token_set_ratio` is within 10 points below the fuzzy cutoff, or its embedding rank is top_k+1 to 2×top_k. Every other pair is rest. Both sets draw 60 / 25 / 15 pairs from these strata, each with its own seed. The ticket asked for a tuning draw "from all pairs"; the user chose a stratified one, because 100 uniform pairs out of run 1's 2,160 would hold about 16 candidates and two or three true matches. The scoring draw leaves out the tuning pairs, and its population sizes are counted after that exclusion.
+- **`score()`** (`resolve/scoring.py`). Each label is weighted by its stratum's population over the number labelled in that stratum. A pair is predicted same when its keys share a canonical key in the alias map, so a merge made through a chain counts. The report gives precision, recall and the rules' share of true matches. Each has a 95% percentile bootstrap that resamples within each stratum. It uses eval.bootstrap's percentile, seeding and resample count, but not `bootstrap_interval()`, which resamples a single list. The adjudicator's accuracy is plain agreement on the labelled pairs it answered; any answer other than `same` counts as not same. Raw counts are given per stratum. Tests are against hand-computed values: three strata, a chain, an empty stratum, a two-pair interval of [0, 1], and the rules' share. They were written first and failed on the missing modules.
+- **Labeller** (`resolve/labeller.py`, `prompts/label/v1.md`, file SHA-256 `9d659103…`). gpt-6-luna at effort `high`, cap 16,000 output tokens. Requests go through the judge's `OpenAIJudgeRequest` and the response cache unchanged. A request carries each node's name, the label, up to 10 spans and the text of its first 3 chunks; for a MetricValue it also carries the subject, period, value and unit. A test checks that the request is the same whatever stratum the pair is in, and that no resolver field name appears in it. Quotes are checked with `extract.spans.find_span` against the node's own shown chunks. A label whose quote fails is kept, flagged `quotes_verified: false` and counted.
+- **Commands.**
+  - `python -m resolve.label --set tuning|scoring` checks `OPENAI_API_KEY` and `DATABASE_URL`, refuses `OPENAI_BASE_URL`, and reads name embeddings from the cache only. It writes the draw once; a later run must draw the same pairs, or it exits 4. It prints an estimate (default cap $5) and labels 4 pairs at a time. Each label is appended as it arrives, and a pair is never labelled twice. The run report goes to `{set}-label-run{N}.json`.
+  - The scoring draw exits 4 unless `frozen.json` matches the current config hash, the label prompt and the latest run report's adjudicator prompt, and that run's config hash is the current one. `resolve/labels.py` has `write_frozen()` for ticket 06.
+  - `python -m resolve.score` (offline) checks that the alias map is the replay of the merge log. It writes `{set}-score{N}.json` with a header naming the commit, labeller and adjudicator models and efforts, prompt versions and hashes, config hashes, ontology version, file hashes and "agent-labelled (gpt-6-luna)".
+  - For the scoring set, `resolve.score` exits 4 when the run's config differs from the draw's, or when a stratum has no labels. For the tuning set it only warns.
+  - Exit codes 0 / 2 / 3 / 4 as elsewhere.
+- **Run report.** `labels_and_scoring` now holds the drawn and labelled counts per set. A malformed label file stops `resolve.run` with exit 2 before it writes anything.
+- **Recorded replies** (four gpt-6-luna calls, with the user's permission, output 248 to 598 tokens each): Groq / Groq, Inc. same; GDPR / U.K. GDPR not same; Blackwell / GB200 not same; Revenue / Total revenue FY2026 same. Every quote was verified. They are replayed offline from `tests/fixtures/label/responses/`.
+- **Contract with ticket 03.** `resolve.score` reads `adjudication.decisions` (`key_a`, `key_b`, `answer`), plus `model`, `effort` and `prompt_version`, from the run report. Ticket 03's in-progress report writes those keys. Decisions match labels in either key order.
+- **Code review** (`mattpocock-skills:code-review`). Fixed:
+  - exceptions that escaped as tracebacks (the label report read, a draw that does not match the nodes, an empty bootstrap, an `iterdir` error in `resolve.score`, the capture script's prompt error);
+  - `resolve.score` now refuses a run under another config and an unlabelled stratum;
+  - decision keys are matched in either order;
+  - the score header carries the label prompt's hashes;
+  - the note, provider and model are taken from constants;
+  - the shared numbering and write-once helpers are reused, and the label report was split out of `label.py`;
+  - a non-trivial interval test was added.
+
+  Left open: the prompt's examples are the four recorded pairs. Groq and Blackwell / GB200 come from CONTEXT.md's same-entity rule; the GDPR and Revenue examples were added for this prompt. If one of these pairs is drawn, the labeller has seen its answer (see Next).
+- **Evidence.** `uv run ruff check .` is clean. Full suite against the local Postgres and Neo4j test service: 1534 passed, 15 skipped. CI result is on the PR.
+
+**Next session starts with**
+1. Merge this PR once CI is green.
+2. The user decides whether `label/v1` keeps the corpus examples (GDPR / U.K. GDPR and Revenue / Total revenue) or swaps them for examples outside the corpus. Swapping means a new prompt file and four new recorded replies.
+3. Ticket 03 (adjudicator) lands, then ticket 05's extraction runs, then ticket 06: `uv run --env-file .env python -m resolve.label --set tuning`, tune, write `frozen.json`, label the scoring set and run `python -m resolve.score`.
+
 ---
 
 ## 2026-10-10 — Step 9 ticket 03: adjudicator and groups

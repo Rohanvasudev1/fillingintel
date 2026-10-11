@@ -55,3 +55,18 @@ def read_alias_map(path: Path) -> dict[str, str]:
 def write_alias_map(path: Path, aliases: Mapping[str, str]) -> None:
     write_json_atomic(path, dict(sorted(aliases.items())), indent=2)
 
+
+
+def next_numbered(directory: Path, prefix: str) -> Path:
+    """`{prefix}{N}.json` in *directory*, N one past the highest used (from 1)."""
+    pattern = re.compile(re.escape(prefix) + r"(\d+)\.json")
+    used = [int(m[1]) for p in directory.iterdir() if (m := pattern.fullmatch(p.name))] \
+        if directory.is_dir() else []
+    return directory / f"{prefix}{max(used, default=0) + 1}.json"
+
+
+def latest_report(directory: Path) -> Path | None:
+    """The highest-numbered run report in *directory*, or None when there is none."""
+    numbered = [(int(m[1]), p) for p in directory.iterdir() if (m := _REPORT.fullmatch(p.name))] \
+        if directory.is_dir() else []
+    return max(numbered)[1] if numbered else None

@@ -173,7 +173,7 @@ def test_a_run_writes_the_log_the_alias_map_and_the_report(run_main, tmp_path, c
     assert adjudication["prompt_version"].startswith("resolve/v1@")
     assert adjudication["price_table"]["date"] == "2026-10-09"
     assert report["provenance"]["status"] == "complete"
-    assert report["labels_and_scoring"] == {}
+    assert report["labels_and_scoring"]["tuning"] == {"drawn": None, "labelled": 0, "same": 0}
 
 
 def test_a_rerun_on_unchanged_inputs_appends_nothing(run_main, tmp_path, candidates):

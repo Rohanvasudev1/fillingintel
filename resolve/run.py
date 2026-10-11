@@ -58,6 +58,8 @@ from resolve.config import ResolveConfig
 from resolve.decisions import Failure
 from resolve.embed import VoyageNodeEmbedder, embed_text
 from resolve.estimate import CostEstimate, estimate_cost
+from resolve.labeller import LABEL_NOTE
+from resolve.labels import LabelFileError, label_status
 from resolve.log import LogError, LogEvent, Stamp, append_events, read_log, replay
 from resolve.nodes import InputError, InputFile, ResolveNode, load_nodes
 from resolve.paths import (
@@ -133,6 +135,7 @@ class _Inputs:
     log: tuple[LogEvent, ...]
     log_path: Path
     map_path: Path
+    labels: Mapping[str, object]  # resolve.labels.label_status, for labels_and_scoring
 
 
 def _cost_cap(value: str) -> float:
@@ -234,14 +237,17 @@ def _read_inputs(files: Sequence[Path], out_dir: Path) -> _Inputs:
         log = read_log(log_path)
         on_disk = read_alias_map(map_path)
         replayed = replay(log)
-    except (InputError, LogError, ValueError) as exc:
+        labels = {**label_status(out_dir), "note": f"{LABEL_NOTE}; scores: python -m "
+                                                   "resolve.score"}
+    except (InputError, LogError, LabelFileError, ValueError) as exc:
         raise _Stop(EXIT_USAGE, str(exc)) from exc
     except OSError as exc:
-        raise _Stop(EXIT_RUN_ERROR, f"cannot read the merge log or alias map: {exc}") from exc
+        raise _Stop(EXIT_RUN_ERROR, "cannot read the merge log, alias map or label files: "
+                                    f"{exc}") from exc
     if on_disk != replayed:
         raise _Stop(EXIT_CHECK_FAILED, f"{map_path.name} is not the replay of {log_path.name}; "
                                        "one was edited by hand")
-    return _Inputs(nodes, inputs, log, log_path, map_path)
+    return _Inputs(nodes, inputs, log, log_path, map_path, labels)
 
 
 def _run(inputs: _Inputs, out_dir: Path, config: ResolveConfig, prompt: ResolvePrompt,
@@ -336,7 +342,7 @@ def _write(inputs: _Inputs, out_dir: Path, result: Resolution, stamp: Stamp,
         report_path = next_report(out_dir)
         info = RunInfo(run=int(report_path.stem.removeprefix("run")), stamp=stamp, config=config,
                        inputs=inputs.files, embedding=embedding, alias_map_keys=len(aliases),
-                       adjudication=adjudication, complete=not failed)
+                       adjudication=adjudication, complete=not failed, labels=inputs.labels)
         write_report(report_path, build_report(result, info))
     except OSError as exc:
         raise _Stop(EXIT_RUN_ERROR, f"could not write the outputs: {exc}") from exc

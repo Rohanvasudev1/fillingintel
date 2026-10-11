@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from graph.ontology import ONTOLOGY_VERSION
@@ -63,6 +63,7 @@ class RunInfo:
     alias_map_keys: int
     adjudication: AdjudicationInfo | None = None
     complete: bool = True  # False when an adjudicator call failed; nothing was logged
+    labels: Mapping[str, object] = field(default_factory=dict)  # resolve.labels.label_status
 
 
 def _merge(merge: MergeEvent, new: bool) -> dict[str, object]:
@@ -186,7 +187,7 @@ def build_report(result: Resolution, info: RunInfo) -> dict[str, object]:
         "pending": [_pair(p) for p in result.pending],
         "adjudication": ({} if info.adjudication is None
                          else build_adjudication(result, info.adjudication)),
-        "labels_and_scoring": {},  # ticket 04
+        "labels_and_scoring": dict(info.labels),
     }
 
 
