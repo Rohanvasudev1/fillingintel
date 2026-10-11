@@ -1,0 +1,869 @@
+{
+  "provenance": {
+    "commit": "bc7e61c",
+    "created_at": "2026-10-11T16:56:31+00:00",
+    "note": "agent-labelled (gpt-6-luna)",
+    "labels_sha256": "7628f6469f3628deced082925d0efc5c6071a2e33e384fcac8e403b94c44fb01",
+    "chosen": "chosen"
+  },
+  "rules": [
+    {
+      "name": "start",
+      "config": {
+        "fuzzy_cutoff": 90.0,
+        "top_k": 3,
+        "rare_word_max_keys": 3,
+        "rare_word_min_length": 3,
+        "embedding_model": "voyage-4-large",
+        "embed_text": "label_name",
+        "embed_input_type": "document"
+      },
+      "config_hash": "2870f2920973894a358eafb68ae948432b1459682762476ec8e246217d2c131e",
+      "pending": 3723,
+      "matches_found": 22,
+      "matches": 23,
+      "non_matches_flagged": 38,
+      "non_matches": 77,
+      "missed": [
+        [
+          "Agreement:altera transaction agreement",
+          "Agreement:amended and restated transaction agreement"
+        ]
+      ]
+    },
+    {
+      "name": "embedding_off",
+      "config": {
+        "fuzzy_cutoff": 90.0,
+        "top_k": 0,
+        "rare_word_max_keys": 3,
+        "rare_word_min_length": 3,
+        "embedding_model": "voyage-4-large",
+        "embed_text": "label_name",
+        "embed_input_type": "document"
+      },
+      "config_hash": "46b0fb10496147a0f753ed5d88b453a81c057134c08b82ea30ade4a4d540aeba",
+      "pending": 2066,
+      "matches_found": 18,
+      "matches": 23,
+      "non_matches_flagged": 15,
+      "non_matches": 77,
+      "missed": [
+        [
+          "Organization:united states department of commerce",
+          "Organization:us federal department of commerce"
+        ],
+        [
+          "Product:4th gen amd epyc",
+          "Product:4th gen amd epyctm cpus"
+        ],
+        [
+          "Product:amd ryzentm",
+          "Product:ryzen"
+        ],
+        [
+          "Product:amd rocm",
+          "Product:amd rocmtm open software stack"
+        ],
+        [
+          "Agreement:altera transaction agreement",
+          "Agreement:amended and restated transaction agreement"
+        ]
+      ]
+    },
+    {
+      "name": "top_k_1",
+      "config": {
+        "fuzzy_cutoff": 90.0,
+        "top_k": 1,
+        "rare_word_max_keys": 3,
+        "rare_word_min_length": 3,
+        "embedding_model": "voyage-4-large",
+        "embed_text": "label_name",
+        "embed_input_type": "document"
+      },
+      "config_hash": "21d59db8e0454aba47afbcc7875de95dead0929e92a8d9817215066827914482",
+      "pending": 2430,
+      "matches_found": 19,
+      "matches": 23,
+      "non_matches_flagged": 21,
+      "non_matches": 77,
+      "missed": [
+        [
+          "Product:4th gen amd epyc",
+          "Product:4th gen amd epyctm cpus"
+        ],
+        [
+          "Product:amd ryzentm",
+          "Product:ryzen"
+        ],
+        [
+          "Product:amd rocm",
+          "Product:amd rocmtm open software stack"
+        ],
+        [
+          "Agreement:altera transaction agreement",
+          "Agreement:amended and restated transaction agreement"
+        ]
+      ]
+    },
+    {
+      "name": "top_k_2",
+      "config": {
+        "fuzzy_cutoff": 90.0,
+        "top_k": 2,
+        "rare_word_max_keys": 3,
+        "rare_word_min_length": 3,
+        "embedding_model": "voyage-4-large",
+        "embed_text": "label_name",
+        "embed_input_type": "document"
+      },
+      "config_hash": "a14b745813fb4b2083d5213d47b1dfc1df1e5758fcf6297bae432e25789d6193",
+      "pending": 3016,
+      "matches_found": 19,
+      "matches": 23,
+      "non_matches_flagged": 28,
+      "non_matches": 77,
+      "missed": [
+        [
+          "Product:4th gen amd epyc",
+          "Product:4th gen amd epyctm cpus"
+        ],
+        [
+          "Product:amd ryzentm",
+          "Product:ryzen"
+        ],
+        [
+          "Product:amd rocm",
+          "Product:amd rocmtm open software stack"
+        ],
+        [
+          "Agreement:altera transaction agreement",
+          "Agreement:amended and restated transaction agreement"
+        ]
+      ]
+    },
+    {
+      "name": "rare_word_off",
+      "config": {
+        "fuzzy_cutoff": 90.0,
+        "top_k": 3,
+        "rare_word_max_keys": 0,
+        "rare_word_min_length": 3,
+        "embedding_model": "voyage-4-large",
+        "embed_text": "label_name",
+        "embed_input_type": "document"
+      },
+      "config_hash": "73e40819bc5ca189e90f7e5f106e79a08d8742fb0375dd69a390a34d4c7c3e4d",
+      "pending": 3590,
+      "matches_found": 22,
+      "matches": 23,
+      "non_matches_flagged": 37,
+      "non_matches": 77,
+      "missed": [
+        [
+          "Agreement:altera transaction agreement",
+          "Agreement:amended and restated transaction agreement"
+        ]
+      ]
+    },
+    {
+      "name": "fuzzy_95",
+      "config": {
+        "fuzzy_cutoff": 95.0,
+        "top_k": 3,
+        "rare_word_max_keys": 3,
+        "rare_word_min_length": 3,
+        "embedding_model": "voyage-4-large",
+        "embed_text": "label_name",
+        "embed_input_type": "document"
+      },
+      "config_hash": "774074adee5ac236d29ab5cefda22e6f5d664623496c1715a2853174ef169a9c",
+      "pending": 3637,
+      "matches_found": 22,
+      "matches": 23,
+      "non_matches_flagged": 38,
+      "non_matches": 77,
+      "missed": [
+        [
+          "Agreement:altera transaction agreement",
+          "Agreement:amended and restated transaction agreement"
+        ]
+      ]
+    },
+    {
+      "name": "fuzzy_85",
+      "config": {
+        "fuzzy_cutoff": 85.0,
+        "top_k": 3,
+        "rare_word_max_keys": 3,
+        "rare_word_min_length": 3,
+        "embedding_model": "voyage-4-large",
+        "embed_text": "label_name",
+        "embed_input_type": "document"
+      },
+      "config_hash": "a8bd0b3dcd1aa40353df85ee749179524257e8c1be9ac38283cfe50bc8529fb7",
+      "pending": 3951,
+      "matches_found": 23,
+      "matches": 23,
+      "non_matches_flagged": 41,
+      "non_matches": 77,
+      "missed": []
+    },
+    {
+      "name": "fuzzy_off",
+      "config": {
+        "fuzzy_cutoff": 101.0,
+        "top_k": 3,
+        "rare_word_max_keys": 3,
+        "rare_word_min_length": 3,
+        "embedding_model": "voyage-4-large",
+        "embed_text": "label_name",
+        "embed_input_type": "document"
+      },
+      "config_hash": "4eff61711667292de472fb118d98a1065a774a1fb40996f9ff4fd2ad14b7bc14",
+      "pending": 3145,
+      "matches_found": 22,
+      "matches": 23,
+      "non_matches_flagged": 34,
+      "non_matches": 77,
+      "missed": [
+        [
+          "Agreement:altera transaction agreement",
+          "Agreement:amended and restated transaction agreement"
+        ]
+      ]
+    },
+    {
+      "name": "name_span",
+      "config": {
+        "fuzzy_cutoff": 90.0,
+        "top_k": 3,
+        "rare_word_max_keys": 3,
+        "rare_word_min_length": 3,
+        "embedding_model": "voyage-4-large",
+        "embed_text": "name_span",
+        "embed_input_type": "document"
+      },
+      "config_hash": "a77b07b9cdd94cc4670faed68caeb531f933236ec5589d21b1eabb711e5140e7",
+      "pending": 3896,
+      "matches_found": 22,
+      "matches": 23,
+      "non_matches_flagged": 31,
+      "non_matches": 77,
+      "missed": [
+        [
+          "Product:4th gen amd epyc",
+          "Product:4th gen amd epyctm cpus"
+        ]
+      ]
+    },
+    {
+      "name": "name_span_top_k_1",
+      "config": {
+        "fuzzy_cutoff": 90.0,
+        "top_k": 1,
+        "rare_word_max_keys": 3,
+        "rare_word_min_length": 3,
+        "embedding_model": "voyage-4-large",
+        "embed_text": "name_span",
+        "embed_input_type": "document"
+      },
+      "config_hash": "b449455a3172958a6f76663a0531ef72d4479abfff7f83d32e03e4003b739957",
+      "pending": 2530,
+      "matches_found": 18,
+      "matches": 23,
+      "non_matches_flagged": 19,
+      "non_matches": 77,
+      "missed": [
+        [
+          "Organization:united states department of commerce",
+          "Organization:us federal department of commerce"
+        ],
+        [
+          "Product:4th gen amd epyc",
+          "Product:4th gen amd epyctm cpus"
+        ],
+        [
+          "Product:amd ryzentm",
+          "Product:ryzen"
+        ],
+        [
+          "Product:amd rocm",
+          "Product:amd rocmtm open software stack"
+        ],
+        [
+          "Agreement:altera transaction agreement",
+          "Agreement:amended and restated transaction agreement"
+        ]
+      ]
+    },
+    {
+      "name": "fuzzy_85_rare_word_off_name_span",
+      "config": {
+        "fuzzy_cutoff": 85.0,
+        "top_k": 3,
+        "rare_word_max_keys": 0,
+        "rare_word_min_length": 3,
+        "embedding_model": "voyage-4-large",
+        "embed_text": "name_span",
+        "embed_input_type": "document"
+      },
+      "config_hash": "2acfb048f344bf118c2946248f6a33b8604c012ae4a6eb1c51798a292833896e",
+      "pending": 3977,
+      "matches_found": 22,
+      "matches": 23,
+      "non_matches_flagged": 32,
+      "non_matches": 77,
+      "missed": [
+        [
+          "Product:4th gen amd epyc",
+          "Product:4th gen amd epyctm cpus"
+        ]
+      ]
+    },
+    {
+      "name": "chosen",
+      "config": {
+        "fuzzy_cutoff": 85.0,
+        "top_k": 3,
+        "rare_word_max_keys": 0,
+        "rare_word_min_length": 3,
+        "embedding_model": "voyage-4-large",
+        "embed_text": "label_name",
+        "embed_input_type": "document"
+      },
+      "config_hash": "7a5aa8de76e57b0a39f9120305b2beaf583f081e07deca2dd9c83ee1a3741205",
+      "pending": 3821,
+      "matches_found": 23,
+      "matches": 23,
+      "non_matches_flagged": 40,
+      "non_matches": 77,
+      "missed": []
+    }
+  ],
+  "adjudicator": {
+    "model": "claude-haiku-5-5",
+    "effort": "high",
+    "prompt_version": "resolve/v2@5b5e4a7d",
+    "price_table": "2026-10-10",
+    "answered": 61,
+    "agreed": 59,
+    "merged_but_not_same": [],
+    "same_but_not_merged": [
+      [
+        "0000050863-26-000011:50863:asset impairment charges:FY2025",
+        "0000050863-26-000011:50863:other non-cash asset impairment charges:FY2025"
+      ],
+      [
+        "Agreement:altera transaction agreement",
+        "Agreement:amended and restated transaction agreement"
+      ]
+    ],
+    "answers": {
+      "distinct": 26,
+      "related": 11,
+      "same": 19,
+      "unsure": 5
+    },
+    "failures": {
+      "distinct": 26,
+      "related:variant": 4,
+      "unsure": 5,
+      "related:parent_subsidiary": 2,
+      "related:family_member": 5
+    },
+    "output_tokens": 40061,
+    "cost_usd": 0,
+    "decisions": [
+      {
+        "key_a": "Agreement:acquisition",
+        "key_b": "Agreement:agreement and plan of merger",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Node A is the 2024 ZT Systems acquisition, a cash-and-stock deal announced August 17, 2024. Node B is the 2020 merger agreement with Xilinx, a different transaction with a different counterparty and date."
+      },
+      {
+        "key_a": "Agreement:altera transaction agreement",
+        "key_b": "Agreement:amended and restated transaction agreement",
+        "answer": "related",
+        "merges": false,
+        "failure": "related:variant",
+        "reason": "Node A is the original transaction agreement signed on April 14, 2025, while Node B is an Amended and Restated version dated September 12, 2025, which is a successor variant of the same deal rather than the same instrument."
+      },
+      {
+        "key_a": "Agreement:chips act commercial program agreement",
+        "key_b": "Agreement:chips act secure enclave agreement",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Node A is the agreement under the commercial CHIPS Act program for up to $7.9 billion, while node B is a Secure Enclave agreement under a different CHIPS Act program. The passage for A also lists the Secure Enclave agreement as a separate $3 billion arrangement, so the two are different agreements."
+      },
+      {
+        "key_a": "Agreement:investment and partnership agreement with openai",
+        "key_b": "Agreement:investment in anthropic",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Node A is an investment and partnership agreement with OpenAI, while Node B is an agreement to invest up to $10 billion in Anthropic. The passages name different counterparties, and the two are separate deals, so they are distinct."
+      },
+      {
+        "key_a": "Agreement:loan agreement with the state of oregon business development commission",
+        "key_b": "Agreement:loan agreements with the industrial development authority of the city of chandler, arizona",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Node A's passage ties its loan agreement to the State of Oregon Business Development Commission, while Node B's passages tie theirs to the Industrial Development Authority of the City of Chandler, Arizona. These are different lenders, so the nodes name different agreements."
+      },
+      {
+        "key_a": "Agreement:master purchase agreement",
+        "key_b": "Agreement:master receivables purchase agreement",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Node A is Intel's supply agreement with SK hynix Inc. listed as exhibit 2.1, while node B is a receivables purchase agreement to which ZT Systems is a party. The passages describe different agreements with different parties and purposes, so they name different things."
+      },
+      {
+        "key_a": "LegalProceeding:inquiry into competition in graphics card and cloud service provider markets",
+        "key_b": "LegalProceeding:inquiry into competition in those markets",
+        "answer": "same",
+        "merges": true,
+        "failure": null,
+        "reason": "Both passages describe the same French Competition Authority inquiry into competition in the graphics card and cloud service provider (CSP) markets, so the two nodes name one legal proceeding. The B passage's own wording ties 'those markets' to the graphics card and CSP market."
+      },
+      {
+        "key_a": "MarketPlatform:2488:client",
+        "key_b": "MarketPlatform:2488:graphics market",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Node A is the Client business, a segment whose revenue is reported in the Q1 2025 filing. Node B is the Graphics Market heading in a different filing, a market description under the Gaming segment, so the two names do not refer to the same entity."
+      },
+      {
+        "key_a": "MarketPlatform:2488:gaming",
+        "key_b": "MarketPlatform:2488:graphics market",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Node A is the Gaming business line, which the filing reports with its own revenue figure. Node B is a \"Graphics Market\" heading that describes graphics products and their end uses, so the two names refer to different things."
+      },
+      {
+        "key_a": "0000002488-24-000123:2488:operating income:FY2024-Q2",
+        "key_b": "0000002488-24-000123:2488:total operating income (loss):FY2024-Q2",
+        "answer": "same",
+        "merges": true,
+        "failure": null,
+        "reason": "Both nodes report the same $269 million operating income for the three months ended June 29, 2024, one figure under two names: narrative text in one passage and a table total in another. The shared subject and period make them one figure."
+      },
+      {
+        "key_a": "0000002488-24-000163:2488:acquisition-related intangible amortization expense:FY2024-Q3",
+        "key_b": "0000002488-24-000163:2488:amortization of acquisition-related intangibles:FY2024-Q3",
+        "answer": "same",
+        "merges": true,
+        "failure": null,
+        "reason": "Both nodes report the same figure, $585 million, for the three months ended September 28, 2024 (FY2024-Q3) under the same subject, and the two names describe the same acquisition-related intangible amortization expense."
+      },
+      {
+        "key_a": "0000002488-25-000012:Segment:2488:client:operating income (loss):FY2023",
+        "key_b": "0000002488-25-000012:Segment:2488:client:operating income:FY2023",
+        "answer": "same",
+        "merges": true,
+        "failure": null,
+        "reason": "Both nodes give the same FY2023 Client segment figure of -46 USD millions, shown as operating loss in the table and text. The passages report one number under two names, so they are the same figure."
+      },
+      {
+        "key_a": "0000002488-25-000108:2488:inventory and related charges associated with export control:FY2025-Q2",
+        "key_b": "0000002488-25-000108:2488:inventory and related charges for export control:FY2025-Q2",
+        "answer": "same",
+        "merges": true,
+        "failure": null,
+        "reason": "Both nodes give the same figure, about $800 million of inventory and related charges tied to the U.S. government export control on AMD Instinct MI308 GPUs, for the three months ended June 28, 2025. The two passages report that one amount under differently worded names, so this is one figure."
+      },
+      {
+        "key_a": "0000002488-26-000018:2488:acquisition-related intangible amortization expense:FY2025",
+        "key_b": "0000002488-26-000018:2488:notional value of foreign currency forward contracts designated as cash flow hedges:FY2025",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Both figures are $2.3 billion for FY2025, but one is acquisition-related intangible amortization expense and the other is the notional value of cash flow hedge forward contracts. They are different subjects, so they are not the same figure."
+      },
+      {
+        "key_a": "0000050863-25-000009:50863:three largest customers share of net revenue:FY2024",
+        "key_b": "0000050863-25-000009:50863:total percentage of net revenue:FY2024",
+        "answer": "same",
+        "merges": true,
+        "failure": null,
+        "reason": "Both nodes give 45 percent of net revenue for FY2024 for Intel (subject 50863). Node B's row is the total of Customers A, B and C, which is the same three-largest-customers figure that node A reports in prose."
+      },
+      {
+        "key_a": "0000050863-26-000011:50863:non-cash asset impairment charges:FY2024",
+        "key_b": "0000050863-26-000011:50863:non-cash impairment charges:FY2024",
+        "answer": "same",
+        "merges": true,
+        "failure": null,
+        "reason": "Both nodes report the same 2024 non-cash impairment charge of $2.3 billion for the same subject (Intel, CIK 50863), so they are one figure under two names. Passage 0131 gives the 2024 impairment charges as $2.3 billion and passage 0056 gives the 2024 non-cash impairment charges as $2.3 billion."
+      },
+      {
+        "key_a": "0000050863-26-000011:50863:asset impairment charges:FY2025",
+        "key_b": "0000050863-26-000011:50863:other non-cash asset impairment charges:FY2025",
+        "answer": "unsure",
+        "merges": false,
+        "failure": "unsure",
+        "reason": "Both passages tie $474 million of 2025 non-cash impairment charges to the restructuring plans. However, passage 0136 says the asset impairment charges line 'primarily included' that $474 million alongside $48 million of leased-asset charges, so node A's name may refer to the broader line total rather than the same $474 million figure, and the passages do not settle it."
+      },
+      {
+        "key_a": "0000050863-26-000011:50863:net change in fair value of escrowed shares:FY2025",
+        "key_b": "0000050863-26-000011:50863:net proceeds recorded in cash and cash equivalents:FY2025",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Both figures are $1.8 billion for FY2025, but they measure different things: a net change in fair value of Escrowed Shares versus net cash proceeds from the NAND memory business sale to SK hynix. Matching amounts and period do not make them one figure, so they are distinct."
+      },
+      {
+        "key_a": "0001045810-25-000023:1045810:goodwill increase from acquisitions:FY2025",
+        "key_b": "0001045810-25-000023:1045810:goodwill increase:FY2025",
+        "answer": "same",
+        "merges": true,
+        "failure": null,
+        "reason": "Both nodes carry the same figure ($758 million), period (FY2025) and subject, taken from the same sentence about goodwill increasing from acquisitions. They are one number reported under two names."
+      },
+      {
+        "key_a": "0001045810-25-000116:1045810:excess inventory purchase obligation charges in cost of revenue:FY2025-Q1",
+        "key_b": "0001045810-25-000116:1045810:excess inventory purchase obligation charges:FY2025-Q1",
+        "answer": "same",
+        "merges": true,
+        "failure": null,
+        "reason": "Both nodes carry the same figure, $183 million for the first quarter of fiscal 2025 under subject 1045810, and the same sentence in each passage reports it. The two names differ only by the added phrase 'in cost of revenue', which the sentence itself uses, so they are one figure under two names."
+      },
+      {
+        "key_a": "0001045810-25-000209:1045810:revenue from customers outside the united states, percent of total revenue:FY2026-Q2",
+        "key_b": "0001045810-25-000209:1045810:revenue from customers outside the united states, share of total revenue:FY2026-Q2",
+        "answer": "same",
+        "merges": true,
+        "failure": null,
+        "reason": "Both nodes are the same figure: 50 percent of total revenue from customers outside the United States for FY2026-Q2 for subject 1045810, reported under two names ('percent of total revenue' and 'share of total revenue') in different passages."
+      },
+      {
+        "key_a": "0001045810-25-000230:1045810:revenue from customers headquartered outside the united states, percent of total revenue:FY2026-Q3",
+        "key_b": "0001045810-25-000230:1045810:revenue from sales to customers headquartered outside of the united states:FY2026-Q3",
+        "answer": "same",
+        "merges": true,
+        "failure": null,
+        "reason": "Both nodes describe the same figure, 31% of total revenue for FY2026-Q3 for customers headquartered outside the United States, under subject 1045810. Node B's wording makes the customer type explicit, and node A's passage reports the same 31% for the same period."
+      },
+      {
+        "key_a": "Organization:amazon web services",
+        "key_b": "Organization:amazon, inc.",
+        "answer": "unsure",
+        "merges": false,
+        "failure": "unsure",
+        "reason": "Node A's passages name Amazon Web Services as an Intel litigation counterparty, and Node B's passages name Amazon, Inc. as a competitor in NVIDIA's filings. Neither set of passages links Amazon Web Services to Amazon, Inc., so the passages alone cannot show whether they are the same, a parent and subsidiary, or distinct."
+      },
+      {
+        "key_a": "Organization:apollo global management",
+        "key_b": "Organization:fortress investments",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Apollo Global Management is a counterparty to a sale of an interest in Ireland SCIP, while Fortress Investments is the acquirer of Finjan in a different context; the passages do not connect the two names to one entity."
+      },
+      {
+        "key_a": "Organization:broadcom inc.",
+        "key_b": "Organization:marvell technology group, ltd.",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Node A is Broadcom Inc., defined in Intel's glossary, while node B is Marvell Technology Group, Ltd., which appears in the competitor lists as a separate ASSP vendor alongside Broadcom Corporation. The passages name two different companies, so they are not the same entity."
+      },
+      {
+        "key_a": "Organization:bureau of industry and security (bis)",
+        "key_b": "Organization:us department of commerce",
+        "answer": "related",
+        "merges": false,
+        "failure": "related:parent_subsidiary",
+        "reason": "Node A's passage describes BIS as a bureau of the United States Department of Commerce, so it is a unit within Node B rather than the same entity. The filings never use the two names interchangeably."
+      },
+      {
+        "key_a": "Organization:bureau of industry and security (bis) of the united states department of commerce",
+        "key_b": "Organization:united states department of commerce",
+        "answer": "related",
+        "merges": false,
+        "failure": "related:parent_subsidiary",
+        "reason": "Node A is a bureau within the United States Department of Commerce, which is Node B, so they are a parent and subsidiary rather than one entity. The passages do not use the two names interchangeably."
+      },
+      {
+        "key_a": "Organization:fabrinet",
+        "key_b": "Organization:lumentum holdings inc.",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Fabrinet is named as a contract manufacturer that performs assembly, testing and packaging for NVIDIA, while Lumentum Holdings Inc. is named only as a competitor in networking products. The passages describe two different companies in different roles."
+      },
+      {
+        "key_a": "Organization:french competition authority",
+        "key_b": "Organization:us securities and exchange commission",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Node A is a French competition regulator that collected information from NVIDIA, while node B is the US Securities and Exchange Commission, a different regulator named in Intel's glossary of terms. They are different entities."
+      },
+      {
+        "key_a": "Organization:ibm",
+        "key_b": "Organization:oracle corporation",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Node A (IBM) and node B (Oracle Corporation) are separate companies in the Eire Og indemnification list, with IBM and Oracle named as different parties. The passages give no basis to treat them as the same entity or as related."
+      },
+      {
+        "key_a": "Organization:mellanox",
+        "key_b": "Organization:mobileye",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Node A is Mellanox, an acquired company referenced in NVIDIA filings, while Node B is Mobileye, a company whose results Intel consolidates in its own filing. The passages describe two different companies with no shared identity or parent-subsidiary link between them."
+      },
+      {
+        "key_a": "Organization:united states department of commerce",
+        "key_b": "Organization:us federal department of commerce",
+        "answer": "same",
+        "merges": true,
+        "failure": null,
+        "reason": "Both names refer to the same U.S. federal agency, the Department of Commerce, under a different spelling. Node B's passage describes direct funding under the CHIPS Act, which matches the Direct Funding Agreement with the U.S. Department of Commerce listed in node A's passages."
+      },
+      {
+        "key_a": "Product:4th gen amd epyc",
+        "key_b": "Product:4th gen amd epyctm cpus",
+        "answer": "same",
+        "merges": true,
+        "failure": null,
+        "reason": "Both nodes name the same AMD server CPU line, 4th Gen AMD EPYC, differing only in the trailing 'CPU' versus 'CPUs' wording and the trademark mark. Each quote shows that product being sold by AMD in a revenue discussion."
+      },
+      {
+        "key_a": "Product:4th gen intel xeon scalable processors",
+        "key_b": "Product:intel xeon processors",
+        "answer": "related",
+        "merges": false,
+        "failure": "related:family_member",
+        "reason": "Node A is one generation of the Intel Xeon processor family named in node B, so it is a family member rather than the same product. The quotes show the 4th Gen processors as a generation and the Intel Xeon processors as the broader product line."
+      },
+      {
+        "key_a": "Product:5th generation amd epyc processors",
+        "key_b": "Product:amd epyc processors",
+        "answer": "related",
+        "merges": false,
+        "failure": "related:variant",
+        "reason": "Node A is a specific generation of the EPYC processor line, while Node B is the umbrella product brand for server microprocessors. A generation is a version of the brand rather than the same entity, so they are related as variant."
+      },
+      {
+        "key_a": "Product:ai nics",
+        "key_b": "Product:vulcano ai nics",
+        "answer": "related",
+        "merges": false,
+        "failure": "related:family_member",
+        "reason": "Node A is the general AI NICs product category, and Node B is one named member of it, the Vulcano model, as the passage 'We introduced our AMD Pensando \u201cPollara\u201d 400 AI NICs and \u201cVulcano\u201d AI NICs' shows. A category and one of its members are related as a family member, not the same."
+      },
+      {
+        "key_a": "Product:amd embedded radeon graphics",
+        "key_b": "Product:amd radeon pro graphics",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Node A is the brand for the embedded graphics market and Node B is the brand for professional graphics products, so the passages describe two different product brands for different markets."
+      },
+      {
+        "key_a": "Product:amd epyc series processors",
+        "key_b": "Product:amd ryzen embedded series processors",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Node A is the EPYC server CPU line, which the passage places in the Data Center segment. Node B is the Ryzen Embedded line with V-Series and R-Series parts, which the passage places in the Embedded segment. The passages describe two different product lines, not one entity or a family member."
+      },
+      {
+        "key_a": "Product:amd rocm",
+        "key_b": "Product:amd rocmtm open software stack",
+        "answer": "same",
+        "merges": true,
+        "failure": null,
+        "reason": "Both nodes name the AMD ROCm software. Node A's passage refers to the latest AMD ROCm\u2122 software, and node B's passage calls the same product the AMD ROCm\u2122 open software stack, so the descriptive suffix is only a longer name for one product."
+      },
+      {
+        "key_a": "Product:amd ryzen embedded 9000 series",
+        "key_b": "Product:ryzen 9000 series processors",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Node A is an embedded product line for automation and machine vision systems, while Node B is a client CPU line for laptop and desktop PCs. The passages describe different market segments, and nothing shows them as a family member, variant, or parent-subsidiary pair."
+      },
+      {
+        "key_a": "Product:amd ryzentm",
+        "key_b": "Product:ryzen",
+        "answer": "same",
+        "merges": true,
+        "failure": null,
+        "reason": "Node A is the AMD Ryzen\u2122 client brand, and node B's passage 0007 uses the same brand name ('AMD Ryzen\u2122') for the desktop processors. Node B's other passages use the short form 'Ryzen' for the same brand, so the two names refer to one product brand."
+      },
+      {
+        "key_a": "Product:amd solarflare",
+        "key_b": "Product:amd solarflaretm adapters",
+        "answer": "related",
+        "merges": false,
+        "failure": "related:family_member",
+        "reason": "Node A is the Solarflare portfolio as a whole, and Node B is the adapter product line within it, so they are a product family and one of its members rather than the same thing."
+      },
+      {
+        "key_a": "Product:amd versal fpgas",
+        "key_b": "Product:amd versal portfolio",
+        "answer": "unsure",
+        "merges": false,
+        "failure": "unsure",
+        "reason": "Node A's passages use Versal FPGAs in an export-control context, and Node B's passage describes the Versal portfolio as a set of software-programmable Adaptive SoCs. The passages do not say whether the Versal FPGAs are the same as, a member of, or separate from that portfolio, so the relationship cannot be determined."
+      },
+      {
+        "key_a": "Product:blackwell full-scale datacenter solutions",
+        "key_b": "Product:helios ai rack-scale platform solution",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Node A is a Blackwell datacenter offering described in an NVIDIA filing, while Node B is AMD's Helios rack-scale platform previewed in an AMD filing. The two names refer to different products from different companies, so they are not the same entity or related."
+      },
+      {
+        "key_a": "Product:cuda development platform",
+        "key_b": "Product:nvidia cuda development platform",
+        "answer": "same",
+        "merges": true,
+        "failure": null,
+        "reason": "Both nodes name the same NVIDIA software platform, with node B adding the NVIDIA prefix. Node A's passage lists the CUDA development platform as part of the company's software, and node B's passage describes that platform as running on all NVIDIA GPUs."
+      },
+      {
+        "key_a": "Product:dgx cloud",
+        "key_b": "Product:dgx spark",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "DGX Cloud is described as a cloud computing service within the Compute & Networking segment, while DGX Spark is described as a newly launched product driving Professional Visualization revenue. The passages show two different offerings with no product-family or variant relationship."
+      },
+      {
+        "key_a": "Product:fpga",
+        "key_b": "Product:virtex",
+        "answer": "related",
+        "merges": false,
+        "failure": "related:family_member",
+        "reason": "FPGA is the general product category, and Virtex is one FPGA family within it, so the two are a category and a member rather than the same entity. The passages do not show them as one thing."
+      },
+      {
+        "key_a": "Product:gaming gpus",
+        "key_b": "Product:geforce gpus",
+        "answer": "unsure",
+        "merges": false,
+        "failure": "unsure",
+        "reason": "Node A appears only as a generic category, 'Gaming GPUs', and Node B as the named 'GeForce GPUs' product line in the Graphics segment. The passages never tie the two names together, so I cannot tell whether they are the same, a family and member, or distinct."
+      },
+      {
+        "key_a": "Product:hopper gpu architecture",
+        "key_b": "Product:x86 architecture",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Hopper is an NVIDIA GPU architecture used for accelerated computing and AI, while x86 is Intel's CPU instruction-set architecture; the passages describe different technologies from different companies, so they name different things."
+      },
+      {
+        "key_a": "Product:intel core",
+        "key_b": "Product:intel core ultra processors",
+        "answer": "related",
+        "merges": false,
+        "failure": "related:family_member",
+        "reason": "Intel Core is a processor brand family, and Intel Core Ultra is a separate product family within it (\"Our Intel Core Ultra family\"), so they are related rather than the same product. The passages do not show them as one entity."
+      },
+      {
+        "key_a": "Product:intel core ultra 200v series",
+        "key_b": "Product:intel core ultra series 3",
+        "answer": "related",
+        "merges": false,
+        "failure": "related:variant",
+        "reason": "Node A is the 200V Series launched in 2024 and Node B is the later Series 3 processors built on Intel 18A, so they are different generations of the Intel Core Ultra line, a successor relationship rather than one product. Related as a variant, not the same."
+      },
+      {
+        "key_a": "Product:nvidia drive orin platform",
+        "key_b": "Product:nvidia drive stack",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Node A is a hardware platform that automakers are using, while node B is a software stack for autonomous driving. The passages do not show that one is a member, variant or part of the other, so they name different things."
+      },
+      {
+        "key_a": "Product:nvidia nemotron",
+        "key_b": "Product:nvidia nim",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Node A is described as one of NVIDIA's open AI model platforms, while node B is a software component listed under NVIDIA AI Enterprise. The passages present them as different products, and nothing ties them to the same thing."
+      },
+      {
+        "key_a": "Product:semi-custom soc products",
+        "key_b": "Product:semi-custom system-on-chip (soc) products",
+        "answer": "same",
+        "merges": true,
+        "failure": null,
+        "reason": "Both nodes name the same product line, semi-custom SoC products, and node B spells out the SoC abbreviation as System-on-Chip (SoC) in a different filing. The product is the same, so this is a naming variant rather than a family member or variant."
+      },
+      {
+        "key_a": "Product:soc",
+        "key_b": "Product:system on modules (soms)",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Node A is Intel's generic system-on-a-chip product category, offered across its CCG, DCAI and NEX segments. Node B is a distinct product type, System on Modules, named in AMD's filing as part of its Embedded segment, so the passages show two different products."
+      },
+      {
+        "key_a": "Regulation:2022 export controls",
+        "key_b": "Regulation:export controls applicable to china",
+        "answer": "unsure",
+        "merges": false,
+        "failure": "unsure",
+        "reason": "Node A is a specific set of 2022 export controls that prompted operational transitions, while node B is the broad set of controls applicable to China described with 2023 and later licensing actions. The passages do not say whether the 2022 controls are the same as, a part of, or separate from the China controls, so the link cannot be determined."
+      },
+      {
+        "key_a": "Regulation:april 2025 license requirement for certain semiconductor products to d5 countries",
+        "key_b": "Regulation:april 2025 license requirement for semiconductor exports to d5 countries",
+        "answer": "same",
+        "merges": true,
+        "failure": null,
+        "reason": "Both nodes name the same April 2025 U.S. government license requirement on certain semiconductor exports to D5 Countries, and the identical sentence appears in both passages. The node names differ only in wording."
+      },
+      {
+        "key_a": "Regulation:chips and science act of 2022",
+        "key_b": "Regulation:u.s. inflation reduction act of 2022",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Node A is the CHIPs and Science Act of 2022, a semiconductor funding law referenced in the Intel passage. Node B is the Inflation Reduction Act of 2022, which the NVIDIA passages describe as imposing an excise tax on share repurchases. These are two different statutes."
+      },
+      {
+        "key_a": "Regulation:climate-related disclosure requirements",
+        "key_b": "Regulation:eu's new corporate sustainability reporting directive",
+        "answer": "distinct",
+        "merges": false,
+        "failure": "distinct",
+        "reason": "Node A is a general reference to climate-related disclosure requirements across multiple jurisdictions, while Node B names one specific EU directive. The passage for A does not tie its requirements to the CSRD, so they are not the same entity."
+      },
+      {
+        "key_a": "Regulation:general data protection regulation (gdpr)",
+        "key_b": "Regulation:u.k. gdpr",
+        "answer": "related",
+        "merges": false,
+        "failure": "related:variant",
+        "reason": "Node A is the GDPR, and node B is the U.K. GDPR, which the filing says the United Kingdom 'similarly adopted' alongside the EU's General Data Protection Regulation. That makes the U.K. version a regional variant of the same law, not the same instrument."
+      },
+      {
+        "key_a": "Regulation:october 2023 bis export requirements for advanced computing items",
+        "key_b": "Regulation:october 2023 bis requirements for advanced computing items",
+        "answer": "same",
+        "merges": true,
+        "failure": null,
+        "reason": "Both passages describe the same October 2023 BIS export requirements for advanced computing items, with the same Country Groups D1, D4 and D5 scope and the same restrictions on AMD Instinct and Versal products. The second passage's extra detail about ECCN 3A090 and 4A090 does not make it a different regulation."
+      }
+    ]
+  }
+}
