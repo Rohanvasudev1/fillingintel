@@ -21,6 +21,7 @@ from pathlib import Path
 
 from ingest.atomic_json import write_json_atomic
 from resolve.sample import SETS, Draw, DrawnPair, PairKeys, Stratum
+from resolve.tuning import CHOSEN
 
 FROZEN_NAME = "frozen.json"
 TUNING_REPORT_NAME = "tuning-report.json"
@@ -162,7 +163,9 @@ class Frozen:
     """What ticket 06 froze before the scoring draw."""
 
     config_hash: str
-    prompts: Mapping[str, str]  # "label" and "resolve" to their prompt versions
+    # "label" and "resolve" to their prompt versions; "label_model" and
+    # "resolve_model" to their model_pin()
+    prompts: Mapping[str, str]
 
 
 def read_frozen(path: Path) -> Frozen | None:
@@ -183,6 +186,11 @@ def write_frozen(path: Path, frozen: Frozen, provenance: Mapping[str, object]) -
         raise LabelFileError(f"{path.name} exists; settings are frozen once")
     write_json_atomic(path, {"config_hash": frozen.config_hash, "prompts": dict(frozen.prompts),
                              "provenance": dict(provenance)}, indent=2)
+
+
+def model_pin(model: object, effort: object) -> str:
+    """How frozen.json names a model and its effort, such as `claude-haiku-5-5@high`."""
+    return f"{model or 'none'}@{effort or 'none'}"
 
 
 def frozen_mismatches(frozen: Frozen, config_hash: str,
@@ -217,7 +225,7 @@ def tuning_status(directory: Path) -> dict[str, object] | None:
         return None
     report = read_json(path)
     rules = report.get("rules")
-    chosen = next((r for r in rules if isinstance(r, dict) and r.get("name") == "chosen"),
+    chosen = next((r for r in rules if isinstance(r, dict) and r.get("name") == CHOSEN),
                   None) if isinstance(rules, list) else None
     adjudicator = report.get("adjudicator")
     frozen = read_frozen(directory / FROZEN_NAME)

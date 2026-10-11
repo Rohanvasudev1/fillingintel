@@ -1,13 +1,28 @@
 """Tuning numbers on the labelled tuning set: rules found and adjudicator agreement (ticket 06)."""
+import hashlib
 import json
 
-from resolve.candidates import Rule, ScoredPair
+import pytest
+
+from resolve.candidates import Rule, ScoredPair, is_named
 from resolve.config import ResolveConfig
+from resolve.embed import embed_text
 from resolve.labeller import load_label_prompt
-from resolve.labels import read_frozen
+from resolve.labels import labels_path, read_frozen
+from resolve.nodes import load_nodes
 from resolve.prompt import load_prompt
-from resolve.tune import EXIT_CHECK_FAILED, EXIT_OK, main
-from resolve.tuning import TunedLabel, adjudicator_check, rule_check
+from resolve.tune import (
+    EXIT_CHECK_FAILED,
+    EXIT_OK,
+    EXIT_RUN_ERROR,
+    EXIT_USAGE,
+    TuneDeps,
+    main,
+)
+from resolve.tuning import CONFIGS, TunedLabel, adjudicator_check, rule_check
+from retrieve.query_cache import CachedBatchEmbedder
+from tests.resolve_helpers import NVDA_10K
+from tests.test_resolve_run import FakeClaude, FakeVoyage
 
 
 def _pair(a, b, *rules):
@@ -47,30 +62,169 @@ def test_adjudicator_check_counts_agreement_on_the_pairs_it_answered():
     assert check.same_but_not_merged == (("C", "D"),)
 
 
-# ── python -m resolve.tune --freeze ───────────────────────────────────────────
+# ── python -m resolve.tune ────────────────────────────────────────────────────
 
-def _tuning_report(directory, config_hash, prompt_version):
-    report = {"rules": [{"name": "chosen", "config_hash": config_hash}],
-              "adjudicator": {"prompt_version": prompt_version}}
-    (directory / "tuning-report.json").write_text(json.dumps(report), encoding="utf-8")
+NAMES = ("Groq", "Groq, Inc.", "Huawei", "Intel")
 
 
-def test_freeze_needs_a_tuning_report(tmp_path):
-    assert main(["--freeze"], out_dir=tmp_path) == EXIT_CHECK_FAILED
-    assert not (tmp_path / "frozen.json").exists()
+def _node_line(name, ordinal):
+    key = f"Organization:{name.casefold()}"
+    return {"kind": "node", "label": "Organization", "item": "x",
+            "properties": {"key": key, "name": name},
+            "evidence": [{"chunk_id": f"{NVDA_10K}:{ordinal:04d}", "confidence": "stated",
+                          "extract_prompt": "extract/v2@00000000", "span": name}]}
 
 
-def test_freeze_refuses_a_report_made_under_other_settings(tmp_path):
-    _tuning_report(tmp_path, "0" * 64, load_prompt().prompt_version)
-    assert main(["--freeze"], out_dir=tmp_path) == EXIT_CHECK_FAILED
-    assert not (tmp_path / "frozen.json").exists()
+def _label_line(a, b, same):
+    return {"set_name": "tuning", "key_a": f"Organization:{a.casefold()}",
+            "key_b": f"Organization:{b.casefold()}", "label": "Organization",
+            "stratum": "candidate", "same": same, "quote_a": a, "chunk_id_a": "c",
+            "quote_b": b, "chunk_id_b": "c", "quotes_verified": True, "reason": "test",
+            "model": "gpt-6-luna", "effort": "high", "prompt_version": "label/v2@00000000"}
 
 
-def test_freeze_writes_the_chosen_settings_once(tmp_path):
-    _tuning_report(tmp_path, ResolveConfig().config_hash, load_prompt().prompt_version)
-    assert main(["--freeze"], out_dir=tmp_path) == EXIT_OK
-    frozen = read_frozen(tmp_path / "frozen.json")
+@pytest.fixture
+def env(tmp_path, monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-not-real-0001")
+    monkeypatch.setenv("DATABASE_URL", "postgresql://not-used")
+    monkeypatch.delenv("ANTHROPIC_BASE_URL", raising=False)
+    extract, out = tmp_path / "extract", tmp_path / "out"
+    extract.mkdir()
+    out.mkdir()
+    (extract / f"{NVDA_10K}-run1.jsonl").write_text(
+        "".join(json.dumps(_node_line(n, i + 10)) + "\n" for i, n in enumerate(NAMES)),
+        encoding="utf-8")
+    (out / "tuning-labels.jsonl").write_text(
+        json.dumps(_label_line("Groq", "Groq, Inc.", True)) + "\n"
+        + json.dumps(_label_line("Huawei", "Intel", False)) + "\n", encoding="utf-8")
+    return tmp_path
+
+
+def _seed_embeddings(env):
+    nodes, _ = load_nodes([env / "extract" / f"{NVDA_10K}-run1.jsonl"])
+    cache = CachedBatchEmbedder(FakeVoyage(), env / "embed")
+    for config in CONFIGS.values():
+        texts = [embed_text(n, config.embed_text) for n in nodes if is_named(n.label)]
+        cache.embed(texts, config.embedding_model, config.embed_input_type)
+
+
+def _deps(env, claude=None, commit="abc1234"):
+    claude = claude or FakeClaude()
+    return TuneDeps(out_dir=env / "out", candidates_dir=env / "extract",
+                    embed_cache=env / "embed", response_cache=env / "responses",
+                    open_model=lambda: _Context(claude),
+                    read_texts=lambda url, ids: {i: f"Passage {i}." for i in ids},
+                    commit=lambda: commit)
+
+
+class _Context:
+    def __init__(self, model):
+        self._model = model
+
+    def __enter__(self):
+        return self._model
+
+    def __exit__(self, *exc):
+        return None
+
+
+def _report(env):
+    return json.loads((env / "out" / "tuning-report.json").read_text(encoding="utf-8"))
+
+
+def test_uncached_embeddings_stop_tuning(env):
+    assert main([], _deps(env)) == EXIT_RUN_ERROR
+    assert not (env / "out" / "tuning-report.json").exists()
+
+
+def test_tuning_reports_every_config_offline(env):
+    _seed_embeddings(env)
+    claude = FakeClaude()
+    assert main([], _deps(env, claude)) == EXIT_OK
+    report = _report(env)
+    assert [r["name"] for r in report["rules"]] == list(CONFIGS)
+    assert report["adjudicator"] is None and claude.calls == 0
+    assert report["provenance"]["note"] == "agent-labelled (gpt-6-luna)"
+
+
+def test_adjudication_refuses_a_base_url(env, monkeypatch):
+    _seed_embeddings(env)
+    monkeypatch.setenv("ANTHROPIC_BASE_URL", "https://proxy.example")
+    assert main(["--adjudicate"], _deps(env)) == EXIT_RUN_ERROR
+
+
+def test_adjudication_over_the_cap_makes_no_call(env):
+    _seed_embeddings(env)
+    claude = FakeClaude()
+    assert main(["--adjudicate", "--max-cost", "0"], _deps(env, claude)) == EXIT_RUN_ERROR
+    assert claude.calls == 0
+
+
+def test_a_negative_cap_is_bad_arguments(env):
+    assert main(["--max-cost", "-1"], _deps(env)) == EXIT_USAGE
+
+
+def test_adjudication_records_agreement_and_spend(env):
+    _seed_embeddings(env)
+    claude = FakeClaude(answer="distinct")
+    assert main(["--adjudicate"], _deps(env, claude)) == EXIT_OK
+    adjudicator = _report(env)["adjudicator"]
+    assert adjudicator["model"] == "claude-haiku-5-5"
+    # Groq / Groq, Inc. merge deterministically, so only Huawei / Intel is adjudicated
+    assert (adjudicator["answered"], adjudicator["agreed"]) == (claude.calls, claude.calls)
+    assert adjudicator["cost_usd"] > 0 and adjudicator["cost_usd_replayed"] == 0
+    assert main(["--adjudicate"], _deps(env, claude)) == EXIT_OK  # replayed from the cache
+    replayed = _report(env)["adjudicator"]
+    assert replayed["cost_usd"] == 0 and replayed["cost_usd_replayed"] == adjudicator["cost_usd"]
+
+
+def _tuning_report(env, **changes):
+    labels = labels_path(env / "out", "tuning").read_bytes()
+    report = {"provenance": {"labels_sha256": hashlib.sha256(labels).hexdigest()},
+              "rules": [{"name": "chosen", "config_hash": ResolveConfig().config_hash}],
+              "adjudicator": {"prompt_version": load_prompt().prompt_version,
+                              "model": "claude-haiku-5-5", "effort": "high"}}
+    for path, value in changes.items():
+        section, field = path.split("__")
+        target = report[section][0] if section == "rules" else report[section]
+        target[field] = value
+    (env / "out" / "tuning-report.json").write_text(json.dumps(report), encoding="utf-8")
+
+
+def test_freeze_needs_a_tuning_report(env):
+    assert main(["--freeze"], _deps(env)) == EXIT_CHECK_FAILED
+    assert not (env / "out" / "frozen.json").exists()
+
+
+def test_freeze_refuses_a_malformed_report(env):
+    (env / "out" / "tuning-report.json").write_text("[]", encoding="utf-8")
+    assert main(["--freeze"], _deps(env)) == EXIT_USAGE
+
+
+@pytest.mark.parametrize("change", [
+    {"rules__config_hash": "0" * 64},
+    {"adjudicator__prompt_version": "resolve/v1@00000000"},
+    {"adjudicator__model": "claude-sonnet-5-5"},
+    {"provenance__labels_sha256": "0" * 64},
+])
+def test_freeze_refuses_a_stale_report(env, change):
+    _tuning_report(env, **change)
+    assert main(["--freeze"], _deps(env)) == EXIT_CHECK_FAILED
+    assert not (env / "out" / "frozen.json").exists()
+
+
+def test_freeze_refuses_a_dirty_tree(env):
+    _tuning_report(env)
+    assert main(["--freeze"], _deps(env, commit="abc1234+dirty")) == EXIT_CHECK_FAILED
+
+
+def test_freeze_writes_the_chosen_settings_once(env):
+    _tuning_report(env)
+    assert main(["--freeze"], _deps(env)) == EXIT_OK
+    frozen = read_frozen(env / "out" / "frozen.json")
     assert frozen.config_hash == ResolveConfig().config_hash
     assert frozen.prompts == {"label": load_label_prompt().prompt_version,
-                              "resolve": load_prompt().prompt_version}
-    assert main(["--freeze"], out_dir=tmp_path) == EXIT_CHECK_FAILED
+                              "resolve": load_prompt().prompt_version,
+                              "label_model": "gpt-6-luna@high",
+                              "resolve_model": "claude-haiku-5-5@high"}
+    assert main(["--freeze"], _deps(env)) == EXIT_CHECK_FAILED

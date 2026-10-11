@@ -17,7 +17,8 @@ from resolve.config import FUZZY_OFF, ResolveConfig
 PairKeys = tuple[str, str]
 
 _START = ResolveConfig(fuzzy_cutoff=90.0, top_k=3, rare_word_max_keys=3)  # ticket 02's values
-# The configs compared on the tuning set; the last is the chosen one (the defaults).
+CHOSEN = "chosen"  # the name of the config chosen on the tuning set
+# The configs compared on the tuning set; CHOSEN names ResolveConfig's defaults.
 CONFIGS: Mapping[str, ResolveConfig] = {
     "start": _START,
     "embedding_off": replace(_START, top_k=0),
@@ -31,7 +32,7 @@ CONFIGS: Mapping[str, ResolveConfig] = {
     "name_span_top_k_1": replace(_START, embed_text="name_span", top_k=1),
     "fuzzy_85_rare_word_off_name_span": replace(_START, fuzzy_cutoff=85.0,
                                                 rare_word_max_keys=0, embed_text="name_span"),
-    "chosen": ResolveConfig(),
+    CHOSEN: ResolveConfig(),
 }
 
 

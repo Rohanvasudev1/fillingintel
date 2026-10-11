@@ -54,6 +54,7 @@ from ingest.store import ChunkNotFound, resolve
 from ingest.voyage import BatchEmbedder, BatchEmbedding, VoyageClient, VoyageError
 from resolve.adjudicate import ClaudeAdjudicator
 from resolve.candidates import ScoredPair, is_named
+from resolve.cli import cost_cap
 from resolve.config import ResolveConfig
 from resolve.decisions import Failure
 from resolve.embed import VoyageNodeEmbedder, embed_text
@@ -138,22 +139,12 @@ class _Inputs:
     labels: Mapping[str, object]  # resolve.labels.label_status, for labels_and_scoring
 
 
-def _cost_cap(value: str) -> float:
-    try:
-        cap = float(value)
-    except ValueError:
-        raise argparse.ArgumentTypeError(f"{value!r} is not a number") from None
-    if not cap >= 0:  # also refuses nan
-        raise argparse.ArgumentTypeError("--max-cost must be 0 or more")
-    return cap
-
-
 def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="python -m resolve.run", description=__doc__.split(
         "\n\n")[0], formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--candidates", type=Path, nargs="+",
                         help="candidates files (default: the latest run of each accession)")
-    parser.add_argument("--max-cost", type=_cost_cap, default=DEFAULT_MAX_COST_USD,
+    parser.add_argument("--max-cost", type=cost_cap, default=DEFAULT_MAX_COST_USD,
                         help=f"refuse adjudication estimated above this many USD "
                              f"(default {DEFAULT_MAX_COST_USD:g})")
     try:

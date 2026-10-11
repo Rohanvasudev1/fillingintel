@@ -55,10 +55,12 @@ from ingest.chunker import count_tokens
 from ingest.provenance import git_state
 from ingest.store import resolve as resolve_chunk
 from resolve.candidates import ScoredPair, is_named, score_pairs
+from resolve.cli import cost_cap
 from resolve.config import ResolveConfig
 from resolve.embed import VoyageNodeEmbedder, embed_text
 from resolve.label_report import build_label_report, now
 from resolve.labeller import (
+    LABEL_EFFORT,
     LABEL_MODEL,
     LabelOutcome,
     LabelPrompt,
@@ -75,6 +77,7 @@ from resolve.labels import (
     draw_path,
     frozen_mismatches,
     labels_path,
+    model_pin,
     read_draw,
     read_frozen,
     read_json,
@@ -138,21 +141,11 @@ def _openai_model() -> AbstractContextManager[AnswerModel]:
     return OpenAIResponsesModel.from_env()
 
 
-def _cost_cap(value: str) -> float:
-    try:
-        cap = float(value)
-    except ValueError:
-        raise argparse.ArgumentTypeError(f"{value!r} is not a number") from None
-    if not cap >= 0:  # also refuses nan
-        raise argparse.ArgumentTypeError("--max-cost must be 0 or more")
-    return cap
-
-
 def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="python -m resolve.label",
                                      description="Draw a set of pairs and label them.")
     parser.add_argument("--set", dest="set_name", required=True, choices=SETS)
-    parser.add_argument("--max-cost", type=_cost_cap, default=DEFAULT_MAX_COST_USD,
+    parser.add_argument("--max-cost", type=cost_cap, default=DEFAULT_MAX_COST_USD,
                         help=f"refuse a run estimated above this many USD "
                              f"(default {DEFAULT_MAX_COST_USD:g})")
     parser.add_argument("--candidates", type=Path, nargs="+",
@@ -243,7 +236,9 @@ def _check_frozen(out_dir: Path, config: ResolveConfig, prompt: LabelPrompt) -> 
         raise _Stop(EXIT_RUN_ERROR, "no run report; run python -m resolve.run first")
     adjudication = report.get("adjudication") or {}
     current = {"label": prompt.prompt_version,
-               "resolve": adjudication.get("prompt_version") or "none"}
+               "resolve": adjudication.get("prompt_version") or "none",
+               "label_model": model_pin(LABEL_MODEL, LABEL_EFFORT),
+               "resolve_model": model_pin(adjudication.get("model"), adjudication.get("effort"))}
     problems = list(frozen_mismatches(frozen, config.config_hash, current))
     run_hash = (report.get("provenance") or {}).get("config_hash")
     if run_hash != config.config_hash:
