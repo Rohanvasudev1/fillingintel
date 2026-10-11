@@ -1,0 +1,206 @@
+{
+  "accession_no": "0000050863-25-000009",
+  "run": 1,
+  "status": "complete",
+  "commit": "9ca8d7f+dirty",
+  "created_at": "2026-10-11T15:18:33+00:00",
+  "prompt": {
+    "version": "v2",
+    "path": "prompts/extract/v2.md",
+    "sha256": "34a82e2b107b550f9d2689fa43d20afb246bab0d4baeb15cf32170ce36c67d77",
+    "file_sha256": "df67f16a26dfa2ac60a7cb8eb0f5e82fad1c3dd1fc607b2214e233fb8383e601",
+    "prompt_version": "extract/v2@34a82e2b"
+  },
+  "model": "claude-haiku-5-5",
+  "effort": "high",
+  "max_tokens": 16000,
+  "ontology_version": 3,
+  "workers": 4,
+  "chunk_count": 175,
+  "candidates": 2350,
+  "nodes": 711,
+  "edges": 1164,
+  "rejections": {
+    "total": 0,
+    "rate": 0.0,
+    "by_reason": {},
+    "examples": {}
+  },
+  "flags": {
+    "name_not_in_span": 299,
+    "uncertain": 17
+  },
+  "conflicts": {
+    "total": 17,
+    "items": [
+      {
+        "item": "RiskFactor(key='0000050863-25-000009:strategic transactions and investments')",
+        "property": "title",
+        "kept": "strategic transactions and investments",
+        "other": "Strategic transactions and investments",
+        "kept_chunk": "0000050863-25-000009:0003",
+        "other_chunk": "0000050863-25-000009:0004"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000009:50863:revenue:FY2024')",
+        "property": "value",
+        "kept": 53.1,
+        "other": 53101.0,
+        "kept_chunk": "0000050863-25-000009:0020",
+        "other_chunk": "0000050863-25-000009:0111"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000009:50863:revenue:FY2024')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0000050863-25-000009:0020",
+        "other_chunk": "0000050863-25-000009:0111"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000009:50863:adjusted free cash flow:FY2024')",
+        "property": "value",
+        "kept": -2.2,
+        "other": -2228.0,
+        "kept_chunk": "0000050863-25-000009:0020",
+        "other_chunk": "0000050863-25-000009:0046"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000009:50863:adjusted free cash flow:FY2024')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0000050863-25-000009:0020",
+        "other_chunk": "0000050863-25-000009:0046"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000009:Segment:50863:intel products:revenue:FY2024')",
+        "property": "value",
+        "kept": 48.9,
+        "other": 48949.0,
+        "kept_chunk": "0000050863-25-000009:0027",
+        "other_chunk": "0000050863-25-000009:0111"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000009:Segment:50863:intel products:revenue:FY2024')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0000050863-25-000009:0027",
+        "other_chunk": "0000050863-25-000009:0111"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000009:50863:cost of sales:FY2024')",
+        "property": "value",
+        "kept": 25.6,
+        "other": 35756.0,
+        "kept_chunk": "0000050863-25-000009:0033",
+        "other_chunk": "0000050863-25-000009:0036"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000009:50863:cost of sales:FY2024')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0000050863-25-000009:0033",
+        "other_chunk": "0000050863-25-000009:0036"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000009:50863:cost of sales:FY2023')",
+        "property": "value",
+        "kept": 21.5,
+        "other": 32517.0,
+        "kept_chunk": "0000050863-25-000009:0033",
+        "other_chunk": "0000050863-25-000009:0036"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000009:50863:cost of sales:FY2023')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0000050863-25-000009:0033",
+        "other_chunk": "0000050863-25-000009:0036"
+      },
+      {
+        "item": "LegalProceeding(key='LegalProceeding:european commission competition matter')",
+        "property": "name",
+        "kept": "European Commission Competition Matter",
+        "other": "European Commission competition matter",
+        "kept_chunk": "0000050863-25-000009:0155",
+        "other_chunk": "0000050863-25-000009:0040"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000009:50863:goodwill:FY2024')",
+        "property": "value",
+        "kept": 24.7,
+        "other": 24693.0,
+        "kept_chunk": "0000050863-25-000009:0090",
+        "other_chunk": "0000050863-25-000009:0094"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000009:50863:goodwill:FY2024')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0000050863-25-000009:0090",
+        "other_chunk": "0000050863-25-000009:0094"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000009:50863:goodwill:FY2024')",
+        "property": "value",
+        "kept": 24.7,
+        "other": 24693.0,
+        "kept_chunk": "0000050863-25-000009:0090",
+        "other_chunk": "0000050863-25-000009:0132"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000009:50863:goodwill:FY2024')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0000050863-25-000009:0090",
+        "other_chunk": "0000050863-25-000009:0132"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000009:50863:non-cash asset impairment charges:FY2024')",
+        "property": "concept",
+        "kept": "non-cash asset impairment charges",
+        "other": "Non-cash asset impairment charges",
+        "kept_chunk": "0000050863-25-000009:0120",
+        "other_chunk": "0000050863-25-000009:0119"
+      }
+    ]
+  },
+  "failed_chunks": [],
+  "violations": [],
+  "calls": {
+    "made": 175,
+    "from_cache": 0
+  },
+  "tokens": {
+    "input": 198922,
+    "cache_read": 1364125,
+    "cache_write": 0,
+    "output": 613995
+  },
+  "cost_usd": 0.3405309499999999,
+  "cost_this_run_usd": 0.3405309499999999,
+  "estimate": {
+    "calls": 175,
+    "usd": 0.29014887
+  },
+  "price_table": {
+    "date": "2026-10-10",
+    "unit": "USD per million tokens",
+    "models": {
+      "claude-haiku-5-5": {
+        "input_per_mtok": 0.1,
+        "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "output_per_mtok": 0.5,
+        "cache_write_per_mtok": 0.125,
+        "cache_read_per_mtok": 0.01
+      }
+    }
+  },
+  "candidates_file": "/Users/rohanvasudev/Downloads/GitHub/fillingintel/.claude/worktrees/extraction-runs-review-3-ee7782/data/extract/0000050863-25-000009-run1.jsonl"
+}

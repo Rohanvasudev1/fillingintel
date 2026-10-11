@@ -1,0 +1,238 @@
+{
+  "accession_no": "0000002488-25-000047",
+  "run": 1,
+  "status": "complete",
+  "commit": "9ca8d7f+dirty",
+  "created_at": "2026-10-11T14:47:52+00:00",
+  "prompt": {
+    "version": "v2",
+    "path": "prompts/extract/v2.md",
+    "sha256": "34a82e2b107b550f9d2689fa43d20afb246bab0d4baeb15cf32170ce36c67d77",
+    "file_sha256": "df67f16a26dfa2ac60a7cb8eb0f5e82fad1c3dd1fc607b2214e233fb8383e601",
+    "prompt_version": "extract/v2@34a82e2b"
+  },
+  "model": "claude-haiku-5-5",
+  "effort": "high",
+  "max_tokens": 16000,
+  "ontology_version": 3,
+  "workers": 4,
+  "chunk_count": 74,
+  "candidates": 880,
+  "nodes": 264,
+  "edges": 384,
+  "rejections": {
+    "total": 5,
+    "rate": 0.005681818181818182,
+    "by_reason": {
+      "endpoint_node_rejected": 3,
+      "span_not_found": 2
+    },
+    "examples": {
+      "span_not_found": [
+        {
+          "chunk_id": "0000002488-25-000047:0023",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n14",
+            "label": "MetricValue",
+            "name": "Client and Gaming net revenue",
+            "value": 2941,
+            "unit": "USD millions",
+            "period": "FY2025-Q1",
+            "evidence_span": "| Total Client and Gaming |  | 2,941 | 2,290 |",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0000002488-25-000047:0032",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n27",
+            "label": "RiskFactor",
+            "name": "We outsource to third-party certain supply-chain logistics functions",
+            "value": null,
+            "unit": null,
+            "period": null,
+            "evidence_span": "We outsource to third\\-party certain supply\\-chain logistics functions",
+            "confidence": "stated"
+          }
+        }
+      ],
+      "endpoint_node_rejected": [
+        {
+          "chunk_id": "0000002488-25-000047:0023",
+          "kind": "triple",
+          "message": "end node 'n14' was rejected",
+          "candidate": {
+            "start": "THIS_FILING",
+            "type": "REPORTS",
+            "end": "n14",
+            "role": null,
+            "stake": null,
+            "evidence_span": "| Total Client and Gaming |  | 2,941 | 2,290 |",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0000002488-25-000047:0023",
+          "kind": "triple",
+          "message": "start node 'n14' was rejected",
+          "candidate": {
+            "start": "n14",
+            "type": "MEASURES",
+            "end": "n1",
+            "role": null,
+            "stake": null,
+            "evidence_span": "| Total Client and Gaming |  | 2,941 | 2,290 |",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0000002488-25-000047:0032",
+          "kind": "triple",
+          "message": "end node 'n27' was rejected",
+          "candidate": {
+            "start": "THIS_FILING",
+            "type": "DISCLOSES",
+            "end": "n27",
+            "role": null,
+            "stake": null,
+            "evidence_span": "We outsource to third\\-party certain supply\\-chain logistics functions",
+            "confidence": "stated"
+          }
+        }
+      ]
+    }
+  },
+  "flags": {
+    "name_not_in_span": 94,
+    "uncertain": 2
+  },
+  "conflicts": {
+    "total": 11,
+    "items": [
+      {
+        "item": "MetricValue(key='0000002488-25-000047:2488:net revenue:FY2025-Q1')",
+        "property": "value",
+        "kept": 7.4,
+        "other": 7438.0,
+        "kept_chunk": "0000002488-25-000047:0021",
+        "other_chunk": "0000002488-25-000047:0002"
+      },
+      {
+        "item": "MetricValue(key='0000002488-25-000047:2488:net revenue:FY2025-Q1')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0000002488-25-000047:0021",
+        "other_chunk": "0000002488-25-000047:0002"
+      },
+      {
+        "item": "MetricValue(key='0000002488-25-000047:2488:net revenue:FY2025-Q1')",
+        "property": "value",
+        "kept": 7438.0,
+        "other": 7.4,
+        "kept_chunk": "0000002488-25-000047:0025",
+        "other_chunk": "0000002488-25-000047:0021"
+      },
+      {
+        "item": "MetricValue(key='0000002488-25-000047:2488:net revenue:FY2025-Q1')",
+        "property": "unit",
+        "kept": "USD millions",
+        "other": "USD billions",
+        "kept_chunk": "0000002488-25-000047:0025",
+        "other_chunk": "0000002488-25-000047:0021"
+      },
+      {
+        "item": "MetricValue(key='0000002488-25-000047:Segment:2488:data center:net revenue:FY2025-Q1')",
+        "property": "value",
+        "kept": 3.7,
+        "other": 3674.0,
+        "kept_chunk": "0000002488-25-000047:0024",
+        "other_chunk": "0000002488-25-000047:0009"
+      },
+      {
+        "item": "MetricValue(key='0000002488-25-000047:Segment:2488:data center:net revenue:FY2025-Q1')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0000002488-25-000047:0024",
+        "other_chunk": "0000002488-25-000047:0009"
+      },
+      {
+        "item": "MetricValue(key='0000002488-25-000047:MarketPlatform:2488:client:net revenue:FY2025-Q1')",
+        "property": "value",
+        "kept": 2.3,
+        "other": 2294.0,
+        "kept_chunk": "0000002488-25-000047:0024",
+        "other_chunk": "0000002488-25-000047:0009"
+      },
+      {
+        "item": "MetricValue(key='0000002488-25-000047:MarketPlatform:2488:client:net revenue:FY2025-Q1')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0000002488-25-000047:0024",
+        "other_chunk": "0000002488-25-000047:0009"
+      },
+      {
+        "item": "MetricValue(key='0000002488-25-000047:Segment:2488:client and gaming:net revenue:FY2025-Q1')",
+        "property": "value",
+        "kept": 2.9,
+        "other": 2941.0,
+        "kept_chunk": "0000002488-25-000047:0024",
+        "other_chunk": "0000002488-25-000047:0009"
+      },
+      {
+        "item": "MetricValue(key='0000002488-25-000047:Segment:2488:client and gaming:net revenue:FY2025-Q1')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0000002488-25-000047:0024",
+        "other_chunk": "0000002488-25-000047:0009"
+      },
+      {
+        "item": "Agreement(key='Agreement:acquisition of zt systems')",
+        "property": "name",
+        "kept": "acquisition of ZT Systems",
+        "other": "Acquisition of ZT Systems",
+        "kept_chunk": "0000002488-25-000047:0027",
+        "other_chunk": "0000002488-25-000047:0019"
+      }
+    ]
+  },
+  "failed_chunks": [],
+  "violations": [],
+  "calls": {
+    "made": 74,
+    "from_cache": 0
+  },
+  "tokens": {
+    "input": 83545,
+    "cache_read": 576830,
+    "cache_write": 0,
+    "output": 239167
+  },
+  "cost_usd": 0.13370629999999997,
+  "cost_this_run_usd": 0.13370629999999997,
+  "estimate": {
+    "calls": 74,
+    "usd": 0.1238343
+  },
+  "price_table": {
+    "date": "2026-10-10",
+    "unit": "USD per million tokens",
+    "models": {
+      "claude-haiku-5-5": {
+        "input_per_mtok": 0.1,
+        "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "output_per_mtok": 0.5,
+        "cache_write_per_mtok": 0.125,
+        "cache_read_per_mtok": 0.01
+      }
+    }
+  },
+  "candidates_file": "/Users/rohanvasudev/Downloads/GitHub/fillingintel/.claude/worktrees/extraction-runs-review-3-ee7782/data/extract/0000002488-25-000047-run1.jsonl"
+}

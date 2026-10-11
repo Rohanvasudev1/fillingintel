@@ -1,0 +1,213 @@
+{
+  "accession_no": "0000002488-24-000123",
+  "run": 1,
+  "status": "complete",
+  "commit": "9ca8d7f+dirty",
+  "created_at": "2026-10-11T14:32:21+00:00",
+  "prompt": {
+    "version": "v2",
+    "path": "prompts/extract/v2.md",
+    "sha256": "34a82e2b107b550f9d2689fa43d20afb246bab0d4baeb15cf32170ce36c67d77",
+    "file_sha256": "df67f16a26dfa2ac60a7cb8eb0f5e82fad1c3dd1fc607b2214e233fb8383e601",
+    "prompt_version": "extract/v2@34a82e2b"
+  },
+  "model": "claude-haiku-5-5",
+  "effort": "high",
+  "max_tokens": 16000,
+  "ontology_version": 3,
+  "workers": 4,
+  "chunk_count": 77,
+  "candidates": 937,
+  "nodes": 292,
+  "edges": 433,
+  "rejections": {
+    "total": 20,
+    "rate": 0.021344717182497332,
+    "by_reason": {
+      "endpoint_node_rejected": 13,
+      "span_not_found": 7
+    },
+    "examples": {
+      "span_not_found": [
+        {
+          "chunk_id": "0000002488-24-000123:0005",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n2",
+            "label": "MetricValue",
+            "name": "Inventories",
+            "value": 4991,
+            "unit": "USD millions",
+            "period": "FY2024-Q2",
+            "evidence_span": "Inventories | 4,991 | 4,351 |",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0000002488-24-000123:0005",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n3",
+            "label": "MetricValue",
+            "name": "Total current assets",
+            "value": 17465,
+            "unit": "USD millions",
+            "period": "FY2024-Q2",
+            "evidence_span": "Total current assets | 17,465 | 16,768 |",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0000002488-24-000123:0005",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n5",
+            "label": "MetricValue",
+            "name": "Total current liabilities",
+            "value": 6195,
+            "unit": "USD millions",
+            "period": "FY2024-Q2",
+            "evidence_span": "Total current liabilities | 6,195 | 6,689 |",
+            "confidence": "stated"
+          }
+        }
+      ],
+      "endpoint_node_rejected": [
+        {
+          "chunk_id": "0000002488-24-000123:0005",
+          "kind": "triple",
+          "message": "end node 'n2' was rejected",
+          "candidate": {
+            "start": "THIS_FILING",
+            "type": "REPORTS",
+            "end": "n2",
+            "role": null,
+            "stake": null,
+            "evidence_span": "Inventories | 4,991 | 4,351 |",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0000002488-24-000123:0005",
+          "kind": "triple",
+          "message": "start node 'n2' was rejected",
+          "candidate": {
+            "start": "n2",
+            "type": "MEASURES",
+            "end": "FILER",
+            "role": null,
+            "stake": null,
+            "evidence_span": "Inventories | 4,991 | 4,351 |",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0000002488-24-000123:0005",
+          "kind": "triple",
+          "message": "end node 'n3' was rejected",
+          "candidate": {
+            "start": "THIS_FILING",
+            "type": "REPORTS",
+            "end": "n3",
+            "role": null,
+            "stake": null,
+            "evidence_span": "Total current assets | 17,465 | 16,768 |",
+            "confidence": "stated"
+          }
+        }
+      ]
+    }
+  },
+  "flags": {
+    "name_not_in_span": 114,
+    "uncertain": 3
+  },
+  "conflicts": {
+    "total": 6,
+    "items": [
+      {
+        "item": "MetricValue(key='0000002488-24-000123:2488:net revenue:FY2024-Q2')",
+        "property": "value",
+        "kept": 5.8,
+        "other": 5835.0,
+        "kept_chunk": "0000002488-24-000123:0024",
+        "other_chunk": "0000002488-24-000123:0003"
+      },
+      {
+        "item": "MetricValue(key='0000002488-24-000123:2488:net revenue:FY2024-Q2')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0000002488-24-000123:0024",
+        "other_chunk": "0000002488-24-000123:0003"
+      },
+      {
+        "item": "MetricValue(key='0000002488-24-000123:Segment:2488:data center:net revenue:FY2024-Q2')",
+        "property": "value",
+        "kept": 2.8,
+        "other": 2834.0,
+        "kept_chunk": "0000002488-24-000123:0026",
+        "other_chunk": "0000002488-24-000123:0012"
+      },
+      {
+        "item": "MetricValue(key='0000002488-24-000123:Segment:2488:data center:net revenue:FY2024-Q2')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0000002488-24-000123:0026",
+        "other_chunk": "0000002488-24-000123:0012"
+      },
+      {
+        "item": "MetricValue(key='0000002488-24-000123:Segment:2488:data center:net revenue:FY2023-Q2')",
+        "property": "value",
+        "kept": 1.3,
+        "other": 1321.0,
+        "kept_chunk": "0000002488-24-000123:0026",
+        "other_chunk": "0000002488-24-000123:0012"
+      },
+      {
+        "item": "MetricValue(key='0000002488-24-000123:Segment:2488:data center:net revenue:FY2023-Q2')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0000002488-24-000123:0026",
+        "other_chunk": "0000002488-24-000123:0012"
+      }
+    ]
+  },
+  "failed_chunks": [],
+  "violations": [],
+  "calls": {
+    "made": 77,
+    "from_cache": 0
+  },
+  "tokens": {
+    "input": 81144,
+    "cache_read": 600215,
+    "cache_write": 0,
+    "output": 237042
+  },
+  "cost_usd": 0.13263754999999994,
+  "cost_this_run_usd": 0.13263754999999994,
+  "estimate": {
+    "calls": 77,
+    "usd": 0.12837671000000003
+  },
+  "price_table": {
+    "date": "2026-10-10",
+    "unit": "USD per million tokens",
+    "models": {
+      "claude-haiku-5-5": {
+        "input_per_mtok": 0.1,
+        "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "output_per_mtok": 0.5,
+        "cache_write_per_mtok": 0.125,
+        "cache_read_per_mtok": 0.01
+      }
+    }
+  },
+  "candidates_file": "/Users/rohanvasudev/Downloads/GitHub/fillingintel/.claude/worktrees/extraction-runs-review-3-ee7782/data/extract/0000002488-24-000123-run1.jsonl"
+}

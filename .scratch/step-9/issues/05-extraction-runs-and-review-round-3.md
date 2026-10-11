@@ -8,12 +8,12 @@
 
 **Parallel-safety:** no code changes. Writes only run outputs (gitignored `data/extract/`) and committed reports and round files under `benchmarks/extraction/`.
 
-**Status:** ready-for-human
+**Status:** done (2026-10-11)
 
-- [ ] NVDA FY2026 run under v2: the run report shows market platforms as MarketPlatform nodes and only Compute & Networking and Graphics as Segments, with zero `check_batch()` violations.
-- [ ] AMD FY2025 10-K run, report committed.
-- [ ] Before round 3, the agent explains what checking means and the review standard. The user runs `python -m extract.review` from the main checkout in the Terminal panel (exact commands given). Afterwards the agent checks the answer timings.
-- [ ] Round 3 results committed: accuracy with a Wilson 95% interval, accuracy per confidence level, median time per answer, and the miss rate from the miss check. An agent second look, if any, is labelled as such and changes no verdict.
-- [ ] If round 3 is under about 85%: stop, report the failure reasons, and propose a fix (a new prompt version, or a model change, which is the user's call since Sonnet for all 24 does not fit in $5), through a ticket-sized PR, before any further run.
-- [ ] The other 21 filings extracted, each with `--max-cost` at $1, the total kept within $5. Commands run with `env -u ANTHROPIC_BASE_URL`.
-- [ ] All 24 run reports committed; total cost, rejections by reason and conflicts summed in BUILD-LOG.
+- [x] NVDA FY2026 run under v2: the run report shows market platforms as MarketPlatform nodes and only Compute & Networking and Graphics as Segments, with zero `check_batch()` violations.
+- [x] AMD FY2025 10-K run, report committed.
+- [x] Before round 3, the agent explains what checking means and the review standard. The user runs `python -m extract.review` from the main checkout in the Terminal panel (exact commands given). Afterwards the agent checks the answer timings.
+- [x] Round 3 results committed: accuracy with a Wilson 95% interval, accuracy per confidence level, median time per answer, and the miss rate from the miss check. An agent second look, if any, is labelled as such and changes no verdict.
+- [x] (not needed: round 3 was 30 of 30) If round 3 is under about 85%: stop, report the failure reasons, and propose a fix (a new prompt version, or a model change, which is the user's call since Sonnet for all 24 does not fit in $5), through a ticket-sized PR, before any further run.
+- [x] The other 21 filings extracted, each with `--max-cost` at $1, the total kept within $5. Commands run with `env -u ANTHROPIC_BASE_URL`.
+- [x] All 24 run reports committed; total cost, rejections by reason and conflicts summed in BUILD-LOG.

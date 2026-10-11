@@ -22,6 +22,9 @@ Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstra
 - Haiku 5.5 against Sonnet 5.5 extraction quality is not compared: Step 9 switched the extractor to Haiku for cost (2026-10-10) and round 3 judges Haiku with prompt v2 only. A comparison would need a Sonnet run under v2 and its own review round.
 - Whether retrieval filters out `uncertain` evidence: decide in Step 11 from the review's accuracy per confidence level.
 
+## Step 10 — graph load
+- MetricValue keys collide when a percentage and a dollar figure share a concept name. Haiku with prompt v2 stored NVIDIA's "net income" as 55.6 percent (its share of revenue) and as $120,067 million under one key, and the conflict rule kept the percentage; 34 of NVDA run 2's conflicts and 32 of AMD run 1's 35 are this kind. AMD's "income tax (benefit)" FY2025 holds the effective rate, -2.5 percent (agent second look at round 3). The extract files keep each unit, so the loader can separate a percentage from a currency amount when it builds the key, with no re-extraction (user decision 2026-10-11: run the corpus under v2 and fix this in code). Decide the rule at Step 10's grilling: unit class in the key, or a percent concept renamed.
+
 ## Lookup arm
 - Map `MetricValue.concept` to XBRL tags from EDGAR companyfacts. Not done in Step 9 (grilling, 2026-10-10): MetricValue is per filing and never merges across filings. It is a new EDGAR data source; propose it when a lookup arm needs it.
 

@@ -1,0 +1,253 @@
+{
+  "accession_no": "0001045810-24-000124",
+  "run": 1,
+  "status": "complete",
+  "commit": "9ca8d7f+dirty",
+  "created_at": "2026-10-11T15:46:13+00:00",
+  "prompt": {
+    "version": "v2",
+    "path": "prompts/extract/v2.md",
+    "sha256": "34a82e2b107b550f9d2689fa43d20afb246bab0d4baeb15cf32170ce36c67d77",
+    "file_sha256": "df67f16a26dfa2ac60a7cb8eb0f5e82fad1c3dd1fc607b2214e233fb8383e601",
+    "prompt_version": "extract/v2@34a82e2b"
+  },
+  "model": "claude-haiku-5-5",
+  "effort": "high",
+  "max_tokens": 16000,
+  "ontology_version": 3,
+  "workers": 4,
+  "chunk_count": 58,
+  "candidates": 728,
+  "nodes": 203,
+  "edges": 325,
+  "rejections": {
+    "total": 8,
+    "rate": 0.01098901098901099,
+    "by_reason": {
+      "endpoint_node_rejected": 5,
+      "span_not_found": 3
+    },
+    "examples": {
+      "span_not_found": [
+        {
+          "chunk_id": "0001045810-24-000124:0027",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n4",
+            "label": "Product",
+            "name": "Blackwell GPU architecture",
+            "value": null,
+            "unit": null,
+            "period": null,
+            "evidence_span": "our next generation data center architecture, Blackwell",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0033",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n16",
+            "label": "MetricValue",
+            "name": "Sales, general and administrative expenses",
+            "value": 777,
+            "unit": "USD millions",
+            "period": "FY2025-Q1",
+            "evidence_span": "Sales, general and administrative expenses | 777 |  | 633 |",
+            "confidence": "implied"
+          }
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0033",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n17",
+            "label": "MetricValue",
+            "name": "Sales, general and administrative expenses",
+            "value": 633,
+            "unit": "USD millions",
+            "period": "FY2024-Q1",
+            "evidence_span": "Sales, general and administrative expenses | 777 |  | 633 |",
+            "confidence": "implied"
+          }
+        }
+      ],
+      "endpoint_node_rejected": [
+        {
+          "chunk_id": "0001045810-24-000124:0027",
+          "kind": "triple",
+          "message": "end node 'n4' was rejected",
+          "candidate": {
+            "start": "FILER",
+            "type": "OFFERS",
+            "end": "n4",
+            "role": null,
+            "stake": null,
+            "evidence_span": "our next generation data center architecture, Blackwell",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0033",
+          "kind": "triple",
+          "message": "end node 'n16' was rejected",
+          "candidate": {
+            "start": "THIS_FILING",
+            "type": "REPORTS",
+            "end": "n16",
+            "role": null,
+            "stake": null,
+            "evidence_span": "Sales, general and administrative expenses | 777 |  | 633 |",
+            "confidence": "implied"
+          }
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0033",
+          "kind": "triple",
+          "message": "start node 'n16' was rejected",
+          "candidate": {
+            "start": "n16",
+            "type": "MEASURES",
+            "end": "FILER",
+            "role": null,
+            "stake": null,
+            "evidence_span": "Sales, general and administrative expenses | 777 |  | 633 |",
+            "confidence": "implied"
+          }
+        }
+      ]
+    }
+  },
+  "flags": {
+    "name_not_in_span": 96,
+    "uncertain": 6
+  },
+  "conflicts": {
+    "total": 11,
+    "items": [
+      {
+        "item": "MetricValue(key='0001045810-24-000124:1045810:revenue:FY2025-Q1')",
+        "property": "value",
+        "kept": 26.0,
+        "other": 26044.0,
+        "kept_chunk": "0001045810-24-000124:0030",
+        "other_chunk": "0001045810-24-000124:0002"
+      },
+      {
+        "item": "MetricValue(key='0001045810-24-000124:1045810:revenue:FY2025-Q1')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0001045810-24-000124:0030",
+        "other_chunk": "0001045810-24-000124:0002"
+      },
+      {
+        "item": "MetricValue(key='0001045810-24-000124:1045810:revenue:FY2025-Q1')",
+        "property": "value",
+        "kept": 26.0,
+        "other": 26044.0,
+        "kept_chunk": "0001045810-24-000124:0030",
+        "other_chunk": "0001045810-24-000124:0032"
+      },
+      {
+        "item": "MetricValue(key='0001045810-24-000124:1045810:revenue:FY2025-Q1')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0001045810-24-000124:0030",
+        "other_chunk": "0001045810-24-000124:0032"
+      },
+      {
+        "item": "MetricValue(key='0001045810-24-000124:1045810:operating income:FY2025-Q1')",
+        "property": "value",
+        "kept": 65.0,
+        "other": 16909.0,
+        "kept_chunk": "0001045810-24-000124:0031",
+        "other_chunk": "0001045810-24-000124:0002"
+      },
+      {
+        "item": "MetricValue(key='0001045810-24-000124:1045810:operating income:FY2025-Q1')",
+        "property": "unit",
+        "kept": "percent",
+        "other": "USD millions",
+        "kept_chunk": "0001045810-24-000124:0031",
+        "other_chunk": "0001045810-24-000124:0002"
+      },
+      {
+        "item": "MetricValue(key='0001045810-24-000124:1045810:operating income:FY2025-Q1')",
+        "property": "value",
+        "kept": 16909.0,
+        "other": 65.0,
+        "kept_chunk": "0001045810-24-000124:0032",
+        "other_chunk": "0001045810-24-000124:0031"
+      },
+      {
+        "item": "MetricValue(key='0001045810-24-000124:1045810:operating income:FY2025-Q1')",
+        "property": "unit",
+        "kept": "USD millions",
+        "other": "percent",
+        "kept_chunk": "0001045810-24-000124:0032",
+        "other_chunk": "0001045810-24-000124:0031"
+      },
+      {
+        "item": "MetricValue(key='0001045810-24-000124:1045810:net income:FY2025-Q1')",
+        "property": "value",
+        "kept": 57.3,
+        "other": 14881.0,
+        "kept_chunk": "0001045810-24-000124:0031",
+        "other_chunk": "0001045810-24-000124:0002"
+      },
+      {
+        "item": "MetricValue(key='0001045810-24-000124:1045810:net income:FY2025-Q1')",
+        "property": "unit",
+        "kept": "percent",
+        "other": "USD millions",
+        "kept_chunk": "0001045810-24-000124:0031",
+        "other_chunk": "0001045810-24-000124:0002"
+      },
+      {
+        "item": "MetricValue(key=\"0001045810-24-000124:1045810:total shareholders' equity:FY2025-Q1\")",
+        "property": "concept",
+        "kept": "Total Shareholders' Equity",
+        "other": "Total shareholders' equity",
+        "kept_chunk": "0001045810-24-000124:0004",
+        "other_chunk": "0001045810-24-000124:0003"
+      }
+    ]
+  },
+  "failed_chunks": [],
+  "violations": [],
+  "calls": {
+    "made": 58,
+    "from_cache": 0
+  },
+  "tokens": {
+    "input": 63052,
+    "cache_read": 452110,
+    "cache_write": 0,
+    "output": 198550
+  },
+  "cost_usd": 0.1101013,
+  "cost_this_run_usd": 0.1101013,
+  "estimate": {
+    "calls": 58,
+    "usd": 0.09746427999999997
+  },
+  "price_table": {
+    "date": "2026-10-10",
+    "unit": "USD per million tokens",
+    "models": {
+      "claude-haiku-5-5": {
+        "input_per_mtok": 0.1,
+        "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "output_per_mtok": 0.5,
+        "cache_write_per_mtok": 0.125,
+        "cache_read_per_mtok": 0.01
+      }
+    }
+  },
+  "candidates_file": "/Users/rohanvasudev/Downloads/GitHub/fillingintel/.claude/worktrees/extraction-runs-review-3-ee7782/data/extract/0001045810-24-000124-run1.jsonl"
+}
