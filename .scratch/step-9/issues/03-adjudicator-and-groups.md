@@ -6,7 +6,7 @@
 
 **Parallel-safety:** touches the adjudication and grouping modules in `resolve/`, `prompts/resolve/`, and only the adjudication section of the run report that 02 set up.
 
-**Status:** ready-for-agent
+**Status:** done (merged 2026-10-10)
 
 - [ ] `prompts/resolve/v1.md`, pinned by hash, version `resolve/v1@<hash8>` recorded on every decision. It states the same-entity rule from CONTEXT.md: same thing at the same level; a family and its member differ; a parent and subsidiary merge only where the filing uses the names interchangeably.
 - [ ] The request carries both names, the label, and each node's evidence spans and chunk text from `resolve()`. claude-sonnet-5-5 at effort `high`, structured output, no sampling settings, through the existing Anthropic client and response cache.
