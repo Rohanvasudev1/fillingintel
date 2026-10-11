@@ -59,7 +59,7 @@ from resolve.decisions import Failure
 from resolve.embed import VoyageNodeEmbedder, embed_text
 from resolve.estimate import CostEstimate, estimate_cost
 from resolve.labeller import LABEL_NOTE
-from resolve.labels import LabelFileError, label_status
+from resolve.labels import LabelFileError, label_status, tuning_status
 from resolve.log import LogError, LogEvent, Stamp, append_events, read_log, replay
 from resolve.nodes import InputError, InputFile, ResolveNode, load_nodes
 from resolve.paths import (
@@ -237,8 +237,8 @@ def _read_inputs(files: Sequence[Path], out_dir: Path) -> _Inputs:
         log = read_log(log_path)
         on_disk = read_alias_map(map_path)
         replayed = replay(log)
-        labels = {**label_status(out_dir), "note": f"{LABEL_NOTE}; scores: python -m "
-                                                   "resolve.score"}
+        labels = {**label_status(out_dir), "tuning_report": tuning_status(out_dir),
+                  "note": f"{LABEL_NOTE}; scores: python -m resolve.score"}
     except (InputError, LogError, LabelFileError, ValueError) as exc:
         raise _Stop(EXIT_USAGE, str(exc)) from exc
     except OSError as exc:

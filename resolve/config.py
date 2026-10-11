@@ -2,8 +2,9 @@
 
 Every cutoff a candidate rule uses and every embedding choice lives here, so a
 run report, a merge-log event and (later) a labelled pair can name the exact
-settings by one hash. The values are starting points; ticket 06 tunes them on
-the tuning set and then freezes them.
+settings by one hash. The defaults are the values chosen on the tuning set in
+ticket 06 (resolve.tuning.CONFIGS holds the starting values and the others
+compared) and frozen in benchmarks/resolution/frozen.json.
 """
 from __future__ import annotations
 
@@ -24,9 +25,9 @@ FUZZY_OFF = 101.0  # a cutoff above any token_set_ratio turns the rule off
 class ResolveConfig:
     """Candidate-rule cutoffs and embedding choices."""
 
-    fuzzy_cutoff: float = 90.0  # RapidFuzz token_set_ratio, 0-100; FUZZY_OFF turns it off
+    fuzzy_cutoff: float = 85.0  # RapidFuzz token_set_ratio, 0-100; FUZZY_OFF turns it off
     top_k: int = 3  # embedding neighbours per node; 0 turns the rule off
-    rare_word_max_keys: int = 3  # a word in at most this many match keys of a label; 0 off
+    rare_word_max_keys: int = 0  # a word in at most this many match keys of a label; 0 off
     rare_word_min_length: int = 3
     embedding_model: str = DEFAULT_MODEL
     embed_text: EmbedText = "label_name"  # "Label: name", or "name: first evidence span"

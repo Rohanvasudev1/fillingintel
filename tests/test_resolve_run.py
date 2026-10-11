@@ -176,6 +176,26 @@ def test_a_run_writes_the_log_the_alias_map_and_the_report(run_main, tmp_path, c
     assert report["labels_and_scoring"]["tuning"] == {"drawn": None, "labelled": 0, "same": 0}
 
 
+def test_the_run_report_carries_the_tuning_choices_and_the_frozen_settings(run_main, tmp_path):
+    out = tmp_path / "out"
+    out.mkdir()
+    tuning = {"rules": [{"name": "chosen", "config_hash": "c" * 64, "pending": 9,
+                         "matches_found": 2, "matches": 2, "non_matches_flagged": 1,
+                         "non_matches": 3, "missed": []}],
+              "adjudicator": {"prompt_version": "resolve/v2@00000000", "answered": 3,
+                              "agreed": 3, "cost_usd": 0.01}}
+    (out / "tuning-report.json").write_text(json.dumps(tuning), encoding="utf-8")
+    (out / "frozen.json").write_text(json.dumps({"config_hash": "c" * 64, "prompts": {
+        "label": "label/v2@00000000", "resolve": "resolve/v2@00000000"}}), encoding="utf-8")
+    assert run_main() == EXIT_OK
+    recorded = _report(tmp_path, 1)["labels_and_scoring"]["tuning_report"]
+    assert recorded["chosen"]["pending"] == 9
+    assert recorded["adjudicator"] == {"prompt_version": "resolve/v2@00000000", "answered": 3,
+                                       "agreed": 3}
+    assert recorded["frozen"]["config_hash"] == "c" * 64
+    assert len(recorded["report_sha256"]) == 64
+
+
 def test_a_rerun_on_unchanged_inputs_appends_nothing(run_main, tmp_path, candidates):
     run_main()
     log = tmp_path / "out" / "merge_log.jsonl"

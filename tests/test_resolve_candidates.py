@@ -91,7 +91,8 @@ def test_acronym_needs_a_one_word_name_and_a_longer_one():
 def test_a_shared_rare_word_fires_alone():
     a = node("Organization", "Lumentum Holdings Inc.")
     b = node("Organization", "Lumentum Operations")
-    pair = _pair(score_pairs((a, b), {}, ResolveConfig(top_k=0, fuzzy_cutoff=101)), a, b)
+    config = ResolveConfig(top_k=0, fuzzy_cutoff=101, rare_word_max_keys=3)
+    pair = _pair(score_pairs((a, b), {}, config), a, b)
     assert pair.rules == frozenset({Rule.RARE_WORD})
     assert pair.shared_rare_words == ("lumentum",)
 

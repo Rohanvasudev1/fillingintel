@@ -1,0 +1,333 @@
+"""Tune the resolver on the labelled tuning set, then freeze it (Step 9, ticket 06).
+
+Usage (needs ``DATABASE_URL``; ``--adjudicate`` also needs ``ANTHROPIC_API_KEY``
+with ``ANTHROPIC_BASE_URL`` unset; every name embedding must be cached)::
+
+    uv run --env-file .env python -m resolve.tune
+    env -u ANTHROPIC_BASE_URL uv run --env-file .env python -m resolve.tune --adjudicate
+    uv run --env-file .env python -m resolve.tune --freeze
+
+For each config in `resolve.tuning.CONFIGS` it scores every same-label pair
+(offline) and reports how many pairs would go to the adjudicator, how many of
+the tuning set's true matches the rules find and how many non-matches they
+flag. With ``--adjudicate`` the adjudicator also judges the tuning pairs the
+chosen config (ResolveConfig's defaults) sends it, through the response cache,
+after a cost estimate checked against ``--max-cost``. The report goes to
+``benchmarks/resolution/tuning-report.json``.
+
+``--freeze`` writes ``frozen.json`` once, holding the chosen config hash and the
+label and adjudicator prompt versions, with the tuning report's hash. It needs
+a tuning report with an adjudicator check under the current config and prompt.
+
+Every number rests on gpt-6-luna's labels: "agent-labelled (gpt-6-luna)".
+
+Exit codes: 0 done; 2 bad arguments or a malformed input; 3 could not run (a
+setting missing, an uncached embedding, the estimate over the cap, an API,
+database or file error); 4 already frozen, or no matching tuning report.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import sys
+from collections import Counter
+from collections.abc import Mapping, Sequence
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
+import psycopg
+
+from ingest.atomic_json import write_json_atomic
+from ingest.provenance import git_state
+from ingest.store import ChunkNotFound
+from ingest.store import resolve as resolve_chunk
+from resolve.adjudicate import ClaudeAdjudicator
+from resolve.candidates import ScoredPair, is_named
+from resolve.config import ResolveConfig
+from resolve.decisions import PairDecision
+from resolve.embed import VoyageNodeEmbedder, embed_text
+from resolve.estimate import estimate_cost
+from resolve.label_report import now
+from resolve.labeller import LABEL_NOTE, LabelPromptError, load_label_prompt
+from resolve.labels import (
+    FROZEN_NAME,
+    TUNING_REPORT_NAME,
+    Frozen,
+    LabelFileError,
+    labels_path,
+    read_labels,
+    write_frozen,
+)
+from resolve.log import Stamp
+from resolve.nodes import InputError, ResolveNode, load_nodes
+from resolve.paths import CANDIDATES_DIR, OUTPUT_DIR, latest_candidates
+from resolve.pipeline import Resolution, resolve_nodes
+from resolve.prompt import PromptError, ResolvePrompt, load_prompt
+from resolve.request import (
+    ADJUDICATION_PRICES,
+    ADJUDICATOR_EFFORT,
+    ADJUDICATOR_MODEL,
+    sent_chunks,
+)
+from resolve.tuning import (
+    CONFIGS,
+    AdjudicatorCheck,
+    TunedLabel,
+    adjudicator_check,
+    check_to_dict,
+    rule_check,
+)
+from retrieve.answer_model import API_KEY_ENV, AnswerModelError, AnthropicAnswerModel
+from retrieve.pricing import anthropic_cost
+from retrieve.query_cache import BATCH_CACHE_DIR, CachedBatchEmbedder, CacheError
+from retrieve.response_cache import DEFAULT_CACHE_DIR, CachedAnswerModel
+
+CHOSEN = "chosen"
+DEFAULT_MAX_COST_USD = 0.5
+WORKERS = 4
+DATABASE_ENV = "DATABASE_URL"
+BASE_URL_ENV = "ANTHROPIC_BASE_URL"
+EXIT_OK, EXIT_USAGE, EXIT_RUN_ERROR, EXIT_CHECK_FAILED = 0, 2, 3, 4
+_NO_STAMP = Stamp(config_hash="", commit="", timestamp="")  # no merge event is written
+
+
+class _Stop(Exception):
+    def __init__(self, code: int, message: str):
+        super().__init__(message)
+        self.code = code
+
+
+class _NoCalls:
+    """A Voyage stand-in: tuning reads name vectors from the cache only."""
+
+    def embed_batch(self, texts, model, input_type):  # noqa: ANN001 - BatchEmbedder protocol
+        raise CacheError("a name embedding is not cached; run python -m resolve.run first")
+
+
+def main(argv: Sequence[str] | None = None, *, out_dir: Path = OUTPUT_DIR) -> int:
+    """CLI entry point; see the module docstring for the exit codes."""
+    try:
+        args = _parse_args(argv)
+        if args.freeze:
+            return _freeze(out_dir)
+        url = _env(DATABASE_ENV)
+        nodes = _nodes()
+        labels = _labels(out_dir)
+        rows, chosen = _rule_rows(nodes, labels)
+        adjudication = _adjudicate(nodes, labels, chosen, url, args.max_cost) \
+            if args.adjudicate else None
+        _write_report(out_dir, rows, adjudication)
+        return EXIT_OK
+    except _Stop as stop:
+        print(str(stop), file=sys.stderr)
+        return stop.code
+
+
+def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(prog="python -m resolve.tune", description=__doc__.split(
+        "\n\n")[0], formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--adjudicate", action="store_true",
+                        help="judge the tuning pairs the chosen config sends to the adjudicator")
+    parser.add_argument("--max-cost", type=float, default=DEFAULT_MAX_COST_USD,
+                        help=f"refuse adjudication estimated above this many USD "
+                             f"(default {DEFAULT_MAX_COST_USD:g})")
+    parser.add_argument("--freeze", action="store_true",
+                        help="write frozen.json from the chosen config and current prompts")
+    try:
+        args = parser.parse_args(argv)
+    except SystemExit as exc:
+        raise _Stop(EXIT_USAGE, "bad arguments") from exc
+    if not args.max_cost >= 0:
+        raise _Stop(EXIT_USAGE, "--max-cost must be 0 or more")
+    return args
+
+
+def _env(name: str) -> str:
+    value = os.environ.get(name)
+    if not value:
+        raise _Stop(EXIT_RUN_ERROR, f"{name} not set (run with: uv run --env-file .env ...)")
+    return value
+
+
+def _nodes() -> tuple[ResolveNode, ...]:
+    try:
+        nodes, _ = load_nodes(latest_candidates(CANDIDATES_DIR))
+    except InputError as exc:
+        raise _Stop(EXIT_USAGE, str(exc)) from exc
+    return nodes
+
+
+def _labels(out_dir: Path) -> tuple[TunedLabel, ...]:
+    try:
+        labels = read_labels(labels_path(out_dir, "tuning"))
+    except LabelFileError as exc:
+        raise _Stop(EXIT_USAGE, str(exc)) from exc
+    if not labels:
+        raise _Stop(EXIT_RUN_ERROR, "no tuning labels; run python -m resolve.label --set tuning")
+    return tuple(TunedLabel(lb.key_a, lb.key_b, lb.same) for lb in labels)
+
+
+def _resolve(nodes: Sequence[ResolveNode], config: ResolveConfig) -> Resolution:
+    """Pairs and pending pairs under *config*, with no adjudicator and name vectors cached."""
+    embedder = None
+    if config.top_k:
+        cache = CachedBatchEmbedder(_NoCalls(), BATCH_CACHE_DIR)
+        texts = [embed_text(n, config.embed_text) for n in nodes if is_named(n.label)]
+        if missing := cache.uncached(texts, config.embedding_model, config.embed_input_type):
+            raise _Stop(EXIT_RUN_ERROR, f"{len(missing)} names are not embedded as "
+                                        f"{config.embed_text}; run python -m resolve.run first")
+        embedder = VoyageNodeEmbedder(cache, config.embedding_model, config.embed_input_type)
+    try:
+        return resolve_nodes(nodes, embedder, None, config, stamp=_NO_STAMP)
+    except (CacheError, OSError, ValueError) as exc:
+        raise _Stop(EXIT_RUN_ERROR, f"could not score the pairs: {exc}") from exc
+
+
+def _rule_rows(nodes: Sequence[ResolveNode], labels: Sequence[TunedLabel]
+               ) -> tuple[list[dict[str, object]], Resolution]:
+    rows, chosen = [], None
+    for name, config in CONFIGS.items():
+        result = _resolve(nodes, config)
+        check = rule_check(result.pairs, len(result.pending), labels)
+        print(f"{name:34} pending {check.pending:5}  matches found {check.matches_found}/"
+              f"{check.matches}  non-matches flagged {check.non_matches_flagged}/"
+              f"{check.non_matches}")
+        rows.append({"name": name, "config": config.to_dict(), "config_hash": config.config_hash,
+                     **check_to_dict(check)})
+        if name == CHOSEN:
+            chosen = result
+    if chosen is None or CONFIGS[CHOSEN] != ResolveConfig():
+        raise _Stop(EXIT_USAGE, "CONFIGS must end with the chosen config, ResolveConfig()")
+    return rows, chosen
+
+
+def _adjudicate(nodes: Sequence[ResolveNode], labels: Sequence[TunedLabel], chosen: Resolution,
+                url: str, max_cost: float) -> dict[str, object]:
+    if os.environ.get(BASE_URL_ENV):
+        raise _Stop(EXIT_RUN_ERROR, f"{BASE_URL_ENV} is set; unset it so filing text and the "
+                                    "API key go only to Anthropic")
+    _env(API_KEY_ENV)
+    try:
+        prompt = load_prompt()
+    except PromptError as exc:
+        raise _Stop(EXIT_RUN_ERROR, str(exc)) from exc
+    wanted = {lb.keys for lb in labels}
+    pairs = [p for p in chosen.pending if (p.key_a, p.key_b) in wanted
+             or (p.key_b, p.key_a) in wanted]
+    by_key = {n.key: n for n in nodes}
+    texts = _texts(url, [by_key[k] for p in pairs for k in (p.key_a, p.key_b)])
+    try:
+        model = AnthropicAnswerModel.from_env()
+    except AnswerModelError as exc:
+        raise _Stop(EXIT_RUN_ERROR, f"cannot open the Anthropic client: {exc}") from exc
+    with model as inner:
+        cached = CachedAnswerModel(inner, DEFAULT_CACHE_DIR)
+        adjudicator = ClaudeAdjudicator(cached, prompt, texts)
+        _check_estimate(adjudicator, cached, pairs, by_key, max_cost)
+        with ThreadPoolExecutor(WORKERS) as pool:
+            decisions = list(pool.map(
+                lambda p: adjudicator.judge(p, by_key[p.key_a], by_key[p.key_b]), pairs))
+    check = adjudicator_check({(d.key_a, d.key_b): d.merges for d in decisions}, labels)
+    _print_check(check)
+    return _adjudication_record(check, decisions, prompt)
+
+
+def _texts(url: str, nodes: Sequence[ResolveNode]) -> Mapping[str, str]:
+    wanted = list(dict.fromkeys(c for n in nodes for c in sent_chunks(n)))
+    try:
+        with psycopg.connect(url) as conn:
+            return {c: resolve_chunk(conn, c) for c in wanted}
+    except ChunkNotFound as exc:
+        raise _Stop(EXIT_RUN_ERROR, f"chunk {exc} is not in Postgres") from exc
+    except psycopg.Error as exc:  # the message can quote the URL
+        raise _Stop(EXIT_RUN_ERROR, f"could not read the chunks: {type(exc).__name__}") from exc
+
+
+def _check_estimate(adjudicator: ClaudeAdjudicator, cached: CachedAnswerModel,
+                    pairs: Sequence[ScoredPair], by_key: Mapping[str, ResolveNode],
+                    max_cost: float) -> None:
+    requests = [adjudicator.request(by_key[p.key_a], by_key[p.key_b]) for p in pairs]
+    estimate = estimate_cost([r for r in requests if not cached.contains(r)], WORKERS)
+    print(f"{len(pairs)} tuning pairs to adjudicate, {estimate.calls} not cached; estimate "
+          f"${estimate.usd:.2f} (cap ${max_cost:.2f}, {ADJUDICATOR_MODEL})")
+    if estimate.usd > max_cost:
+        raise _Stop(EXIT_RUN_ERROR, f"the estimate ${estimate.usd:.2f} is over --max-cost "
+                                    f"${max_cost:.2f}; no call was made")
+
+
+def _print_check(check: AdjudicatorCheck) -> None:
+    print(f"adjudicator agreed with the labels on {check.agreed} of {check.answered} pairs; "
+          f"merged but labelled not same: {len(check.merged_but_not_same)}; labelled same "
+          f"but not merged: {len(check.same_but_not_merged)}")
+
+
+def _adjudication_record(check: AdjudicatorCheck, decisions: Sequence[PairDecision],
+                         prompt: ResolvePrompt) -> dict[str, object]:
+    spent = [d for d in decisions if d.usage is not None and not d.from_cache]
+    return {
+        "model": ADJUDICATOR_MODEL, "effort": ADJUDICATOR_EFFORT,
+        "prompt_version": prompt.prompt_version, "price_table": ADJUDICATION_PRICES.date,
+        **check_to_dict(check),
+        "answers": dict(Counter(d.answer.value if d.answer else "none" for d in decisions)),
+        "failures": dict(Counter(d.failure for d in decisions if d.failure)),
+        "output_tokens": sum(d.usage.output_tokens for d in decisions if d.usage),
+        "cost_usd": round(sum(anthropic_cost(ADJUDICATOR_MODEL, d.usage, ADJUDICATION_PRICES)
+                              for d in spent if d.usage), 6),
+        "decisions": [{"key_a": d.key_a, "key_b": d.key_b, "answer": d.answer and d.answer.value,
+                       "merges": d.merges, "failure": d.failure, "reason": d.reason}
+                      for d in decisions],
+    }
+
+
+def _write_report(out_dir: Path, rows: Sequence[Mapping[str, object]],
+                  adjudication: Mapping[str, object] | None) -> None:
+    path = out_dir / TUNING_REPORT_NAME
+    labels = labels_path(out_dir, "tuning")
+    record = {
+        "provenance": {"commit": git_state(), "created_at": now(), "note": LABEL_NOTE,
+                       "labels_sha256": hashlib.sha256(labels.read_bytes()).hexdigest(),
+                       "chosen": CHOSEN},
+        "rules": list(rows), "adjudicator": adjudication,
+    }
+    try:
+        write_json_atomic(path, record, indent=2)
+    except OSError as exc:
+        raise _Stop(EXIT_RUN_ERROR, f"could not write {path.name}: {exc}") from exc
+    print(f"wrote {path.name}")
+
+
+def _freeze(out_dir: Path) -> int:
+    report_path = out_dir / TUNING_REPORT_NAME
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        label_prompt = load_label_prompt().prompt_version
+        resolve_prompt = load_prompt().prompt_version
+    except FileNotFoundError as exc:
+        raise _Stop(EXIT_CHECK_FAILED, f"{TUNING_REPORT_NAME} is missing; tune first") from exc
+    except (OSError, ValueError, LabelPromptError, PromptError) as exc:
+        raise _Stop(EXIT_RUN_ERROR, f"cannot read the tuning report or prompts: {exc}") from exc
+    config = ResolveConfig()
+    chosen = next((r for r in report.get("rules", []) if r.get("name") == CHOSEN), {})
+    adjudicator = report.get("adjudicator") or {}
+    if chosen.get("config_hash") != config.config_hash or \
+            adjudicator.get("prompt_version") != resolve_prompt:
+        raise _Stop(EXIT_CHECK_FAILED, f"{TUNING_REPORT_NAME} was not made under the current "
+                                       "config and adjudicator prompt; run it again with "
+                                       "--adjudicate")
+    provenance = {"commit": git_state(), "created_at": now(), "config": config.to_dict(),
+                  "tuning_report_sha256": hashlib.sha256(report_path.read_bytes()).hexdigest()}
+    try:
+        write_frozen(out_dir / FROZEN_NAME, Frozen(config.config_hash, {
+            "label": label_prompt, "resolve": resolve_prompt}), provenance)
+    except LabelFileError as exc:
+        raise _Stop(EXIT_CHECK_FAILED, str(exc)) from exc
+    except OSError as exc:
+        raise _Stop(EXIT_RUN_ERROR, f"could not write {FROZEN_NAME}: {exc}") from exc
+    print(f"froze config {config.config_hash[:12]}, {label_prompt}, {resolve_prompt}")
+    return EXIT_OK
+
+
+if __name__ == "__main__":
+    sys.exit(main())
