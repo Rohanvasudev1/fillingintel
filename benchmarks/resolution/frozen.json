@@ -1,0 +1,23 @@
+{
+  "config_hash": "7a5aa8de76e57b0a39f9120305b2beaf583f081e07deca2dd9c83ee1a3741205",
+  "prompts": {
+    "label": "label/v2@a7f163e9",
+    "resolve": "resolve/v2@5b5e4a7d",
+    "label_model": "gpt-6-luna@high",
+    "resolve_model": "claude-haiku-5-5@high"
+  },
+  "provenance": {
+    "commit": "eba237d",
+    "created_at": "2026-10-11T17:04:22+00:00",
+    "config": {
+      "fuzzy_cutoff": 85.0,
+      "top_k": 3,
+      "rare_word_max_keys": 0,
+      "rare_word_min_length": 3,
+      "embedding_model": "voyage-4-large",
+      "embed_text": "label_name",
+      "embed_input_type": "document"
+    },
+    "tuning_report_sha256": "7cf38853e42e69e694ab40bddff462265c9d9b922ce8bc0c87b7c95257423aad"
+  }
+}
