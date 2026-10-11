@@ -1,7 +1,7 @@
 {
   "provenance": {
-    "commit": "bc7e61c",
-    "created_at": "2026-10-11T16:56:31+00:00",
+    "commit": "0b424e4",
+    "created_at": "2026-10-11T17:04:17+00:00",
     "note": "agent-labelled (gpt-6-luna)",
     "labels_sha256": "7628f6469f3628deced082925d0efc5c6071a2e33e384fcac8e403b94c44fb01",
     "chosen": "chosen"
@@ -375,6 +375,7 @@
     },
     "output_tokens": 40061,
     "cost_usd": 0,
+    "cost_usd_replayed": 0.045487,
     "decisions": [
       {
         "key_a": "Agreement:acquisition",
