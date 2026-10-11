@@ -1517,6 +1517,40 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 1. Merge this PR once CI is green, and decide on the prompt-examples question above.
 2. Ticket 05's extraction runs, then ticket 04 (labeller and sampling) and ticket 06. A real `resolve.run` over all 24 filings waits for those runs. With run 1 alone and `top_k` 3 it would send about 340 pairs (the estimate prints first).
 
+## 2026-10-11 — Step 9 ticket 05: extraction runs and review round 3
+
+- **Model and budget (user decisions, 2026-10-10).** Sonnet 5.5's estimate for the 24 filings was $54.41, about $33 expected, and the user capped the ticket at $5. PR #27 moved the extractor to `claude-haiku-5-5` at effort `high`, added price table 2026-10-10, set `TOTAL_CAP_USD` to $5 and the `--max-cost` default to $1. A smoke check on NVDA chunk 0012 hit `max_tokens` at 8,000 (7,699 of them thinking tokens) and finished at 13,737 with 16,000, so `max_tokens` is now 16,000 and the estimate assumes 3,000 output tokens per call. Haiku wrote 1.1 to 2.2 times Sonnet's output on the two chunks tried.
+- **NVDA FY2026 10-K, run 2 (Haiku, extract v2).** 457 nodes, 676 edges, no failed chunks, no `check_batch()` violations, $0.22. The two Segments are Compute & Networking and Graphics. The 7 MarketPlatforms are Data Center, Gaming, Professional Visualization, Automotive, OEM and Other, Compute, and Networking.
+- **AMD FY2025 10-K, run 1.** 595 nodes, 877 edges, $0.26. The Segments are Data Center, Client and Gaming, and Embedded, each also extracted as "… Segment", since `norm` keeps the word. Resolution should merge each pair. The MarketPlatforms are Client and Gaming.
+- **Review round 3** (the user, AMD run 1, file `0000002488-26-000018-round1.jsonl`; Haiku with prompt v2):
+  - 30 of 30 correct, Wilson 95% 0.886 to 1.000. By confidence (uncalibrated): stated 20 of 20, implied 10 of 10. 13 of the 30 edges were MEASURES or REPORTS.
+  - Median 17.1 s per answer. 10 answers were under 15 s, one of them 1.5 s; the rest ran 15 to 71 s, and the first, which follows the review standard, 568 s.
+  - Miss check: 0 of 5 chunks missing anything, answered in 2.8, 4.2, 7.0, 9.6 and 20.3 s. Four of five are too fast to read a whole chunk with its triples, so the miss rate is not measured reliably.
+  - Agent second look (changes no verdict): edge 13, MetricValue "income tax (benefit)" FY2025, holds -2.5 percent, AMD's effective tax rate; the amount is -$103 million. The EU AI Act and ZT Systems edges were checked against their chunks and hold up.
+  - Round 3 is not comparable with round 2 (Sonnet, prompt v1). OPEN-DECISIONS notes that Haiku and Sonnet quality are not compared.
+- **The other 22 filings**, one `extract.run` each at the $1 default cap. All 24 reports are committed.
+
+  | | Total over 24 runs |
+  |---|---|
+  | Chunks | 2,144 |
+  | Nodes / edges | 8,084 / 12,660 |
+  | Failed chunks | 1 (`0000050863-24-000076:0017`, stopped at `max_tokens` 16,000) |
+  | `check_batch()` violations | 0 |
+  | Rejections | 327: endpoint_node_rejected 211, span_not_found 110, disallowed_endpoint 4, dangling_local_id 1, missing_property 1 |
+  | Conflicts | 332, of them MetricValue 301, Agreement 16, Product 4, RiskFactor 3, Company 3, Regulation 3, LegalProceeding 1, Organization 1 |
+  | Flags | name_not_in_span 3,455; uncertain 245 |
+  | Tokens | input 2.36M, cache read 16.60M, cache write 0.12M, output 7.20M |
+  | Cost | $4.01 in run reports, against $3.57 estimated |
+
+  Spend not in any report: about $0.02 of smoke calls, and about $0.01 for 4 calls of a first loop over the 22 that was stopped and restarted (the restarted run replayed them from the cache). Step 9 extraction cost about $4.04 in all, under the $5 cap. Estimates ran 12% low overall and up to 44% low on Intel's 10-Qs, which produce more output per chunk.
+- **Metric collisions.** Most MetricValue conflicts are a percentage and a dollar figure sharing one key, such as NVIDIA's net income stored as 55.6 percent (share of revenue) and as $120,067 million. The conflict rule then keeps whichever has the stronger evidence, sometimes the percentage. The user chose to run the corpus under v2 and fix this in code at Step 10, since the extract files keep each unit (OPEN-DECISIONS, Step 10).
+- **Evidence.** Run reports and the round file are in `benchmarks/extraction/`; candidates files are in `data/extract/` (gitignored). The ticket made no code changes.
+
+**Next session starts with**
+1. Merge the ticket 05 PR.
+2. Ticket 06 (tune, freeze, score); tickets 03 and 04 are merged. Resolution runs over the 24 run files in `data/extract/` (the latest run per filing).
+3. Decide whether Intel chunk `0000050863-24-000076:0017` is extracted again, which needs streaming for a cap above 16,000, or left as the one failed chunk.
+
 ---
 
 ## Findings worth telling

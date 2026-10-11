@@ -6,7 +6,7 @@
 
 **Parallel-safety:** touches the label, sample and score modules in `resolve/`, `prompts/label/`, and only the labels-and-scoring section of the run report that 02 set up. Reuses the eval harness's bootstrap and the judge's OpenAI path without changing them.
 
-**Status:** ready-for-agent
+**Status:** done (merged 2026-10-10)
 
 - [ ] `prompts/label/v1.md`, pinned by hash, with the same-entity rule from CONTEXT.md. The request carries names, label, evidence spans and chunk text, and a test checks it carries no resolver output (no decision, rule or score).
 - [ ] gpt-6-luna at effort `high` through the existing OpenAI Responses path: strict json_schema, store=false, no sampling settings, response cache. Reply: `same` (bool), a quote and chunk ID per node, a reason.

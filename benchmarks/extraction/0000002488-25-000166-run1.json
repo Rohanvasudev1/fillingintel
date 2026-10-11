@@ -1,0 +1,134 @@
+{
+  "accession_no": "0000002488-25-000166",
+  "run": 1,
+  "status": "complete",
+  "commit": "9ca8d7f+dirty",
+  "created_at": "2026-10-11T14:56:50+00:00",
+  "prompt": {
+    "version": "v2",
+    "path": "prompts/extract/v2.md",
+    "sha256": "34a82e2b107b550f9d2689fa43d20afb246bab0d4baeb15cf32170ce36c67d77",
+    "file_sha256": "df67f16a26dfa2ac60a7cb8eb0f5e82fad1c3dd1fc607b2214e233fb8383e601",
+    "prompt_version": "extract/v2@34a82e2b"
+  },
+  "model": "claude-haiku-5-5",
+  "effort": "high",
+  "max_tokens": 16000,
+  "ontology_version": 3,
+  "workers": 4,
+  "chunk_count": 85,
+  "candidates": 913,
+  "nodes": 295,
+  "edges": 435,
+  "rejections": {
+    "total": 0,
+    "rate": 0.0,
+    "by_reason": {},
+    "examples": {}
+  },
+  "flags": {
+    "name_not_in_span": 130,
+    "uncertain": 5
+  },
+  "conflicts": {
+    "total": 8,
+    "items": [
+      {
+        "item": "MetricValue(key='0000002488-25-000166:2488:net revenue:FY2025-Q3')",
+        "property": "value",
+        "kept": 9.2,
+        "other": 9246.0,
+        "kept_chunk": "0000002488-25-000166:0029",
+        "other_chunk": "0000002488-25-000166:0003"
+      },
+      {
+        "item": "MetricValue(key='0000002488-25-000166:2488:net revenue:FY2025-Q3')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0000002488-25-000166:0029",
+        "other_chunk": "0000002488-25-000166:0003"
+      },
+      {
+        "item": "MetricValue(key='0000002488-25-000166:2488:operating income:FY2025-Q3')",
+        "property": "value",
+        "kept": 1.3,
+        "other": 1270.0,
+        "kept_chunk": "0000002488-25-000166:0029",
+        "other_chunk": "0000002488-25-000166:0003"
+      },
+      {
+        "item": "MetricValue(key='0000002488-25-000166:2488:operating income:FY2025-Q3')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0000002488-25-000166:0029",
+        "other_chunk": "0000002488-25-000166:0003"
+      },
+      {
+        "item": "MetricValue(key='0000002488-25-000166:2488:net income:FY2025-Q3')",
+        "property": "value",
+        "kept": 1.2,
+        "other": 1243.0,
+        "kept_chunk": "0000002488-25-000166:0029",
+        "other_chunk": "0000002488-25-000166:0003"
+      },
+      {
+        "item": "MetricValue(key='0000002488-25-000166:2488:net income:FY2025-Q3')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0000002488-25-000166:0029",
+        "other_chunk": "0000002488-25-000166:0003"
+      },
+      {
+        "item": "MetricValue(key='0000002488-25-000166:2488:net income:FY2025-Q3')",
+        "property": "value",
+        "kept": 2.8,
+        "other": 1.2,
+        "kept_chunk": "0000002488-25-000166:0039",
+        "other_chunk": "0000002488-25-000166:0029"
+      },
+      {
+        "item": "Agreement(key='Agreement:acquisition of zt systems')",
+        "property": "name",
+        "kept": "acquisition of ZT Systems",
+        "other": "Acquisition of ZT Systems",
+        "kept_chunk": "0000002488-25-000166:0075",
+        "other_chunk": "0000002488-25-000166:0030"
+      }
+    ]
+  },
+  "failed_chunks": [],
+  "violations": [],
+  "calls": {
+    "made": 85,
+    "from_cache": 0
+  },
+  "tokens": {
+    "input": 94557,
+    "cache_read": 662575,
+    "cache_write": 0,
+    "output": 264898
+  },
+  "cost_usd": 0.14853044999999995,
+  "cost_this_run_usd": 0.14853044999999995,
+  "estimate": {
+    "calls": 85,
+    "usd": 0.14187267000000003
+  },
+  "price_table": {
+    "date": "2026-10-10",
+    "unit": "USD per million tokens",
+    "models": {
+      "claude-haiku-5-5": {
+        "input_per_mtok": 0.1,
+        "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "output_per_mtok": 0.5,
+        "cache_write_per_mtok": 0.125,
+        "cache_read_per_mtok": 0.01
+      }
+    }
+  },
+  "candidates_file": "/Users/rohanvasudev/Downloads/GitHub/fillingintel/.claude/worktrees/extraction-runs-review-3-ee7782/data/extract/0000002488-25-000166-run1.jsonl"
+}

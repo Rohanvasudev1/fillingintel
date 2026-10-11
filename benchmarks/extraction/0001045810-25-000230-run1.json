@@ -1,0 +1,177 @@
+{
+  "accession_no": "0001045810-25-000230",
+  "run": 1,
+  "status": "complete",
+  "commit": "9ca8d7f+dirty",
+  "created_at": "2026-10-11T16:10:23+00:00",
+  "prompt": {
+    "version": "v2",
+    "path": "prompts/extract/v2.md",
+    "sha256": "34a82e2b107b550f9d2689fa43d20afb246bab0d4baeb15cf32170ce36c67d77",
+    "file_sha256": "df67f16a26dfa2ac60a7cb8eb0f5e82fad1c3dd1fc607b2214e233fb8383e601",
+    "prompt_version": "extract/v2@34a82e2b"
+  },
+  "model": "claude-haiku-5-5",
+  "effort": "high",
+  "max_tokens": 16000,
+  "ontology_version": 3,
+  "workers": 4,
+  "chunk_count": 69,
+  "candidates": 818,
+  "nodes": 253,
+  "edges": 392,
+  "rejections": {
+    "total": 1,
+    "rate": 0.0012224938875305623,
+    "by_reason": {
+      "span_not_found": 1
+    },
+    "examples": {
+      "span_not_found": [
+        {
+          "chunk_id": "0001045810-25-000230:0011",
+          "kind": "triple",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "start": "FILER",
+            "type": "SUBJECT_TO",
+            "end": "n1",
+            "role": null,
+            "stake": null,
+            "evidence_span": "prepared in accordance with accounting principles generally accepted in the United States of America, or U\\.S\\. GAAP for interim financial information and with the instructions to Form 10\\-Q and Article 10 of Securities and Exchange Commission, or SEC, Regulation S\\-X",
+            "confidence": "implied"
+          }
+        }
+      ]
+    }
+  },
+  "flags": {
+    "name_not_in_span": 135,
+    "uncertain": 9
+  },
+  "conflicts": {
+    "total": 11,
+    "items": [
+      {
+        "item": "MetricValue(key='0001045810-25-000230:1045810:revenue:FY2026-Q3')",
+        "property": "value",
+        "kept": 57.0,
+        "other": 57006.0,
+        "kept_chunk": "0001045810-25-000230:0037",
+        "other_chunk": "0001045810-25-000230:0003"
+      },
+      {
+        "item": "MetricValue(key='0001045810-25-000230:1045810:revenue:FY2026-Q3')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0001045810-25-000230:0037",
+        "other_chunk": "0001045810-25-000230:0003"
+      },
+      {
+        "item": "MetricValue(key='0001045810-25-000230:1045810:net income:FY2026-Q3')",
+        "property": "value",
+        "kept": 77107.0,
+        "other": 31910.0,
+        "kept_chunk": "0001045810-25-000230:0010",
+        "other_chunk": "0001045810-25-000230:0003"
+      },
+      {
+        "item": "MetricValue(key='0001045810-25-000230:1045810:net income:FY2026-Q3')",
+        "property": "value",
+        "kept": 31910.0,
+        "other": 77107.0,
+        "kept_chunk": "0001045810-25-000230:0013",
+        "other_chunk": "0001045810-25-000230:0010"
+      },
+      {
+        "item": "MetricValue(key='0001045810-25-000230:1045810:net income:FY2025-Q3')",
+        "property": "value",
+        "kept": 50789.0,
+        "other": 19309.0,
+        "kept_chunk": "0001045810-25-000230:0010",
+        "other_chunk": "0001045810-25-000230:0003"
+      },
+      {
+        "item": "MetricValue(key='0001045810-25-000230:1045810:net income:FY2025-Q3')",
+        "property": "value",
+        "kept": 19309.0,
+        "other": 50789.0,
+        "kept_chunk": "0001045810-25-000230:0013",
+        "other_chunk": "0001045810-25-000230:0010"
+      },
+      {
+        "item": "MetricValue(key=\"0001045810-25-000230:1045810:total shareholders' equity:FY2026-Q3\")",
+        "property": "concept",
+        "kept": "Total Shareholders' Equity",
+        "other": "Total shareholders' equity",
+        "kept_chunk": "0001045810-25-000230:0006",
+        "other_chunk": "0001045810-25-000230:0005"
+      },
+      {
+        "item": "MetricValue(key=\"0001045810-25-000230:1045810:total shareholders' equity:FY2025\")",
+        "property": "concept",
+        "kept": "Total Shareholders' Equity",
+        "other": "Total shareholders' equity",
+        "kept_chunk": "0001045810-25-000230:0008",
+        "other_chunk": "0001045810-25-000230:0005"
+      },
+      {
+        "item": "Agreement(key='Agreement:letter of intent with openai')",
+        "property": "name",
+        "kept": "Letter of intent with OpenAI",
+        "other": "letter of intent with OpenAI",
+        "kept_chunk": "0001045810-25-000230:0023",
+        "other_chunk": "0001045810-25-000230:0046"
+      },
+      {
+        "item": "Agreement(key='Agreement:letter of intent with openai')",
+        "property": "name",
+        "kept": "Letter of intent with OpenAI",
+        "other": "letter of intent with OpenAI",
+        "kept_chunk": "0001045810-25-000230:0023",
+        "other_chunk": "0001045810-25-000230:0055"
+      },
+      {
+        "item": "Regulation(key='Regulation:export controls')",
+        "property": "name",
+        "kept": "export controls",
+        "other": "Export controls",
+        "kept_chunk": "0001045810-25-000230:0064",
+        "other_chunk": "0001045810-25-000230:0059"
+      }
+    ]
+  },
+  "failed_chunks": [],
+  "violations": [],
+  "calls": {
+    "made": 69,
+    "from_cache": 0
+  },
+  "tokens": {
+    "input": 71395,
+    "cache_read": 537855,
+    "cache_write": 0,
+    "output": 235702
+  },
+  "cost_usd": 0.13036904999999996,
+  "cost_this_run_usd": 0.13036904999999996,
+  "estimate": {
+    "calls": 69,
+    "usd": 0.11522955
+  },
+  "price_table": {
+    "date": "2026-10-10",
+    "unit": "USD per million tokens",
+    "models": {
+      "claude-haiku-5-5": {
+        "input_per_mtok": 0.1,
+        "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "output_per_mtok": 0.5,
+        "cache_write_per_mtok": 0.125,
+        "cache_read_per_mtok": 0.01
+      }
+    }
+  },
+  "candidates_file": "/Users/rohanvasudev/Downloads/GitHub/fillingintel/.claude/worktrees/extraction-runs-review-3-ee7782/data/extract/0001045810-25-000230-run1.jsonl"
+}
