@@ -1,0 +1,63 @@
+{
+  "recorded": "real API response, recorded by scripts/capture_resolve_responses.py",
+  "prompt_version": "resolve/v1@6cf68829",
+  "node_a": {
+    "key": "Regulation:gdpr",
+    "label": "Regulation",
+    "name": "GDPR",
+    "evidence": [
+      {
+        "chunk_id": "0001045810-26-000021:0050",
+        "span": "the GDPR governs the transfer of personal data to countries outside of the EEA"
+      }
+    ],
+    "metric": null
+  },
+  "node_b": {
+    "key": "Regulation:u.k. gdpr",
+    "label": "Regulation",
+    "name": "U.K. GDPR",
+    "evidence": [
+      {
+        "chunk_id": "0001045810-26-000021:0049",
+        "span": "the United Kingdom similarly adopted the U\\.K\\. GDPR"
+      }
+    ],
+    "metric": null
+  },
+  "api_ms": 2067.856416999348,
+  "response": {
+    "id": "msg_011CfuJfE2S7RPT61NvapVq3",
+    "container": null,
+    "content": [
+      {
+        "citations": null,
+        "text": "{\"answer\":\"related\",\"related_kind\":\"variant\",\"quote_a\":\"the GDPR governs the transfer of personal data to countries outside of the EEA\",\"chunk_id_a\":\"0001045810-26-000021:0050\",\"quote_b\":\"the United Kingdom similarly adopted the U\\\\.K\\\\. GDPR\",\"chunk_id_b\":\"0001045810-26-000021:0049\",\"reason\":\"The passages present the EU's GDPR and the U.K. GDPR as separate laws adopted by different jurisdictions (EEA vs. United Kingdom), so the U.K. GDPR is a regional variant of the GDPR, not the same regulation.\"}",
+        "type": "text"
+      }
+    ],
+    "diagnostics": null,
+    "model": "claude-sonnet-5-5",
+    "role": "assistant",
+    "stop_details": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 1505,
+      "inference_geo": "global",
+      "input_tokens": 2476,
+      "output_tokens": 215,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": null,
+      "service_tier": "standard"
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "recorded": "real API response, recorded by scripts/capture_resolve_responses.py",
+  "prompt_version": "resolve/v1@6cf68829",
+  "node_a": {
+    "key": "0001045810-26-000021:1045810:revenue:FY2026",
+    "label": "MetricValue",
+    "name": "Revenue",
+    "evidence": [
+      {
+        "chunk_id": "0001045810-26-000021:0063",
+        "span": "| Revenue | $ | 215,938 |  | $ | 130,497 |  | Up 65% |"
+      },
+      {
+        "chunk_id": "0001045810-26-000021:0088",
+        "span": "| Revenue | $ | 215,938 | $ | 130,497 | $ | 60,922 |"
+      },
+      {
+        "chunk_id": "0001045810-26-000021:0123",
+        "span": "| Revenue | $ | 193,479 | $ | 22,459 | $ | 215,938 |"
+      }
+    ],
+    "metric": {
+      "accession_no": "0001045810-26-000021",
+      "subject_key": "1045810",
+      "period": "FY2026",
+      "value": 215938.0,
+      "unit": "USD millions"
+    }
+  },
+  "node_b": {
+    "key": "0001045810-26-000021:1045810:total revenue:FY2026",
+    "label": "MetricValue",
+    "name": "Total revenue",
+    "evidence": [
+      {
+        "chunk_id": "0001045810-26-000021:0124",
+        "span": "| Total revenue | $ | 215,938 | $ | 130,497 | $ | 60,922 |"
+      }
+    ],
+    "metric": {
+      "accession_no": "0001045810-26-000021",
+      "subject_key": "1045810",
+      "period": "FY2026",
+      "value": 215938.0,
+      "unit": "USD millions"
+    }
+  },
+  "api_ms": 2305.416082999727,
+  "response": {
+    "id": "msg_011CfuJg5voZtoYQvNNbYRV2",
+    "container": null,
+    "content": [
+      {
+        "citations": null,
+        "text": "{\"answer\":\"same\",\"related_kind\":null,\"quote_a\":\"| Revenue | $ | 215,938 | $ | 130,497 | $ | 60,922 |\",\"chunk_id_a\":\"0001045810-26-000021:0088\",\"quote_b\":\"| Total revenue | $ | 215,938 | $ | 130,497 | $ | 60,922 |\",\"chunk_id_b\":\"0001045810-26-000021:0124\",\"reason\":\"Both rows report the same figure, 215,938 million for fiscal 2026, with the same prior-year values (130,497 and 60,922). The consolidated income statement labels it \\\"Revenue\\\" and the geographic table labels it \\\"Total revenue\\\", so this is one number under two names.\"}",
+        "type": "text"
+      }
+    ],
+    "diagnostics": null,
+    "model": "claude-sonnet-5-5",
+    "role": "assistant",
+    "stop_details": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 1505,
+      "inference_geo": "global",
+      "input_tokens": 5013,
+      "output_tokens": 238,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": null,
+      "service_tier": "standard"
+    }
+  }
+}

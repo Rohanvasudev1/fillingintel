@@ -1458,6 +1458,65 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 1. Merge this PR once CI is green.
 2. Ticket 02 (deterministic resolution) if it is not already done, then ticket 03. Ticket 05's runs start with NVDA FY2026 under v2: `env -u ANTHROPIC_BASE_URL uv run --env-file .env python -m extract.run --accession 0001045810-26-000021`.
 
+## 2026-10-10 — Step 9 ticket 04: labeller, sampling and scoring
+
+- **Strata and draws** (`resolve/sample.py`). Each scored pair falls in one stratum under a config. A pair is a candidate when some rule fired. It is near when no rule fired but its `token_set_ratio` is within 10 points below the fuzzy cutoff, or its embedding rank is top_k+1 to 2×top_k. Every other pair is rest. Both sets draw 60 / 25 / 15 pairs from these strata, each with its own seed. The ticket asked for a tuning draw "from all pairs"; the user chose a stratified one, because 100 uniform pairs out of run 1's 2,160 would hold about 16 candidates and two or three true matches. The scoring draw leaves out the tuning pairs, and its population sizes are counted after that exclusion.
+- **`score()`** (`resolve/scoring.py`). Each label is weighted by its stratum's population over the number labelled in that stratum. A pair is predicted same when its keys share a canonical key in the alias map, so a merge made through a chain counts. The report gives precision, recall and the rules' share of true matches. Each has a 95% percentile bootstrap that resamples within each stratum. It uses eval.bootstrap's percentile, seeding and resample count, but not `bootstrap_interval()`, which resamples a single list. The adjudicator's accuracy is plain agreement on the labelled pairs it answered; any answer other than `same` counts as not same. Raw counts are given per stratum. Tests are against hand-computed values: three strata, a chain, an empty stratum, a two-pair interval of [0, 1], and the rules' share. They were written first and failed on the missing modules.
+- **Labeller** (`resolve/labeller.py`, `prompts/label/v1.md`, file SHA-256 `9d659103…`). gpt-6-luna at effort `high`, cap 16,000 output tokens. Requests go through the judge's `OpenAIJudgeRequest` and the response cache unchanged. A request carries each node's name, the label, up to 10 spans and the text of its first 3 chunks; for a MetricValue it also carries the subject, period, value and unit. A test checks that the request is the same whatever stratum the pair is in, and that no resolver field name appears in it. Quotes are checked with `extract.spans.find_span` against the node's own shown chunks. A label whose quote fails is kept, flagged `quotes_verified: false` and counted.
+- **Commands.**
+  - `python -m resolve.label --set tuning|scoring` checks `OPENAI_API_KEY` and `DATABASE_URL`, refuses `OPENAI_BASE_URL`, and reads name embeddings from the cache only. It writes the draw once; a later run must draw the same pairs, or it exits 4. It prints an estimate (default cap $5) and labels 4 pairs at a time. Each label is appended as it arrives, and a pair is never labelled twice. The run report goes to `{set}-label-run{N}.json`.
+  - The scoring draw exits 4 unless `frozen.json` matches the current config hash, the label prompt and the latest run report's adjudicator prompt, and that run's config hash is the current one. `resolve/labels.py` has `write_frozen()` for ticket 06.
+  - `python -m resolve.score` (offline) checks that the alias map is the replay of the merge log. It writes `{set}-score{N}.json` with a header naming the commit, labeller and adjudicator models and efforts, prompt versions and hashes, config hashes, ontology version, file hashes and "agent-labelled (gpt-6-luna)".
+  - For the scoring set, `resolve.score` exits 4 when the run's config differs from the draw's, or when a stratum has no labels. For the tuning set it only warns.
+  - Exit codes 0 / 2 / 3 / 4 as elsewhere.
+- **Run report.** `labels_and_scoring` now holds the drawn and labelled counts per set. A malformed label file stops `resolve.run` with exit 2 before it writes anything.
+- **Recorded replies** (four gpt-6-luna calls, with the user's permission, output 248 to 598 tokens each): Groq / Groq, Inc. same; GDPR / U.K. GDPR not same; Blackwell / GB200 not same; Revenue / Total revenue FY2026 same. Every quote was verified. They are replayed offline from `tests/fixtures/label/responses/`.
+- **Contract with ticket 03.** `resolve.score` reads `adjudication.decisions` (`key_a`, `key_b`, `answer`), plus `model`, `effort` and `prompt_version`, from the run report. Ticket 03's in-progress report writes those keys. Decisions match labels in either key order.
+- **Code review** (`mattpocock-skills:code-review`). Fixed:
+  - exceptions that escaped as tracebacks (the label report read, a draw that does not match the nodes, an empty bootstrap, an `iterdir` error in `resolve.score`, the capture script's prompt error);
+  - `resolve.score` now refuses a run under another config and an unlabelled stratum;
+  - decision keys are matched in either order;
+  - the score header carries the label prompt's hashes;
+  - the note, provider and model are taken from constants;
+  - the shared numbering and write-once helpers are reused, and the label report was split out of `label.py`;
+  - a non-trivial interval test was added.
+
+  Left open: the prompt's examples are the four recorded pairs. Groq and Blackwell / GB200 come from CONTEXT.md's same-entity rule; the GDPR and Revenue examples were added for this prompt. If one of these pairs is drawn, the labeller has seen its answer (see Next).
+- **Evidence.** `uv run ruff check .` is clean. Full suite against the local Postgres and Neo4j test service: 1534 passed, 15 skipped. CI result is on the PR.
+
+**Next session starts with**
+1. Merge this PR once CI is green.
+2. The user decides whether `label/v1` keeps the corpus examples (GDPR / U.K. GDPR and Revenue / Total revenue) or swaps them for examples outside the corpus. Swapping means a new prompt file and four new recorded replies.
+3. Ticket 03 (adjudicator) lands, then ticket 05's extraction runs, then ticket 06: `uv run --env-file .env python -m resolve.label --set tuning`, tune, write `frozen.json`, label the scoring set and run `python -m resolve.score`.
+
+---
+
+## 2026-10-10 — Step 9 ticket 03: adjudicator and groups
+
+- **Adjudicator** (`resolve/adjudicate.py`, `resolve/request.py`, `resolve/output_schema.py`). claude-sonnet-5-5 at effort `high`, `max_tokens` 8,000, structured output, no sampling settings, through the Anthropic client and response cache. The pins (provider, model, effort, output cap, the 2026-10-09 price table) are constants in `resolve/request.py`, and every report records them. The request carries both names, the label, evidence spans and the text `resolve()` returns for each node's first 3 evidence chunks. A chunk both nodes cite is sent once. Quotes are checked with `extract.spans.find_span` against the chunks sent for the node they quote. Not merged, counted by reason: `quote_not_found`, `quote_from_other_node`, `unsure`, `distinct`, `related:{kind}`, `invalid_reply` (a related answer without a kind, a kind on another answer, broken JSON, a cut-off reply) and `call_failed`.
+- **Prompt `resolve/v1`** (`prompts/resolve/v1.md`, file SHA-256 `403e2d11…`, version `resolve/v1@6cf68829`, which also covers the user template and schema). It states CONTEXT.md's same-entity rule.
+- **Groups** (`resolve.groups.group_decisions`). Union-find runs over the decisions that merge, joined with the deterministic groups they touch. A group is held back when it holds any `related` or `distinct` pair, or has more than 5 keys (Company keys included). Held-back groups go into the report with every decision among their keys. Each clean group becomes one `llm` merge event that names its decision IDs, the quotes and the prompt version. Decision IDs hash the pair, prompt version, model and effort, so a rerun appends nothing.
+- **`python -m resolve.run`** now needs `ANTHROPIC_API_KEY` and `DATABASE_URL`, and refuses `ANTHROPIC_BASE_URL`. It runs the deterministic pass, reads the pending pairs' chunks from Postgres, prints an estimate for the uncached calls, and stops over `--max-cost` (default $10) with exit 3. It then adjudicates 4 at a time under a Phoenix CHAIN span, with one LLM span per call. The report's `adjudication` section has settings, prompt, estimate, answers, reasons, tokens, cost this run, cost replayed, held-back groups, related pairs and every decision. If any call failed, nothing is appended to the log, the report says `incomplete`, and the command exits 3; a rerun tries again.
+- **Recorded replies** (ten calls with the user's go-ahead, $0.10 against a $0.26 estimate, `scripts/capture_resolve_responses.py`). The first try was refused by the API (HTTP 400, no charge): an enum with `null` inside a `["string", "null"]` type is invalid, so `related_kind` is now `anyOf`. Seven pairs came back `same` with verified quotes: two Groq agreement pairs, Huawei, GDPR / General Data Protection Regulation, OBBBA, Teter, Revenue / Total revenue. GDPR / U.K. GDPR came back `related` (variant); Blackwell / GB200 and GeForce / GeForce NOW came back `related` (family member). Output was 193 to 295 tokens, with no thinking blocks.
+- **Tests first.** The group and reply-check tests failed (`NotImplementedError`, then a missing module) before the code existed.
+- **Code review** (`mattpocock-skills:code-review`). Fixed:
+  - a failed call now exits 3, not 4;
+  - the 5-name rule counts every key, as the ticket says;
+  - two `except` branches with the same body were merged;
+  - `Method.LLM` replaced a string.
+
+  Left as they are, with reasons:
+  - `_in_order`, the traced-model wrapper and the run scaffolding repeat their `extract/` counterparts, since the ticket limits this change to `resolve/` and a shared helper would edit extract modules;
+  - `resolve.run` runs `resolve_nodes()` twice (once to find the pending pairs for the estimate), which costs one more scoring pass and no API calls;
+  - the adjudicator pins are not in `ResolveConfig`, so `config_hash` does not move with the model, but each decision ID and merge event records the prompt version, and decision IDs hash the model and effort.
+- **Decision needed.** Both reviewers flagged that the prompt's worked examples (Blackwell / GB200, GDPR / U.K. GDPR, GeForce NOW, Mr. Teter, Revenue / Total revenue) are run 1 pairs. The recorded replies may echo the prompt, and adjudicator accuracy would be inflated if those pairs reach ticket 04's scoring set. Recommendation: ticket 06 swaps them for invented examples while tuning the prompt, and ticket 04 leaves the run 1 example pairs out of the scoring draw.
+- **Also flagged.** Only the first 3 evidence chunks per node are sent and checked (`MAX_CHUNKS_PER_NODE`), to bound cost. This departs from the ticket's "each node's evidence spans". Ticket 06 can measure whether it costs recall.
+- **Evidence.** `uv run ruff check .` is clean. Full suite against the local Postgres and the Neo4j test service: 1522 passed, 15 skipped after the review fixes. CI result is on the PR.
+
+**Next session starts with**
+1. Merge this PR once CI is green, and decide on the prompt-examples question above.
+2. Ticket 05's extraction runs, then ticket 04 (labeller and sampling) and ticket 06. A real `resolve.run` over all 24 filings waits for those runs. With run 1 alone and `top_k` 3 it would send about 340 pairs (the estimate prints first).
+
 ## 2026-10-11 — Step 9 ticket 05: extraction runs and review round 3
 
 - **Model and budget (user decisions, 2026-10-10).** Sonnet 5.5's estimate for the 24 filings was $54.41, about $33 expected, and the user capped the ticket at $5. PR #27 moved the extractor to `claude-haiku-5-5` at effort `high`, added price table 2026-10-10, set `TOTAL_CAP_USD` to $5 and the `--max-cost` default to $1. A smoke check on NVDA chunk 0012 hit `max_tokens` at 8,000 (7,699 of them thinking tokens) and finished at 13,737 with 16,000, so `max_tokens` is now 16,000 and the estimate assumes 3,000 output tokens per call. Haiku wrote 1.1 to 2.2 times Sonnet's output on the two chunks tried.
@@ -1489,7 +1548,7 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 
 **Next session starts with**
 1. Merge the ticket 05 PR.
-2. Ticket 06 (tune, freeze, score) once tickets 03 and 04 are in. Resolution runs over the 24 run files in `data/extract/` (the latest run per filing).
+2. Ticket 06 (tune, freeze, score); tickets 03 and 04 are merged. Resolution runs over the 24 run files in `data/extract/` (the latest run per filing).
 3. Decide whether Intel chunk `0000050863-24-000076:0017` is extracted again, which needs streaming for a cap above 16,000, or left as the one failed chunk.
 
 ---

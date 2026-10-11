@@ -1,0 +1,75 @@
+{
+  "recorded": "real API response, recorded by scripts/capture_resolve_responses.py",
+  "prompt_version": "resolve/v1@6cf68829",
+  "node_a": {
+    "key": "Product:geforce",
+    "label": "Product",
+    "name": "GeForce",
+    "evidence": [
+      {
+        "chunk_id": "0001045810-26-000021:0006",
+        "span": "The Graphics segment includes GeForce GPUs for gaming and PCs, and Quadro/NVIDIA RTX GPUs for enterprise workstation graphics\\."
+      },
+      {
+        "chunk_id": "0001045810-26-000021:0010",
+        "span": "deliver an optimized experience on our GeForce and NVIDIA RTX platforms"
+      }
+    ],
+    "metric": null
+  },
+  "node_b": {
+    "key": "Product:geforce now",
+    "label": "Product",
+    "name": "GeForce NOW",
+    "evidence": [
+      {
+        "chunk_id": "0001045810-26-000021:0008",
+        "span": "GeForce NOW cloud gaming service"
+      },
+      {
+        "chunk_id": "0001045810-26-000021:0022",
+        "span": "the availability of third\\-party content on our platforms, such as GeForce NOW"
+      },
+      {
+        "chunk_id": "0001045810-26-000021:0023",
+        "span": "such as GeForce NOW"
+      }
+    ],
+    "metric": null
+  },
+  "api_ms": 2315.83049999972,
+  "response": {
+    "id": "msg_011CfuJfv1zypPbzCRumpLcX",
+    "container": null,
+    "content": [
+      {
+        "citations": null,
+        "text": "{\"answer\":\"related\",\"related_kind\":\"family_member\",\"quote_a\":\"The Graphics segment includes GeForce GPUs for gaming and PCs\",\"chunk_id_a\":\"0001045810-26-000021:0006\",\"quote_b\":\"GeForce NOW cloud gaming service\",\"chunk_id_b\":\"0001045810-26-000021:0008\",\"reason\":\"GeForce is the GPU brand family for gaming PCs, while GeForce NOW is a distinct cloud gaming service listed alongside GeForce RTX GPUs as one of its products, so it is a member of the family rather than the same entity.\"}",
+        "type": "text"
+      }
+    ],
+    "diagnostics": null,
+    "model": "claude-sonnet-5-5",
+    "role": "assistant",
+    "stop_details": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 1505,
+      "inference_geo": "global",
+      "input_tokens": 6343,
+      "output_tokens": 200,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": null,
+      "service_tier": "standard"
+    }
+  }
+}

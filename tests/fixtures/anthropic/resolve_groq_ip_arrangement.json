@@ -1,0 +1,63 @@
+{
+  "recorded": "real API response, recorded by scripts/capture_resolve_responses.py",
+  "prompt_version": "resolve/v1@6cf68829",
+  "node_a": {
+    "key": "Agreement:intellectual property license arrangement with groq",
+    "label": "Agreement",
+    "name": "intellectual property license arrangement with Groq",
+    "evidence": [
+      {
+        "chunk_id": "0001045810-26-000021:0020",
+        "span": "We have entered into an intellectual property license arrangement with Groq"
+      }
+    ],
+    "metric": null
+  },
+  "node_b": {
+    "key": "Agreement:license agreement with groq",
+    "label": "Agreement",
+    "name": "license agreement with Groq",
+    "evidence": [
+      {
+        "chunk_id": "0001045810-26-000021:0070",
+        "span": "license agreement with Groq"
+      }
+    ],
+    "metric": null
+  },
+  "api_ms": 2899.67095800057,
+  "response": {
+    "id": "msg_011CfuJei8rBY7zeqH5xjRKK",
+    "container": null,
+    "content": [
+      {
+        "citations": null,
+        "text": "{\"answer\":\"same\",\"related_kind\":null,\"quote_a\":\"We have entered into an intellectual property license arrangement with Groq, Inc\\\\., or Groq, that required significant, nonrefundable payments\",\"chunk_id_a\":\"0001045810-26-000021:0020\",\"quote_b\":\"the execution of a non\\\\-exclusive license agreement with Groq\",\"chunk_id_b\":\"0001045810-26-000021:0070\",\"reason\":\"Both passages are NVIDIA's filing describing its license with Groq in the same fiscal year, one as an IP license arrangement with a nonrefundable payment and the other as an executed license agreement driving investing cash use. They plausibly name one agreement, but the passages do not explicitly tie them together.\"}",
+        "type": "text"
+      }
+    ],
+    "diagnostics": null,
+    "model": "claude-sonnet-5-5",
+    "role": "assistant",
+    "stop_details": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 1505,
+      "inference_geo": "global",
+      "input_tokens": 2622,
+      "output_tokens": 243,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": null,
+      "service_tier": "standard"
+    }
+  }
+}

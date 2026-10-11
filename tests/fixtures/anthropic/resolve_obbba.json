@@ -1,0 +1,63 @@
+{
+  "recorded": "real API response, recorded by scripts/capture_resolve_responses.py",
+  "prompt_version": "resolve/v1@6cf68829",
+  "node_a": {
+    "key": "Regulation:obbba",
+    "label": "Regulation",
+    "name": "OBBBA",
+    "evidence": [
+      {
+        "chunk_id": "0001045810-26-000021:0119",
+        "span": "the OBBBA was enacted into law"
+      }
+    ],
+    "metric": null
+  },
+  "node_b": {
+    "key": "Regulation:one big beautiful bill act",
+    "label": "Regulation",
+    "name": "One Big Beautiful Bill Act",
+    "evidence": [
+      {
+        "chunk_id": "0001045810-26-000021:0069",
+        "span": "the One Big Beautiful Bill Act"
+      }
+    ],
+    "metric": null
+  },
+  "api_ms": 2063.5055000002467,
+  "response": {
+    "id": "msg_011CfuJfNrmJ4VknkjwBnMxY",
+    "container": null,
+    "content": [
+      {
+        "citations": null,
+        "text": "{\"answer\":\"same\",\"related_kind\":null,\"quote_a\":\"In July 2025, the OBBBA was enacted into law and contains several changes to key U.S. federal income tax laws.\",\"chunk_id_a\":\"0001045810-26-000021:0119\",\"quote_b\":\"In July 2025, the One Big Beautiful Bill Act (OBBBA) was enacted into law\",\"chunk_id_b\":\"0001045810-26-000021:0069\",\"reason\":\"Passage 0069 defines OBBBA as the One Big Beautiful Bill Act, and both passages describe the same July 2025 enactment with the same tax-law changes, so the two names refer to one law.\"}",
+        "type": "text"
+      }
+    ],
+    "diagnostics": null,
+    "model": "claude-sonnet-5-5",
+    "role": "assistant",
+    "stop_details": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 1505,
+      "inference_geo": "global",
+      "input_tokens": 2395,
+      "output_tokens": 218,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": null,
+      "service_tier": "standard"
+    }
+  }
+}
