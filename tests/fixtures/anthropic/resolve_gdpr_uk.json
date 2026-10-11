@@ -1,6 +1,6 @@
 {
   "recorded": "real API response, recorded by scripts/capture_resolve_responses.py",
-  "prompt_version": "resolve/v1@6cf68829",
+  "prompt_version": "resolve/v2@5b5e4a7d",
   "node_a": {
     "key": "Regulation:gdpr",
     "label": "Regulation",
@@ -25,19 +25,24 @@
     ],
     "metric": null
   },
-  "api_ms": 2067.856416999348,
+  "api_ms": 3496.734375003143,
   "response": {
-    "id": "msg_011CfuJfE2S7RPT61NvapVq3",
+    "id": "msg_011CfvnN66FGi81sZP1odAqS",
     "container": null,
     "content": [
       {
+        "signature": "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",
+        "thinking": "",
+        "type": "thinking"
+      },
+      {
         "citations": null,
-        "text": "{\"answer\":\"related\",\"related_kind\":\"variant\",\"quote_a\":\"the GDPR governs the transfer of personal data to countries outside of the EEA\",\"chunk_id_a\":\"0001045810-26-000021:0050\",\"quote_b\":\"the United Kingdom similarly adopted the U\\\\.K\\\\. GDPR\",\"chunk_id_b\":\"0001045810-26-000021:0049\",\"reason\":\"The passages present the EU's GDPR and the U.K. GDPR as separate laws adopted by different jurisdictions (EEA vs. United Kingdom), so the U.K. GDPR is a regional variant of the GDPR, not the same regulation.\"}",
+        "text": "{\"answer\":\"related\",\"related_kind\":\"variant\",\"quote_a\":\"the GDPR governs the transfer of personal data to countries outside of the EEA\",\"chunk_id_a\":\"0001045810-26-000021:0050\",\"quote_b\":\"the United Kingdom similarly adopted the U\\\\.K\\\\. GDPR\",\"chunk_id_b\":\"0001045810-26-000021:0049\",\"reason\":\"The filing presents the U.K. GDPR as a separate regime that the United Kingdom 'similarly adopted' alongside the EU GDPR, governing the EEA and UK respectively, so it is a regional version of GDPR rather than the same law.\"}",
         "type": "text"
       }
     ],
     "diagnostics": null,
-    "model": "claude-sonnet-5-5",
+    "model": "claude-haiku-5-5",
     "role": "assistant",
     "stop_details": null,
     "stop_reason": "end_turn",
@@ -49,12 +54,12 @@
         "ephemeral_5m_input_tokens": 0
       },
       "cache_creation_input_tokens": 0,
-      "cache_read_input_tokens": 1505,
+      "cache_read_input_tokens": 1514,
       "inference_geo": "global",
       "input_tokens": 2476,
-      "output_tokens": 215,
+      "output_tokens": 676,
       "output_tokens_details": {
-        "thinking_tokens": 0
+        "thinking_tokens": 463
       },
       "server_tool_use": null,
       "service_tier": "standard"

@@ -6,6 +6,9 @@ share one key across filings, so a key seen in several files is one node whose
 evidence is the union of theirs, its name the first file's. A MetricValue also
 needs its subject, which only its `MEASURES` edge holds: the filer's CIK, or
 the key of the Segment, MarketPlatform or Product it measures, as in its key.
+A MetricValue whose MEASURES edge extraction dropped has no subject, so it can
+never pair; it is skipped and its key listed on its file (user decision,
+2026-10-11).
 """
 from __future__ import annotations
 
@@ -82,6 +85,7 @@ class InputFile:
 
     name: str
     sha256: str
+    skipped_metrics: tuple[str, ...] = ()  # MetricValue keys with no MEASURES edge
 
 
 def load_nodes(paths: Sequence[Path]) -> tuple[tuple[ResolveNode, ...], tuple[InputFile, ...]]:
@@ -93,9 +97,10 @@ def load_nodes(paths: Sequence[Path]) -> tuple[tuple[ResolveNode, ...], tuple[In
             raw = path.read_bytes()
         except OSError as exc:
             raise InputError(f"cannot read {path.name}: {type(exc).__name__}") from exc
-        files.append(InputFile(path.name, hashlib.sha256(raw).hexdigest()))
-        for found in _file_nodes(path.name, raw.decode("utf-8")):
-            merged[found.key] = _union(merged.get(found.key), found)
+        found, skipped = _file_nodes(path.name, raw.decode("utf-8"))
+        files.append(InputFile(path.name, hashlib.sha256(raw).hexdigest(), skipped))
+        for node in found:
+            merged[node.key] = _union(merged.get(node.key), node)
     return tuple(sorted(merged.values(), key=lambda n: (n.label, n.key))), tuple(files)
 
 
@@ -108,7 +113,8 @@ def _union(kept: ResolveNode | None, new: ResolveNode) -> ResolveNode:
     return ResolveNode(kept.key, kept.label, kept.name, evidence, kept.metric)
 
 
-def _file_nodes(file_name: str, text: str) -> list[ResolveNode]:
+def _file_nodes(file_name: str, text: str) -> tuple[list[ResolveNode], tuple[str, ...]]:
+    """The file's nodes, and the keys of MetricValues skipped for want of a subject."""
     lines: list[tuple[int, Mapping[str, object]]] = []
     for number, raw_line in enumerate(text.splitlines(), start=1):
         try:
@@ -119,15 +125,28 @@ def _file_nodes(file_name: str, text: str) -> list[ResolveNode]:
             raise InputError(f"{file_name} line {number} is not an object")
         lines.append((number, line))
     subjects = _subjects(file_name, lines)
-    nodes = []
+    nodes, skipped = [], []
     for number, line in lines:
         if line.get("kind") != "node":
+            continue
+        orphan = _orphan_metric_key(line, subjects)
+        if orphan is not None:
+            skipped.append(orphan)
             continue
         try:
             nodes.append(_node(line, subjects))
         except (KeyError, TypeError, ValueError) as exc:
             raise InputError(f"{file_name} line {number} is not a node line: {exc}") from exc
-    return nodes
+    return nodes, tuple(skipped)
+
+
+def _orphan_metric_key(line: Mapping[str, object], subjects: Mapping[str, str]) -> str | None:
+    """The key of a MetricValue line with no MEASURES edge, else None."""
+    properties = line.get("properties")
+    if line.get("label") != METRIC_LABEL or not isinstance(properties, Mapping):
+        return None
+    key = properties.get("key")
+    return key if isinstance(key, str) and key not in subjects else None
 
 
 def _subjects(file_name: str, lines: Iterable[tuple[int, Mapping[str, object]]]

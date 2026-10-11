@@ -163,7 +163,8 @@ def build_report(result: Resolution, info: RunInfo) -> dict[str, object]:
             "config_hash": info.config.config_hash, "config": info.config.to_dict(),
             "ontology_version": ONTOLOGY_VERSION, "embedding_model": model,
             "embedding_input_type": info.config.embed_input_type,
-            "inputs": [{"file": f.name, "sha256": f.sha256} for f in info.inputs],
+            "inputs": [{"file": f.name, "sha256": f.sha256,
+                        "skipped_metric_values": list(f.skipped_metrics)} for f in info.inputs],
         },
         "counts": {
             "nodes_by_label": dict(counts.nodes_by_label),

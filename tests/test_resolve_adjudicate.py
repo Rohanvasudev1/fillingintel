@@ -1,4 +1,4 @@
-"""The claude-sonnet-5-5 adjudicator: its request and the checks on its reply (Step 9).
+"""The claude-haiku-5-5 adjudicator: its request and the checks on its reply (Step 9).
 
 Nodes carry real evidence from NVDA run 1 and chunk text from the NVDA FY2026
 10-K fixture. Each hand-written reply breaks one rule, and goes through
@@ -88,7 +88,7 @@ def test_every_decision_records_the_prompt_version_and_usage(texts):
     result, _ = _run(reply(), texts)
     (decision,) = result.decisions
     assert decision.prompt_version == load_prompt().prompt_version
-    assert decision.prompt_version.startswith("resolve/v1@")
+    assert decision.prompt_version.startswith("resolve/v2@")
     assert decision.usage is not None and decision.usage.output_tokens > 0
     assert decision.decision_id.startswith("d-")
 
@@ -172,7 +172,7 @@ def test_the_request_carries_names_label_spans_and_chunk_text(texts):
     _, model = _run(reply(), texts)
     (request,) = model.requests
     params = request.params()
-    assert params["model"] == ADJUDICATOR_MODEL == "claude-sonnet-5-5"
+    assert params["model"] == ADJUDICATOR_MODEL == "claude-haiku-5-5"
     assert params["output_config"]["effort"] == ADJUDICATOR_EFFORT == "high"
     assert params["output_config"]["format"]["type"] == "json_schema"
     assert not {"temperature", "top_p", "top_k", "tools"} & set(params)
@@ -211,6 +211,14 @@ def test_the_same_request_twice_has_one_cache_key(texts):
 def test_a_missing_chunk_text_is_an_error_not_a_decision(texts):
     with pytest.raises(ValueError, match="no text"):
         _run(reply(), {CHUNK_50: texts[CHUNK_50]})
+
+
+def test_the_current_prompt_is_v2_with_invented_examples():
+    # resolve/v1's examples were corpus pairs that could reach the scoring set (ticket 06).
+    prompt = load_prompt()
+    assert prompt.prompt_version.startswith("resolve/v2@")
+    for corpus_name in ("Groq", "GDPR", "Blackwell", "GeForce", "Teter"):
+        assert corpus_name not in prompt.system
 
 
 def test_a_changed_prompt_file_is_refused(tmp_path):

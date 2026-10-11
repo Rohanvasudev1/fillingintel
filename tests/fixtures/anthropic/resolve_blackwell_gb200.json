@@ -1,6 +1,6 @@
 {
   "recorded": "real API response, recorded by scripts/capture_resolve_responses.py",
-  "prompt_version": "resolve/v1@6cf68829",
+  "prompt_version": "resolve/v2@5b5e4a7d",
   "node_a": {
     "key": "Product:blackwell",
     "label": "Product",
@@ -49,19 +49,24 @@
     ],
     "metric": null
   },
-  "api_ms": 2917.5459170000977,
+  "api_ms": 3719.4969999982277,
   "response": {
-    "id": "msg_011CfuJfhb8a5u8nwbKAD5pB",
+    "id": "msg_011CfvnP8QRTQWTPTWXBRJUT",
     "container": null,
     "content": [
       {
+        "signature": "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",
+        "thinking": "",
+        "type": "thinking"
+      },
+      {
         "citations": null,
-        "text": "{\"answer\":\"related\",\"related_kind\":\"family_member\",\"quote_a\":\"Our Blackwell architectures represented the majority of our Data Center revenue\\\\.\",\"chunk_id_a\":\"0001045810-26-000021:0061\",\"quote_b\":\"such as our H200, GB200 and GB300\",\"chunk_id_b\":\"0001045810-26-000021:0014\",\"reason\":\"Blackwell is an architecture/platform family, while GB200 is a specific data center product listed among others. The passages do not use the two names interchangeably, so GB200 is a family member of Blackwell and not the same entity.\"}",
+        "text": "{\"answer\":\"unsure\",\"related_kind\":null,\"quote_a\":\"Introduced with the Blackwell architecture\",\"chunk_id_a\":\"0001045810-26-000021:0004\",\"quote_b\":\"such as our H200, GB200 and GB300\",\"chunk_id_b\":\"0001045810-26-000021:0014\",\"reason\":\"Node A is the Blackwell architecture, while node B is GB200, listed among data center products. The passages never state that GB200 is a Blackwell product or a member of that architecture, so the relationship cannot be determined from them.\"}",
         "type": "text"
       }
     ],
     "diagnostics": null,
-    "model": "claude-sonnet-5-5",
+    "model": "claude-haiku-5-5",
     "role": "assistant",
     "stop_details": null,
     "stop_reason": "end_turn",
@@ -73,12 +78,12 @@
         "ephemeral_5m_input_tokens": 0
       },
       "cache_creation_input_tokens": 0,
-      "cache_read_input_tokens": 1505,
+      "cache_read_input_tokens": 1514,
       "inference_geo": "global",
       "input_tokens": 6970,
-      "output_tokens": 193,
+      "output_tokens": 592,
       "output_tokens_details": {
-        "thinking_tokens": 0
+        "thinking_tokens": 411
       },
       "server_tool_use": null,
       "service_tier": "standard"

@@ -1,6 +1,6 @@
 {
   "recorded": "real API response, recorded by scripts/capture_resolve_responses.py",
-  "prompt_version": "resolve/v1@6cf68829",
+  "prompt_version": "resolve/v2@5b5e4a7d",
   "node_a": {
     "key": "Agreement:license agreement with groq",
     "label": "Agreement",
@@ -25,19 +25,24 @@
     ],
     "metric": null
   },
-  "api_ms": 3997.36912499975,
+  "api_ms": 5969.970791004016,
   "response": {
-    "id": "msg_011CfuJeRTjvP2xpNznTz1uc",
+    "id": "msg_011CfvnLfZL1DQrjhdXefm1Z",
     "container": null,
     "content": [
       {
+        "signature": "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",
+        "thinking": "",
+        "type": "thinking"
+      },
+      {
         "citations": null,
-        "text": "{\"answer\":\"same\",\"related_kind\":null,\"quote_a\":\"the execution of a non\\\\-exclusive license agreement with Groq\",\"chunk_id_a\":\"0001045810-26-000021:0070\",\"quote_b\":\"we entered into a non‑exclusive license agreement with Groq, Inc\\\\., or Groq, for its language processing unit technology\",\"chunk_id_b\":\"0001045810-26-000021:0102\",\"reason\":\"Both passages describe NVIDIA's single non-exclusive license agreement with Groq (Groq, Inc.) in fiscal 2026. Node A is the same agreement, described in the liquidity discussion, and Node B is the agreement as described in Note 2.\"}",
+        "text": "{\"answer\":\"same\",\"related_kind\":null,\"quote_a\":\"license agreement with Groq\",\"chunk_id_a\":\"0001045810-26-000021:0070\",\"quote_b\":\"for its language processing unit technology\",\"chunk_id_b\":\"0001045810-26-000021:0102\",\"reason\":\"Node A's passage refers to the execution of a non-exclusive license agreement with Groq, and Node B's passage describes the same December 2025 Groq license agreement. The shorter name omits only the descriptive qualifier, so both name one agreement.\"}",
         "type": "text"
       }
     ],
     "diagnostics": null,
-    "model": "claude-sonnet-5-5",
+    "model": "claude-haiku-5-5",
     "role": "assistant",
     "stop_details": null,
     "stop_reason": "end_turn",
@@ -46,15 +51,15 @@
     "usage": {
       "cache_creation": {
         "ephemeral_1h_input_tokens": 0,
-        "ephemeral_5m_input_tokens": 1505
+        "ephemeral_5m_input_tokens": 1514
       },
-      "cache_creation_input_tokens": 1505,
+      "cache_creation_input_tokens": 1514,
       "cache_read_input_tokens": 0,
       "inference_geo": "global",
       "input_tokens": 2734,
-      "output_tokens": 228,
+      "output_tokens": 1029,
       "output_tokens_details": {
-        "thinking_tokens": 0
+        "thinking_tokens": 852
       },
       "server_tool_use": null,
       "service_tier": "standard"

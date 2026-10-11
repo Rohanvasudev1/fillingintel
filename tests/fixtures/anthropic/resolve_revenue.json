@@ -1,6 +1,6 @@
 {
   "recorded": "real API response, recorded by scripts/capture_resolve_responses.py",
-  "prompt_version": "resolve/v1@6cf68829",
+  "prompt_version": "resolve/v2@5b5e4a7d",
   "node_a": {
     "key": "0001045810-26-000021:1045810:revenue:FY2026",
     "label": "MetricValue",
@@ -45,19 +45,24 @@
       "unit": "USD millions"
     }
   },
-  "api_ms": 2305.416082999727,
+  "api_ms": 3681.1677500008955,
   "response": {
-    "id": "msg_011CfuJg5voZtoYQvNNbYRV2",
+    "id": "msg_011CfvnPkfF6KLfANAFbFfDE",
     "container": null,
     "content": [
       {
+        "signature": "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",
+        "thinking": "",
+        "type": "thinking"
+      },
+      {
         "citations": null,
-        "text": "{\"answer\":\"same\",\"related_kind\":null,\"quote_a\":\"| Revenue | $ | 215,938 | $ | 130,497 | $ | 60,922 |\",\"chunk_id_a\":\"0001045810-26-000021:0088\",\"quote_b\":\"| Total revenue | $ | 215,938 | $ | 130,497 | $ | 60,922 |\",\"chunk_id_b\":\"0001045810-26-000021:0124\",\"reason\":\"Both rows report the same figure, 215,938 million for fiscal 2026, with the same prior-year values (130,497 and 60,922). The consolidated income statement labels it \\\"Revenue\\\" and the geographic table labels it \\\"Total revenue\\\", so this is one number under two names.\"}",
+        "text": "{\"answer\":\"same\",\"related_kind\":null,\"quote_a\":\"| Revenue | $ | 215,938 | $ | 130,497 | $ | 60,922 |\",\"chunk_id_a\":\"0001045810-26-000021:0088\",\"quote_b\":\"| Total revenue | $ | 215,938 | $ | 130,497 | $ | 60,922 |\",\"chunk_id_b\":\"0001045810-26-000021:0124\",\"reason\":\"Both nodes are the same figure, 215,938 USD millions for the year ended Jan 25, 2026, under one subject, reported as \\\"Revenue\\\" in the income statement and as \\\"Total revenue\\\" in the geographic table. A figure reported under two names for one period is the same entity.\"}",
         "type": "text"
       }
     ],
     "diagnostics": null,
-    "model": "claude-sonnet-5-5",
+    "model": "claude-haiku-5-5",
     "role": "assistant",
     "stop_details": null,
     "stop_reason": "end_turn",
@@ -69,12 +74,12 @@
         "ephemeral_5m_input_tokens": 0
       },
       "cache_creation_input_tokens": 0,
-      "cache_read_input_tokens": 1505,
+      "cache_read_input_tokens": 1514,
       "inference_geo": "global",
       "input_tokens": 5013,
-      "output_tokens": 238,
+      "output_tokens": 676,
       "output_tokens_details": {
-        "thinking_tokens": 0
+        "thinking_tokens": 437
       },
       "server_tool_use": null,
       "service_tier": "standard"
