@@ -1641,7 +1641,7 @@ Spec `.scratch/step-9b/spec.md`, ticket `.scratch/step-9b/issues/01-group-cut-an
   Left as they are: `_Stop` and the exit codes still repeat across the CLIs, as before. Round 1 is rescored as committed only from its own commit, since the scorer uses the current alias map; replaying only run 2's listed merges does not reproduce round 1's map either (one run-1 Groq merge). Two readings went to the user, who kept the code's choices: ties merge the meet, and 6–12-name clean groups are ordinary merges.
 - **Regressions.** None in tests. Run 3's merges add to the alias map; no Step 9 merge is undone.
 - **Costs.** Run 3 $0; `scoring2` labels $0.0575 (estimate $0.23). Step 9 ticket 06 cap: about $3.15 of $5 spent.
-- **Evidence.** `uv run ruff check .` is clean. Full suite with the local databases: 1984 passed, 1 skipped (before the review fixes); resolve tests after them: 285 passed. CI result is on the PR.
+- **Evidence.** `uv run ruff check .` is clean. Full suite with the local databases: 1989 passed, 1 skipped. CI result is on the PR.
 
 **Next session starts with**
 1. Merge this PR once CI is green. Step 9b is closed.
