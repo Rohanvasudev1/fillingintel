@@ -234,9 +234,8 @@ def test_freeze_writes_the_chosen_settings_once(env):
 
 def _step9_row(env):
     """A tuning report from Step 9: the same candidate rules, before the group fields."""
-    candidate_rules = {k: v for k, v in ResolveConfig().to_dict().items()
-                       if k not in ("max_group_names", "group_rule")}
-    _tuning_report(env, rules__config_hash="0" * 64, rules__config=candidate_rules)
+    _tuning_report(env, rules__config_hash="0" * 64,
+                   rules__config=ResolveConfig().candidate_rules())
 
 
 def _tuning_check(env, config_hash=None, not_same=()):
@@ -274,8 +273,7 @@ def test_freeze_for_round_two_needs_a_passing_tuning_check(env, check):
 
 
 def test_freeze_for_round_two_refuses_other_candidate_rules(env):
-    rules = {**ResolveConfig().to_dict(), "fuzzy_cutoff": 90.0}
-    del rules["max_group_names"], rules["group_rule"]
+    rules = {**ResolveConfig().candidate_rules(), "fuzzy_cutoff": 90.0}
     _tuning_report(env, rules__config_hash="0" * 64, rules__config=rules)
     _tuning_check(env)
     assert main(["--freeze", "scoring2"], _deps(env)) == EXIT_CHECK_FAILED

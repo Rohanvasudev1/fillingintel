@@ -91,6 +91,8 @@ class _Search:
         return self.best
 
     def _place(self, i: int, blocks: list[list[int]], size: int) -> None:
+        # Backtracking: *blocks* is private search state, grown and restored in place; only
+        # tuple copies leave the search (in _keep).
         if size > self.best_size:
             return
         if i == self.n:

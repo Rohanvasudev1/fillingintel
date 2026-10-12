@@ -103,7 +103,8 @@ def _held(group: HeldBackGroup) -> dict[str, object]:
 
 def _cut_group(group: CutGroup) -> dict[str, object]:
     return {"keys": list(group.keys),
-            "pieces": [list(p) for p in group.pieces if len(p) > 1],
+            "pieces": [{"keys": list(p), "decisions": [d.decision_id for d in kept]}
+                       for p, kept in zip(group.pieces, group.kept, strict=True) if len(p) > 1],
             "cut": [_decision(d) for d in group.cut], "tied": list(group.tied),
             "smallest_cuts": group.smallest_cuts}
 

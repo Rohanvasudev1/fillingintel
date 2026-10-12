@@ -30,6 +30,7 @@ from resolve.config import FUZZY_OFF, ResolveConfig
 
 SETS = ("tuning", "scoring", "scoring2")
 SEEDS = MappingProxyType({"tuning": 20261010, "scoring": 20261011, "scoring2": 20261013})
+SCORING_SETS = ("scoring", "scoring2")  # scored once, under a freeze file; tuning is not
 # The sets whose pairs a scoring set leaves out; a set not named here leaves out none.
 EXCLUDED_SETS = MappingProxyType({"scoring": ("tuning",), "scoring2": ("tuning", "scoring")})
 NEAR_FUZZY_MARGIN = 10.0

@@ -18,6 +18,7 @@ from tests.resolve_helpers import ScriptedAdjudicator, node
 
 STAMP = Stamp(config_hash="c" * 64, commit="abc1234", timestamp="2026-10-12T12:00:00+00:00")
 EVERY_PAIR = ResolveConfig(fuzzy_cutoff=0.0, top_k=0)
+LIMIT = EVERY_PAIR.max_group_names
 SAME, RELATED, DISTINCT, UNSURE = Answer.SAME, Answer.RELATED, Answer.DISTINCT, Answer.UNSURE
 
 
@@ -193,7 +194,7 @@ def _decision(key_a, key_b, answer, label="Organization"):
 def test_a_contradiction_inside_a_deterministic_merge_stays_held_back():
     decisions = [_decision("Organization:a", "Organization:c", SAME),
                  _decision("Organization:a", "Organization:b", DISTINCT)]
-    grouping = group_decisions(decisions, joined=[("Organization:a", "Organization:b")])
+    grouping = group_decisions(decisions, [("Organization:a", "Organization:b")], LIMIT)
     assert grouping.clean == ()
     (held,) = grouping.held_back
     assert held.reason == "no cut separates the contradiction"
@@ -207,18 +208,18 @@ def test_the_result_does_not_depend_on_the_order_of_the_decisions():
     decisions += [_decision(keys[0], keys[7], DISTINCT, "Product"),
                   _decision(keys[1], keys[6], RELATED, "Product"),
                   _decision(keys[2], keys[5], DISTINCT, "Product")]
-    expected = group_decisions(decisions)
+    expected = group_decisions(decisions, (), LIMIT)
     for seed in range(5):
         shuffled = list(decisions)
         random.Random(seed).shuffle(shuffled)
-        assert group_decisions(shuffled) == expected
+        assert group_decisions(shuffled, (), LIMIT) == expected
 
 
 def test_a_group_whose_units_exceed_the_search_bound_stays_held_back():
     keys = [f"Product:{i:02d}" for i in range(14)]
     decisions = [_decision(x, y, SAME, "Product") for x, y in zip(keys, keys[1:], strict=False)]
     decisions.append(_decision(keys[0], keys[13], DISTINCT, "Product"))
-    grouping = group_decisions(decisions)
+    grouping = group_decisions(decisions, (), LIMIT)
     assert grouping.clean == ()
     (held,) = grouping.held_back
     assert held.reason == ("14 names after deterministic merges, more than the "
@@ -246,7 +247,10 @@ def test_the_report_lists_each_cut_group_and_counts_them():
     assert section["counts"] == {"cut_groups": 2, "pieces_merged": 4, "keys_left_by_ties": 1,
                                  "held_back": 0}
     epyc = next(g for g in section["groups"] if EPYC.key in g["keys"])
-    assert epyc["pieces"] == sorted([sorted(n.key for n in BRAND), sorted(n.key for n in LINE)])
+    assert [p["keys"] for p in epyc["pieces"]] == sorted([sorted(n.key for n in BRAND),
+                                                          sorted(n.key for n in LINE)])
+    line = next(p for p in epyc["pieces"] if SERIES_9005.key in p["keys"])
+    assert len(line["decisions"]) == 3  # the three `same` answers kept inside the line
     assert [(c["key_a"], c["key_b"], c["answer"]) for c in epyc["cut"]] == [
         (*sorted((AMD_EPYC.key, AMD_9005.key)), "same")]
     assert epyc["tied"] == [] and epyc["smallest_cuts"] == 1

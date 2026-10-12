@@ -20,6 +20,10 @@ The adjudicator's answers come from the run report's ``adjudication`` section
 ``answer`` (``same``, ``related``, ``distinct``, ``unsure`` or null when no
 usable reply came back), and ``model``, ``effort`` and ``prompt_version``.
 
+The alias map is the current one, the replay of the whole merge log. A set
+scored before a later run (round 1 before Step 9b's run 3) is rescored as
+committed by checking out the commit of its score report, not here.
+
 Exit codes: 0 scored; 2 bad arguments or a malformed file; 3 could not run
 (no draw, no labels or no run report; a file error); 4 checks failed (the
 alias map is not the replay of the merge log, a label is not for a drawn pair
@@ -49,7 +53,6 @@ from resolve.labeller import (
     load_label_prompt,
 )
 from resolve.labels import (
-    FROZEN_FILES,
     LabelFileError,
     PairLabel,
     draw_path,
@@ -68,7 +71,7 @@ from resolve.paths import (
     run_reports,
 )
 from resolve.report import write_report
-from resolve.sample import SETS, Draw
+from resolve.sample import SCORING_SETS, SETS, Draw
 from resolve.scoring import Decisions, Figure, PairView, ScoreReport, score
 
 EXIT_OK = 0
@@ -121,7 +124,7 @@ def _run(set_name: str, out_dir: Path) -> int:
     result = score([PairView(lb.key_a, lb.key_b, lb.stratum, lb.same) for lb in inputs.labels],
                    inputs.aliases, inputs.drawn.populations,
                    decisions=_decisions(adjudication))
-    if result.unrepresented and set_name in FROZEN_FILES:
+    if result.unrepresented and set_name in SCORING_SETS:
         raise _Stop(EXIT_CHECK_FAILED, "no labels in the stratum "
                     f"{', '.join(s.value for s in result.unrepresented)}; recall would leave "
                     "out the matches the rules missed there")
@@ -183,7 +186,7 @@ def _check_scorable(inputs: _Inputs) -> list[str]:
         return []
     problem = (f"the run report's config {str(run_hash)[:12]} is not the draw's "
                f"{inputs.drawn.config_hash[:12]}, so the strata do not match the scored rules")
-    if inputs.drawn.set_name in FROZEN_FILES:
+    if inputs.drawn.set_name in SCORING_SETS:
         raise _Stop(EXIT_CHECK_FAILED, problem)
     return [problem]
 

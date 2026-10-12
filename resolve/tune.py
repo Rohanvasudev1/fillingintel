@@ -75,6 +75,7 @@ from resolve.labeller import (
 from resolve.labels import (
     CHECK_REPORT_NAME,
     FROZEN_FILES,
+    GROUP_CUT_SETS,
     TUNING_REPORT_NAME,
     Frozen,
     LabelFileError,
@@ -96,6 +97,7 @@ from resolve.request import (
     AdjudicateRequest,
     sent_chunks,
 )
+from resolve.sample import SCORING_SETS
 from resolve.tuning import (
     CHOSEN,
     CONFIGS,
@@ -185,7 +187,7 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser.add_argument("--max-cost", type=cost_cap, default=DEFAULT_MAX_COST_USD,
                         help=f"refuse adjudication estimated above this many USD "
                              f"(default {DEFAULT_MAX_COST_USD:g})")
-    parser.add_argument("--freeze", nargs="?", const="scoring", choices=sorted(FROZEN_FILES),
+    parser.add_argument("--freeze", nargs="?", const=SCORING_SETS[0], choices=SCORING_SETS,
                         help="write the freeze file of a scoring set (default scoring, "
                              "frozen.json; scoring2 writes frozen-2.json) from the chosen "
                              "config and current prompts")
@@ -398,7 +400,7 @@ def _tuned_config_matches(chosen: Mapping[str, object], config: ResolveConfig,
     """The tuning report chose *config*, or, for round 2, the same candidate rules."""
     if chosen.get("config_hash") == config.config_hash:
         return True
-    return set_name != "scoring" and chosen.get("config") == config.candidate_rules()
+    return set_name in GROUP_CUT_SETS and chosen.get("config") == config.candidate_rules()
 
 
 def _tuning_check_sha(out_dir: Path, config: ResolveConfig) -> str:
@@ -448,7 +450,7 @@ def _freeze(deps: TuneDeps, set_name: str) -> int:
                                        "run it again with --adjudicate")
     provenance = {"commit": commit, "created_at": now(), "config": config.to_dict(),
                   "tuning_report_sha256": _sha256(deps.out_dir / TUNING_REPORT_NAME)}
-    if set_name != "scoring":
+    if set_name in GROUP_CUT_SETS:
         provenance["tuning_check_sha256"] = _tuning_check_sha(deps.out_dir, config)
     try:
         write_frozen(deps.out_dir / name, Frozen(config.config_hash, pins), provenance)

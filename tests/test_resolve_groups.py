@@ -14,7 +14,6 @@ from tests.resolve_helpers import ADJUDICATOR_PROMPT, ScriptedAdjudicator, node
 
 STAMP = Stamp(config_hash="c" * 64, commit="abc1234", timestamp="2026-10-10T12:00:00+00:00")
 EVERY_PAIR = ResolveConfig(fuzzy_cutoff=0.0, top_k=0)  # every same-label pair is a candidate
-PROMPT = ADJUDICATOR_PROMPT
 
 
 def _resolve(nodes, answers, log=(), verified=True, config=EVERY_PAIR):
@@ -49,7 +48,7 @@ def test_a_related_pair_is_a_contradiction_too_and_is_listed():
     assert [d.related_kind for d in result.related] == [RelatedKind.VARIANT]
 
 
-def test_a_six_name_chain_merges_now_the_limit_is_twelve():
+def test_six_names_all_judged_same_merge_now_the_limit_is_twelve():
     six = _people("Ann Alpha", "Bea Beta", "Cy Gamma", "Di Delta", "Ed Epsilon", "Flo Zeta")
     every_same = {(x.name, y.name): Answer.SAME for x in six for y in six if x.key < y.key}
     result, _ = _resolve(six, every_same)
@@ -79,7 +78,7 @@ def test_a_clean_three_name_group_merges_with_the_most_evidenced_canonical_key()
     assert merge.rule is None
     assert dict(merge.members) == {a.key: 1, b.key: 2, c.key: 1}
     assert merge.canonical == b.key
-    assert merge.prompt_version == PROMPT
+    assert merge.prompt_version == ADJUDICATOR_PROMPT
     assert merge.decision == "+".join(sorted(d.decision_id for d in result.decisions))
     assert {(q.key, q.chunk_id) for q in merge.evidence} == {
         (a.key, a.evidence[0].chunk_id), (b.key, b.evidence[0].chunk_id),

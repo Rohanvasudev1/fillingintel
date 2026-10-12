@@ -93,6 +93,7 @@ class CutGroup:
 
     keys: tuple[str, ...]  # the whole group, sorted
     pieces: tuple[tuple[str, ...], ...]  # every piece, single keys included, by smallest key
+    kept: tuple[tuple[PairDecision, ...], ...]  # per piece, the `same` decisions inside it
     cut: tuple[PairDecision, ...]  # the merging `same` decisions between pieces, by ID
     tied: tuple[str, ...]  # keys left out of a piece because tied cuts placed them differently
     smallest_cuts: int  # how many cuts shared the smallest size

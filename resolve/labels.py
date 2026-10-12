@@ -28,6 +28,9 @@ FROZEN_NAME = "frozen.json"
 FROZEN_2_NAME = "frozen-2.json"  # Step 9b: the group cut, for scoring round 2
 # The freeze file each scoring set is drawn under; round 1's stays as written.
 FROZEN_FILES = MappingProxyType({"scoring": FROZEN_NAME, "scoring2": FROZEN_2_NAME})
+# Sets frozen under the Step 9b group cut: their freeze needs a passing tuning check and
+# accepts a Step 9 tuning report whose candidate rules match (resolve.tune).
+GROUP_CUT_SETS = frozenset({"scoring2"})
 TUNING_REPORT_NAME = "tuning-report.json"
 CHECK_REPORT_NAME = "tuning-check.json"  # Step 9b: python -m resolve.check_tuning
 _DRAW_FIELDS = ("set", "seed", "config_hash", "sizes", "populations", "near_fuzzy_margin",
