@@ -1,6 +1,6 @@
 {
   "recorded": "real API response, recorded by scripts/capture_resolve_responses.py",
-  "prompt_version": "resolve/v1@6cf68829",
+  "prompt_version": "resolve/v2@5b5e4a7d",
   "node_a": {
     "key": "Regulation:obbba",
     "label": "Regulation",
@@ -25,19 +25,24 @@
     ],
     "metric": null
   },
-  "api_ms": 2063.5055000002467,
+  "api_ms": 3034.141832999012,
   "response": {
-    "id": "msg_011CfuJfNrmJ4VknkjwBnMxY",
+    "id": "msg_011CfvnNM3QYE6priwnzjbb2",
     "container": null,
     "content": [
       {
+        "signature": "CAQSsQoKEAgSGAI4AUIIdGhpbmtpbmcSDDPNFJrxpYctBT5iFhoMN5mmwtWp2/Ul1iItIjBwM1if8mfEAG0/VutyV0pF6q0tS/YtgMbfTkj9mJnrGawa7xPAaNvPfelO4aeypqEqzgl87ZrcgdyQNYXqZOUYphHyhHzVQZoDhkRYrc46w30spXaE+9/QG9AzC/9ZYZHZxqmXvBm2138VNhstaUewtlGeSOzeGWgvNqK9aMjNok2OikYXe2PRlhUPBYhNNmqzW0TbqYQ7AEhUu0tAg/wb0QBfvLopQmeCHHBCRgWk2NkXfLWiJccJLpR01NN5TIdcdQfEVacAYqKRhljFraIDMpNaISEedbGE0Y7Q/9kBOJwxyqKfiPOou+cZCW++1KAODNToED6mHf8zyR8SBhp0O3P81jS01jQkrmL75WhMbZkV7TRcxQxmt7OWVdUAIoffJuJKk+bRZw/1qWV7sDJ2dpuUoA0OFEXE6pTYIDPvCQWuLbRAzCbdbqpPSY2FDfTmtr7Y1U+mbggOnU4c6HX2CwLcIef548oJ3s4X03xBiGlWxk7nbfmczqd4LszoIu+yLmz71DRv6vktl9yShAOjnmCGzbL9ox1BQUGuoStTnkMHfbzeZA+9zy0cyxFR97X6fTC/q3jbbtIHNis/y+hvEEPE5tPUbxU6/ku9pMggKZeWn4lq4b0K/St2CiAGe9Oj56l+zW32MW5xLAoxqEbKa/VUxjQ84Uc87vBMuQqoED8GIuBgnim68xc4O9d9n0QapmMjpCmBVVuz6vwuvjMIULvWu0H88KGUMzrl9GIikWnQP+L9NZ9iLR88zof3ruwr+qhK1cF/E/FRO4SPHynQGbynk7nrZ0eaJMIH6qCUREyalD6tRyIQ79R4UOWcUgZUPO0zx1HNRN3iT0y6MGW5aGf0aQFBipZSdufdRU9vbHwrzducyU67KNdTDoolkyUZJyFw5K+H5iqhtT5SkjOlxnX/2J78AnvitIIIouwu8kDi65XiDmNzetQgF76aetLzJ86IMPHxnhS700D7Qel0bIEvMcIrtIDFqFq+YrCMxZkRkDR+xyHK+WOOvfw3egy6ng2VcbrE0kg+QX58qDCNdVygZTr4WhFRry4wqQOcA+HtPson1GLv6NuZ6iNpfEhrKb9RKtWoXkdnrB2YBFsd0qjvLy1l6pPg52yrxpdUcr6EX9ULa4irGQFr3pRUbKTnfpFcTLSXl0JTqrnTmftgfWql7Wg6XAdxzoXVMxE/0HwOZPra4fLqYe04IApwxas0GNgAWqBW+iuq+19wKQXzZIbFtbHriavKUnJA6+fOIPd7pg5/89J15D9dWrE6g4qjg6kNg+L7UwjvZUZzDkl2vjtW/0n/MjL9kvaEDqumlMqv8HGyYvsapflJ809o+nBZ8C/iE1tdEEjoJz3GJlZsR9bx0wxExjY8vS30ODjimaJk3byO6xtwsaguFgrB54OWtp716I8nW1EJt6fmZT2cGKk1mDKcA1fr7mOT/ntbkNeJiID1U9tHVNezu4Q/UbyFlmdveYVixvyuj6wtkkxh+jDUSq5TQ2f31MgaQ7ZAYl3JtasnI9YmbM0EObLOVsPui6M/bgBaehrtBeAWJJ/k843YjSDmfjXPjDObCAAf5PiU077jU/inRY/IcmT8QFsHAQC83rxYajV4DaiekY4x7Y0Y8q4zedFFZoKwNSeSrH5Oa8TJGS/jMZ/CpTiwWs8fWCR9xzsO1pQdN5V4QOuryY5lKzTZrwWIPbxyiTWS+nwYAQ==",
+        "thinking": "",
+        "type": "thinking"
+      },
+      {
         "citations": null,
-        "text": "{\"answer\":\"same\",\"related_kind\":null,\"quote_a\":\"In July 2025, the OBBBA was enacted into law and contains several changes to key U.S. federal income tax laws.\",\"chunk_id_a\":\"0001045810-26-000021:0119\",\"quote_b\":\"In July 2025, the One Big Beautiful Bill Act (OBBBA) was enacted into law\",\"chunk_id_b\":\"0001045810-26-000021:0069\",\"reason\":\"Passage 0069 defines OBBBA as the One Big Beautiful Bill Act, and both passages describe the same July 2025 enactment with the same tax-law changes, so the two names refer to one law.\"}",
+        "text": "{\"answer\":\"same\",\"related_kind\":null,\"quote_a\":\"the OBBBA was enacted into law\",\"chunk_id_a\":\"0001045810-26-000021:0119\",\"quote_b\":\"the One Big Beautiful Bill Act\",\"chunk_id_b\":\"0001045810-26-000021:0069\",\"reason\":\"Passage 0069 defines the One Big Beautiful Bill Act with the acronym OBBBA in the same sentence, so the two names refer to one law. Passage 0119 uses OBBBA for the same enacted legislation.\"}",
         "type": "text"
       }
     ],
     "diagnostics": null,
-    "model": "claude-sonnet-5-5",
+    "model": "claude-haiku-5-5",
     "role": "assistant",
     "stop_details": null,
     "stop_reason": "end_turn",
@@ -49,12 +54,12 @@
         "ephemeral_5m_input_tokens": 0
       },
       "cache_creation_input_tokens": 0,
-      "cache_read_input_tokens": 1505,
+      "cache_read_input_tokens": 1514,
       "inference_geo": "global",
       "input_tokens": 2395,
-      "output_tokens": 218,
+      "output_tokens": 510,
       "output_tokens_details": {
-        "thinking_tokens": 0
+        "thinking_tokens": 329
       },
       "server_tool_use": null,
       "service_tier": "standard"

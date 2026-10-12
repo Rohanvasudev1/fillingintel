@@ -60,7 +60,14 @@ def _reply(**fields) -> dict:
 def test_the_prompt_file_is_pinned(tmp_path):
     (tmp_path / "v1.md").write_text("$label $node_a $node_b edited\n", encoding="utf-8")
     with pytest.raises(LabelPromptError, match="changed"):
-        load_label_prompt(prompts_dir=tmp_path)
+        load_label_prompt("v1", prompts_dir=tmp_path)
+
+
+def test_the_current_prompt_is_v2_with_invented_examples():
+    # label/v1's examples were corpus pairs the labeller might be asked about (ticket 06).
+    prompt = load_label_prompt()
+    assert prompt.prompt_version.startswith("label/v2@")
+    assert "Groq" not in prompt.template and "GDPR" not in prompt.template
 
 
 def test_the_request_carries_the_nodes_own_evidence(prompt, chunk_text):

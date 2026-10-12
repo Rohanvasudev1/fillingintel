@@ -5,7 +5,7 @@ The request goes through the judge's OpenAI path unchanged: an
 sampling settings) sent through whatever backend the caller passes, normally
 the response cache around `OpenAIResponsesModel`. Only the prompt differs.
 
-The prompt (`prompts/label/v1.md`, pinned by SHA-256) carries each node's
+The prompt (`prompts/label/v2.md`, pinned by SHA-256) carries each node's
 name, the shared label, its evidence spans and the text of its first chunks
 (and a MetricValue's subject, period, value and unit). It never carries the
 resolver's output: no rule, score, stratum or decision reaches the labeller,
@@ -45,9 +45,10 @@ LABEL_MAX_OUTPUT_TOKENS = 16_000  # reasoning plus JSON at effort high
 MAX_CHUNKS_PER_NODE = 3  # chunk texts shown per node, in evidence order
 MAX_SPANS_PER_NODE = 10
 PROMPTS_DIR = REPO_ROOT / "prompts" / "label"
-CURRENT_VERSION = "v1"
+CURRENT_VERSION = "v2"
 PUBLISHED = MappingProxyType({
     "v1": "9d65910323ebcd83b0340368a3779d152e54228f788ecb52fcaff91234411f04",
+    "v2": "97a4a047620d308e2570967cbc520653f27fc059316830e9ef5be946778aeb6d",  # invented examples
 })
 _HASH_CHARS = 8
 

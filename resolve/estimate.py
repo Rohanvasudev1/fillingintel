@@ -1,8 +1,9 @@
 """The cost estimate printed before adjudication makes any call (Step 9).
 
 Counted as extraction counts (extract.estimate): input with cl100k_base scaled
-by 1.3 for Claude's tokenizer. Each call is assumed to return 2,000 tokens, an
-allowance for thinking at effort `high` plus a short JSON reply. The system
+by 1.3 for Claude's tokenizer. Each call is assumed to return 1,200 tokens, an
+allowance for thinking at effort `high` plus a short JSON reply: ten recorded
+claude-haiku-5-5 replies under resolve/v2 ran 475 to 1,487, mean about 830. The system
 prompt carries the one cache breakpoint: the first call on each worker is
 priced as a cache write, every later call as a cache read.
 """
@@ -18,7 +19,7 @@ from resolve.request import ADJUDICATION_PRICES, AdjudicateRequest
 from retrieve.answer_model import TokenUsage
 from retrieve.pricing import PriceTable, anthropic_cost
 
-ASSUMED_OUTPUT_TOKENS = 2_000
+ASSUMED_OUTPUT_TOKENS = 1_200
 
 
 @dataclass(frozen=True, slots=True)

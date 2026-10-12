@@ -1,0 +1,733 @@
+{
+  "set": "scoring",
+  "seed": 20261011,
+  "config_hash": "7a5aa8de76e57b0a39f9120305b2beaf583f081e07deca2dd9c83ee1a3741205",
+  "sizes": {
+    "candidate": 60,
+    "near": 25,
+    "rest": 15
+  },
+  "populations": {
+    "candidate": 3829,
+    "near": 3648,
+    "rest": 144581
+  },
+  "near_fuzzy_margin": 10.0,
+  "near_rank_factor": 2,
+  "pairs": [
+    {
+      "key_a": "Organization:finjan",
+      "key_b": "Organization:positive technologies",
+      "label": "Organization",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:amd rocm platform",
+      "key_b": "Product:amd rocmtm software",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Regulation:export restrictions and export licensing requirements targeting china's semiconductor and supercomputing industries",
+      "key_b": "Regulation:usg export restrictions and export licensing requirements targeting china\u2019s semiconductor and supercomputing industries",
+      "label": "Regulation",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:nvidia drive orin platform",
+      "key_b": "Product:nvidia rubin platform",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Regulation:export controls",
+      "key_b": "Regulation:u.s. export controls on gpus",
+      "label": "Regulation",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0000050863-26-000011:50863:non-cash impairments of construction-in-progress assets:FY2024",
+      "key_b": "0000050863-26-000011:50863:operating income benefit from operating-related incentives:FY2024",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:amd epyc",
+      "key_b": "Product:amd epyc embedded cpus",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Segment:50863:intel foundry",
+      "key_b": "Segment:50863:intel products",
+      "label": "Segment",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Agreement:364-day $ 5.0 billion credit facility agreement",
+      "key_b": "Agreement:5-year $5.0 billion revolving credit facility agreement",
+      "label": "Agreement",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0000050863-26-000011:50863:asset impairment charges, construction-in-progress:FY2024",
+      "key_b": "0000050863-26-000011:50863:other non-cash asset impairment charges:FY2024",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:amd instinct gpu",
+      "key_b": "Product:amd instinct mi308 data center gpu products",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Agreement:acquisition of zt systems",
+      "key_b": "Agreement:zt systems acquisition",
+      "label": "Agreement",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:amd versal fpgas",
+      "key_b": "Product:amd versaltm",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Agreement:purchase agreement",
+      "key_b": "Agreement:sale agreement",
+      "label": "Agreement",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Regulation:export licensing requirements",
+      "key_b": "Regulation:usg licensing requirements",
+      "label": "Regulation",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Regulation:export control regulations",
+      "key_b": "Regulation:united states export control regulations",
+      "label": "Regulation",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:dgx",
+      "key_b": "Product:hgx",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:amd versaltm",
+      "key_b": "Product:versal adaptive socs",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0000050863-26-000011:50863:interest and other, net:FY2024",
+      "key_b": "0000050863-26-000011:50863:total interest and other, net:FY2024",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Regulation:gdpr",
+      "key_b": "Regulation:general data protection regulation",
+      "label": "Regulation",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0000050863-24-000149:50863:non-cash charges to provision for income taxes:FY2024-Q3",
+      "key_b": "0000050863-24-000149:50863:valuation allowance established against us deferred tax assets:FY2024-Q3",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:hopper",
+      "key_b": "Product:nex",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0000002488-26-000018:2488:non-marketable equity securities and other instruments, carrying value:FY2025",
+      "key_b": "0000002488-26-000018:2488:stock repurchases returned to shareholders:FY2025",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0001045810-25-000023:1045810:revenue from sales outside the united states:FY2025",
+      "key_b": "0001045810-25-000023:1045810:revenue from sales to customers outside of the united states, share of total revenue:FY2025",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:amd ryzen threadripper pro",
+      "key_b": "Product:ryzen",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:b200",
+      "key_b": "Product:blackwell ultra",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Organization:king yuan electronics company",
+      "key_b": "Organization:lg electronics inc",
+      "label": "Organization",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Agreement:chips act commercial program agreement",
+      "key_b": "Agreement:direct funding agreement with the us department of commerce",
+      "label": "Agreement",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:openvinotm toolkit",
+      "key_b": "Product:vitis ai unified software platform",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Facility:germany wafer production facility",
+      "key_b": "Facility:ohio wafer production facility",
+      "label": "Facility",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Organization:arizona fab llc",
+      "key_b": "Organization:zt manufacturing business",
+      "label": "Organization",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:amd ryzen 8000 series",
+      "key_b": "Product:amd ryzen pro 200 series",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:gpus",
+      "key_b": "Product:nvidia rtx 500 and 1000 professional ada generation laptop gpus",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Regulation:comprehensive, environmental response, compensation and liability act of 1980",
+      "key_b": "Regulation:final site clean-up requirements orders",
+      "label": "Regulation",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "LegalProceeding:dusseldorf regional court injunction and order",
+      "key_b": "LegalProceeding:european commission competition matter",
+      "label": "LegalProceeding",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:intel 3",
+      "key_b": "Product:intel core ultra series 3 processors",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "LegalProceeding:eire og innovations v ibm et. al.",
+      "key_b": "LegalProceeding:media content protection v intel",
+      "label": "LegalProceeding",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "LegalProceeding:ec 2009 finding on payments to prevent sales of specific rival products",
+      "key_b": "LegalProceeding:ec fine for payments to prevent sales of specific rival products (september 2023)",
+      "label": "LegalProceeding",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:intel core",
+      "key_b": "Product:intel core ultra products",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Organization:r2 semiconductor, inc.",
+      "key_b": "Organization:taiwan semiconductor manufacturing company limited (tsmc)",
+      "label": "Organization",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:amd ryzen threadripper pro",
+      "key_b": "Product:ryzen threadripper",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:amd instincttm mi308 data center gpu products",
+      "key_b": "Product:mi308",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Organization:lantana hp, ltd",
+      "key_b": "Organization:zt group int\u2019l, inc",
+      "label": "Organization",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:ryzen",
+      "key_b": "Product:ryzen ai halo",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "LegalProceeding:r2 semiconductor patent litigation",
+      "key_b": "LegalProceeding:vlsi and r2 litigation",
+      "label": "LegalProceeding",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Regulation:usg export restrictions and licensing requirements targeting china's semiconductor and supercomputing industries (august 2022)",
+      "key_b": "Regulation:usg licensing requirements, august 2022",
+      "label": "Regulation",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Regulation:licensing requirements",
+      "key_b": "Regulation:usg export licensing requirements (october 2023)",
+      "label": "Regulation",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0000002488-25-000012:Segment:2488:gaming:operating income (loss):FY2024",
+      "key_b": "0000002488-25-000012:Segment:2488:gaming:operating income:FY2024",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Facility:data center space in santa clara, california",
+      "key_b": "Facility:oregon wafer production facilities",
+      "label": "Facility",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:h200",
+      "key_b": "Product:h800",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0000050863-26-000011:50863:interest and other, net:FY2023",
+      "key_b": "0000050863-26-000011:50863:total interest and other, net:FY2023",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Agreement:altera separation agreement",
+      "key_b": "Agreement:altera transaction agreement",
+      "label": "Agreement",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Agreement:wafer manufacturing and sale agreement",
+      "key_b": "Agreement:wafer supply agreement",
+      "label": "Agreement",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Agreement:arm share purchase agreement",
+      "key_b": "Agreement:share purchase agreement, dated september 13, 2020",
+      "label": "Agreement",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Organization:federal security service of the russian federation",
+      "key_b": "Organization:pozitiv teknolodzhiz, ao (positive technologies)",
+      "label": "Organization",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:hopper gpu architecture",
+      "key_b": "Product:xe2 gpu architecture",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "LegalProceeding:ec 2009 finding on payments to prevent sales of rival products",
+      "key_b": "LegalProceeding:ec 2009 rebates finding",
+      "label": "LegalProceeding",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Organization:altera corporation",
+      "key_b": "Organization:xilinx",
+      "label": "Organization",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Agreement:credit agreement dated as of april 29, 2022",
+      "key_b": "Agreement:zt credit agreement",
+      "label": "Agreement",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0000050863-25-000179:50863:net gains (losses) on hedged investments held at reporting date:FY2025-Q3",
+      "key_b": "0000050863-25-000179:50863:net gains (losses) on hedged investments:FY2025-Q3",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:amd versal fpgas",
+      "key_b": "Product:versal rf series",
+      "label": "Product",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Product:amd versaltm fpgas",
+      "key_b": "Product:amd vivadotm design suite",
+      "label": "Product",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Product:accelerated processing units",
+      "key_b": "Product:amd instincttm accelerators",
+      "label": "Product",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Product:amd instincttm gpus",
+      "key_b": "Product:amd instincttm mi308 data center gpu products",
+      "label": "Product",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Product:a800",
+      "key_b": "Product:l40s",
+      "label": "Product",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Regulation:license requirements for exports to d1 and d4 countries",
+      "key_b": "Regulation:usg licensing requirements for exports to china and country groups d%3a1, d%3a4, and d%3a5",
+      "label": "Regulation",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Agreement:agreement to sell 51%25 of all issued and outstanding common stock of altera",
+      "key_b": "Agreement:stock purchase agreement",
+      "label": "Agreement",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Organization:higon information technology co., ltd.",
+      "key_b": "Organization:montage technology co., ltd",
+      "label": "Organization",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Organization:semiconductor manufacturing international corporation",
+      "key_b": "Organization:united microelectronics corporation (umc)",
+      "label": "Organization",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Agreement:acquisition of zt systems",
+      "key_b": "Agreement:sale of the zt manufacturing business",
+      "label": "Agreement",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Product:amd ryzen mobile and desktop processors",
+      "key_b": "Product:amd ryzen pro",
+      "label": "Product",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Product:intel 4",
+      "key_b": "Product:intel core ultra series 2",
+      "label": "Product",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Product:5th gen amd epyctm processors",
+      "key_b": "Product:ryzen processors",
+      "label": "Product",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Agreement:amended and restated transaction agreement",
+      "key_b": "Agreement:apollo transaction",
+      "label": "Agreement",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Segment:50863:networking and edge",
+      "key_b": "Segment:50863:nex",
+      "label": "Segment",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Organization:dell technologies",
+      "key_b": "Organization:huawei technologies co. ltd.",
+      "label": "Organization",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Organization:astera labs, inc.",
+      "key_b": "Organization:marvell technology group, ltd.",
+      "label": "Organization",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Product:geforce rtx",
+      "key_b": "Product:quadro/nvidia rtx gpus",
+      "label": "Product",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Agreement:ireland scip transaction",
+      "key_b": "Agreement:scip arrangement with apollo",
+      "label": "Agreement",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Product:amd versal",
+      "key_b": "Product:versal adaptive socs",
+      "label": "Product",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Product:intel core ultra processors",
+      "key_b": "Product:intel core ultra series 3",
+      "label": "Product",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Organization:amazon",
+      "key_b": "Organization:ibm",
+      "label": "Organization",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Product:adaptive soc",
+      "key_b": "Product:semi-custom system-on-chip (soc) products",
+      "label": "Product",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Regulation:h20 export licensing requirements",
+      "key_b": "Regulation:usg licensing requirements, july 2023",
+      "label": "Regulation",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Product:geforce rtx gpus",
+      "key_b": "Product:nvidia rtx a400 and a1000 gpus",
+      "label": "Product",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Product:rtx 6000 ada",
+      "key_b": "Product:ryzen ai 400 series",
+      "label": "Product",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Product:notebook",
+      "key_b": "Product:nvidia vgpu software",
+      "label": "Product",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Product:alder lake",
+      "key_b": "Product:amd instincttm mi350 series gpus",
+      "label": "Product",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Regulation:environmental, health, and safety laws and regulations",
+      "key_b": "Regulation:european union code of practice for general purpose artificial intelligence",
+      "label": "Regulation",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Product:amd epyc processors",
+      "key_b": "Product:hopper hgx systems",
+      "label": "Product",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Regulation:u.s. gaap",
+      "key_b": "Regulation:u.s. inflation reduction act of 2022",
+      "label": "Regulation",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Regulation:climate-related disclosure requirements",
+      "key_b": "Regulation:usg export control licensing requirements",
+      "label": "Regulation",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Product:amd instincttm gpu accelerators",
+      "key_b": "Product:oneapi",
+      "label": "Product",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Product:5th gen amd epyctm processors",
+      "key_b": "Product:versal prime series gen 2",
+      "label": "Product",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Product:blackwell full-scale datacenter solutions",
+      "key_b": "Product:gpu accelerators",
+      "label": "Product",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Product:gaming products",
+      "key_b": "Product:open platform for enterprise ai",
+      "label": "Product",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Product:discrete gpus",
+      "key_b": "Product:ice lake server (xeon)",
+      "label": "Product",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "LegalProceeding:consolidated us consumer class action, district of oregon",
+      "key_b": "LegalProceeding:ec fine",
+      "label": "LegalProceeding",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Product:amd rocm platform",
+      "key_b": "Product:fpga products",
+      "label": "Product",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Agreement:loan agreement with the industrial development authority of the city of chandler, arizona",
+      "key_b": "Agreement:settlement agreement between advanced micro devices, inc. and intel corporation, dated november 11, 2009",
+      "label": "Agreement",
+      "stratum": "rest"
+    }
+  ],
+  "provenance": {
+    "commit": "68b35fd",
+    "created_at": "2026-10-12T14:26:24+00:00",
+    "label_prompt": "label/v2@a7f163e9",
+    "ontology_version": 3,
+    "frozen": {
+      "config_hash": "7a5aa8de76e57b0a39f9120305b2beaf583f081e07deca2dd9c83ee1a3741205",
+      "prompts": {
+        "label": "label/v2@a7f163e9",
+        "resolve": "resolve/v2@5b5e4a7d",
+        "label_model": "gpt-6-luna@high",
+        "resolve_model": "claude-haiku-5-5@high"
+      },
+      "run_report": "run2.json"
+    },
+    "inputs": [
+      {
+        "file": "0000002488-24-000056-run1.jsonl",
+        "sha256": "30cf9bf376531f02de3eb8bca592575be01f95b32f773f3938449f701efd48f2"
+      },
+      {
+        "file": "0000002488-24-000123-run1.jsonl",
+        "sha256": "ec4dc84c513d2627a81b5b73fa184fcacaaf8514e12d33c087c74cabb3c9b09e"
+      },
+      {
+        "file": "0000002488-24-000163-run1.jsonl",
+        "sha256": "4d88625cbc7490e06061d1fa2ca5e5bd30fb2122a617ca721d6d8e566a9f34c1"
+      },
+      {
+        "file": "0000002488-25-000012-run1.jsonl",
+        "sha256": "11372f29811a2f633f5d2666bd9cac33fd7f434de0287381f66d21d412844c9c"
+      },
+      {
+        "file": "0000002488-25-000047-run1.jsonl",
+        "sha256": "958cec79da1a5735b00e6a6f7c469859c235a314c155ebc2b2d7424752b4be4b"
+      },
+      {
+        "file": "0000002488-25-000108-run1.jsonl",
+        "sha256": "0197374b913615dc255d9f3c1a830b771c57f9f0fd5fa4b9a5163433417dd8fd"
+      },
+      {
+        "file": "0000002488-25-000166-run1.jsonl",
+        "sha256": "b01c7d34019d2aea140c92e0a724638649cba97cb665f6ddfb0bb013470ea18c"
+      },
+      {
+        "file": "0000002488-26-000018-run1.jsonl",
+        "sha256": "562cf825cfad94a50dd9693c4041507357f25759b451cf3d4b22459b34a2b007"
+      },
+      {
+        "file": "0000050863-24-000076-run1.jsonl",
+        "sha256": "3f34ebe7c3d43de8cdfe543839009197031b68f123c4ef96446c72b2f11399ed"
+      },
+      {
+        "file": "0000050863-24-000124-run1.jsonl",
+        "sha256": "e291fb5cf095dc32bab414a0df85c1173f28dac02340a7b3691ce47f60b15dbd"
+      },
+      {
+        "file": "0000050863-24-000149-run1.jsonl",
+        "sha256": "73c3fa3094be48e0f925fe6735fd85346db038733098f1077d31a5232e0151fc"
+      },
+      {
+        "file": "0000050863-25-000009-run1.jsonl",
+        "sha256": "33e441d048e14b3dd52802f903a752a8c17995d85ab4490f9624104a02e3a573"
+      },
+      {
+        "file": "0000050863-25-000074-run1.jsonl",
+        "sha256": "5217d39e0319c08a86765e47484613d8ed282c8362663bc217c5bc30bd400913"
+      },
+      {
+        "file": "0000050863-25-000109-run1.jsonl",
+        "sha256": "ce7d975b30fef606f54c2b4b8dd4cdb66cefa44e86dd6861ff70031c951b9a13"
+      },
+      {
+        "file": "0000050863-25-000179-run1.jsonl",
+        "sha256": "afba3c68c6b53cb42460b91215d560ca39c02cadebc114821364741f9b785c1d"
+      },
+      {
+        "file": "0000050863-26-000011-run1.jsonl",
+        "sha256": "c517bb5a8897a4b5eeaa74e29f5a2dc18d802bc867dee6d2d2981554d3269cb2"
+      },
+      {
+        "file": "0001045810-24-000124-run1.jsonl",
+        "sha256": "37ff8feed44215efc91d19d44649c6c3479b4c1ac6c32937dd0e6594c6af5023"
+      },
+      {
+        "file": "0001045810-24-000264-run1.jsonl",
+        "sha256": "3919e00d5689ab7ed845e81b41159d40df1d43ac43a74caa831ad3a322aa3a72"
+      },
+      {
+        "file": "0001045810-24-000316-run1.jsonl",
+        "sha256": "f98ad8d21558724e4f33bbaeaf7cedb6f8e8404cc5a8dd492f04b8bc68625a3b"
+      },
+      {
+        "file": "0001045810-25-000023-run1.jsonl",
+        "sha256": "3efffe5ebc5e85beead87f2be5697a3a3472742b6c637b21da113352a5bf11cc"
+      },
+      {
+        "file": "0001045810-25-000116-run1.jsonl",
+        "sha256": "cf58929d34bf86d171837a672e4358c91bac89357f37e4c5c964f1b74e633b2a"
+      },
+      {
+        "file": "0001045810-25-000209-run1.jsonl",
+        "sha256": "9006f7c13a7dabe55f0956d0a2665c53e5f748df7badbf42c598b7c4e61ff1c5"
+      },
+      {
+        "file": "0001045810-25-000230-run1.jsonl",
+        "sha256": "6592f34b7090a1fdd5d833fedc1187d746a6f6f5fe68fd3cfc12ebfb51497994"
+      },
+      {
+        "file": "0001045810-26-000021-run2.jsonl",
+        "sha256": "9d6d4ed747719257cc7389e19087aa5de8f516fcb1409eb97f9148984af2616b"
+      }
+    ]
+  }
+}

@@ -54,12 +54,13 @@ from ingest.store import ChunkNotFound, resolve
 from ingest.voyage import BatchEmbedder, BatchEmbedding, VoyageClient, VoyageError
 from resolve.adjudicate import ClaudeAdjudicator
 from resolve.candidates import ScoredPair, is_named
+from resolve.cli import cost_cap
 from resolve.config import ResolveConfig
 from resolve.decisions import Failure
 from resolve.embed import VoyageNodeEmbedder, embed_text
 from resolve.estimate import CostEstimate, estimate_cost
 from resolve.labeller import LABEL_NOTE
-from resolve.labels import LabelFileError, label_status
+from resolve.labels import LabelFileError, label_status, tuning_status
 from resolve.log import LogError, LogEvent, Stamp, append_events, read_log, replay
 from resolve.nodes import InputError, InputFile, ResolveNode, load_nodes
 from resolve.paths import (
@@ -138,22 +139,12 @@ class _Inputs:
     labels: Mapping[str, object]  # resolve.labels.label_status, for labels_and_scoring
 
 
-def _cost_cap(value: str) -> float:
-    try:
-        cap = float(value)
-    except ValueError:
-        raise argparse.ArgumentTypeError(f"{value!r} is not a number") from None
-    if not cap >= 0:  # also refuses nan
-        raise argparse.ArgumentTypeError("--max-cost must be 0 or more")
-    return cap
-
-
 def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="python -m resolve.run", description=__doc__.split(
         "\n\n")[0], formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--candidates", type=Path, nargs="+",
                         help="candidates files (default: the latest run of each accession)")
-    parser.add_argument("--max-cost", type=_cost_cap, default=DEFAULT_MAX_COST_USD,
+    parser.add_argument("--max-cost", type=cost_cap, default=DEFAULT_MAX_COST_USD,
                         help=f"refuse adjudication estimated above this many USD "
                              f"(default {DEFAULT_MAX_COST_USD:g})")
     try:
@@ -237,8 +228,8 @@ def _read_inputs(files: Sequence[Path], out_dir: Path) -> _Inputs:
         log = read_log(log_path)
         on_disk = read_alias_map(map_path)
         replayed = replay(log)
-        labels = {**label_status(out_dir), "note": f"{LABEL_NOTE}; scores: python -m "
-                                                   "resolve.score"}
+        labels = {**label_status(out_dir), "tuning_report": tuning_status(out_dir),
+                  "note": f"{LABEL_NOTE}; scores: python -m resolve.score"}
     except (InputError, LogError, LabelFileError, ValueError) as exc:
         raise _Stop(EXIT_USAGE, str(exc)) from exc
     except OSError as exc:

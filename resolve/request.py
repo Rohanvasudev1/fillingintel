@@ -23,13 +23,13 @@ from resolve.nodes import EvidenceRef, ResolveNode
 from resolve.output_schema import output_schema
 from resolve.prompt import ResolvePrompt
 from retrieve.answer_model import Effort
-from retrieve.pricing import TABLE_2026_10_09
+from retrieve.pricing import TABLE_2026_10_10
 
 ADJUDICATOR_PROVIDER = "anthropic"
-ADJUDICATOR_MODEL = "claude-sonnet-5-5"
+ADJUDICATOR_MODEL = "claude-haiku-5-5"  # user decision 2026-10-11, for cost
 ADJUDICATOR_EFFORT: Effort = "high"
-ADJUDICATOR_MAX_TOKENS = 8_000  # thinking plus the reply
-ADJUDICATION_PRICES = TABLE_2026_10_09  # Sonnet 5.5 cache reads at $0.10 per MTok
+ADJUDICATOR_MAX_TOKENS = 16_000  # thinking plus the reply; Haiku thinks longer
+ADJUDICATION_PRICES = TABLE_2026_10_10  # Haiku 5.5 at its up-to-100K-token prices
 MAX_CHUNKS_PER_NODE = 3
 
 

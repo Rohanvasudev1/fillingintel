@@ -1553,6 +1553,70 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 
 ---
 
+## 2026-10-12 — Step 9 ticket 06: tune, freeze, score; Step 9 closed
+
+- **User decisions (2026-10-11).**
+  - Ticket 06 is capped at $5 in all.
+  - The adjudicator moves to claude-haiku-5-5 at effort `high` (`max_tokens` 16,000, price table 2026-10-10). Sonnet's estimate over the 3,723 starting candidate pairs was $99.
+  - New prompts `resolve/v2` and `label/v2` replace the corpus examples with invented ones (Halvern, NDPA, Orion X200, Ms. Okafor, Bookings). None of these names is in the parsed corpus. This settles the prompt-examples question left open by tickets 03 and 04.
+  - Two Intel MetricValues kept by extraction without their MEASURES edge are skipped by resolution and listed per input file in the run and label reports. Before this, `resolve.run` refused the whole corpus.
+- **Recorded replies.** 10 Haiku and 4 gpt-6-luna replies were recorded again under v2 (about $0.02). Haiku is more cautious than Sonnet was under v1: it answered `unsure` on the Groq IP arrangement, Teter and Blackwell / GB200, and `distinct` on GeForce / GeForce NOW. Haiku output ran 475 to 1,487 tokens, so the estimate now assumes 1,200 per call.
+- **Tuning** (`python -m resolve.tune`, new; `benchmarks/resolution/tuning-report.json`). The tuning set has 100 pairs, 23 labelled same, and cost $0.057 to label.
+
+  | Config | Pending pairs | Matches found | Non-matches flagged |
+  |---|---|---|---|
+  | start (fuzzy 90, k 3, rare-word on) | 3,723 | 22 / 23 | 38 / 77 |
+  | embedding off | 2,066 | 18 | 15 |
+  | k 1 | 2,430 | 19 | 21 |
+  | rare-word off | 3,590 | 22 | 37 |
+  | fuzzy 85 | 3,951 | 23 | 41 |
+  | "name: span" embedded | 3,896 | 22 | 31 |
+  | **chosen**: fuzzy 85, rare-word off, k 3, "label: name" | 3,821 | 23 / 23 | 40 / 77 |
+
+  - Lowering k lost real matches, and the rare-word rule found no match the others missed.
+  - The adjudicator prompt was not tuned. `resolve/v2` was measured once: it agreed with the labels on 59 of 61 tuning pairs with no wrong merge, for $0.045.
+  - The tuning draw's strata come from the starting config, so its "near" stratum is not the frozen one.
+- **Freeze.** `frozen.json` pins config `7a5aa8de76e5`, `label/v2@a7f163e9`, `resolve/v2@5b5e4a7d`, `gpt-6-luna@high` and `claude-haiku-5-5@high`. The first freeze lacked the model pins; it was deleted and written again after review, before any scoring pair was drawn. `--freeze` refuses a dirty tree or a stale tuning report, and the scoring draw checks the run's adjudicator model against the freeze.
+- **Run 2** (`resolve.run` over the 24 latest extract files, 6,765 nodes).
+  - 3,821 pairs adjudicated: 998 `same`, 1,975 `distinct`, 497 `related` (362 family member, 124 variant, 11 parent / subsidiary), 351 `unsure`.
+  - 578 merges: 525 by the adjudicator, 50 on normalized names, 3 through the filer table. 21 groups were held back.
+  - The first attempt stalled when the laptop slept, with 2,528 replies cached and nothing written. It was stopped, and the rerun replayed those replies and sent the other 1,293.
+  - Cost $2.91: $1.89 before the stall, $1.02 on the rerun.
+  - The report's commit reads `b8cdebd+dirty`. The only uncommitted change was the CLAUDE.md Decisions edit, committed right after.
+- **Score** (scoring set, 100 fresh pairs, 22 labelled same, $0.058 to label; scored once at commit 68b35fd; agent-labelled, gpt-6-luna):
+  - Precision 1.000. The bootstrap interval is [1.000, 1.000] because all 10 sampled merges were right; a Wilson interval on 10 of 10 is [0.72, 1.00].
+  - Recall 0.387 [0.199, 0.611].
+  - Rules' share of true matches 0.735 [0.529, 1.000].
+  - Adjudicator accuracy 55 of 60, 0.917 [0.850, 0.983].
+  - Raw counts: candidate 60 labelled (19 same, 10 merged, all correct); near 25 (3 same, none merged); rest 15 (no match).
+  - Of the 9 missed candidate matches, 5 were `same` answers held back by the group rule (AMD Versal, MI308, US export-licensing rules), and 4 got `unsure`. The 3 near-stratum matches never reached the adjudicator.
+  - One labeller quote failed its check and is counted.
+- **Regressions.** None in tests. Recall is low against perfect sampled precision: the group rule trades recall for safety. It goes to OPEN-DECISIONS for Step 10. Changing it now would mean tuning after seeing the scoring set.
+- **Costs, ticket 06.** Recorded replies about $0.02, tuning labels $0.057, tuning adjudication $0.045, run 2 $2.91, scoring labels $0.058, name embeddings under $0.01. About **$3.09** of the $5 cap.
+- **Code.**
+  - `resolve/tuning.py` holds the rule and adjudicator checks; `resolve/tune.py` is the CLI with `--adjudicate` and `--freeze`; `resolve/cli.py` holds the shared `--max-cost` parser.
+  - `ResolveConfig` defaults are now the chosen values. The run report's `labels_and_scoring.tuning_report` carries the chosen row, the agreement and the freeze, and the tuning report keeps `cost_usd_replayed`.
+  - Tests: the orphan-metric, Haiku / v2, `rule_check`, `adjudicator_check` and freeze-pin tests were written first and failed. The freeze guard and CLI tests were written after the code, and one found a crash on a non-object tuning report, now fixed.
+- **Code review** (`mattpocock-skills:code-review`). Fixed:
+  - errors that escaped `resolve.tune` as tracebacks;
+  - the duplicated `--max-cost` parser;
+  - "chosen" named in three places;
+  - a speculative check;
+  - missing tests for the tune CLI;
+  - model and effort missing from the freeze;
+  - no label-hash or dirty-tree check at freeze;
+  - tuning spend lost on a cached rerun.
+
+  Left as they are: `_Stop`, the environment checks and the chunk-text reader still repeat across `run`, `label` and `tune`, as in tickets 03 and 04; `resolve.tune` adds no Phoenix spans.
+- **Evidence.** `uv run ruff check .` is clean. Full suite against the local Postgres and Neo4j test service: 1950 passed, 1 skipped. CI result is on the PR.
+
+**Next session starts with**
+1. Merge this PR once CI is green. Step 9 is closed.
+2. Step 9b (user decision 2026-10-12, RUNBOOK): `/grill-with-docs` on splitting held-back resolution groups instead of dropping them, then one ticket and scoring round 2 (about $0.06 of labels; the adjudicator answers are cached).
+3. Step 10 grilling (`/grill-with-docs`). First, the user clears the local Neo4j's version-1 `:GraphMeta`, since `apply_constraints()` refuses a graph at another version. Open items for the grilling: the MetricValue percent / dollar key rule, held-back groups and ER recall, the two skipped Intel MetricValues, and Intel chunk 0017.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.
@@ -1564,3 +1628,4 @@ Short versions of the stories from this build so far, for interviews and write-u
 - **Reviewing the agent's tests, not just its code.** Several agent-written tests would have passed while proving nothing: a loose rate-limit threshold, a circular round-trip test, and fixtures written by the same agent as the parser. Catching these is part of the job.
 - **A schema's key order changed what the judge wrote.** Sorting a JSON schema's keys for a stable hash put the verdict ahead of its reason. The judge, which writes fields in schema order, then left every reason blank. Keeping the declared order brought the reasoning back. Small serialization choices can change what an LLM produces.
 - **A pace check caught a rubber-stamp review.** The first extraction review came back 30 of 30 correct, with a median of under a second per answer. The tool logs how long each judgment takes, so the round was set aside rather than reported, and it also exposed that the review screen hid the metric values being judged. A human-in-the-loop number is only as good as the evidence that the human looked.
+- **A safety rule cost most of the recall.** The entity resolver never merged two different entities in its scored sample (10 of 10 right), but it found only about 39% of true matches. Most misses were not model errors: the model said "same", and a rule that holds back any group larger than five names or containing a disputed pair blocked the merge. The rule bought precision with recall, and the scoring made the price visible.

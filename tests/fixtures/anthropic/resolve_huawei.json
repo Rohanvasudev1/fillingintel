@@ -1,6 +1,6 @@
 {
   "recorded": "real API response, recorded by scripts/capture_resolve_responses.py",
-  "prompt_version": "resolve/v1@6cf68829",
+  "prompt_version": "resolve/v2@5b5e4a7d",
   "node_a": {
     "key": "Organization:huawei",
     "label": "Organization",
@@ -25,19 +25,24 @@
     ],
     "metric": null
   },
-  "api_ms": 2118.1646659988473,
+  "api_ms": 4400.945624998712,
   "response": {
-    "id": "msg_011CfuJevdBpAw4AvM7A9Hs3",
+    "id": "msg_011CfvnMZhPEX4GKJzYwL3Pp",
     "container": null,
     "content": [
       {
+        "signature": "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",
+        "thinking": "",
+        "type": "thinking"
+      },
+      {
         "citations": null,
-        "text": "{\"answer\":\"same\",\"related_kind\":null,\"quote_a\":\"Hewlett Packard Enterprise Company, Huawei, Intel\",\"chunk_id_a\":\"0001045810-26-000021:0013\",\"quote_b\":\"Huawei Technologies Co\\\\. Ltd\\\\., or Huawei\",\"chunk_id_b\":\"0001045810-26-000021:0012\",\"reason\":\"The filing defines \\\"Huawei Technologies Co. Ltd.\\\" with the short form \\\"Huawei\\\" and then uses \\\"Huawei\\\" in the competitor lists, so both nodes name the same company.\"}",
+        "text": "{\"answer\":\"same\",\"related_kind\":null,\"quote_a\":\"Hewlett Packard Enterprise Company, Huawei, Intel\",\"chunk_id_a\":\"0001045810-26-000021:0013\",\"quote_b\":\"Huawei Technologies Co\\\\. Ltd\\\\., or Huawei\",\"chunk_id_b\":\"0001045810-26-000021:0012\",\"reason\":\"Node B's passage defines Huawei as the short form of Huawei Technologies Co. Ltd., and Node A's Huawei is the same competitor named in the same filing's competitor lists.\"}",
         "type": "text"
       }
     ],
     "diagnostics": null,
-    "model": "claude-sonnet-5-5",
+    "model": "claude-haiku-5-5",
     "role": "assistant",
     "stop_details": null,
     "stop_reason": "end_turn",
@@ -49,12 +54,12 @@
         "ephemeral_5m_input_tokens": 0
       },
       "cache_creation_input_tokens": 0,
-      "cache_read_input_tokens": 1505,
+      "cache_read_input_tokens": 1514,
       "inference_geo": "global",
       "input_tokens": 2913,
-      "output_tokens": 197,
+      "output_tokens": 763,
       "output_tokens_details": {
-        "thinking_tokens": 0
+        "thinking_tokens": 572
       },
       "server_tool_use": null,
       "service_tier": "standard"

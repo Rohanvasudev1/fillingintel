@@ -1,6 +1,6 @@
 """Record real adjudicator replies as tests/fixtures/anthropic/resolve_{name}.json.
 
-Sends ten pairs of nodes from NVDA run 1 to claude-sonnet-5-5 with the current
+Sends ten pairs of nodes from NVDA run 1 to the adjudicator model with the current
 resolve prompt, uncached: the Groq agreements, Huawei, GDPR against its long
 name and against U.K. GDPR, OBBBA, Teter, Blackwell / GB200, GeForce / GeForce
 NOW, and Revenue / Total revenue for FY2026. The nodes come from the run 1

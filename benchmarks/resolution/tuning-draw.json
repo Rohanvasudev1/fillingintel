@@ -1,0 +1,724 @@
+{
+  "set": "tuning",
+  "seed": 20261010,
+  "config_hash": "2870f2920973894a358eafb68ae948432b1459682762476ec8e246217d2c131e",
+  "sizes": {
+    "candidate": 60,
+    "near": 25,
+    "rest": 15
+  },
+  "populations": {
+    "candidate": 3794,
+    "near": 2995,
+    "rest": 145369
+  },
+  "near_fuzzy_margin": 10.0,
+  "near_rank_factor": 2,
+  "pairs": [
+    {
+      "key_a": "Product:soc",
+      "key_b": "Product:system on modules (soms)",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Organization:broadcom inc.",
+      "key_b": "Organization:marvell technology group, ltd.",
+      "label": "Organization",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:amd solarflare",
+      "key_b": "Product:amd solarflaretm adapters",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Organization:globalfoundries",
+      "key_b": "Organization:globalfoundries inc",
+      "label": "Organization",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Organization:bureau of industry and security (bis) of the united states department of commerce",
+      "key_b": "Organization:united states department of commerce",
+      "label": "Organization",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0000002488-24-000123:2488:operating income:FY2024-Q2",
+      "key_b": "0000002488-24-000123:2488:total operating income (loss):FY2024-Q2",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:5th generation amd epyc processors",
+      "key_b": "Product:amd epyc processors",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:gaming gpus",
+      "key_b": "Product:geforce gpus",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Organization:apollo global management",
+      "key_b": "Organization:fortress investments",
+      "label": "Organization",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Agreement:acquisition",
+      "key_b": "Agreement:agreement and plan of merger",
+      "label": "Agreement",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:ai nics",
+      "key_b": "Product:vulcano ai nics",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Organization:mellanox",
+      "key_b": "Organization:mobileye",
+      "label": "Organization",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Organization:united states department of commerce",
+      "key_b": "Organization:us federal department of commerce",
+      "label": "Organization",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0000002488-25-000108:2488:inventory and related charges associated with export control:FY2025-Q2",
+      "key_b": "0000002488-25-000108:2488:inventory and related charges for export control:FY2025-Q2",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Organization:apollo global management, inc.",
+      "key_b": "Organization:global foundries",
+      "label": "Organization",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0001045810-25-000209:1045810:revenue from customers outside the united states, percent of total revenue:FY2026-Q2",
+      "key_b": "0001045810-25-000209:1045810:revenue from customers outside the united states, share of total revenue:FY2026-Q2",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0000050863-26-000011:50863:non-cash asset impairment charges:FY2024",
+      "key_b": "0000050863-26-000011:50863:non-cash impairment charges:FY2024",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Regulation:april 2025 license requirement for certain semiconductor products to d5 countries",
+      "key_b": "Regulation:april 2025 license requirement for semiconductor exports to d5 countries",
+      "label": "Regulation",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:amd embedded radeon graphics",
+      "key_b": "Product:amd radeon pro graphics",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:fpga",
+      "key_b": "Product:virtex",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:4th gen amd epyc",
+      "key_b": "Product:4th gen amd epyctm cpus",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "MarketPlatform:2488:gaming",
+      "key_b": "MarketPlatform:2488:graphics market",
+      "label": "MarketPlatform",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0000002488-24-000163:2488:acquisition-related intangible amortization expense:FY2024-Q3",
+      "key_b": "0000002488-24-000163:2488:amortization of acquisition-related intangibles:FY2024-Q3",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Organization:samsung electronics co., ltd",
+      "key_b": "Organization:samsung electronics co., ltd.",
+      "label": "Organization",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "LegalProceeding:inquiry into competition in graphics card and cloud service provider markets",
+      "key_b": "LegalProceeding:inquiry into competition in those markets",
+      "label": "LegalProceeding",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "MarketPlatform:2488:client",
+      "key_b": "MarketPlatform:2488:graphics market",
+      "label": "MarketPlatform",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:nvidia nemotron",
+      "key_b": "Product:nvidia nim",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0001045810-25-000230:1045810:revenue from customers headquartered outside the united states, percent of total revenue:FY2026-Q3",
+      "key_b": "0001045810-25-000230:1045810:revenue from sales to customers headquartered outside of the united states:FY2026-Q3",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:amd ryzentm",
+      "key_b": "Product:ryzen",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Regulation:october 2023 bis export requirements for advanced computing items",
+      "key_b": "Regulation:october 2023 bis requirements for advanced computing items",
+      "label": "Regulation",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0000002488-25-000012:Segment:2488:client:operating income (loss):FY2023",
+      "key_b": "0000002488-25-000012:Segment:2488:client:operating income:FY2023",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:amd rocm",
+      "key_b": "Product:amd rocmtm open software stack",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Agreement:master purchase agreement",
+      "key_b": "Agreement:master receivables purchase agreement",
+      "label": "Agreement",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Regulation:chips and science act of 2022",
+      "key_b": "Regulation:u.s. inflation reduction act of 2022",
+      "label": "Regulation",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:4th gen intel xeon scalable processors",
+      "key_b": "Product:intel xeon processors",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0000002488-26-000018:2488:acquisition-related intangible amortization expense:FY2025",
+      "key_b": "0000002488-26-000018:2488:notional value of foreign currency forward contracts designated as cash flow hedges:FY2025",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:amd versal fpgas",
+      "key_b": "Product:amd versal portfolio",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Organization:ibm",
+      "key_b": "Organization:oracle corporation",
+      "label": "Organization",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Organization:amazon web services",
+      "key_b": "Organization:amazon, inc.",
+      "label": "Organization",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Organization:fabrinet",
+      "key_b": "Organization:lumentum holdings inc.",
+      "label": "Organization",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:nvidia drive orin platform",
+      "key_b": "Product:nvidia drive stack",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Regulation:general data protection regulation (gdpr)",
+      "key_b": "Regulation:u.k. gdpr",
+      "label": "Regulation",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0000050863-26-000011:50863:net change in fair value of escrowed shares:FY2025",
+      "key_b": "0000050863-26-000011:50863:net proceeds recorded in cash and cash equivalents:FY2025",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Agreement:investment and partnership agreement with openai",
+      "key_b": "Agreement:investment in anthropic",
+      "label": "Agreement",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0001045810-25-000116:1045810:excess inventory purchase obligation charges in cost of revenue:FY2025-Q1",
+      "key_b": "0001045810-25-000116:1045810:excess inventory purchase obligation charges:FY2025-Q1",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0000050863-26-000011:50863:asset impairment charges:FY2025",
+      "key_b": "0000050863-26-000011:50863:other non-cash asset impairment charges:FY2025",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:intel core",
+      "key_b": "Product:intel core ultra processors",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Agreement:loan agreement with the state of oregon business development commission",
+      "key_b": "Agreement:loan agreements with the industrial development authority of the city of chandler, arizona",
+      "label": "Agreement",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:dgx cloud",
+      "key_b": "Product:dgx spark",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:blackwell full-scale datacenter solutions",
+      "key_b": "Product:helios ai rack-scale platform solution",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:cuda development platform",
+      "key_b": "Product:nvidia cuda development platform",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:intel core ultra 200v series",
+      "key_b": "Product:intel core ultra series 3",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:semi-custom soc products",
+      "key_b": "Product:semi-custom system-on-chip (soc) products",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:amd ryzen embedded 9000 series",
+      "key_b": "Product:ryzen 9000 series processors",
+      "label": "Product",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0001045810-25-000023:1045810:goodwill increase from acquisitions:FY2025",
+      "key_b": "0001045810-25-000023:1045810:goodwill increase:FY2025",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Organization:bureau of industry and security (bis)",
+      "key_b": "Organization:us department of commerce",
+      "label": "Organization",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Agreement:chips act commercial program agreement",
+      "key_b": "Agreement:chips act secure enclave agreement",
+      "label": "Agreement",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "0000050863-25-000009:50863:three largest customers share of net revenue:FY2024",
+      "key_b": "0000050863-25-000009:50863:total percentage of net revenue:FY2024",
+      "label": "MetricValue",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Organization:french competition authority",
+      "key_b": "Organization:us securities and exchange commission",
+      "label": "Organization",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Regulation:climate-related disclosure requirements",
+      "key_b": "Regulation:eu's new corporate sustainability reporting directive",
+      "label": "Regulation",
+      "stratum": "candidate"
+    },
+    {
+      "key_a": "Product:dgx cloud",
+      "key_b": "Product:nvidia ai cloud services",
+      "label": "Product",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Agreement:retirement transition agreement and general release with devinder kumar",
+      "key_b": "Agreement:transition services agreement",
+      "label": "Agreement",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Organization:qualcomm",
+      "key_b": "Organization:softbank",
+      "label": "Organization",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Organization:foundry jv holdco llc",
+      "key_b": "Organization:slp vii gryphon aggregator, l.p.",
+      "label": "Organization",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Facility:germany fab",
+      "key_b": "Facility:ireland wafer fabrication facilities",
+      "label": "Facility",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Product:amd epyc series processors",
+      "key_b": "Product:amd ryzen embedded series processors",
+      "label": "Product",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Regulation:usg licensing requirements, july 2023",
+      "key_b": "Regulation:worldwide licensing requirements",
+      "label": "Regulation",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Regulation:environmental laws and regulations",
+      "key_b": "Regulation:united states and foreign laws and regulations",
+      "label": "Regulation",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Organization:hpi",
+      "key_b": "Organization:trgp",
+      "label": "Organization",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Regulation:2022 export controls",
+      "key_b": "Regulation:export controls applicable to china",
+      "label": "Regulation",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Agreement:altera transaction agreement",
+      "key_b": "Agreement:amended and restated transaction agreement",
+      "label": "Agreement",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Agreement:manufacturing services agreement",
+      "key_b": "Agreement:wafer manufacturing and sale agreement",
+      "label": "Agreement",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Regulation:fasb accounting standard on income tax disclosures",
+      "key_b": "Regulation:u.s. federal research tax credit",
+      "label": "Regulation",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Organization:hewlett packard enterprise company",
+      "key_b": "Organization:huawei technologies co. ltd.",
+      "label": "Organization",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Product:core ultra 200v series processors",
+      "key_b": "Product:intel core ultra series 1",
+      "label": "Product",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Organization:ims nanofabrication",
+      "key_b": "Organization:united microelectronics corporation (umc)",
+      "label": "Organization",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Agreement:equity investment in intel corporation",
+      "key_b": "Agreement:settlement agreement with intel corporation",
+      "label": "Agreement",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Product:hopper gpu architecture",
+      "key_b": "Product:x86 architecture",
+      "label": "Product",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Regulation:chips act",
+      "key_b": "Regulation:creating helpful incentives to produce semiconductors for america and science act",
+      "label": "Regulation",
+      "stratum": "near"
+    },
+    {
+      "key_a": "LegalProceeding:consumer class action lawsuits against us",
+      "key_b": "LegalProceeding:litigation related to security vulnerabilities",
+      "label": "LegalProceeding",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Organization:nand opco business",
+      "key_b": "Organization:sk hynix inc",
+      "label": "Organization",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Organization:altera",
+      "key_b": "Organization:lattice semiconductor corporation",
+      "label": "Organization",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Organization:customer c",
+      "key_b": "Organization:zt systems",
+      "label": "Organization",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Organization:apple",
+      "key_b": "Organization:microsoft",
+      "label": "Organization",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Agreement:apollo scip transaction",
+      "key_b": "Agreement:three separate confidential agreements with r2, third point and trgp capital",
+      "label": "Agreement",
+      "stratum": "near"
+    },
+    {
+      "key_a": "Organization:intel americas, inc.",
+      "key_b": "Organization:tower",
+      "label": "Organization",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Product:amd instinct",
+      "key_b": "Product:intel 14a",
+      "label": "Product",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Product:artix",
+      "key_b": "Product:epyc embedded 4005 series",
+      "label": "Product",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Organization:hpe",
+      "key_b": "Organization:sanmina",
+      "label": "Organization",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Product:5th gen intel xeon scalable processors",
+      "key_b": "Product:intel 18a",
+      "label": "Product",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Product:amd instincttm accelerators",
+      "key_b": "Product:nics",
+      "label": "Product",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Product:amd ryzentm",
+      "key_b": "Product:intel xeon scalable processor family",
+      "label": "Product",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Product:chipsets",
+      "key_b": "Product:vgpu",
+      "label": "Product",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Product:amd radeon 9000 series gpus",
+      "key_b": "Product:nvidia ai enterprise",
+      "label": "Product",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Product:amd desktop and mobile ryzen processors",
+      "key_b": "Product:amd versal portfolio",
+      "label": "Product",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Organization:california regional water quality control board",
+      "key_b": "Organization:zt systems group int\u2019l, inc.",
+      "label": "Organization",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Organization:dell technologies",
+      "key_b": "Organization:ims nanofabrication",
+      "label": "Organization",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Product:epyc embedded 2005 series",
+      "key_b": "Product:ryzen 10 and 100 series",
+      "label": "Product",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Agreement:ireland scip transaction",
+      "key_b": "Agreement:private placement share sale agreements",
+      "label": "Agreement",
+      "stratum": "rest"
+    },
+    {
+      "key_a": "Product:cosmos",
+      "key_b": "Product:gpu accelerators",
+      "label": "Product",
+      "stratum": "rest"
+    }
+  ],
+  "provenance": {
+    "commit": "dc3808d",
+    "created_at": "2026-10-11T16:44:05+00:00",
+    "label_prompt": "label/v2@a7f163e9",
+    "ontology_version": 3,
+    "frozen": null,
+    "inputs": [
+      {
+        "file": "0000002488-24-000056-run1.jsonl",
+        "sha256": "30cf9bf376531f02de3eb8bca592575be01f95b32f773f3938449f701efd48f2"
+      },
+      {
+        "file": "0000002488-24-000123-run1.jsonl",
+        "sha256": "ec4dc84c513d2627a81b5b73fa184fcacaaf8514e12d33c087c74cabb3c9b09e"
+      },
+      {
+        "file": "0000002488-24-000163-run1.jsonl",
+        "sha256": "4d88625cbc7490e06061d1fa2ca5e5bd30fb2122a617ca721d6d8e566a9f34c1"
+      },
+      {
+        "file": "0000002488-25-000012-run1.jsonl",
+        "sha256": "11372f29811a2f633f5d2666bd9cac33fd7f434de0287381f66d21d412844c9c"
+      },
+      {
+        "file": "0000002488-25-000047-run1.jsonl",
+        "sha256": "958cec79da1a5735b00e6a6f7c469859c235a314c155ebc2b2d7424752b4be4b"
+      },
+      {
+        "file": "0000002488-25-000108-run1.jsonl",
+        "sha256": "0197374b913615dc255d9f3c1a830b771c57f9f0fd5fa4b9a5163433417dd8fd"
+      },
+      {
+        "file": "0000002488-25-000166-run1.jsonl",
+        "sha256": "b01c7d34019d2aea140c92e0a724638649cba97cb665f6ddfb0bb013470ea18c"
+      },
+      {
+        "file": "0000002488-26-000018-run1.jsonl",
+        "sha256": "562cf825cfad94a50dd9693c4041507357f25759b451cf3d4b22459b34a2b007"
+      },
+      {
+        "file": "0000050863-24-000076-run1.jsonl",
+        "sha256": "3f34ebe7c3d43de8cdfe543839009197031b68f123c4ef96446c72b2f11399ed"
+      },
+      {
+        "file": "0000050863-24-000124-run1.jsonl",
+        "sha256": "e291fb5cf095dc32bab414a0df85c1173f28dac02340a7b3691ce47f60b15dbd"
+      },
+      {
+        "file": "0000050863-24-000149-run1.jsonl",
+        "sha256": "73c3fa3094be48e0f925fe6735fd85346db038733098f1077d31a5232e0151fc"
+      },
+      {
+        "file": "0000050863-25-000009-run1.jsonl",
+        "sha256": "33e441d048e14b3dd52802f903a752a8c17995d85ab4490f9624104a02e3a573"
+      },
+      {
+        "file": "0000050863-25-000074-run1.jsonl",
+        "sha256": "5217d39e0319c08a86765e47484613d8ed282c8362663bc217c5bc30bd400913"
+      },
+      {
+        "file": "0000050863-25-000109-run1.jsonl",
+        "sha256": "ce7d975b30fef606f54c2b4b8dd4cdb66cefa44e86dd6861ff70031c951b9a13"
+      },
+      {
+        "file": "0000050863-25-000179-run1.jsonl",
+        "sha256": "afba3c68c6b53cb42460b91215d560ca39c02cadebc114821364741f9b785c1d"
+      },
+      {
+        "file": "0000050863-26-000011-run1.jsonl",
+        "sha256": "c517bb5a8897a4b5eeaa74e29f5a2dc18d802bc867dee6d2d2981554d3269cb2"
+      },
+      {
+        "file": "0001045810-24-000124-run1.jsonl",
+        "sha256": "37ff8feed44215efc91d19d44649c6c3479b4c1ac6c32937dd0e6594c6af5023"
+      },
+      {
+        "file": "0001045810-24-000264-run1.jsonl",
+        "sha256": "3919e00d5689ab7ed845e81b41159d40df1d43ac43a74caa831ad3a322aa3a72"
+      },
+      {
+        "file": "0001045810-24-000316-run1.jsonl",
+        "sha256": "f98ad8d21558724e4f33bbaeaf7cedb6f8e8404cc5a8dd492f04b8bc68625a3b"
+      },
+      {
+        "file": "0001045810-25-000023-run1.jsonl",
+        "sha256": "3efffe5ebc5e85beead87f2be5697a3a3472742b6c637b21da113352a5bf11cc"
+      },
+      {
+        "file": "0001045810-25-000116-run1.jsonl",
+        "sha256": "cf58929d34bf86d171837a672e4358c91bac89357f37e4c5c964f1b74e633b2a"
+      },
+      {
+        "file": "0001045810-25-000209-run1.jsonl",
+        "sha256": "9006f7c13a7dabe55f0956d0a2665c53e5f748df7badbf42c598b7c4e61ff1c5"
+      },
+      {
+        "file": "0001045810-25-000230-run1.jsonl",
+        "sha256": "6592f34b7090a1fdd5d833fedc1187d746a6f6f5fe68fd3cfc12ebfb51497994"
+      },
+      {
+        "file": "0001045810-26-000021-run2.jsonl",
+        "sha256": "9d6d4ed747719257cc7389e19087aa5de8f516fcb1409eb97f9148984af2616b"
+      }
+    ]
+  }
+}

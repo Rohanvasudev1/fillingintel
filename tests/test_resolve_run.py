@@ -169,11 +169,31 @@ def test_a_run_writes_the_log_the_alias_map_and_the_report(run_main, tmp_path, c
     assert report["counts"]["pending_by_label"] == {}
     adjudication = report["adjudication"]
     assert adjudication["pairs"] == 2 and adjudication["answers"] == {"distinct": 2}
-    assert adjudication["model"] == "claude-sonnet-5-5" and adjudication["effort"] == "high"
-    assert adjudication["prompt_version"].startswith("resolve/v1@")
-    assert adjudication["price_table"]["date"] == "2026-10-09"
+    assert adjudication["model"] == "claude-haiku-5-5" and adjudication["effort"] == "high"
+    assert adjudication["prompt_version"].startswith("resolve/v2@")
+    assert adjudication["price_table"]["date"] == "2026-10-10"
     assert report["provenance"]["status"] == "complete"
     assert report["labels_and_scoring"]["tuning"] == {"drawn": None, "labelled": 0, "same": 0}
+
+
+def test_the_run_report_carries_the_tuning_choices_and_the_frozen_settings(run_main, tmp_path):
+    out = tmp_path / "out"
+    out.mkdir()
+    tuning = {"rules": [{"name": "chosen", "config_hash": "c" * 64, "pending": 9,
+                         "matches_found": 2, "matches": 2, "non_matches_flagged": 1,
+                         "non_matches": 3, "missed": []}],
+              "adjudicator": {"prompt_version": "resolve/v2@00000000", "answered": 3,
+                              "agreed": 3, "cost_usd": 0.01}}
+    (out / "tuning-report.json").write_text(json.dumps(tuning), encoding="utf-8")
+    (out / "frozen.json").write_text(json.dumps({"config_hash": "c" * 64, "prompts": {
+        "label": "label/v2@00000000", "resolve": "resolve/v2@00000000"}}), encoding="utf-8")
+    assert run_main() == EXIT_OK
+    recorded = _report(tmp_path, 1)["labels_and_scoring"]["tuning_report"]
+    assert recorded["chosen"]["pending"] == 9
+    assert recorded["adjudicator"] == {"prompt_version": "resolve/v2@00000000", "answered": 3,
+                                       "agreed": 3}
+    assert recorded["frozen"]["config_hash"] == "c" * 64
+    assert len(recorded["report_sha256"]) == 64
 
 
 def test_a_rerun_on_unchanged_inputs_appends_nothing(run_main, tmp_path, candidates):
@@ -318,10 +338,10 @@ def test_adjudicator_calls_are_traced_without_text(run_main):
     assert len(pairs) == 2
     assert all(s.parent.span_id == root.context.span_id for s in pairs)
     attributes = pairs[0].attributes
-    assert attributes["llm.model_name"] == "claude-sonnet-5-5"
+    assert attributes["llm.model_name"] == "claude-haiku-5-5"
     assert attributes[CACHE_HIT_ATTR] is False and attributes[COST_ATTR] > 0
     assert attributes["llm.token_count.completion"] > 0
-    assert attributes["llm.prompt_template.version"].startswith("resolve/v1@")
+    assert attributes["llm.prompt_template.version"].startswith("resolve/v2@")
     assert not any(k.startswith("llm.input_messages") for k in attributes)
 
 
@@ -350,10 +370,23 @@ def test_a_metric_value_takes_its_subject_from_its_measures_edge(tmp_path, candi
     assert revenue.metric.accession_no == NVDA_10K
 
 
-def test_a_metric_value_without_a_measures_edge_is_refused(tmp_path):
-    path = _write(tmp_path, f"{NVDA_10K}-run1.jsonl", _metric("Revenue", 61)[:1])
-    with pytest.raises(InputError, match="MEASURES"):
-        load_nodes([path])
+def test_a_metric_value_without_a_measures_edge_is_skipped_and_listed(tmp_path):
+    # User decision 2026-10-11: the extractor kept two Intel MetricValues whose
+    # MEASURES edge it dropped; with no subject they cannot pair, so they are skipped.
+    orphan = _metric("Revenue", 61)[0]
+    path = _write(tmp_path, f"{NVDA_10K}-run1.jsonl", [orphan, *_metric("Net income", 62)])
+    nodes, (file,) = load_nodes([path])
+    assert [n.name for n in nodes] == ["Net income"]
+    assert file.skipped_metrics == (orphan["properties"]["key"],)
+
+
+def test_the_run_report_lists_skipped_metric_values(run_main, tmp_path, candidates):
+    orphan = _metric("Revenue", 61, AMD_10K)[0]
+    _write(candidates, f"{AMD_10K}-run2.jsonl", [*AMD_LINES, orphan])
+    assert run_main() == EXIT_OK
+    inputs = _report(tmp_path, 1)["provenance"]["inputs"]
+    assert {i["file"]: i["skipped_metric_values"] for i in inputs} == {
+        f"{AMD_10K}-run2.jsonl": [orphan["properties"]["key"]], f"{NVDA_10K}-run2.jsonl": []}
 
 
 def test_a_missing_file_is_refused(tmp_path):

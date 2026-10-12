@@ -1,0 +1,129 @@
+{
+  "provenance": {
+    "note": "agent-labelled (gpt-6-luna)",
+    "set": "scoring",
+    "commit": "68b35fd",
+    "created_at": "2026-10-12T14:28:27+00:00",
+    "labeller": {
+      "provider": "openai",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "prompt": {
+        "version": "label/v2@a7f163e9",
+        "sha256": "a7f163e9d045503c701732d34dcf0fb53e90eff53f6c1c93093fa8cf4aad26af",
+        "file_sha256": "97a4a047620d308e2570967cbc520653f27fc059316830e9ef5be946778aeb6d"
+      },
+      "prompt_versions_in_labels": [
+        "label/v2@a7f163e9"
+      ]
+    },
+    "adjudicator": {
+      "model": "claude-haiku-5-5",
+      "effort": "high",
+      "prompt_version": "resolve/v2@5b5e4a7d"
+    },
+    "config_hash": {
+      "draw": "7a5aa8de76e57b0a39f9120305b2beaf583f081e07deca2dd9c83ee1a3741205",
+      "run": "7a5aa8de76e57b0a39f9120305b2beaf583f081e07deca2dd9c83ee1a3741205"
+    },
+    "ontology_version": 3,
+    "files": {
+      "draw": {
+        "file": "scoring-draw.json",
+        "sha256": "b8af180b3b317cd628a4378670b0af5b04fc019bfc26ed2ea60fa6ca73ae036d"
+      },
+      "labels": {
+        "file": "scoring-labels.jsonl",
+        "sha256": "a234e19f80331244f75faf72c5dc8a2d369f09cb4490a184a38ed10ebea84ea5"
+      },
+      "alias_map": {
+        "file": "alias_map.json",
+        "sha256": "7e84f3e15b5ca9a755c9bee5f36780a7d80e63910ac31fc2442444e84f06cf61"
+      },
+      "run_report": {
+        "file": "run2.json",
+        "sha256": "7163ebf1c1040debcae866c4bfbebaba045b76cd65edebf7534e372d844e0834"
+      }
+    },
+    "bootstrap": {
+      "resamples": 10000,
+      "confidence": 0.95,
+      "within_strata": true
+    },
+    "warnings": []
+  },
+  "precision": {
+    "value": 1.0,
+    "interval": {
+      "low": 1.0,
+      "high": 1.0,
+      "resamples": 10000
+    }
+  },
+  "recall": {
+    "value": 0.38670283568613745,
+    "interval": {
+      "low": 0.19854346855582575,
+      "high": 0.6107241978047204,
+      "resamples": 10000
+    }
+  },
+  "rules_share_of_true_matches": {
+    "value": 0.7347353878036611,
+    "interval": {
+      "low": 0.5293206889878072,
+      "high": 1.0,
+      "resamples": 10000
+    }
+  },
+  "adjudicator": {
+    "judged": 60,
+    "correct": 55,
+    "unusable": 0,
+    "accuracy": {
+      "value": 0.9166666666666666,
+      "interval": {
+        "low": 0.85,
+        "high": 0.9833333333333333,
+        "resamples": 10000
+      }
+    }
+  },
+  "strata": [
+    {
+      "stratum": "candidate",
+      "population": 3829,
+      "labelled": 60,
+      "weight": 63.81666666666667,
+      "same": 19,
+      "predicted_same": 10,
+      "true_positives": 10
+    },
+    {
+      "stratum": "near",
+      "population": 3648,
+      "labelled": 25,
+      "weight": 145.92,
+      "same": 3,
+      "predicted_same": 0,
+      "true_positives": 0
+    },
+    {
+      "stratum": "rest",
+      "population": 144581,
+      "labelled": 15,
+      "weight": 9638.733333333334,
+      "same": 0,
+      "predicted_same": 0,
+      "true_positives": 0
+    }
+  ],
+  "unrepresented_strata": [],
+  "counts": {
+    "drawn": 100,
+    "labelled": 100,
+    "unlabelled": 0,
+    "quotes_unverified": 1
+  },
+  "seed": 20261012
+}

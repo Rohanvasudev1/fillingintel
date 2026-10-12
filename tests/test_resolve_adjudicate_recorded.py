@@ -1,7 +1,7 @@
-"""The adjudicator on real claude-sonnet-5-5 replies to NVDA run 1 pairs, offline (Step 9).
+"""The adjudicator on real claude-haiku-5-5 replies to NVDA run 1 pairs, offline (Step 9).
 
 Ten pairs recorded once by scripts/capture_resolve_responses.py with prompt
-resolve/v1, each fixture holding both nodes as run 1 extracted them. The chunk
+resolve/v2 (ticket 06), each fixture holding both nodes as run 1 extracted them. The chunk
 text comes from the NVDA FY2026 10-K fixture. These tests pin what the model
 really answered and that the code turns each answer into the right merge or
 counted reason; they do not claim the answers are right (ticket 04 scores that).
@@ -22,11 +22,13 @@ from tests.anthropic_fixtures import FIXTURES
 
 STAMP = Stamp(config_hash="c" * 64, commit="abc1234", timestamp="2026-10-10T12:00:00+00:00")
 EVERY_PAIR = ResolveConfig(fuzzy_cutoff=0.0, top_k=0)
-RECORDED_UNDER = "resolve/v1@6cf68829"
-SAME = ("groq_license_agreements", "groq_ip_arrangement", "huawei", "gdpr_long_name", "obbba",
-        "teter", "revenue")
-RELATED = {"gdpr_uk": RelatedKind.VARIANT, "blackwell_gb200": RelatedKind.FAMILY_MEMBER,
-           "geforce_now": RelatedKind.FAMILY_MEMBER}
+RECORDED_UNDER = "resolve/v2@5b5e4a7d"
+SAME = ("groq_license_agreements", "huawei", "gdpr_long_name", "obbba", "revenue")
+RELATED = {"gdpr_uk": RelatedKind.VARIANT}
+# Haiku is more cautious than Sonnet was under v1, which answered same for the Groq IP
+# arrangement and Teter, and related for Blackwell / GB200 and GeForce NOW.
+NOT_MERGED = {"groq_ip_arrangement": "unsure", "teter": "unsure", "blackwell_gb200": "unsure",
+              "geforce_now": "distinct"}
 
 
 def _node(data):
@@ -74,7 +76,7 @@ def _resolve(texts, *names):
 
 def test_the_replies_were_recorded_with_the_current_prompt():
     assert load_prompt().prompt_version == RECORDED_UNDER
-    for name in (*SAME, *RELATED):
+    for name in (*SAME, *RELATED, *NOT_MERGED):
         assert _load(name)["prompt_version"] == RECORDED_UNDER
 
 
@@ -100,17 +102,20 @@ def test_related_pairs_are_logged_by_kind_and_never_merge(texts, name):
     assert result.counts.failures == {f"related:{RELATED[name].value}": 1}
 
 
-def test_mr_teter_merges_into_the_full_name_with_more_evidence(texts):
-    (merge,) = _resolve(texts, "teter").merges
-    assert merge.canonical == "Person:timothy s. teter"
+@pytest.mark.parametrize("name", NOT_MERGED)
+def test_unsure_and_distinct_answers_are_counted_and_never_merge(texts, name):
+    result = _resolve(texts, name)
+    (decision,) = result.decisions
+    assert decision.answer.value == NOT_MERGED[name]
+    assert result.merges == ()
+    assert result.counts.failures == {NOT_MERGED[name]: 1}
 
 
-def test_two_groq_agreement_decisions_chain_into_one_group_of_three(texts):
+def test_an_unsure_groq_pair_leaves_the_other_groq_merge_alone(texts):
     result = _resolve(texts, "groq_license_agreements", "groq_ip_arrangement")
-    assert result.counts.failures == {"call_failed": 1}  # the pair no reply was recorded for
+    assert result.counts.failures == {"call_failed": 1, "unsure": 1}  # one pair unrecorded
     (merge,) = result.merges
-    assert len(merge.members) == 3
-    assert merge.decision.count("+") == 1
+    assert len(merge.members) == 2
     assert result.held_back == ()
 
 

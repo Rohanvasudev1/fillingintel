@@ -165,11 +165,17 @@ def test_the_scoring_set_needs_frozen_settings(env):
                 read_chunks=_chunks, config=CONFIG)
     assert main(scoring, **args) == EXIT_CHECK_FAILED  # no frozen.json
     run_report = {"provenance": {"config_hash": CONFIG.config_hash},
-                  "adjudication": {"prompt_version": "resolve/v1@00000000"}}
+                  "adjudication": {"prompt_version": "resolve/v1@00000000",
+                                   "model": "claude-haiku-5-5", "effort": "high"}}
     (env / "out" / "run1.json").write_text(json.dumps(run_report), encoding="utf-8")
-    prompts = {"label": load_label_prompt().prompt_version, "resolve": "resolve/v1@00000000"}
+    prompts = {"label": load_label_prompt().prompt_version, "resolve": "resolve/v1@00000000",
+               "label_model": "gpt-6-luna@high", "resolve_model": "claude-haiku-5-5@high"}
     write_frozen(env / "out" / FROZEN_NAME, Frozen("0" * 64, prompts), {})
     assert main(scoring, **args) == EXIT_CHECK_FAILED  # another config hash
+    (env / "out" / FROZEN_NAME).unlink()
+    swapped = {**prompts, "resolve_model": "claude-sonnet-5-5@high"}
+    write_frozen(env / "out" / FROZEN_NAME, Frozen(CONFIG.config_hash, swapped), {})
+    assert main(scoring, **args) == EXIT_CHECK_FAILED  # the run used another adjudicator
     (env / "out" / FROZEN_NAME).unlink()
     write_frozen(env / "out" / FROZEN_NAME, Frozen(CONFIG.config_hash, prompts), {})
     assert main(scoring, **args) == EXIT_OK

@@ -1,6 +1,6 @@
 {
   "recorded": "real API response, recorded by scripts/capture_resolve_responses.py",
-  "prompt_version": "resolve/v1@6cf68829",
+  "prompt_version": "resolve/v2@5b5e4a7d",
   "node_a": {
     "key": "Regulation:gdpr",
     "label": "Regulation",
@@ -25,19 +25,24 @@
     ],
     "metric": null
   },
-  "api_ms": 1952.7057919985964,
+  "api_ms": 2713.0048330000136,
   "response": {
-    "id": "msg_011CfuJf5fu68tXhAMeNwfmS",
+    "id": "msg_011CfvnMtWio6S6NogQ6BHqA",
     "container": null,
     "content": [
       {
+        "signature": "CAQStgoKEAgSGAI4AUIIdGhpbmtpbmcSDHA18Akc8Dwe/s13pBoMIycyR1Ci6lYYKB4TIjDQLjDvD5Lilqpn6EzBh+zMqsCLe5TQnT/H+i0axbHybXCOT2T/2IV+jkLNt7SQkywq0wklu5WZxh/8y5jhjO9QuoMHWFjDt/VnCBIRzVq1sYXRTeP5mrgfwiDzSafa/650/QcaM4Bg8iUXfzMe8iE2rO2fc0YoZAxAW0k0aOcV/seAXNtpRdRoR/r1bb4r0jQqfXU1BUKAhC0d/BMr9PBLDtXsrAmM6F0PqK35XvhUz1m9YvMn6eHWLzUIiqYBELdf4EJvYmL4Lzs69tqlCyJCzc26DhelL6KnulvSSuVVtxRZXFKwL7VyYRch5BZ/9oWydWsfkWeLkqll9V1p8P85M1Wka4rQ8RAdCA5ifY9IK7a2T8N7t6xb9zXBY2hN8sHlVeLsfZiEeatyxYqyU0zNWWNZVuTDZG/UDS7HyMT3V3Edv8klf0tU6rscYxhALPUtAZmDu1zacGnR9fO2sQSQT5YPWzB4RnX6Peyw60gulAMJc0kHwrsbOTfgbSE6U/iyQMNjd728znmdkNBWd8IdwjW0lXhvHfc0iWDNBz/8/GuQ1/RBUF/bDUdJAHAnIj7D7e1Tu1pOUyb2NiEOKmL7UgcAuumKgcnEfl4eWkfdWMkZa/2lWRaS0b5izB2XW27BCvxYwq/OKsGsGSH1VWiSeHZmuFrFzzuJynzirtu2Erd7DZNWFakhRJEguA8Od8xxyHfomsymFEsMr+sb7eZ3FZqHLxk6q/nIld/gufeYNLK3HIyFbtT2IFRkNSAIr7942ypXnqaP3YgnucMhtFqzXGel5gs42LV7VORdAiaa+ZST8sSjIQovcd5UzRqZIM8dO92teZ1kMs38o2/asXKI7ni2u9xCZML3bwxAwwyhz5b1FXtcUHw/HZK3Y+bA2dct6LmvSzZLfbxPSnMUrcAt4Kn3u2nhLer7z/oVmLumbQGzTLmCgaJ43y5feSow//m0zFDezHI9C4XKttXYmJbtbA13++RCTuqsTpbHYtYlpsv4wx1GdaPc1oit2Jn3aGbXzJmWR+EQnSwcuI3DHdzoFT69IJ57hbgwZ78knIQdIbx9Jn0GAlw7FKINvw+4dtaeVKEA3cd3ML8XygceAvdaO5G0I192FIIcnl7nJSkUiCzu0RGDZB+ddwHHwK+VhmYvcIZbhkDDqb72Ww70FHq04qN9KAvWxcoKjMYYECRDRg1C1XNoG7at9Zs89f4VXDkt83c+2JasDQX98HOo2QHnp4bKbhFQH8PQX5BmiJmCYL6tIY0yJTGvVWYwrKottXyKeGu/Sf6gFwxz68MXFo059tjr3H0/ReGHve3FVSnh+oPPffwn+uoIjX0BSCTO1O+VDAGN3rTJL8G0SFvtwy603H/EHIX4UsxzGj8gwpN2w3R6AZ0j9vDWF/luk3qt3YDKIUZGcRKrM7UkedVIzkEtUlWefmI3IEKqYQCCoFTywQTTT5Ij5oV4cDVrIwCNlq/w6Spf9BSxvBQ79RKmFiLoGxAJEZSZ78fvkbjmILnB/VWxWzDMamOE9L+UNDYZF77CBCq5NpKtZIxg0ZOBRIOI4dN6gjS7vVAeK1qGxXZjHhUxuoqoWcV+RUn0fl5WI1zGxIHEKY/yTpEFxGzHtwIL6fLMsY5j18XDR8P/VIP52kwjOHpV8/WIgA7v+7+8kETukVGlLoCrlFioYNrdrcbSDPvNLwnZT+tcqbfvgHzuLdTNMMx3HxgB",
+        "thinking": "",
+        "type": "thinking"
+      },
+      {
         "citations": null,
-        "text": "{\"answer\":\"same\",\"related_kind\":null,\"quote_a\":\"the GDPR governs the transfer of personal data to countries outside of the EEA\",\"chunk_id_a\":\"0001045810-26-000021:0050\",\"quote_b\":\"The European Union adopted the General Data Protection Regulation, or GDPR\",\"chunk_id_b\":\"0001045810-26-000021:0049\",\"reason\":\"The filing defines \\\"General Data Protection Regulation, or GDPR\\\" in one passage and uses \\\"GDPR\\\" for the same EU regulation in the adjacent passage, so they are one law under two names.\"}",
+        "text": "{\"answer\":\"same\",\"related_kind\":null,\"quote_a\":\"the GDPR governs the transfer of personal data to countries outside of the EEA\",\"chunk_id_a\":\"0001045810-26-000021:0050\",\"quote_b\":\"The European Union adopted the General Data Protection Regulation, or GDPR\",\"chunk_id_b\":\"0001045810-26-000021:0049\",\"reason\":\"Passage 0049 defines the General Data Protection Regulation as \\\"GDPR\\\", and passage 0050 uses GDPR for the same EU regulation, so the two names refer to one law.\"}",
         "type": "text"
       }
     ],
     "diagnostics": null,
-    "model": "claude-sonnet-5-5",
+    "model": "claude-haiku-5-5",
     "role": "assistant",
     "stop_details": null,
     "stop_reason": "end_turn",
@@ -49,12 +54,12 @@
         "ephemeral_5m_input_tokens": 0
       },
       "cache_creation_input_tokens": 0,
-      "cache_read_input_tokens": 1505,
+      "cache_read_input_tokens": 1514,
       "inference_geo": "global",
       "input_tokens": 2478,
-      "output_tokens": 196,
+      "output_tokens": 475,
       "output_tokens_details": {
-        "thinking_tokens": 0
+        "thinking_tokens": 284
       },
       "server_tool_use": null,
       "service_tier": "standard"

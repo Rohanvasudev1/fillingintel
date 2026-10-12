@@ -23,9 +23,10 @@ from ingest.provenance import REPO_ROOT
 from resolve.output_schema import output_schema
 
 PROMPTS_DIR = REPO_ROOT / "prompts" / "resolve"
-CURRENT_VERSION = "v1"
+CURRENT_VERSION = "v2"
 PUBLISHED = MappingProxyType({
     "v1": "403e2d11364e0bef8476fe40be4be3e31cb7c747fbd29dc23ad8b50373a22f8e",
+    "v2": "671eb57abec6ef29994353c68fb6633e1367787027f7ff1c0bcae592dd2c048f",  # invented examples
 })
 _PARTS = re.compile(r"\A# System\n(?P<system>.*?)\n# User\n(?P<user>.*)\Z", re.DOTALL)
 _HASH_CHARS = 8
