@@ -1,0 +1,32 @@
+{
+  "config_hash": "721ca77c90bc86ad8b03bbc5f8bd0892a7c87ee081896db3d88e0a9635790e84",
+  "prompts": {
+    "label": "label/v2@a7f163e9",
+    "resolve": "resolve/v2@5b5e4a7d",
+    "label_model": "gpt-6-luna@high",
+    "resolve_model": "claude-haiku-5-5@high"
+  },
+  "provenance": {
+    "commit": "176098c",
+    "created_at": "2026-10-12T22:36:24+00:00",
+    "config": {
+      "fuzzy_cutoff": 85.0,
+      "top_k": 3,
+      "rare_word_max_keys": 0,
+      "rare_word_min_length": 3,
+      "embedding_model": "voyage-4-large",
+      "embed_text": "label_name",
+      "embed_input_type": "document",
+      "max_group_names": 12,
+      "group_rule": "group_cut/v1"
+    },
+    "tuning_report_sha256": "7cf38853e42e69e694ab40bddff462265c9d9b922ce8bc0c87b7c95257423aad",
+    "tuning_check_sha256": "1cabf1be10c6eba76cd9a3c394219d8a606e7d1a57c15a162f887e7ec5ca22ec",
+    "accepted_not_same": [
+      [
+        "Regulation:chips act",
+        "Regulation:creating helpful incentives to produce semiconductors for america and science act"
+      ]
+    ]
+  }
+}
