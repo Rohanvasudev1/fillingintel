@@ -25,6 +25,10 @@ Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstra
 ## Step 10 — graph load
 - MetricValue keys collide when a percentage and a dollar figure share a concept name. Haiku with prompt v2 stored NVIDIA's "net income" as 55.6 percent (its share of revenue) and as $120,067 million under one key, and the conflict rule kept the percentage; 34 of NVDA run 2's conflicts and 32 of AMD run 1's 35 are this kind. AMD's "income tax (benefit)" FY2025 holds the effective rate, -2.5 percent (agent second look at round 3). The extract files keep each unit, so the loader can separate a percentage from a currency amount when it builds the key, with no re-extraction (user decision 2026-10-11: run the corpus under v2 and fix this in code). Decide the rule at Step 10's grilling: unit class in the key, or a percent concept renamed.
 
+- Entity-resolution recall (Step 9 scored 0.387, agent-labelled). Five of the nine missed candidate matches were `same` answers held back because their group had more than 5 names or held a `related` / `distinct` pair. Options: split a held-back group along its `same` edges instead of dropping it, raise the 5-name limit for labels such as Regulation and Product, or let the user review held-back groups. Any change is tuned on the tuning set and reported as a new scoring round with a fresh draw (ticket 06 rule).
+- Whether to send more than 3 evidence chunks per node to the adjudicator (`MAX_CHUNKS_PER_NODE`): not measured in Step 9.
+- Intel chunk `0000050863-24-000076:0017` failed extraction at `max_tokens` 16,000; extracting it again needs streaming for a higher cap. Two Intel MetricValues lost their MEASURES edge in extraction and are skipped by resolution; the loader decides whether they load.
+
 ## Lookup arm
 - Map `MetricValue.concept` to XBRL tags from EDGAR companyfacts. Not done in Step 9 (grilling, 2026-10-10): MetricValue is per filing and never merges across filings. It is a new EDGAR data source; propose it when a lookup arm needs it.
 
