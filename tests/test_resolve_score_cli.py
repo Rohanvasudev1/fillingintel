@@ -1,5 +1,6 @@
 """`python -m resolve.score`: inputs, checks, the report header and exit codes (Step 9)."""
 import json
+from dataclasses import replace
 
 import pytest
 
@@ -83,11 +84,43 @@ def test_bad_arguments(out):
     assert main(["--set", "final"], out_dir=out) == EXIT_USAGE
 
 
-def test_a_scoring_run_under_another_config_fails_the_check(out):
+def test_a_scoring_set_with_no_run_under_its_config_fails_the_check(out):
     report = json.loads((out / "run1.json").read_text(encoding="utf-8"))
     report["provenance"]["config_hash"] = "d" * 64
-    (out / "run2.json").write_text(json.dumps(report), encoding="utf-8")
+    (out / "run1.json").write_text(json.dumps(report), encoding="utf-8")
     assert main([], out_dir=out) == EXIT_CHECK_FAILED
+
+
+def test_the_scorer_reads_the_latest_run_under_the_draws_config(out):
+    report = json.loads((out / "run1.json").read_text(encoding="utf-8"))
+    report["provenance"]["config_hash"] = "d" * 64
+    (out / "run2.json").write_text(json.dumps(report), encoding="utf-8")  # a later run, Step 9b
+    assert main([], out_dir=out) == EXIT_OK
+    header = json.loads((out / "scoring-score1.json").read_text(encoding="utf-8"))["provenance"]
+    assert header["files"]["run_report"]["file"] == "run1.json"
+    assert header["config_hash"] == {"draw": "c" * 64, "run": "c" * 64}
+
+
+def _round_two(out, config_hash):
+    write_draw(draw_path(out, "scoring2"), Draw(
+        set_name="scoring2", seed=2, config_hash=config_hash,
+        populations={Stratum.CANDIDATE: 40, Stratum.NEAR: 0, Stratum.REST: 900},
+        pairs=PAIRS), {})
+    append_labels(labels_path(out, "scoring2"), [
+        replace(_label(p, same), set_name="scoring2")
+        for p, same in zip(PAIRS, (True, False), strict=True)])
+
+
+def test_scoring2_scores_against_its_own_run(out):
+    _round_two(out, "c" * 64)
+    assert main(["--set", "scoring2"], out_dir=out) == EXIT_OK
+    assert (out / "scoring2-score1.json").exists()
+
+
+def test_scoring2_refuses_a_run_under_another_config(out):
+    _round_two(out, "e" * 64)
+    assert main(["--set", "scoring2"], out_dir=out) == EXIT_CHECK_FAILED
+    assert not (out / "scoring2-score1.json").exists()
 
 
 def test_a_stratum_without_labels_fails_the_scoring_check(tmp_path):

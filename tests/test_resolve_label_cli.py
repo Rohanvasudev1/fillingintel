@@ -208,3 +208,66 @@ def test_strata_are_recorded_on_each_label(env):
     assert _main(env) == EXIT_OK
     strata = {lb.stratum for lb in read_labels(labels_path(env / "out", "tuning"))}
     assert strata <= set(Stratum)
+
+
+# ── Scoring round 2 (Step 9b) ─────────────────────────────────────────────────
+
+PROMPTS = {"resolve": "resolve/v2@00000000", "label_model": "gpt-6-luna@high",
+           "resolve_model": "claude-haiku-5-5@high"}
+
+
+def _set_args(env):
+    return dict(candidates_dir=env / "extract", out_dir=env / "out", embed_cache=env / "embed",
+                response_cache=env / "responses", open_model=FakeLabeller,
+                read_chunks=_chunks, config=CONFIG)
+
+
+def _freeze(env, name):
+    prompts = {**PROMPTS, "label": load_label_prompt().prompt_version}
+    write_frozen(env / "out" / name, Frozen(CONFIG.config_hash, prompts), {})
+
+
+def _run_report(env):
+    report = {"provenance": {"config_hash": CONFIG.config_hash},
+              "adjudication": {"prompt_version": PROMPTS["resolve"],
+                               "model": "claude-haiku-5-5", "effort": "high"}}
+    (env / "out" / "run1.json").write_text(json.dumps(report), encoding="utf-8")
+
+
+def test_each_scoring_set_checks_its_own_freeze_file(env):
+    assert _main(env) == EXIT_OK
+    _run_report(env)
+    _freeze(env, "frozen-2.json")
+    assert main(["--set", "scoring"], **_set_args(env)) == EXIT_CHECK_FAILED  # no frozen.json
+    _freeze(env, FROZEN_NAME)
+    (env / "out" / "frozen-2.json").unlink()
+    assert main(["--set", "scoring"], **_set_args(env)) == EXIT_OK
+    assert main(["--set", "scoring2"], **_set_args(env)) == EXIT_CHECK_FAILED  # no frozen-2
+    provenance = json.loads(draw_path(env / "out", "scoring").read_text())["provenance"]
+    assert provenance["frozen"]["file"] == FROZEN_NAME
+
+
+def test_scoring2_needs_the_round_one_draw(env):
+    assert _main(env) == EXIT_OK
+    _run_report(env)
+    _freeze(env, "frozen-2.json")
+    assert main(["--set", "scoring2"], **_set_args(env)) == EXIT_RUN_ERROR
+    assert not draw_path(env / "out", "scoring2").exists()
+
+
+def test_scoring2_leaves_out_every_tuning_and_round_one_pair(env):
+    assert _main(env) == EXIT_OK
+    _run_report(env)
+    _freeze(env, FROZEN_NAME)
+    assert main(["--set", "scoring"], **_set_args(env)) == EXIT_OK
+    _freeze(env, "frozen-2.json")
+    assert main(["--set", "scoring2"], **_set_args(env)) == EXIT_OK
+    drawn = read_draw(draw_path(env / "out", "scoring2"))
+    seen = {p.keys for name in ("tuning", "scoring")
+            for p in read_draw(draw_path(env / "out", name)).pairs}
+    assert not {p.keys for p in drawn.pairs} & seen
+    assert sum(drawn.populations.values()) == len(NAMES) * (len(NAMES) - 1) // 2 - len(seen)
+    assert drawn.seed not in {read_draw(draw_path(env / "out", n)).seed
+                              for n in ("tuning", "scoring")}
+    provenance = json.loads(draw_path(env / "out", "scoring2").read_text())["provenance"]
+    assert provenance["frozen"]["file"] == "frozen-2.json"

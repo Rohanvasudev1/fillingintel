@@ -101,3 +101,39 @@ def adjudicator_check(merged: Mapping[PairKeys, bool],
 def check_to_dict(check: RuleCheck | AdjudicatorCheck) -> dict[str, object]:
     return {k: ([list(keys) for keys in v] if isinstance(v, tuple) else v)
             for k, v in asdict(check).items()}
+
+
+# ── Step 9b: merge status between two runs on the tuning labels ───────────────
+
+@dataclass(frozen=True, slots=True)
+class MergeChanges:
+    """How a newer alias map differs from an older one on the labelled tuning pairs."""
+
+    labels: int
+    agreed_before: int  # merged exactly when labelled same, under the older map
+    agreed_after: int
+    newly_merged: tuple[PairKeys, ...]  # merged only under the newer map, in label order
+    no_longer_merged: tuple[PairKeys, ...]
+    newly_merged_not_same: tuple[PairKeys, ...]  # any of these stops the step
+
+
+def _merged(aliases: Mapping[str, str], keys: PairKeys) -> bool:
+    """Whether the two keys share a canonical key; a key absent from the map is its own."""
+    return aliases.get(keys[0], keys[0]) == aliases.get(keys[1], keys[1])
+
+
+def merge_changes(before: Mapping[str, str], after: Mapping[str, str],
+                  labels: Sequence[TunedLabel]) -> MergeChanges:
+    """The labelled pairs whose merge status differs between *before* and *after*."""
+    was = {lb.keys: _merged(before, lb.keys) for lb in labels}
+    now = {lb.keys: _merged(after, lb.keys) for lb in labels}
+    newly = tuple(lb.keys for lb in labels if now[lb.keys] and not was[lb.keys])
+    same = {lb.keys: lb.same for lb in labels}
+    return MergeChanges(
+        labels=len(labels),
+        agreed_before=sum(was[lb.keys] == lb.same for lb in labels),
+        agreed_after=sum(now[lb.keys] == lb.same for lb in labels),
+        newly_merged=newly,
+        no_longer_merged=tuple(lb.keys for lb in labels if was[lb.keys] and not now[lb.keys]),
+        newly_merged_not_same=tuple(k for k in newly if not same[k]),
+    )

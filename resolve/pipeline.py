@@ -9,9 +9,11 @@
    Without one, they come back as pending and nothing more happens.
 5. Groups (resolve.groups.group_decisions): union-find over the decisions that
    merge, joined with the deterministic groups they touch. A group with a
-   `related` or `distinct` pair inside, or more than 5 names, is held back;
-   each other group is one `merge` event with method `llm`, naming its
-   decisions and their quotes.
+   `related` or `distinct` pair inside is cut into pieces (Step 9b), and a
+   group or piece with more than the config's name limit is held back. Each
+   other group is one `merge` event with method `llm`, naming its decisions
+   and their quotes; a piece is one with rule `group_cut`, quoting only the
+   `same` decisions kept inside it.
 
 The function reads nothing and writes nothing; the caller passes the merge log
 already on disk, and only merges whose IDs it lacks come back as new.
@@ -27,10 +29,16 @@ from typing import TypeVar
 
 from resolve.candidates import Rule, ScoredPair, is_named, score_pairs
 from resolve.config import ResolveConfig
-from resolve.decisions import Adjudicator, Answer, HeldBackGroup, PairDecision
+from resolve.decisions import Adjudicator, Answer, CutGroup, HeldBackGroup, PairDecision
 from resolve.embed import NodeEmbedder, embed_text
 from resolve.filers import FILER_RULE, FilerEntry, filer_entry
-from resolve.groups import COMPANY_PREFIX, DecisionGroup, connected, group_decisions
+from resolve.groups import (
+    COMPANY_PREFIX,
+    GROUP_CUT_RULE,
+    DecisionGroup,
+    connected,
+    group_decisions,
+)
 from resolve.log import EvidenceQuote, LogEvent, MergeEvent, Method, Stamp, merge_event, new_merges
 from resolve.nodes import ResolveNode
 
@@ -63,6 +71,7 @@ class Resolution:
     decisions: tuple[PairDecision, ...] = ()
     held_back: tuple[HeldBackGroup, ...] = ()
     related: tuple[PairDecision, ...] = ()
+    cut_groups: tuple[CutGroup, ...] = ()
 
 
 def resolve_nodes(nodes: Sequence[ResolveNode], embedder: NodeEmbedder | None,
@@ -86,13 +95,15 @@ def resolve_nodes(nodes: Sequence[ResolveNode], embedder: NodeEmbedder | None,
                           counts=_counts(nodes, pairs, deterministic, pending, ()))
     decisions = tuple(_in_order(lambda p: adjudicator.judge(p, by_key[p.key_a], by_key[p.key_b]),
                                 pending, workers))
-    clean, held = group_decisions(decisions, joined=[m.members for m in deterministic])
+    grouping = group_decisions(decisions, joined=[m.members for m in deterministic],
+                               max_names=config.max_group_names)
     proposed = (*deterministic, *(_llm_merge(g, by_key, adjudicator.prompt_version, stamp)
-                                  for g in clean))
+                                  for g in grouping.clean))
     return Resolution(
         merges=new_merges(log, proposed), proposed=proposed, pairs=pairs, pending=(),
         counts=_counts(nodes, pairs, proposed, (), decisions), decisions=decisions,
-        held_back=held, related=tuple(d for d in decisions if d.answer is Answer.RELATED),
+        held_back=grouping.held_back, cut_groups=grouping.cut_groups,
+        related=tuple(d for d in decisions if d.answer is Answer.RELATED),
     )
 
 
@@ -112,15 +123,19 @@ def _in_order(fn: Callable[[_T], _R], items: Sequence[_T], workers: int) -> list
 
 def _llm_merge(group: DecisionGroup, by_key: Mapping[str, ResolveNode], prompt_version: str,
                stamp: Stamp) -> MergeEvent:
-    """One `llm` merge of the keys the group's merging decisions name, with their quotes."""
+    """One `llm` merge of the keys the group's merging decisions name, with their quotes.
+
+    A piece of a cut group names the rule `group_cut` instead of its decisions, so its
+    merge ID is the same however the cut is reached."""
     evidence = [EvidenceQuote(key, by_key[key].name, chunk_id, quote)
                 for d in group.merging
                 for key, chunk_id, quote in ((d.key_a, d.chunk_id_a, d.quote_a),
                                              (d.key_b, d.chunk_id_b, d.quote_b))
                 if quote is not None]
     members = {k: len(by_key[k].chunk_ids) for d in group.merging for k in (d.key_a, d.key_b)}
+    decision = None if group.cut else "+".join(d.decision_id for d in group.merging)
     return merge_event(label=group.merging[0].label, members=members, method=Method.LLM,
-                       decision="+".join(d.decision_id for d in group.merging),
+                       rule=GROUP_CUT_RULE if group.cut else None, decision=decision,
                        evidence=evidence, prompt_version=prompt_version, stamp=stamp)
 
 

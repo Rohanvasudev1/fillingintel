@@ -75,7 +75,14 @@ from resolve.paths import (
 )
 from resolve.pipeline import Resolution, resolve_nodes
 from resolve.prompt import PromptError, ResolvePrompt, load_prompt
-from resolve.report import AdjudicationInfo, EmbeddingUse, RunInfo, build_report, write_report
+from resolve.report import (
+    AdjudicationInfo,
+    EmbeddingUse,
+    RunInfo,
+    build_group_cuts,
+    build_report,
+    write_report,
+)
 from resolve.request import ADJUDICATION_PRICES, ADJUDICATOR_MODEL, sent_chunks
 from resolve.tracing import RUN_SPAN, TracedAdjudicatorModel
 from retrieve.answer_model import API_KEY_ENV, AnswerModel, AnswerModelError, AnthropicAnswerModel
@@ -366,8 +373,11 @@ def _cached_embedder(texts: Sequence[str], config: ResolveConfig, cache_dir: Pat
 
 def _summary(nodes: Sequence[ResolveNode], result: Resolution, paths: Sequence[Path]) -> str:
     shown = ", ".join(_display(p) for p in paths)
+    cuts = build_group_cuts(result)["counts"]
     return (f"{len(nodes)} nodes, {sum(p.is_candidate for p in result.pairs)} candidate pairs, "
-            f"{len(result.decisions)} adjudicated, {len(result.held_back)} groups held back, "
+            f"{len(result.decisions)} adjudicated, {cuts['cut_groups']} groups cut "
+            f"({cuts['pieces_merged']} pieces merged, {cuts['keys_left_by_ties']} keys left by "
+            f"ties), {cuts['held_back']} held back, "
             f"{len(result.merges)} new merges ({len(result.proposed)} in all); wrote {shown}")
 
 

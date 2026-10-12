@@ -1,4 +1,4 @@
-"""Tune the resolver on the labelled tuning set, then freeze it (Step 9, ticket 06).
+"""Tune the resolver on the labelled tuning set, then freeze it (Step 9, ticket 06; 9b).
 
 Usage (needs ``DATABASE_URL``; ``--adjudicate`` also needs ``ANTHROPIC_API_KEY``
 with ``ANTHROPIC_BASE_URL`` unset; every name embedding must be cached)::
@@ -6,6 +6,7 @@ with ``ANTHROPIC_BASE_URL`` unset; every name embedding must be cached)::
     uv run --env-file .env python -m resolve.tune
     env -u ANTHROPIC_BASE_URL uv run --env-file .env python -m resolve.tune --adjudicate
     uv run --env-file .env python -m resolve.tune --freeze
+    uv run --env-file .env python -m resolve.tune --freeze scoring2
 
 For each config in `resolve.tuning.CONFIGS` it scores every same-label pair
 (offline) and reports how many pairs would go to the adjudicator, how many of
@@ -21,11 +22,22 @@ tuning report's hash. It needs a clean working tree and a tuning report made
 from the current tuning labels, with an adjudicator check under the current
 config, prompt and model.
 
+``--freeze scoring2`` (Step 9b) writes ``frozen-2.json`` once for scoring
+round 2, with the same guards, leaving ``frozen.json`` as round 1's record.
+The tuning report may predate the group fields (``max_group_names``,
+``group_rule``), since it compared candidate rules only; its chosen config
+must then equal the current one without them. It also needs a passing
+``tuning-check.json`` (``python -m resolve.check_tuning``) on a run under the
+current config: no newly merged tuning pair labelled not same, unless the user
+accepts each such pair with ``--accept-pair KEY_A KEY_B`` (recorded in
+``frozen-2.json``).
+
 Every number rests on gpt-6-luna's labels: "agent-labelled (gpt-6-luna)".
 
 Exit codes: 0 done; 2 bad arguments or a malformed input; 3 could not run (a
 setting missing, an uncached embedding, the estimate over the cap, an API,
-database or file error); 4 already frozen, or no matching tuning report.
+database or file error); 4 already frozen, no matching tuning report, or no
+passing tuning check.
 """
 from __future__ import annotations
 
@@ -63,12 +75,15 @@ from resolve.labeller import (
     load_label_prompt,
 )
 from resolve.labels import (
-    FROZEN_NAME,
+    CHECK_REPORT_NAME,
+    FROZEN_FILES,
+    GROUP_CUT_SETS,
     TUNING_REPORT_NAME,
     Frozen,
     LabelFileError,
     labels_path,
     model_pin,
+    read_json,
     read_labels,
     write_frozen,
 )
@@ -84,10 +99,12 @@ from resolve.request import (
     AdjudicateRequest,
     sent_chunks,
 )
+from resolve.sample import SCORING_SETS
 from resolve.tuning import (
     CHOSEN,
     CONFIGS,
     AdjudicatorCheck,
+    PairKeys,
     TunedLabel,
     adjudicator_check,
     check_to_dict,
@@ -150,8 +167,11 @@ def main(argv: Sequence[str] | None = None, deps: TuneDeps | None = None) -> int
     deps = deps or TuneDeps()
     try:
         args = _parse_args(argv)
+        accepted = [tuple(sorted(p)) for p in args.accept_pair or ()]
+        if accepted and args.freeze not in GROUP_CUT_SETS:
+            raise _Stop(EXIT_USAGE, "--accept-pair goes with --freeze scoring2 only")
         if args.freeze:
-            return _freeze(deps)
+            return _freeze(deps, args.freeze, accepted)
         url = _env(DATABASE_ENV)
         nodes = _nodes(deps.candidates_dir)
         labels = _labels(deps.out_dir)
@@ -173,8 +193,13 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser.add_argument("--max-cost", type=cost_cap, default=DEFAULT_MAX_COST_USD,
                         help=f"refuse adjudication estimated above this many USD "
                              f"(default {DEFAULT_MAX_COST_USD:g})")
-    parser.add_argument("--freeze", action="store_true",
-                        help="write frozen.json from the chosen config and current prompts")
+    parser.add_argument("--freeze", nargs="?", const=SCORING_SETS[0], choices=SCORING_SETS,
+                        help="write the freeze file of a scoring set (default scoring, "
+                             "frozen.json; scoring2 writes frozen-2.json) from the chosen "
+                             "config and current prompts")
+    parser.add_argument("--accept-pair", nargs=2, action="append", metavar=("KEY_A", "KEY_B"),
+                        help="with --freeze scoring2: a newly merged tuning pair labelled not "
+                             "same that the user accepts; repeat for each listed pair")
     try:
         return parser.parse_args(argv)
     except SystemExit as exc:
@@ -379,10 +404,55 @@ def _read_tuning_report(out_dir: Path) -> tuple[dict[str, object], dict[str, obj
     return chosen, {**adjudicator, "labels_sha256": provenance.get("labels_sha256")}
 
 
-def _freeze(deps: TuneDeps) -> int:
+def _tuned_config_matches(chosen: Mapping[str, object], config: ResolveConfig,
+                          set_name: str) -> bool:
+    """The tuning report chose *config*, or, for round 2, the same candidate rules."""
+    if chosen.get("config_hash") == config.config_hash:
+        return True
+    return set_name in GROUP_CUT_SETS and chosen.get("config") == config.candidate_rules()
+
+
+def _tuning_check(out_dir: Path, config: ResolveConfig,
+                  accepted: Sequence[PairKeys]) -> dict[str, object]:
+    """The passing tuning check on a run under *config*, as frozen-2.json records it.
+
+    A newly merged pair labelled not same passes only when the user accepted it
+    (``--accept-pair``); the accepted pairs must be exactly the listed ones.
+    """
+    path = out_dir / CHECK_REPORT_NAME
+    if not path.exists():
+        raise _Stop(EXIT_CHECK_FAILED, f"{CHECK_REPORT_NAME} is missing; run python -m "
+                                       "resolve.check_tuning first")
+    try:
+        check = read_json(path)
+    except LabelFileError as exc:
+        raise _Stop(EXIT_USAGE, str(exc)) from exc
+    except OSError as exc:
+        raise _Stop(EXIT_RUN_ERROR, f"cannot read {CHECK_REPORT_NAME}: {exc}") from exc
+    after = (check.get("provenance") or {}).get("after") or {}
+    if after.get("config_hash") != config.config_hash:
+        raise _Stop(EXIT_CHECK_FAILED, f"{CHECK_REPORT_NAME} checked a run under another "
+                                       "config; run the tuning check on the current run")
+    listed = check.get("newly_merged_not_same")
+    if not isinstance(listed, list) or not all(isinstance(r, dict) for r in listed):
+        raise _Stop(EXIT_USAGE, f"{CHECK_REPORT_NAME} lacks the newly_merged_not_same list")
+    flagged = {tuple(sorted((str(r.get("key_a")), str(r.get("key_b"))))) for r in listed}
+    if flagged != set(accepted):
+        raise _Stop(EXIT_CHECK_FAILED, f"{CHECK_REPORT_NAME} lists {len(flagged)} newly merged "
+                                       f"pairs labelled not same and {len(set(accepted))} were "
+                                       "accepted; the user accepts each listed pair "
+                                       "(--accept-pair), and only those, before freezing")
+    return {"tuning_check_sha256": _sha256(path),
+            "accepted_not_same": [list(k) for k in sorted(flagged)]}
+
+
+def _freeze(deps: TuneDeps, set_name: str, accepted: Sequence[PairKeys] = ()) -> int:
     commit = deps.commit()
     if commit.endswith(DIRTY):
         raise _Stop(EXIT_CHECK_FAILED, "the working tree has changes; commit before freezing")
+    name = FROZEN_FILES[set_name]
+    if (deps.out_dir / name).exists():
+        raise _Stop(EXIT_CHECK_FAILED, f"{name} exists; settings are frozen once")
     chosen, adjudicator = _read_tuning_report(deps.out_dir)
     config, pins = ResolveConfig(), _current_pins()
     try:
@@ -390,7 +460,7 @@ def _freeze(deps: TuneDeps) -> int:
     except OSError as exc:
         raise _Stop(EXIT_RUN_ERROR, f"cannot read the tuning labels: {exc}") from exc
     stale = [what for what, ok in (
-        ("config", chosen.get("config_hash") == config.config_hash),
+        ("config", _tuned_config_matches(chosen, config, set_name)),
         ("adjudicator prompt", adjudicator.get("prompt_version") == pins["resolve"]),
         ("adjudicator model", model_pin(adjudicator.get("model"), adjudicator.get("effort"))
          == pins["resolve_model"]),
@@ -401,13 +471,15 @@ def _freeze(deps: TuneDeps) -> int:
                                        "run it again with --adjudicate")
     provenance = {"commit": commit, "created_at": now(), "config": config.to_dict(),
                   "tuning_report_sha256": _sha256(deps.out_dir / TUNING_REPORT_NAME)}
+    if set_name in GROUP_CUT_SETS:
+        provenance.update(_tuning_check(deps.out_dir, config, accepted))
     try:
-        write_frozen(deps.out_dir / FROZEN_NAME, Frozen(config.config_hash, pins), provenance)
+        write_frozen(deps.out_dir / name, Frozen(config.config_hash, pins), provenance)
     except LabelFileError as exc:
         raise _Stop(EXIT_CHECK_FAILED, str(exc)) from exc
     except OSError as exc:
-        raise _Stop(EXIT_RUN_ERROR, f"could not write {FROZEN_NAME}: {exc}") from exc
-    print(f"froze config {config.config_hash[:12]}, " + ", ".join(pins.values()))
+        raise _Stop(EXIT_RUN_ERROR, f"could not write {name}: {exc}") from exc
+    print(f"froze config {config.config_hash[:12]} in {name}, " + ", ".join(pins.values()))
     return EXIT_OK
 
 

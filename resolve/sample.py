@@ -1,4 +1,4 @@
-"""The strata and the seeded draws of the tuning and scoring sets (Step 9, ticket 04).
+"""The strata and the seeded draws of the tuning and scoring sets (Step 9, ticket 04; 9b).
 
 Every scored same-label pair falls in one stratum under a config:
 - candidate: some candidate rule fired;
@@ -11,9 +11,11 @@ Every scored same-label pair falls in one stratum under a config:
 Both sets are drawn the same way (user decision, 2026-10-10: the tuning set is
 stratified too, so it holds enough true matches to tune on): from each stratum,
 SET_SIZES of its pairs at random, from a generator seeded by the set's seed,
-the set name and the stratum. A stratum with fewer pairs is taken whole. The
-scoring draw excludes the tuning pairs, and its populations are counted after
-the exclusion, since the scored figures describe the pairs left.
+the set name and the stratum. A stratum with fewer pairs is taken whole. A
+scoring draw excludes the pairs of the sets drawn before it (EXCLUDED_SETS:
+`scoring` the tuning pairs, `scoring2`, for scoring round 2 in Step 9b, the
+tuning and round-1 pairs), and its populations are counted after the
+exclusion, since the scored figures describe the pairs left.
 """
 from __future__ import annotations
 
@@ -26,8 +28,11 @@ from types import MappingProxyType
 from resolve.candidates import ScoredPair
 from resolve.config import FUZZY_OFF, ResolveConfig
 
-SETS = ("tuning", "scoring")
-SEEDS = MappingProxyType({"tuning": 20261010, "scoring": 20261011})
+SETS = ("tuning", "scoring", "scoring2")
+SEEDS = MappingProxyType({"tuning": 20261010, "scoring": 20261011, "scoring2": 20261013})
+SCORING_SETS = ("scoring", "scoring2")  # scored once, under a freeze file; tuning is not
+# The sets whose pairs a scoring set leaves out; a set not named here leaves out none.
+EXCLUDED_SETS = MappingProxyType({"scoring": ("tuning",), "scoring2": ("tuning", "scoring")})
 NEAR_FUZZY_MARGIN = 10.0
 NEAR_RANK_FACTOR = 2
 

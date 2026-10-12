@@ -1,4 +1,6 @@
-"""Hand-built resolution nodes around names and chunk IDs from NVDA run 1 (Step 9)."""
+"""Hand-built resolution nodes around names and chunk IDs from NVDA run 1 (Step 9),
+and a scripted stand-in for the adjudicator."""
+from resolve.decisions import Answer, PairDecision, RelatedKind
 from resolve.nodes import EvidenceRef, MetricFacts, ResolveNode
 
 NVDA_10K = "0001045810-26-000021"
@@ -29,3 +31,34 @@ def metric(concept: str, *, value: float = 216.0, unit: str = "USD billions",
         metric=MetricFacts(accession_no=accession_no, subject_key=subject, period=period,
                            value=value, unit=unit),
     )
+
+
+ADJUDICATOR_PROMPT = "resolve/v1@0123abcd"
+
+
+class ScriptedAdjudicator:
+    """Answers each pair from *answers* (keyed by the two names), *default* otherwise."""
+
+    prompt_version = ADJUDICATOR_PROMPT
+
+    def __init__(self, answers, verified=True, default=Answer.DISTINCT):
+        self._answers = {frozenset(k): v for k, v in answers.items()}
+        self._verified = verified
+        self._default = default
+        self.judged = []
+
+    def judge(self, pair, a, b):
+        self.judged.append((a.name, b.name))
+        answer = self._answers.get(frozenset((a.name, b.name)), self._default)
+        kind = RelatedKind.VARIANT if answer is Answer.RELATED else None
+        failure = None if answer is Answer.SAME else (
+            f"related:{kind}" if kind else answer.value)
+        if answer is Answer.SAME and not self._verified:
+            failure = "quote_not_found"
+        return PairDecision(
+            decision_id=f"d-{a.name}-{b.name}", key_a=pair.key_a, key_b=pair.key_b,
+            label=pair.label, answer=answer, related_kind=kind,
+            quote_a=a.evidence[0].span, chunk_id_a=a.evidence[0].chunk_id,
+            quote_b=b.evidence[0].span, chunk_id_b=b.evidence[0].chunk_id,
+            reason="scripted", quotes_verified=self._verified, failure=failure,
+            prompt_version=ADJUDICATOR_PROMPT)

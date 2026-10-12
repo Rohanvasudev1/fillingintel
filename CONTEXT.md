@@ -127,7 +127,7 @@ The mapping from every extracted node key to its canonical key, rebuilt by repla
 _Avoid_: lookup table, synonym list
 
 **Merge log**:
-The append-only record of every merge and split, each with its deciding evidence and method (deterministic, LLM or user). A merge is undone by appending a split.
+The append-only record of every merge and split, each with its deciding evidence and method (deterministic, LLM or user). A merge is undone by appending a split. A split here never means a group cut.
 _Avoid_: audit trail, history
 
 **Candidate pair**:
@@ -137,6 +137,18 @@ _Avoid_: block, match
 **Adjudicator**:
 The model that judges a candidate pair `same`, `related` (family member, parent and subsidiary, or variant), `distinct` or `unsure`, quoting evidence from both nodes' chunks. Only `same` with verified quotes merges.
 _Avoid_: matcher, resolver, when meaning the model alone
+
+**Held-back group**:
+Keys joined by `same` answers (and deterministic merges) that are not merged as one, because the group holds a `related` or `distinct` pair or has more names than the limit. From Step 9b it is cut into pieces rather than dropped.
+_Avoid_: rejected group, conflict cluster
+
+**Group cut**:
+Removing the fewest `same` answers from a held-back group so that no `related` or `distinct` pair ends up in one piece. Deterministic merges are never cut. When several smallest cuts tie, a key they place differently stays unmerged.
+_Avoid_: split (a merge-log undo), partition
+
+**Piece**:
+A set of keys left joined after a group cut. A piece within the name limit merges as one `llm` merge; a larger piece stays held back.
+_Avoid_: subgroup, fragment
 
 **Labeller**:
 The agent that labels pairs for tuning and scoring the resolver. It runs on a different model family from the adjudicator and never sees the resolver's output.

@@ -193,6 +193,7 @@ def test_the_run_report_carries_the_tuning_choices_and_the_frozen_settings(run_m
     assert recorded["adjudicator"] == {"prompt_version": "resolve/v2@00000000", "answered": 3,
                                        "agreed": 3}
     assert recorded["frozen"]["config_hash"] == "c" * 64
+    assert recorded["frozen_2"] is None  # scoring round 2 not frozen yet
     assert len(recorded["report_sha256"]) == 64
 
 
@@ -392,3 +393,11 @@ def test_the_run_report_lists_skipped_metric_values(run_main, tmp_path, candidat
 def test_a_missing_file_is_refused(tmp_path):
     with pytest.raises(InputError, match="cannot read"):
         load_nodes([tmp_path / "absent.jsonl"])
+
+
+def test_the_summary_and_report_count_cut_groups(run_main, tmp_path, capsys):
+    assert run_main() == EXIT_OK
+    assert "0 groups cut (0 pieces merged, 0 keys left by ties), 0 held back" in \
+        capsys.readouterr().out
+    assert _report(tmp_path, 1)["adjudication"]["group_cut"]["counts"] == {
+        "cut_groups": 0, "pieces_merged": 0, "keys_left_by_ties": 0, "held_back": 0}

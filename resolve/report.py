@@ -4,8 +4,9 @@
 rule and pending, embedding calls and cost, every merge this run makes (new or
 already logged), every pending pair with its scores, the `adjudication`
 section (model settings, prompt, estimate, answers and reasons, tokens and
-cost, held-back groups with every decision involved, related pairs and every
-decision), and `labels_and_scoring`, which ticket 04 fills.
+cost, held-back groups with every decision involved, cut groups (Step 9b),
+related pairs and every decision), and `labels_and_scoring`, which ticket 04
+fills.
 """
 from __future__ import annotations
 
@@ -17,8 +18,9 @@ from pathlib import Path
 from graph.ontology import ONTOLOGY_VERSION
 from resolve.candidates import ScoredPair
 from resolve.config import ResolveConfig
-from resolve.decisions import HeldBackGroup, PairDecision
+from resolve.decisions import CutGroup, HeldBackGroup, PairDecision
 from resolve.estimate import CostEstimate
+from resolve.groups import GROUP_CUT_RULE
 from resolve.log import MergeEvent, Method, Stamp
 from resolve.nodes import InputFile
 from resolve.pipeline import Resolution
@@ -99,6 +101,26 @@ def _held(group: HeldBackGroup) -> dict[str, object]:
             "decisions": [_decision(d) for d in group.decisions]}
 
 
+def _cut_group(group: CutGroup) -> dict[str, object]:
+    return {"keys": list(group.keys),
+            "pieces": [{"keys": list(p), "decisions": [d.decision_id for d in kept]}
+                       for p, kept in zip(group.pieces, group.kept, strict=True) if len(p) > 1],
+            "cut": [_decision(d) for d in group.cut], "tied": list(group.tied),
+            "smallest_cuts": group.smallest_cuts}
+
+
+def build_group_cuts(result: Resolution) -> dict[str, object]:
+    """Every cut group, with its pieces of two or more keys, the `same` answers cut, the
+    keys left alone by tied cuts, and counts (Step 9b)."""
+    return {
+        "counts": {"cut_groups": len(result.cut_groups),
+                   "pieces_merged": sum(m.rule == GROUP_CUT_RULE for m in result.proposed),
+                   "keys_left_by_ties": sum(len(g.tied) for g in result.cut_groups),
+                   "held_back": len(result.held_back)},
+        "groups": [_cut_group(g) for g in result.cut_groups],
+    }
+
+
 def _usage(decisions: Sequence[PairDecision]) -> TokenUsage:
     used = [d.usage for d in decisions if d.usage is not None]
     return TokenUsage(
@@ -147,6 +169,7 @@ def build_adjudication(result: Resolution, info: AdjudicationInfo) -> dict[str, 
         "cost_replayed_usd": round(_cost(decisions, cached=True), 4),
         "price_table": price_table([ADJUDICATOR_MODEL], ADJUDICATION_PRICES),
         "held_back": [_held(g) for g in result.held_back],
+        "group_cut": build_group_cuts(result),
         "related": [_decision(d) for d in result.related],
         "decisions": [_decision(d) for d in decisions],
     }
