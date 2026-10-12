@@ -1615,6 +1615,38 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 2. Step 9b (user decision 2026-10-12, RUNBOOK): `/grill-with-docs` on splitting held-back resolution groups instead of dropping them, then one ticket and scoring round 2 (about $0.06 of labels; the adjudicator answers are cached).
 3. Step 10 grilling (`/grill-with-docs`). First, the user clears the local Neo4j's version-1 `:GraphMeta`, since `apply_constraints()` refuses a graph at another version. Open items for the grilling: the MetricValue percent / dollar key rule, held-back groups and ER recall, the two skipped Intel MetricValues, and Intel chunk 0017.
 
+## 2026-10-12 — Step 9b ticket 01: group cut and scoring round 2
+
+Spec `.scratch/step-9b/spec.md`, ticket `.scratch/step-9b/issues/01-group-cut-and-scoring-round-2.md`, research `docs/research/er-cluster-splitting.md`. Decisions are in CLAUDE.md (Step 9b and its ticket 01 entry).
+
+- **Result (agent-labelled, gpt-6-luna).** Scoring round 2, 100 fresh pairs, scored once at commit `99882ce`, config `721ca77c90bc`: precision 1.000 [1.000, 1.000] (Wilson on 18 of 18 sampled merges: [0.82, 1.00]), recall **0.783 [0.600, 0.947]**, adjudicator accuracy 0.900 [0.817, 0.967], rules' share of true matches 1.000. Round 1 (`68b35fd`, `7a5aa8de76e5`): precision 1.000, recall 0.387 [0.199, 0.611]. The rounds are different draws, not a paired comparison. Round 2's near stratum held no true match, so part of the gain comes from the draw.
+  - Candidate stratum: 18 of 23 labelled matches merged; no merge labelled not same.
+  - The 5 misses are adjudicator answers, not the cut: `distinct` (environmental laws), `related:variant` twice (the $5.0 billion and $8.0 billion 364-day credit facilities), `unsure` twice (licensing requirements; Radeon 9000 series). Agent second look: the two credit-facility labels say "same" for facilities of different sizes and look wrong. Labels are left as written; only the user changes one.
+- **Run 3** (`resolve.run`, commit `85a4310`). All 3,821 adjudicator answers replayed from the cache, $0. 12 groups cut, 15 pieces merged, 5 keys left alone by ties, 0 held back, 24 new merges (the 15 pieces and 9 groups of 6–12 names held back in Step 9 for size alone), 602 merges in all. Only 2 groups had tied smallest cuts.
+- **Tuning check** (`resolve.check_tuning --before 2 --after 3`). 2 tuning pairs newly merged, none unmerged, agreement 94 of 100 before and after. One newly merged pair is labelled not same: "CHIPS Act" (Intel's glossary spells it out without "and Science") with the CHIPS and Science Act (AMD). It came from the six-name CHIPS group the 12-name limit now admits, not from a cut. The step stopped; the user accepted the merge, and `--freeze scoring2 --accept-pair` recorded it in `frozen-2.json`.
+- **Code.**
+  - `resolve/cut.py`: the smallest cut, by branch and bound over every partition of a group's parts (keys after deterministic merges), keeping all tied optima; ties merge only pairs every tied cut keeps together. `resolve/unionfind.py` holds `connected()` so both modules can use it.
+  - `resolve/groups.py`: a group with a contradiction is cut, each piece of up to `max_group_names` (12) merges as an `llm` merge with rule `group_cut`; a contradiction inside a deterministic merge, or more than 12 parts to search, stays held back with its reason. `ResolveConfig` gains `max_group_names` and `group_rule`, so the config hash changed.
+  - Run report: an `adjudication.group_cut` section (pieces with their kept decision IDs, cut answers, tied keys, counts) and the counts in the CLI summary.
+  - Sets: `scoring2` with its own seed, excluding the tuning and round-1 pairs, checked against `frozen-2.json`. The scorer reads the latest run report under the draw's config. `resolve.check_tuning` is new; `resolve.tune --freeze scoring2` needs a passing tuning check or the user's `--accept-pair`.
+  - Tests first for each seam: the group-cut cases through `resolve_nodes()` with the scripted adjudicator, and the label, score, tune and check-tuning CLIs. Four Step 9 grouping tests changed their expectations, since those groups are now cut or merged.
+- **Code review** (`mattpocock-skills:code-review`). Fixed:
+  - the name limit was defined twice;
+  - literal set names stood in for scoring sets and group-cut sets;
+  - `_add_piece` filled lists its caller passed in;
+  - `group_decisions` was near 50 lines;
+  - per-piece decision IDs were missing from the report;
+  - two test nits.
+
+  Left as they are: `_Stop` and the exit codes still repeat across the CLIs, as before. Round 1 is rescored as committed only from its own commit, since the scorer uses the current alias map; replaying only run 2's listed merges does not reproduce round 1's map either (one run-1 Groq merge). Two readings went to the user, who kept the code's choices: ties merge the meet, and 6–12-name clean groups are ordinary merges.
+- **Regressions.** None in tests. Run 3's merges add to the alias map; no Step 9 merge is undone.
+- **Costs.** Run 3 $0; `scoring2` labels $0.0575 (estimate $0.23). Step 9 ticket 06 cap: about $3.15 of $5 spent.
+- **Evidence.** `uv run ruff check .` is clean. Full suite with the local databases: 1984 passed, 1 skipped (before the review fixes); resolve tests after them: 285 passed. CI result is on the PR.
+
+**Next session starts with**
+1. Merge this PR once CI is green. Step 9b is closed.
+2. Step 10 grilling (`/grill-with-docs`). First, the user clears the local Neo4j's version-1 `:GraphMeta`. Open items: the MetricValue percent / dollar key rule, the two skipped Intel MetricValues, Intel chunk 0017, and the remaining ER misses (OPEN-DECISIONS).
+
 ---
 
 ## Findings worth telling
@@ -1629,3 +1661,4 @@ Short versions of the stories from this build so far, for interviews and write-u
 - **A schema's key order changed what the judge wrote.** Sorting a JSON schema's keys for a stable hash put the verdict ahead of its reason. The judge, which writes fields in schema order, then left every reason blank. Keeping the declared order brought the reasoning back. Small serialization choices can change what an LLM produces.
 - **A pace check caught a rubber-stamp review.** The first extraction review came back 30 of 30 correct, with a median of under a second per answer. The tool logs how long each judgment takes, so the round was set aside rather than reported, and it also exposed that the review screen hid the metric values being judged. A human-in-the-loop number is only as good as the evidence that the human looked.
 - **A safety rule cost most of the recall.** The entity resolver never merged two different entities in its scored sample (10 of 10 right), but it found only about 39% of true matches. Most misses were not model errors: the model said "same", and a rule that holds back any group larger than five names or containing a disputed pair blocked the merge. The rule bought precision with recall, and the scoring made the price visible.
+- **A group cut doubled entity-resolution recall at no model cost.** Recall went from 0.387 to 0.783 on agent-labelled pairs from two different draws, with no wrong merge in the sample and no new model call. The resolver now cuts each blocked group by removing the fewest "same" answers that keep every disputed pair apart. It finds that cut exactly, because merging in a fixed order gave a different answer in 11 of 12 groups.
