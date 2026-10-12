@@ -126,3 +126,4 @@ Prototype result on run 2, recorded in the research note and not a commitment. T
 - The research note found that no ER library surveyed cuts clusters on cannot-link pairs; they all rely on numeric scores this resolver lacks. Splink's `ties_method="drop"` is the closest precedent for leaving tied keys unmerged. Exact enumeration took under 0.6 s on run 2's largest contradiction group.
 - The prototype used a rough stand-in for the deterministic merges, so its pieces may differ from run 3's. Run 3's report is the record.
 - Stop condition (RUNBOOK): round 2 precision and recall in the README beside round 1, with commit and config, before Step 10 loads the alias map.
+- Decisions at ticket 01's code review (2026-10-12, user): ties merge the pairs every tied cut puts together (the meet), and a 6–12-name group with no contradiction is an ordinary `llm` merge as in Step 9. Recorded in CLAUDE.md Decisions.
