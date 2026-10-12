@@ -1,0 +1,38 @@
+{
+  "provenance": {
+    "note": "agent-labelled (gpt-6-luna)",
+    "commit": "85a4310+dirty",
+    "created_at": "2026-10-12T22:31:00+00:00",
+    "before": {
+      "run": "run2.json",
+      "config_hash": "7a5aa8de76e57b0a39f9120305b2beaf583f081e07deca2dd9c83ee1a3741205"
+    },
+    "after": {
+      "run": "run3.json",
+      "config_hash": "721ca77c90bc86ad8b03bbc5f8bd0892a7c87ee081896db3d88e0a9635790e84"
+    }
+  },
+  "labels": 100,
+  "agreed_before": 94,
+  "agreed_after": 94,
+  "newly_merged": [
+    {
+      "key_a": "Regulation:october 2023 bis export requirements for advanced computing items",
+      "key_b": "Regulation:october 2023 bis requirements for advanced computing items",
+      "same": true
+    },
+    {
+      "key_a": "Regulation:chips act",
+      "key_b": "Regulation:creating helpful incentives to produce semiconductors for america and science act",
+      "same": false
+    }
+  ],
+  "no_longer_merged": [],
+  "newly_merged_not_same": [
+    {
+      "key_a": "Regulation:chips act",
+      "key_b": "Regulation:creating helpful incentives to produce semiconductors for america and science act",
+      "same": false
+    }
+  ]
+}

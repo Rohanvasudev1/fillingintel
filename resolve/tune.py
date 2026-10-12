@@ -28,7 +28,9 @@ The tuning report may predate the group fields (``max_group_names``,
 ``group_rule``), since it compared candidate rules only; its chosen config
 must then equal the current one without them. It also needs a passing
 ``tuning-check.json`` (``python -m resolve.check_tuning``) on a run under the
-current config: no newly merged tuning pair labelled not same.
+current config: no newly merged tuning pair labelled not same, unless the user
+accepts each such pair with ``--accept-pair KEY_A KEY_B`` (recorded in
+``frozen-2.json``).
 
 Every number rests on gpt-6-luna's labels: "agent-labelled (gpt-6-luna)".
 
@@ -102,6 +104,7 @@ from resolve.tuning import (
     CHOSEN,
     CONFIGS,
     AdjudicatorCheck,
+    PairKeys,
     TunedLabel,
     adjudicator_check,
     check_to_dict,
@@ -164,8 +167,11 @@ def main(argv: Sequence[str] | None = None, deps: TuneDeps | None = None) -> int
     deps = deps or TuneDeps()
     try:
         args = _parse_args(argv)
+        accepted = [tuple(sorted(p)) for p in args.accept_pair or ()]
+        if accepted and args.freeze not in GROUP_CUT_SETS:
+            raise _Stop(EXIT_USAGE, "--accept-pair goes with --freeze scoring2 only")
         if args.freeze:
-            return _freeze(deps, args.freeze)
+            return _freeze(deps, args.freeze, accepted)
         url = _env(DATABASE_ENV)
         nodes = _nodes(deps.candidates_dir)
         labels = _labels(deps.out_dir)
@@ -191,6 +197,9 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
                         help="write the freeze file of a scoring set (default scoring, "
                              "frozen.json; scoring2 writes frozen-2.json) from the chosen "
                              "config and current prompts")
+    parser.add_argument("--accept-pair", nargs=2, action="append", metavar=("KEY_A", "KEY_B"),
+                        help="with --freeze scoring2: a newly merged tuning pair labelled not "
+                             "same that the user accepts; repeat for each listed pair")
     try:
         return parser.parse_args(argv)
     except SystemExit as exc:
@@ -403,8 +412,13 @@ def _tuned_config_matches(chosen: Mapping[str, object], config: ResolveConfig,
     return set_name in GROUP_CUT_SETS and chosen.get("config") == config.candidate_rules()
 
 
-def _tuning_check_sha(out_dir: Path, config: ResolveConfig) -> str:
-    """The SHA-256 of a passing tuning check on a run under *config*; exit 4 otherwise."""
+def _tuning_check(out_dir: Path, config: ResolveConfig,
+                  accepted: Sequence[PairKeys]) -> dict[str, object]:
+    """The passing tuning check on a run under *config*, as frozen-2.json records it.
+
+    A newly merged pair labelled not same passes only when the user accepted it
+    (``--accept-pair``); the accepted pairs must be exactly the listed ones.
+    """
     path = out_dir / CHECK_REPORT_NAME
     if not path.exists():
         raise _Stop(EXIT_CHECK_FAILED, f"{CHECK_REPORT_NAME} is missing; run python -m "
@@ -419,13 +433,20 @@ def _tuning_check_sha(out_dir: Path, config: ResolveConfig) -> str:
     if after.get("config_hash") != config.config_hash:
         raise _Stop(EXIT_CHECK_FAILED, f"{CHECK_REPORT_NAME} checked a run under another "
                                        "config; run the tuning check on the current run")
-    if check.get("newly_merged_not_same") != []:
-        raise _Stop(EXIT_CHECK_FAILED, f"{CHECK_REPORT_NAME} lists newly merged pairs "
-                                       "labelled not same; the user decides before freezing")
-    return _sha256(path)
+    listed = check.get("newly_merged_not_same")
+    if not isinstance(listed, list) or not all(isinstance(r, dict) for r in listed):
+        raise _Stop(EXIT_USAGE, f"{CHECK_REPORT_NAME} lacks the newly_merged_not_same list")
+    flagged = {tuple(sorted((str(r.get("key_a")), str(r.get("key_b"))))) for r in listed}
+    if flagged != set(accepted):
+        raise _Stop(EXIT_CHECK_FAILED, f"{CHECK_REPORT_NAME} lists {len(flagged)} newly merged "
+                                       f"pairs labelled not same and {len(set(accepted))} were "
+                                       "accepted; the user accepts each listed pair "
+                                       "(--accept-pair), and only those, before freezing")
+    return {"tuning_check_sha256": _sha256(path),
+            "accepted_not_same": [list(k) for k in sorted(flagged)]}
 
 
-def _freeze(deps: TuneDeps, set_name: str) -> int:
+def _freeze(deps: TuneDeps, set_name: str, accepted: Sequence[PairKeys] = ()) -> int:
     commit = deps.commit()
     if commit.endswith(DIRTY):
         raise _Stop(EXIT_CHECK_FAILED, "the working tree has changes; commit before freezing")
@@ -451,7 +472,7 @@ def _freeze(deps: TuneDeps, set_name: str) -> int:
     provenance = {"commit": commit, "created_at": now(), "config": config.to_dict(),
                   "tuning_report_sha256": _sha256(deps.out_dir / TUNING_REPORT_NAME)}
     if set_name in GROUP_CUT_SETS:
-        provenance["tuning_check_sha256"] = _tuning_check_sha(deps.out_dir, config)
+        provenance.update(_tuning_check(deps.out_dir, config, accepted))
     try:
         write_frozen(deps.out_dir / name, Frozen(config.config_hash, pins), provenance)
     except LabelFileError as exc:
