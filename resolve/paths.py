@@ -65,8 +65,14 @@ def next_numbered(directory: Path, prefix: str) -> Path:
     return directory / f"{prefix}{max(used, default=0) + 1}.json"
 
 
-def latest_report(directory: Path) -> Path | None:
-    """The highest-numbered run report in *directory*, or None when there is none."""
+def run_reports(directory: Path) -> tuple[Path, ...]:
+    """The run reports in *directory*, highest-numbered first."""
     numbered = [(int(m[1]), p) for p in directory.iterdir() if (m := _REPORT.fullmatch(p.name))] \
         if directory.is_dir() else []
-    return max(numbered)[1] if numbered else None
+    return tuple(p for _, p in sorted(numbered, reverse=True))
+
+
+def latest_report(directory: Path) -> Path | None:
+    """The highest-numbered run report in *directory*, or None when there is none."""
+    reports = run_reports(directory)
+    return reports[0] if reports else None

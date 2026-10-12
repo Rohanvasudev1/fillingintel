@@ -18,13 +18,18 @@ import json
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from types import MappingProxyType
 
 from ingest.atomic_json import write_json_atomic
 from resolve.sample import SETS, Draw, DrawnPair, PairKeys, Stratum
 from resolve.tuning import CHOSEN
 
 FROZEN_NAME = "frozen.json"
+FROZEN_2_NAME = "frozen-2.json"  # Step 9b: the group cut, for scoring round 2
+# The freeze file each scoring set is drawn under; round 1's stays as written.
+FROZEN_FILES = MappingProxyType({"scoring": FROZEN_NAME, "scoring2": FROZEN_2_NAME})
 TUNING_REPORT_NAME = "tuning-report.json"
+CHECK_REPORT_NAME = "tuning-check.json"  # Step 9b: python -m resolve.check_tuning
 _DRAW_FIELDS = ("set", "seed", "config_hash", "sizes", "populations", "near_fuzzy_margin",
                 "near_rank_factor", "pairs")
 
@@ -228,14 +233,16 @@ def tuning_status(directory: Path) -> dict[str, object] | None:
     chosen = next((r for r in rules if isinstance(r, dict) and r.get("name") == CHOSEN),
                   None) if isinstance(rules, list) else None
     adjudicator = report.get("adjudicator")
-    frozen = read_frozen(directory / FROZEN_NAME)
+    frozen = {name: read_frozen(directory / name) for name in (FROZEN_NAME, FROZEN_2_NAME)}
+    shown = {name: None if f is None else {"config_hash": f.config_hash,
+                                           "prompts": dict(f.prompts)}
+             for name, f in frozen.items()}
     return {
         "report": path.name, "report_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
         "chosen": chosen,
         "adjudicator": {k: adjudicator.get(k) for k in ("prompt_version", "answered", "agreed")}
         if isinstance(adjudicator, dict) else None,
-        "frozen": None if frozen is None else {"config_hash": frozen.config_hash,
-                                               "prompts": dict(frozen.prompts)},
+        "frozen": shown[FROZEN_NAME], "frozen_2": shown[FROZEN_2_NAME],
     }
 
 

@@ -1,17 +1,19 @@
-"""Score the alias map against a labelled set (Step 9, ticket 04).
+"""Score the alias map against a labelled set (Step 9, ticket 04; Step 9b).
 
 Usage (offline; no API key or database)::
 
     uv run python -m resolve.score
     uv run python -m resolve.score --set tuning
+    uv run python -m resolve.score --set scoring2
 
 The command reads ``benchmarks/resolution/{set}-draw.json`` and
-``{set}-labels.jsonl``, the merge log and alias map, and the latest run report,
-and runs ``score()`` (resolve.scoring): weighted pairwise precision and recall
-on the final groups, the adjudicator's accuracy on the labelled pairs it
-answered, and the candidate rules' share of true matches, each with a
-fixed-seed bootstrap 95% interval, plus raw counts per stratum. The report
-goes to ``{set}-score{N}.json``. Every figure is "agent-labelled (gpt-6-luna)".
+``{set}-labels.jsonl``, the merge log and alias map, and the latest run report
+under the draw's config (the latest run report when none is), and runs
+``score()`` (resolve.scoring): weighted pairwise precision and recall on the
+final groups, the adjudicator's accuracy on the labelled pairs it answered,
+and the candidate rules' share of true matches, each with a fixed-seed
+bootstrap 95% interval, plus raw counts per stratum. The report goes to
+``{set}-score{N}.json``. Every figure is "agent-labelled (gpt-6-luna)".
 
 The adjudicator's answers come from the run report's ``adjudication`` section
 (ticket 03): ``decisions``, a list of objects with ``key_a``, ``key_b`` and
@@ -21,9 +23,9 @@ usable reply came back), and ``model``, ``effort`` and ``prompt_version``.
 Exit codes: 0 scored; 2 bad arguments or a malformed file; 3 could not run
 (no draw, no labels or no run report; a file error); 4 checks failed (the
 alias map is not the replay of the merge log, a label is not for a drawn pair
-in its stratum, or, for the scoring set, the latest run used another config
-than the draw or a stratum has no labels; the tuning set only warns on these,
-since ticket 06 tunes on it).
+in its stratum, or, for a scoring set, no run used the draw's config or a
+stratum has no labels; the tuning set only warns on these, since ticket 06
+tunes on it).
 """
 from __future__ import annotations
 
@@ -47,6 +49,7 @@ from resolve.labeller import (
     load_label_prompt,
 )
 from resolve.labels import (
+    FROZEN_FILES,
     LabelFileError,
     PairLabel,
     draw_path,
@@ -60,9 +63,9 @@ from resolve.paths import (
     ALIAS_MAP_NAME,
     MERGE_LOG_NAME,
     OUTPUT_DIR,
-    latest_report,
     next_numbered,
     read_alias_map,
+    run_reports,
 )
 from resolve.report import write_report
 from resolve.sample import SETS, Draw
@@ -118,7 +121,7 @@ def _run(set_name: str, out_dir: Path) -> int:
     result = score([PairView(lb.key_a, lb.key_b, lb.stratum, lb.same) for lb in inputs.labels],
                    inputs.aliases, inputs.drawn.populations,
                    decisions=_decisions(adjudication))
-    if result.unrepresented and set_name == "scoring":
+    if result.unrepresented and set_name in FROZEN_FILES:
         raise _Stop(EXIT_CHECK_FAILED, "no labels in the stratum "
                     f"{', '.join(s.value for s in result.unrepresented)}; recall would leave "
                     "out the matches the rules missed there")
@@ -144,10 +147,8 @@ def _read(set_name: str, out_dir: Path) -> _Inputs:
             raise _Stop(EXIT_RUN_ERROR, f"no {set_name} {what}; run python -m resolve.label "
                                         f"--set {set_name} first")
     try:
-        report_path = latest_report(out_dir)
-        if report_path is None:
-            raise _Stop(EXIT_RUN_ERROR, "no run report; run python -m resolve.run first")
         drawn, labels = read_draw(draw_file), read_labels(labels_file)
+        report_path = _run_report_path(out_dir, drawn.config_hash)
         aliases = read_alias_map(out_dir / ALIAS_MAP_NAME)
         replayed = replay(read_log(out_dir / MERGE_LOG_NAME))
         run_report = read_json(report_path)
@@ -164,6 +165,17 @@ def _read(set_name: str, out_dir: Path) -> _Inputs:
     return _Inputs(drawn, labels, aliases, run_report, files)
 
 
+def _run_report_path(out_dir: Path, config_hash: str) -> Path:
+    """The latest run report under *config_hash*, else the latest run report."""
+    reports = run_reports(out_dir)
+    if not reports:
+        raise _Stop(EXIT_RUN_ERROR, "no run report; run python -m resolve.run first")
+    for path in reports:
+        if (read_json(path).get("provenance") or {}).get("config_hash") == config_hash:
+            return path
+    return reports[0]
+
+
 def _check_scorable(inputs: _Inputs) -> list[str]:
     """Stops a scoring set whose strata came from another config than the scored run."""
     run_hash = (inputs.run_report.get("provenance") or {}).get("config_hash")
@@ -171,7 +183,7 @@ def _check_scorable(inputs: _Inputs) -> list[str]:
         return []
     problem = (f"the run report's config {str(run_hash)[:12]} is not the draw's "
                f"{inputs.drawn.config_hash[:12]}, so the strata do not match the scored rules")
-    if inputs.drawn.set_name == "scoring":
+    if inputs.drawn.set_name in FROZEN_FILES:
         raise _Stop(EXIT_CHECK_FAILED, problem)
     return [problem]
 

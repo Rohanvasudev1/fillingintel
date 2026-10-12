@@ -228,3 +228,61 @@ def test_freeze_writes_the_chosen_settings_once(env):
                               "label_model": "gpt-6-luna@high",
                               "resolve_model": "claude-haiku-5-5@high"}
     assert main(["--freeze"], _deps(env)) == EXIT_CHECK_FAILED
+
+
+# ── Freezing for scoring round 2 (Step 9b) ────────────────────────────────────
+
+def _step9_row(env):
+    """A tuning report from Step 9: the same candidate rules, before the group fields."""
+    candidate_rules = {k: v for k, v in ResolveConfig().to_dict().items()
+                       if k not in ("max_group_names", "group_rule")}
+    _tuning_report(env, rules__config_hash="0" * 64, rules__config=candidate_rules)
+
+
+def _tuning_check(env, config_hash=None, not_same=()):
+    check = {"provenance": {"after": {"run": "run3.json",
+                                      "config_hash": config_hash or ResolveConfig().config_hash}},
+             "newly_merged_not_same": [{"key_a": a, "key_b": b, "same": False}
+                                       for a, b in not_same]}
+    (env / "out" / "tuning-check.json").write_text(json.dumps(check), encoding="utf-8")
+
+
+def test_freeze_for_round_two_writes_frozen_2_once(env):
+    _step9_row(env)
+    _tuning_check(env)
+    (env / "out" / "frozen.json").write_text("{}", encoding="utf-8")  # round 1's, left alone
+    assert main(["--freeze", "scoring2"], _deps(env)) == EXIT_OK
+    frozen = read_frozen(env / "out" / "frozen-2.json")
+    assert frozen.config_hash == ResolveConfig().config_hash
+    assert (env / "out" / "frozen.json").read_text(encoding="utf-8") == "{}"
+    provenance = json.loads((env / "out" / "frozen-2.json").read_text())["provenance"]
+    assert len(provenance["tuning_check_sha256"]) == 64
+    assert main(["--freeze", "scoring2"], _deps(env)) == EXIT_CHECK_FAILED
+
+
+@pytest.mark.parametrize("check", [
+    None,  # no tuning check
+    {"config_hash": "0" * 64},  # the check ran on another config
+    {"not_same": [("Product:a", "Product:b")]},  # a newly merged pair labelled not same
+])
+def test_freeze_for_round_two_needs_a_passing_tuning_check(env, check):
+    _step9_row(env)
+    if check is not None:
+        _tuning_check(env, **check)
+    assert main(["--freeze", "scoring2"], _deps(env)) == EXIT_CHECK_FAILED
+    assert not (env / "out" / "frozen-2.json").exists()
+
+
+def test_freeze_for_round_two_refuses_other_candidate_rules(env):
+    rules = {**ResolveConfig().to_dict(), "fuzzy_cutoff": 90.0}
+    del rules["max_group_names"], rules["group_rule"]
+    _tuning_report(env, rules__config_hash="0" * 64, rules__config=rules)
+    _tuning_check(env)
+    assert main(["--freeze", "scoring2"], _deps(env)) == EXIT_CHECK_FAILED
+
+
+def test_freeze_for_round_two_refuses_a_dirty_tree(env):
+    _step9_row(env)
+    _tuning_check(env)
+    assert main(["--freeze", "scoring2"], _deps(env, commit="abc1234+dirty")) == \
+        EXIT_CHECK_FAILED

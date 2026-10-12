@@ -1,46 +1,20 @@
 """resolve_nodes() with an adjudicator: groups of `same` decisions, held back or merged (Step 9).
 
 The adjudicator is a fake that answers from a script, so these tests pin the
-grouping rules alone: union-find over merging decisions, a contradiction or more
-than 5 names holds a group back, the canonical key, and reruns. The real
+grouping rules alone: union-find over merging decisions, the canonical key, and
+reruns. Cutting groups that hold a contradiction (Step 9b) is in
+test_resolve_group_cut.py. The real
 adjudicator's reply checks are in test_resolve_adjudicate.py.
 """
 from resolve.config import ResolveConfig
-from resolve.decisions import Answer, PairDecision, RelatedKind
+from resolve.decisions import Answer, RelatedKind
 from resolve.log import Method, Stamp
 from resolve.pipeline import resolve_nodes
-from tests.resolve_helpers import node
+from tests.resolve_helpers import ADJUDICATOR_PROMPT, ScriptedAdjudicator, node
 
 STAMP = Stamp(config_hash="c" * 64, commit="abc1234", timestamp="2026-10-10T12:00:00+00:00")
 EVERY_PAIR = ResolveConfig(fuzzy_cutoff=0.0, top_k=0)  # every same-label pair is a candidate
-PROMPT = "resolve/v1@0123abcd"
-
-
-class ScriptedAdjudicator:
-    """Answers each pair from *answers* (keyed by the two names), `distinct` otherwise."""
-
-    prompt_version = PROMPT
-
-    def __init__(self, answers, verified=True):
-        self._answers = {frozenset(k): v for k, v in answers.items()}
-        self._verified = verified
-        self.judged = []
-
-    def judge(self, pair, a, b):
-        self.judged.append((a.name, b.name))
-        answer = self._answers.get(frozenset((a.name, b.name)), Answer.DISTINCT)
-        kind = RelatedKind.VARIANT if answer is Answer.RELATED else None
-        failure = None if answer is Answer.SAME else (
-            f"related:{kind}" if kind else answer.value)
-        if answer is Answer.SAME and not self._verified:
-            failure = "quote_not_found"
-        return PairDecision(
-            decision_id=f"d-{a.name}-{b.name}", key_a=pair.key_a, key_b=pair.key_b,
-            label=pair.label, answer=answer, related_kind=kind,
-            quote_a=a.evidence[0].span, chunk_id_a=a.evidence[0].chunk_id,
-            quote_b=b.evidence[0].span, chunk_id_b=b.evidence[0].chunk_id,
-            reason="scripted", quotes_verified=self._verified, failure=failure,
-            prompt_version=PROMPT)
+PROMPT = ADJUDICATOR_PROMPT
 
 
 def _resolve(nodes, answers, log=(), verified=True, config=EVERY_PAIR):
@@ -55,36 +29,34 @@ def _people(*names):
 A, B, C = _people("Ann Alpha", "Bea Beta", "Cy Gamma")
 
 
-def test_a_contradiction_holds_the_whole_group_back():
+def test_a_three_name_chain_with_its_ends_distinct_ties_and_merges_nothing():
     result, _ = _resolve((A, B, C), {(A.name, B.name): Answer.SAME,
                                      (B.name, C.name): Answer.SAME})
-    assert [m for m in result.merges if m.method is Method.LLM] == []
-    (held,) = result.held_back
-    assert held.keys == (A.key, B.key, C.key)
-    assert "contradiction" in held.reason
-    assert {(d.key_a, d.key_b) for d in held.decisions} == {
-        (A.key, B.key), (B.key, C.key), (A.key, C.key)}
+    assert [m for m in result.proposed if m.method is Method.LLM] == []
+    assert result.held_back == ()
+    (cut,) = result.cut_groups
+    assert cut.keys == (A.key, B.key, C.key)
+    assert cut.smallest_cuts == 2  # cut A-B or B-C
+    assert cut.tied == (A.key, B.key, C.key)
 
 
-def test_a_related_pair_inside_a_group_is_a_contradiction_too():
+def test_a_related_pair_is_a_contradiction_too_and_is_listed():
     result, _ = _resolve((A, B, C), {(A.name, B.name): Answer.SAME,
                                      (B.name, C.name): Answer.SAME,
                                      (A.name, C.name): Answer.RELATED})
     assert result.merges == ()
-    assert len(result.held_back) == 1
+    assert len(result.cut_groups) == 1
     assert [d.related_kind for d in result.related] == [RelatedKind.VARIANT]
 
 
-def test_a_six_name_chain_is_held_back():
+def test_a_six_name_chain_merges_now_the_limit_is_twelve():
     six = _people("Ann Alpha", "Bea Beta", "Cy Gamma", "Di Delta", "Ed Epsilon", "Flo Zeta")
-    chain = {(x.name, y.name): Answer.SAME for x, y in zip(six, six[1:], strict=False)}
     every_same = {(x.name, y.name): Answer.SAME for x in six for y in six if x.key < y.key}
-    for answers in (chain, every_same):
-        result, _ = _resolve(six, answers)
-        assert result.merges == ()
-        (held,) = result.held_back
-        assert len(held.keys) == 6
-        assert "6 names" in held.reason
+    result, _ = _resolve(six, every_same)
+    (merge,) = result.merges
+    assert set(merge.members) == {n.key for n in six}
+    assert merge.rule is None
+    assert result.held_back == ()
 
 
 def test_five_names_all_judged_same_merge():
@@ -142,16 +114,6 @@ def test_pairs_already_merged_deterministically_are_not_adjudicated():
                                                                               fuzzy_cutoff=0.0))
     assert ("Groq", "Groq, Inc.") not in adjudicator.judged
     assert len(adjudicator.judged) == 2
-
-
-def test_a_contradiction_through_a_deterministic_group_holds_the_llm_group_back():
-    groq, groq_inc = node("Organization", "Groq", 30), node("Organization", "Groq, Inc.", 31)
-    other = node("Organization", "GroqCloud", 32)
-    result, _ = _resolve((groq, groq_inc, other), {(groq.name, other.name): Answer.SAME,
-                                                   (groq_inc.name, other.name): Answer.DISTINCT})
-    assert [m.method for m in result.merges] == [Method.DETERMINISTIC]
-    (held,) = result.held_back
-    assert set(held.keys) == {groq.key, groq_inc.key, other.key}
 
 
 def test_a_rerun_over_the_logged_merges_appends_nothing():

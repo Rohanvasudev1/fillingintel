@@ -1,18 +1,21 @@
-"""Draw a set of pairs and have gpt-6-luna label them (Step 9, ticket 04).
+"""Draw a set of pairs and have gpt-6-luna label them (Step 9, ticket 04; Step 9b).
 
 Usage (needs ``OPENAI_API_KEY`` and ``DATABASE_URL``, with ``OPENAI_BASE_URL``
 unset; run ``python -m resolve.run`` first, so every name embedding is cached)::
 
     uv run --env-file .env python -m resolve.label --set tuning
     uv run --env-file .env python -m resolve.label --set scoring --max-cost 2
+    uv run --env-file .env python -m resolve.label --set scoring2 --max-cost 1
 
 The command reads the latest candidates file of each accession, scores every
 same-label pair under the current config (embeddings from the cache only),
 and draws the set (resolve.sample). The draw goes to
 ``benchmarks/resolution/{set}-draw.json`` once; a later run must draw the same
-pairs. The scoring draw leaves out the tuning pairs and refuses to run unless
-``frozen.json`` holds the current config hash, label prompt version and the
-adjudicator prompt version of the latest run report.
+pairs. A scoring draw leaves out the pairs of the sets drawn before it
+(resolve.sample.EXCLUDED_SETS) and refuses to run unless its freeze file
+(``frozen.json`` for ``scoring``, ``frozen-2.json`` for ``scoring2``) holds
+the current config hash, label prompt version and the adjudicator prompt
+version of the latest run report.
 
 It then reads each unlabelled pair's chunk texts from Postgres, prints a cost
 estimate for the calls not in the response cache, stops if it is over
@@ -24,7 +27,7 @@ is never sent again. The run's counts, tokens and cost go to
 
 Exit codes: 0 every drawn pair is labelled; 2 bad arguments or a malformed
 input, draw or label file; 3 could not run (a setting missing, Postgres
-unreachable, an uncached embedding, a missing tuning draw, the estimate over
+unreachable, an uncached embedding, a missing earlier draw, the estimate over
 the cap, an API, cache or file error); 4 checks failed or the run is
 incomplete (the draw differs from the one on disk, the settings are not
 frozen, or a reply could not be used).
@@ -71,7 +74,7 @@ from resolve.labeller import (
     shown_chunks,
 )
 from resolve.labels import (
-    FROZEN_NAME,
+    FROZEN_FILES,
     LabelFileError,
     append_labels,
     draw_path,
@@ -93,7 +96,7 @@ from resolve.paths import (
     next_numbered,
 )
 from resolve.report import write_report
-from resolve.sample import SETS, Draw, DrawnPair, draw
+from resolve.sample import EXCLUDED_SETS, SETS, Draw, DrawnPair, draw
 from resolve.scoring import LABEL_NOTE
 from retrieve.answer_model import AnswerModel, AnswerModelError, ApiResponse, ModelRequest
 from retrieve.pricing import openai_cost
@@ -206,9 +209,10 @@ def _run(args: argparse.Namespace, url: str, paths: _Paths, config: ResolveConfi
         nodes, inputs = load_nodes(files)
     except InputError as exc:
         raise _Stop(EXIT_USAGE, str(exc)) from exc
-    frozen = _check_frozen(paths.out_dir, config, prompt) if set_name == "scoring" else None
+    frozen = _check_frozen(paths.out_dir, FROZEN_FILES[set_name], config, prompt) \
+        if set_name in FROZEN_FILES else None
     drawn = draw(_pairs(nodes, config, paths.embed_cache), set_name, config,
-                 exclude=_tuning_pairs(paths.out_dir) if set_name == "scoring" else ())
+                 exclude=_excluded_pairs(paths.out_dir, set_name))
     _record_draw(paths.out_dir, drawn, {
         "commit": git_state(), "created_at": now(), "label_prompt": prompt.prompt_version,
         "ontology_version": ONTOLOGY_VERSION, "frozen": frozen,
@@ -221,17 +225,18 @@ def _run(args: argparse.Namespace, url: str, paths: _Paths, config: ResolveConfi
     return _finish(paths.out_dir, drawn, outcomes, prompt, inputs, config)
 
 
-def _check_frozen(out_dir: Path, config: ResolveConfig, prompt: LabelPrompt) -> dict[str, object]:
-    """The frozen settings, after checking the config, prompts and latest run match them."""
+def _check_frozen(out_dir: Path, name: str, config: ResolveConfig,
+                  prompt: LabelPrompt) -> dict[str, object]:
+    """The settings frozen in *name*, after checking the config, prompts and latest run."""
     try:
-        frozen = read_frozen(out_dir / FROZEN_NAME)
+        frozen = read_frozen(out_dir / name)
         report_path = latest_report(out_dir)
         report = read_json(report_path) if report_path is not None else None
     except (LabelFileError, OSError) as exc:
         raise _Stop(EXIT_USAGE, str(exc)) from exc
     if frozen is None:
-        raise _Stop(EXIT_CHECK_FAILED, f"{FROZEN_NAME} is missing; the scoring set is drawn "
-                                       "only after the rules and prompts are frozen")
+        raise _Stop(EXIT_CHECK_FAILED, f"{name} is missing; a scoring set is drawn only "
+                                       "after the rules and prompts are frozen")
     if report is None:
         raise _Stop(EXIT_RUN_ERROR, "no run report; run python -m resolve.run first")
     adjudication = report.get("adjudication") or {}
@@ -246,7 +251,7 @@ def _check_frozen(out_dir: Path, config: ResolveConfig, prompt: LabelPrompt) -> 
                         f"not {config.config_hash[:12]}")
     if problems:
         raise _Stop(EXIT_CHECK_FAILED, "not frozen: " + "; ".join(problems))
-    return {"config_hash": frozen.config_hash, "prompts": dict(frozen.prompts),
+    return {"file": name, "config_hash": frozen.config_hash, "prompts": dict(frozen.prompts),
             "run_report": report_path.name}
 
 
@@ -273,15 +278,19 @@ def _pairs(nodes: Sequence[ResolveNode], config: ResolveConfig,
         raise _Stop(EXIT_RUN_ERROR, f"cannot score the pairs: {exc}") from exc
 
 
-def _tuning_pairs(out_dir: Path) -> set[tuple[str, str]]:
-    path = draw_path(out_dir, "tuning")
-    if not path.exists():
-        raise _Stop(EXIT_RUN_ERROR, "no tuning draw; the scoring set leaves out the tuning "
-                                    "pairs, so label the tuning set first")
-    try:
-        return {p.keys for p in read_draw(path).pairs}
-    except (LabelFileError, OSError) as exc:
-        raise _Stop(EXIT_USAGE, str(exc)) from exc
+def _excluded_pairs(out_dir: Path, set_name: str) -> set[tuple[str, str]]:
+    """The pairs of every set *set_name* leaves out; each of those draws must exist."""
+    excluded: set[tuple[str, str]] = set()
+    for earlier in EXCLUDED_SETS.get(set_name, ()):
+        path = draw_path(out_dir, earlier)
+        if not path.exists():
+            raise _Stop(EXIT_RUN_ERROR, f"no {earlier} draw; the {set_name} set leaves out the "
+                                        f"{earlier} pairs, so label the {earlier} set first")
+        try:
+            excluded |= {p.keys for p in read_draw(path).pairs}
+        except (LabelFileError, OSError) as exc:
+            raise _Stop(EXIT_USAGE, str(exc)) from exc
+    return excluded
 
 
 def _record_draw(out_dir: Path, drawn: Draw, provenance: Mapping[str, object]) -> None:

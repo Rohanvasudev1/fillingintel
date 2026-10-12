@@ -79,8 +79,20 @@ class Adjudicator(Protocol):
 
 @dataclass(frozen=True, slots=True)
 class HeldBackGroup:
-    """A group of `same` decisions not merged: a contradiction inside it, or too many names."""
+    """A group or piece of `same` decisions not merged, with the reason (Step 9b: too
+    many names, too many parts to search, or a contradiction no cut separates)."""
 
     keys: tuple[str, ...]
     reason: str
     decisions: tuple[PairDecision, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class CutGroup:
+    """A group cut into pieces because it held a `related` or `distinct` pair (Step 9b)."""
+
+    keys: tuple[str, ...]  # the whole group, sorted
+    pieces: tuple[tuple[str, ...], ...]  # every piece, single keys included, by smallest key
+    cut: tuple[PairDecision, ...]  # the merging `same` decisions between pieces, by ID
+    tied: tuple[str, ...]  # keys left out of a piece because tied cuts placed them differently
+    smallest_cuts: int  # how many cuts shared the smallest size
