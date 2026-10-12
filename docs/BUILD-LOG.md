@@ -1612,7 +1612,8 @@ Ticket 04 is also closed: PR #3 merged, and the `push` run on `main` (3745500270
 
 **Next session starts with**
 1. Merge this PR once CI is green. Step 9 is closed.
-2. Step 10 grilling (`/grill-with-docs`). First, the user clears the local Neo4j's version-1 `:GraphMeta`, since `apply_constraints()` refuses a graph at another version. Open items for the grilling: the MetricValue percent / dollar key rule, held-back groups and ER recall, the two skipped Intel MetricValues, and Intel chunk 0017.
+2. Step 9b (user decision 2026-10-12, RUNBOOK): `/grill-with-docs` on splitting held-back resolution groups instead of dropping them, then one ticket and scoring round 2 (about $0.06 of labels; the adjudicator answers are cached).
+3. Step 10 grilling (`/grill-with-docs`). First, the user clears the local Neo4j's version-1 `:GraphMeta`, since `apply_constraints()` refuses a graph at another version. Open items for the grilling: the MetricValue percent / dollar key rule, held-back groups and ER recall, the two skipped Intel MetricValues, and Intel chunk 0017.
 
 ---
 

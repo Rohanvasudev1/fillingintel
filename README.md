@@ -33,7 +33,7 @@ Precision and recall are weighted by stratum (population over pairs labelled) wi
 | near (just below a rule's cutoff) | 3,648 | 25 | 3 | 0 | 0 |
 | rest | 144,581 | 15 | 0 | 0 | 0 |
 
-The resolver never merged wrongly in the sample, but it misses most true matches. Of the nine candidate-stratum misses, five were pairs Haiku called `same` whose group the safety rule held back (large clusters such as AMD Versal, AMD's MI308 products and the US export-licensing rules), and four got `unsure`. The three near-stratum matches were never sent to the adjudicator. The rest stratum's 15 pairs carry most of the weight and held no match, so recall there is not measured well.
+The resolver never merged wrongly in the sample, but it misses most true matches. Of the nine candidate-stratum misses, five were pairs Haiku called `same` whose group the safety rule held back (large clusters such as AMD Versal, AMD's MI308 products and the US export-licensing rules), and four got `unsure`. The three near-stratum matches were never sent to the adjudicator. The rest stratum's 15 pairs carry most of the weight and held no match, so recall there is not measured well. Step 9b splits held-back groups instead of dropping them and will be scored as round 2 on a fresh draw.
 
 Provenance: scored at commit `68b35fd`; config hash `7a5aa8de76e5` (fuzzy cutoff 85, top_k 3, rare-word rule off, "label: name" embedded); `resolve/v2@5b5e4a7d`; `label/v2@a7f163e9`; ontology version 3. Files: `benchmarks/resolution/scoring-score1.json`, `run2.json`, `tuning-report.json`, `frozen.json`.
 

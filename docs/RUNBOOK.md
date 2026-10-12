@@ -215,6 +215,14 @@ Hand-label 100 candidate pairs as same/different. Score your resolver against th
 
 As built (2026-10-12): the user chose an agent labeller (gpt-6-luna) over hand labels, and every figure carries "agent-labelled (gpt-6-luna)". There are no XBRL concept tags; MetricValues merge only within one filing (OPEN-DECISIONS, Lookup arm). Blocking uses name rules and top-3 embedding neighbours, not one similarity threshold. The adjudicator is claude-haiku-5-5 under `resolve/v2`, chosen for cost. Precision and recall are in the README (scored once at commit 68b35fd): precision 1.000, recall 0.387 [0.199, 0.611]. Most misses come from the rule that holds back large or mixed groups, which Step 10 revisits (OPEN-DECISIONS). The stop condition is met.
 
+### Step 9b. Split held-back resolution groups
+
+Added 2026-10-12 (user decision). Step 9 holds back any merge group with more than 5 names or with a `related` / `distinct` pair inside it, and drops the whole group. That rule cost most of the recall (0.387). Instead, split a held-back group so that no `related` or `distinct` pair shares a piece, and merge each piece that passes. The split reuses the cached adjudicator answers, so rerunning `resolve.run` makes no new calls.
+
+Plan it with `/grill-with-docs`: the split rule, whether the 5-name limit stays, and how round 2 is reported. Check the change on the tuning set, freeze again, then draw, label and score a fresh 100-pair scoring set once ("scoring round 2"). Round 1 stays in the README next to it.
+
+**Stop condition:** round 2 precision and recall in the README beside round 1, with commit and config, before Step 10 loads the alias map.
+
 ### Step 10. Load the graph
 
 Write nodes and edges through a single guarded write path that rejects anything unevidenced. Run `validate_graph()` after load.
