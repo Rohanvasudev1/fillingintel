@@ -85,10 +85,10 @@ def test_keys_follow_the_rules(run):
     assert samsung.properties["name"] == "Samsung Electronics Co., Ltd."
     segment_revenue = _node(
         run, "MetricValue",
-        f"{NVDA_10K}:Segment:1045810:compute & networking:revenue:FY2026")
+        f"{NVDA_10K}:Segment:1045810:compute & networking:revenue:currency:FY2026")
     assert (segment_revenue.properties["value"], segment_revenue.properties["unit"]) == (
         193479.0, "USD millions")
-    net_income = _node(run, "MetricValue", f"{NVDA_10K}:1045810:net income:FY2026")
+    net_income = _node(run, "MetricValue", f"{NVDA_10K}:1045810:net income:currency:FY2026")
     assert net_income.properties["value"] == 120067.0
     [risk] = [n for n in run.nodes if n.label == "RiskFactor"]
     assert risk.properties["key"].startswith(f"{NVDA_10K}:product, system security")

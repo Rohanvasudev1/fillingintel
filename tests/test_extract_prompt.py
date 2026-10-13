@@ -9,6 +9,7 @@ from extract.filers import FilingInfo
 from extract.output_schema import output_schema
 from extract.prompt import CURRENT_VERSION, PROMPTS_DIR, PUBLISHED, PromptError, load_prompt
 from extract.request import EXTRACT_MAX_TOKENS, EXTRACT_MODEL, ChunkInput, build_request
+from graph.ontology import ONTOLOGY_VERSION
 from graph.schema_text import schema_text
 from retrieve.answer_model import AnthropicAnswerModel
 from tests.anthropic_fixtures import FakeAnthropicClient, load, with_text
@@ -34,6 +35,15 @@ def test_v2_is_the_current_prompt_and_v1_is_kept():
     assert current.version == "v2"
     assert re.fullmatch(r"extract/v2@[0-9a-f]{8}", current.prompt_version)
     assert load_prompt("v1").prompt_version != current.prompt_version
+
+
+def test_the_unit_class_key_left_the_prompt_and_ontology_unchanged():
+    # Step 10 put the unit class in metric-value keys in code only, so replaying
+    # the 24 extractions from the response cache costs nothing.
+    current = load_prompt()
+    assert current.prompt_version == "extract/v2@34a82e2b"
+    assert current.sha256 == "34a82e2b107b550f9d2689fa43d20afb246bab0d4baeb15cf32170ce36c67d77"
+    assert ONTOLOGY_VERSION == 3
 
 
 def test_v2_explains_reportable_segments_and_market_platforms_with_nvidias_split():
