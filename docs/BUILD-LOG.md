@@ -1649,6 +1649,36 @@ Spec `.scratch/step-9b/spec.md`, ticket `.scratch/step-9b/issues/01-group-cut-an
 
 ---
 
+## 2026-10-13 — Step 10 ticket 01: write path sets by name, takes evidence as given, rejects duplicates
+
+Spec `.scratch/step-10/spec.md` (Write path), ticket `.scratch/step-10/issues/01-write-path-named-sets-and-duplicates.md`, research `docs/research/neo4j-bulk-load.md`. The Step 10 planning files were copied in from the grilling worktree and committed first.
+
+- **Pinned before the change.** The same edge twice in one batch wrote one edge holding both rows' chunks, in batch order (`test_the_same_edge_twice_in_one_batch_is_one_edge`, green on the old code). That test now expects a rejection.
+- **Code.**
+  - `graph/batch.py`: rule `duplicate_item`. A repeated node key, or a repeated edge identity (start, type, end, plus `role` where the type has one), is reported on the later item, naming the earlier one. `identity_properties()` and `edge_identity()` are shared with the write path. `COMPETES_WITH` A→B and B→A are still two identities; the Step 10 builder orders the ends.
+  - `graph/write.py`: every ontology property is set by name (no `SET +=`). Node keys are set only by MERGE. An extracted edge's four evidence lists are set as given. `EVIDENCED_BY` sets span, confidence and prompt on every write, not only on create. `write_queries()` lists every query the write path builds.
+- **User decisions (2026-10-13, recorded in the spec).** A node or edge written again holds exactly the batch's properties, so an optional property the batch leaves out or gives as None is removed. `EVIDENCED_BY` edges to chunks a batch does not cite stay. An earlier version of this change deleted them, which was beyond the ticket and could drop another filing's evidence in a partial batch.
+- **Plans.** `EXPLAIN` of all 70 write queries against `neo4j-test` shows no `Eager` and no full scan. `EagerAggregation` is `count(*)` and is not the Eager barrier. The test caught the old `SET n +=` node query. My first stale-evidence delete planned `Eager` in every form tried except a delete by element ID; that delete was then dropped.
+- **Tests changed.**
+  - Replaced, because they asserted the old append or first-wins rules: `test_a_new_chunk_on_an_existing_edge_is_appended_with_its_span`, `test_only_the_new_chunks_of_a_mixed_list_are_appended`, `test_an_appended_chunk_keeps_its_own_confidence_and_prompt_version`, `test_the_same_edge_twice_in_one_batch_is_one_edge`.
+  - Renamed only: `test_node_evidence_accumulates_through_evidenced_by_edges` is now `test_node_evidence_for_other_chunks_is_kept`, with the same body.
+  - Changed by the new rule: `test_every_violation_in_a_batch_is_reported` now also expects `duplicate_item`, because its extra `HAS_SEGMENT` edge repeats the test graph's own.
+- **Review.** `mattpocock-skills:code-review` found no hard violations. Fixed:
+  - the identity rule was written out three times;
+  - the plan test did not check for scans;
+  - the SET-item helper left a trailing comma for its caller;
+  - a test literal was repeated;
+  - `write_queries()` needed a note that it must list the same queries `_write` runs.
+  The stale-evidence delete was a Spec finding and went to the user.
+- **Regressions.** None.
+- **Evidence.** `uv run ruff check .` is clean. Full suite with the local databases: 2001 passed, 1 skipped (the existing parser pointer-section skip).
+
+**Next session starts with**
+1. Merge this PR once CI is green.
+2. Step 10 ticket 02 (unit class in the metric-value key) or 05 (persistence links); neither is blocked.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.
