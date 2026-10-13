@@ -173,8 +173,7 @@ def build_report(run: ExtractionRun, info: RunInfo) -> dict[str, object]:
         "rejections": _rejections(run.rejections, run.rejection_counts, candidates),
         "flags": {str(reason): n for reason, n in sorted(run.flag_counts.items())},
         "conflicts": {"total": len(run.conflicts), "items": [
-            {"item": c.item, "property": c.property, "kept": c.kept, "other": c.other,
-             "kept_chunk": c.kept_chunk, "other_chunk": c.other_chunk} for c in run.conflicts]},
+            c.to_dict() for c in run.conflicts]},
         "failed_chunks": [{"chunk_id": f.chunk_id, "reason": f.reason} for f in run.failures],
         "violations": [str(v) for v in run.violations],
         "calls": {"made": made, "from_cache": sum(1 for c in run.chunks if c.from_cache)},

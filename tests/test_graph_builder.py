@@ -144,6 +144,14 @@ def test_a_merged_node_takes_the_canonical_members_properties_and_sorted_aliases
             if n.label == "Organization"] == [TSMC_LONG]
 
 
+def test_a_merged_node_takes_its_canonical_keys_properties_from_the_latest_filing():
+    files = [_file(NVDA_10K, [_org(TSMC, "Taiwan Semiconductor", _ev(SUPPLY_CHUNK))]),
+             _file(EARLIER_10K, [_org(TSMC, "TSMC", _ev(EARLIER_CHUNK))])]
+    node = _node(_build(files), "Organization", TSMC)
+    assert node.properties["name"] == "Taiwan Semiconductor"
+    assert node.properties["aliases"] == ["TSMC"]
+
+
 def test_node_evidence_is_one_entry_per_chunk_in_filing_date_order_most_confident_winning():
     files = [
         _file(NVDA_10K, [_org(TSMC, "TSMC", _ev(SUPPLY_CHUNK, "implied", "later, implied"))]),
@@ -222,6 +230,13 @@ def test_an_equally_confident_stake_goes_to_the_later_filing():
     (edge,) = _edges(built, "OWNS")
     assert edge.properties["stake"] == 1.0
     assert len(built.report.conflicts) == 1
+
+
+def test_a_losing_stake_held_by_two_members_is_one_conflict():
+    built = _build([_owns(NVDA_10K, SUPPLY_CHUNK, "stated", 1.0),
+                    _owns(EARLIER_10K, EARLIER_CHUNK, "implied", 0.9),
+                    _owns(AMD_10K, AMD_COMPETITION_CHUNK, "implied", 0.9)])
+    assert [(c.kept, c.other) for c in built.report.conflicts] == [(1.0, 0.9)]
 
 
 def test_one_person_with_two_roles_keeps_two_edges():

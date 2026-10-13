@@ -11,7 +11,7 @@ from extract.pipeline import ExtractionRun
 from extract.report import candidate_lines, write_candidates
 from graph.build_input import (
     InputError,
-    latest_extract_files,
+    current_extract_files,
     read_extract_file,
 )
 from graph.ontology import LABELS_BY_NAME, Kind
@@ -61,12 +61,27 @@ def test_a_line_extraction_never_writes_is_refused_with_its_line_number(tmp_path
         read_extract_file(path)
 
 
-def test_the_latest_run_of_each_filing_is_chosen(tmp_path):
-    for name in (f"{NVDA_10K}-run1.jsonl", f"{NVDA_10K}-run3.jsonl", f"{NVDA_10K}-run10.jsonl",
-                 "0000002488-26-000018-run2.jsonl", "notes.txt"):
-        (tmp_path / name).write_text("")
-    assert [p.name for p in latest_extract_files(tmp_path)] == [
-        "0000002488-26-000018-run2.jsonl", f"{NVDA_10K}-run10.jsonl"]
+def _prompt_file(path, prompt):
+    line = {"kind": "node", "label": "Organization", "properties": {"key": "Organization:x",
+            "name": "X"}, "evidence": [{"chunk_id": f"{NVDA_10K}:0001", "span": "X",
+                                        "confidence": "stated", "extract_prompt": prompt}]}
+    path.write_text(json.dumps(line) + "\n")
+
+
+def test_the_latest_run_under_the_current_prompt_is_chosen_per_filing(tmp_path):
+    _prompt_file(tmp_path / f"{NVDA_10K}-run1.jsonl", "extract/v2@34a82e2b")
+    _prompt_file(tmp_path / f"{NVDA_10K}-run2.jsonl", "extract/v2@34a82e2b")
+    _prompt_file(tmp_path / f"{NVDA_10K}-run10.jsonl", "extract/v1@4b83bf9b")
+    _prompt_file(tmp_path / "0000002488-26-000018-run1.jsonl", "extract/v2@34a82e2b")
+    (tmp_path / "notes.txt").write_text("")
+    assert [f.name for f in current_extract_files(tmp_path)] == [
+        "0000002488-26-000018-run1.jsonl", f"{NVDA_10K}-run2.jsonl"]
+
+
+def test_a_filing_with_no_run_under_the_current_prompt_is_refused(tmp_path):
+    _prompt_file(tmp_path / f"{NVDA_10K}-run1.jsonl", "extract/v1@4b83bf9b")
+    with pytest.raises(InputError, match=NVDA_10K):
+        current_extract_files(tmp_path)
 
 
 def test_the_load_command_exits_2_on_bad_arguments_and_3_without_settings(monkeypatch, capsys):

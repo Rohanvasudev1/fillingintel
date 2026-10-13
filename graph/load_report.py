@@ -37,28 +37,27 @@ def graph_counts(batch: Batch) -> dict[str, dict[str, int]]:
 
 def load_report(commit: str, inputs: LoadInputs, result: LoadResult) -> dict[str, object]:
     build = result.built.report
-    validation = result.validation
     return {
         "commit": commit,
         "ontology_version": ONTOLOGY_VERSION,
         "alias_map_sha256": inputs.alias_map_sha256,
         "extract_files": {f.name: f.sha256 for f in inputs.files},
         "counts": graph_counts(result.built.batch),
-        "conflicts": [
-            {"item": c.item, "property": c.property, "kept": c.kept, "other": c.other,
-             "kept_chunk": c.kept_chunk, "other_chunk": c.other_chunk}
-            for c in build.conflicts
-        ],
+        "conflicts": [c.to_dict() for c in build.conflicts],
         "skipped_metric_values": list(build.skipped_metric_values),
         "dropped_edges": [{"reason": d.reason.value, "edge": d.edge, "file": d.file}
                           for d in build.dropped_edges],
         "merged_into_company": list(build.merged_into_company),
         "chunk_gaps": [c for _, chunks in sorted(inputs.gaps.items()) for c in chunks],
         "write_seconds": round(result.write_seconds, 1),
-        "validation": {
-            "ok": validation.ok,
-            "violations": validation.violation_count,
-            "postgres_checked": validation.postgres_checked,
-            "checks": {r.check.value: r.count for r in validation.results},
-        },
+        "validation": _validation(result),
     }
+
+
+def _validation(result: LoadResult) -> dict[str, object]:
+    report = result.validation
+    if report is None:
+        return {"ran": False, "error": result.validation_error}
+    return {"ran": True, "ok": report.ok, "violations": report.violation_count,
+            "postgres_checked": report.postgres_checked,
+            "checks": {r.check.value: r.count for r in report.results}}

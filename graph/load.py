@@ -12,8 +12,9 @@ Usage: python -m graph.load [--rebuild]
 Reads NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD and DATABASE_URL. Constraints and
 :GraphMeta must exist (apply_constraints()). Exit codes as graph.validate:
 0 loaded and valid; 2 bad arguments, or a graph holding data without
---rebuild; 3 could not run (nothing changed); 4 loaded, with violations (the
-report is still written).
+--rebuild (nothing changed); 3 could not run (nothing changed), or the graph was
+replaced but validation could not run (the report says so); 4 loaded, with
+violations. The report is written whenever the graph was replaced.
 """
 from __future__ import annotations
 
@@ -35,8 +36,7 @@ from graph.build_input import (
     ExtractFile,
     InputError,
     StructuralRows,
-    latest_extract_files,
-    read_extract_file,
+    current_extract_files,
 )
 from graph.builder import BuildError, Built, build_graph
 from graph.connection import GraphSettingsMissing, driver_from_env
@@ -57,7 +57,7 @@ from ingest.atomic_json import write_json_atomic
 from ingest.provenance import REPO_ROOT, git_state
 from resolve.paths import ALIAS_MAP, CANDIDATES_DIR, parse_alias_map
 
-__all__ = ["GraphNotEmpty", "LoadInputs", "LoadResult", "load_graph", "main", "read_inputs"]
+__all__ = ["LoadInputs", "LoadResult", "load_graph", "main", "read_inputs"]
 
 EXTRACTION_REPORTS = REPO_ROOT / "benchmarks" / "extraction"
 OUTPUT_DIR = REPO_ROOT / "benchmarks" / "graph"
@@ -73,20 +73,19 @@ class LoadInputs:
 
 @dataclass(frozen=True, slots=True)
 class LoadResult:
+    """A written graph and its validation, or why validation could not run after the write."""
+
     built: Built
     write_seconds: float
-    validation: ValidationReport
+    validation: ValidationReport | None
+    validation_error: str | None = None
 
 
 def read_inputs(extract_dir: Path, alias_map: Path, reports_dir: Path) -> LoadInputs:
-    """The latest extract file per filing, the alias map and each file's chunk gaps.
-
-    InputError when a file is missing or malformed.
+    """Per filing its latest extract run under the current prompt, the alias map and each
+    run's chunk gaps. InputError when a file is missing or malformed.
     """
-    paths = latest_extract_files(extract_dir)
-    if not paths:
-        raise InputError(f"no extract files in {extract_dir}")
-    files = tuple(read_extract_file(p) for p in paths)
+    files = current_extract_files(extract_dir)
     try:
         raw = alias_map.read_bytes()
         aliases = parse_alias_map(raw, alias_map.name)
@@ -116,17 +115,19 @@ def load_graph(
     """Build the graph, write it in one transaction and validate it.
 
     Raises GraphNotEmpty (without *rebuild*), BuildError or BatchRejected, each
-    before anything changes. Validation failures come back in the result.
+    before anything changes. Once the write has committed nothing is raised:
+    violations, or an error that stopped validation, come back in the result.
     """
     built = build_graph(rows, inputs.files, inputs.alias_map)
     started = time.monotonic()
     rebuild_graph(driver, built.batch, replace=rebuild)
     seconds = time.monotonic() - started
     try:
-        validation = validate_graph(driver, postgres)
+        return LoadResult(built, seconds, validate_graph(driver, postgres))
     except GraphValidationError as exc:
-        validation = exc.report
-    return LoadResult(built, seconds, validation)
+        return LoadResult(built, seconds, exc.report)
+    except (Neo4jError, DriverError, psycopg.Error) as exc:
+        return LoadResult(built, seconds, None, f"{type(exc).__name__}: {exc}")
 
 
 # ── command ────────────────────────────────────────────────────────────────────
@@ -141,8 +142,11 @@ def _run(rebuild: bool) -> tuple[LoadInputs, LoadResult]:
         raise _CouldNotRun("DATABASE_URL is not set")
     try:
         inputs = read_inputs(CANDIDATES_DIR, ALIAS_MAP, EXTRACTION_REPORTS)
+    except InputError as exc:
+        raise _CouldNotRun(str(exc)) from exc
+    try:
         driver = driver_from_env()
-    except (InputError, GraphSettingsMissing, ValueError) as exc:  # ValueError: bad NEO4J_URI
+    except (GraphSettingsMissing, ValueError) as exc:  # ValueError: a malformed NEO4J_URI
         raise _CouldNotRun(str(exc)) from exc
     try:
         with driver, psycopg.connect(url) as conn:
@@ -172,8 +176,14 @@ def main(argv: Sequence[str] | None = None, *, out_dir: Path = OUTPUT_DIR) -> in
         return EXIT_RUN_ERROR
     path = next_report_path(out_dir)
     write_json_atomic(path, load_report(git_state(), inputs, result), indent=2)
+    shown = path.relative_to(REPO_ROOT) if path.is_relative_to(REPO_ROOT) else path
+    if result.validation is None:
+        print(f"the graph was replaced, but validation could not run: "
+              f"{result.validation_error}. Run python -m graph.validate. Report: {shown}",
+              file=sys.stderr)
+        return EXIT_RUN_ERROR
     print(result.validation)
-    print(f"load report: {path.relative_to(REPO_ROOT) if path.is_relative_to(REPO_ROOT) else path}")
+    print(f"load report: {shown}")
     return EXIT_OK if result.validation.ok else EXIT_VIOLATIONS
 
 

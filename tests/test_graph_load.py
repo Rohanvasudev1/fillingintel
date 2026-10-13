@@ -17,9 +17,9 @@ from graph.batch import Batch, NodeRecord
 from graph.build_input import ChunkRow, FilingRow, StructuralRows
 from graph.connection import DATABASE
 from graph.constraints import GRAPH_META, apply_constraints
-from graph.load import GraphNotEmpty, load_graph, read_inputs
+from graph.load import load_graph, read_inputs
 from graph.ontology import LABELS_BY_NAME, ONTOLOGY_VERSION, Kind
-from graph.write import BatchRejected, rebuild_graph
+from graph.write import BatchRejected, GraphNotEmpty, rebuild_graph
 from tests.graph_test_data import AMD_10K, NVDA_10K
 from tests.neo4j_fixtures import MARKER_LABEL
 
@@ -124,3 +124,20 @@ def test_graph_meta_survives_a_rebuild(unmarked, rows, inputs):
     load_graph(unmarked, rows, inputs, rebuild=True)
     versions = _run(unmarked, f"MATCH (m:`{GRAPH_META}`) RETURN m.ontology_version AS v")
     assert versions == [{"v": ONTOLOGY_VERSION}]
+
+
+def test_a_validation_that_cannot_run_after_the_write_is_reported_not_hidden(
+    unmarked, rows, inputs, monkeypatch,
+):
+    from neo4j.exceptions import ServiceUnavailable
+
+    import graph.load
+
+    def unreachable(*_args, **_kwargs):
+        raise ServiceUnavailable("gone")
+
+    monkeypatch.setattr(graph.load, "validate_graph", unreachable)
+    result = load_graph(unmarked, rows, inputs, rebuild=False)
+    assert result.validation is None
+    assert "ServiceUnavailable" in result.validation_error
+    assert _counts(unmarked)["Filing"] == 2  # the write stands

@@ -10,8 +10,8 @@ the write path writes exactly what it is given (ADR-0004, ADR-0006):
 - Every extracted key maps through the alias map; a key absent from it is its
   own canonical key. A key mapped to `Company:{cik}` is that filer's Company
   node, so the extracted node is not emitted and its edges move to the Company.
-- A merged node takes its canonical member's own properties; the other
-  members' names go in `aliases`, sorted and without repeats.
+- A merged node takes its canonical member's own properties, from its latest
+  filing; the other members' names go in `aliases`, sorted and without repeats.
 - Node and edge evidence hold one entry per chunk, ordered by the chunk's
   filing date, then chunk ID. When a chunk appears twice the more confident
   entry wins, ties to the later filing, then the later line.
@@ -30,7 +30,6 @@ from enum import StrEnum
 
 from extract.filers import TICKER_BY_CIK
 from extract.outcomes import Conflict
-from extract.prompt import CURRENT_VERSION
 from graph.batch import (
     CHUNK_IDS,
     CONFIDENCES,
@@ -42,17 +41,23 @@ from graph.batch import (
     NodeRecord,
     NodeRef,
 )
-from graph.build_input import ExtractEdge, ExtractFile, ExtractNode, StructuralRows
-from graph.ontology import CONFIDENCE_LEVELS, EDGE_TYPES_BY_NAME, LABELS_BY_NAME, Kind
+from graph.build_input import (
+    EXTRACT_PROMPT_PREFIX,
+    ExtractEdge,
+    ExtractFile,
+    ExtractNode,
+    StructuralRows,
+)
+from graph.ontology import CONFIDENCE_RANK, EDGE_TYPES_BY_NAME, LABELS_BY_NAME, Kind
 
-EXTRACT_PROMPT_PREFIX = f"extract/{CURRENT_VERSION}@"
-COMPANY, FILING, PERIOD, CHUNK = "Company", "Filing", "Period", "Chunk"
-METRIC, MEASURES = "MetricValue", "MEASURES"
+# Looked up in the ontology, so renaming one there fails at import, not silently.
+COMPANY, FILING, PERIOD, CHUNK, METRIC = (
+    LABELS_BY_NAME[name].name for name in ("Company", "Filing", "Period", "Chunk", "MetricValue"))
+FILED, COVERS_PERIOD, PART_OF, MEASURES = (
+    EDGE_TYPES_BY_NAME[name].name for name in ("FILED", "COVERS_PERIOD", "PART_OF", "MEASURES"))
 ALIASES, STAKE = "aliases", "stake"
 COMPANY_KEY_PREFIX = f"{COMPANY}:"  # how the alias map names a filer (ADR-0006)
 _NAME_PROPERTY = {"RiskFactor": "title", METRIC: "concept"}
-# stated outranks implied outranks uncertain
-_CONFIDENCE_RANK = {level: len(CONFIDENCE_LEVELS) - i for i, level in enumerate(CONFIDENCE_LEVELS)}
 
 
 class BuildError(ValueError):
@@ -127,7 +132,7 @@ class _Context:
         for e in evidence:
             if e.chunk_id not in self.chunk_dates:
                 raise BuildError(f"evidence cites chunk {e.chunk_id!r}, which Postgres lacks")
-            found.append(_Entry(e, (_CONFIDENCE_RANK[e.confidence], file_date, file_index, line)))
+            found.append(_Entry(e, (CONFIDENCE_RANK[e.confidence], file_date, file_index, line)))
         return found
 
     def ordered(self, entries: Iterable[_Entry]) -> tuple[Evidence, ...]:
@@ -171,8 +176,7 @@ def _filing_date(filing_dates: Mapping[str, date], accession_no: str) -> date:
 
 
 def _check_prompts(files: Sequence[ExtractFile]) -> None:
-    prompts = {e.extract_prompt for f in files for item in (*f.nodes, *f.edges)
-               for e in item.evidence}
+    prompts = {p for f in files for p in f.prompts}
     if len(prompts) > 1 or any(not p.startswith(EXTRACT_PROMPT_PREFIX) for p in prompts):
         raise PromptMix(f"expected one {EXTRACT_PROMPT_PREFIX}… prompt version across the "
                         f"extract files, found {', '.join(sorted(prompts))}")
@@ -216,7 +220,7 @@ def _node_record(
     canonical = [n for n, _ in group if n.key == key]
     if not canonical:
         raise BuildError(f"the alias map sends keys to {key!r}, which no extract file holds")
-    properties = dict(canonical[0].properties)
+    properties = dict(canonical[-1].properties)  # files run oldest first: the latest wins
     if any(p.name == ALIASES for p in LABELS_BY_NAME[ref.label].properties):
         name_property = _NAME_PROPERTY.get(ref.label, "name")
         names = {str(n.properties[name_property]) for n, _ in group}
@@ -312,8 +316,12 @@ def _stake(
     if not stakes:
         return None, []
     value, best = max(stakes, key=lambda s: s[1].rank)
+    losers: dict[float, _Entry] = {}  # one conflict per losing value, its best entry
+    for other, entry in stakes:
+        if other != value and (other not in losers or entry.rank > losers[other].rank):
+            losers[other] = entry
     return value, [Conflict(item, STAKE, value, other, best.chunk_id, entry.chunk_id)
-                   for other, entry in stakes if other != value]
+                   for other, entry in sorted(losers.items())]
 
 
 # ── structural nodes and edges ────────────────────────────────────────────────
@@ -342,12 +350,12 @@ def structural_nodes(rows: StructuralRows) -> tuple[NodeRecord, ...]:
 def structural_edges(rows: StructuralRows) -> tuple[EdgeRecord, ...]:
     filings = sorted(rows.filings, key=lambda f: f.accession_no)
     return (
-        *(EdgeRecord("FILED", NodeRef.of(COMPANY, cik=f.cik),
+        *(EdgeRecord(FILED, NodeRef.of(COMPANY, cik=f.cik),
                      NodeRef.of(FILING, accession_no=f.accession_no)) for f in filings),
-        *(EdgeRecord("COVERS_PERIOD", NodeRef.of(FILING, accession_no=f.accession_no),
+        *(EdgeRecord(COVERS_PERIOD, NodeRef.of(FILING, accession_no=f.accession_no),
                      NodeRef.of(PERIOD, cik=f.cik, fiscal_period=f.fiscal_period))
           for f in filings),
-        *(EdgeRecord("PART_OF", NodeRef.of(CHUNK, chunk_id=c.chunk_id),
+        *(EdgeRecord(PART_OF, NodeRef.of(CHUNK, chunk_id=c.chunk_id),
                      NodeRef.of(FILING, accession_no=c.accession_no))
           for c in sorted(rows.chunks, key=lambda c: c.chunk_id)),
     )

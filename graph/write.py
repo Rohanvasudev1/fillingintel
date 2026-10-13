@@ -125,7 +125,7 @@ _OTHER_NODES = f"MATCH (n) WHERE NOT n:{quoted(GRAPH_META)}"
 
 
 def _rebuild(tx: ManagedTransaction, batch: Batch, replace: bool) -> None:
-    require_graph_meta(tx)
+    # _write checks :GraphMeta before writing; a mismatch rolls the delete back with it.
     if replace:
         tx.run(f"{_OTHER_NODES} DETACH DELETE n").consume()
     else:

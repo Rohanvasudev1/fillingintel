@@ -47,6 +47,9 @@ class Confidence(StrEnum):
 
 
 CONFIDENCE_LEVELS: tuple[str, ...] = tuple(c.value for c in Confidence)
+# stated outranks implied outranks uncertain: the most-confident rule's order (Step 8).
+CONFIDENCE_RANK = MappingProxyType(
+    {level: len(CONFIDENCE_LEVELS) - i for i, level in enumerate(CONFIDENCE_LEVELS)})
 
 
 class PropType(StrEnum):

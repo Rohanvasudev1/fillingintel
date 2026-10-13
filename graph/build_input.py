@@ -18,10 +18,12 @@ from datetime import date
 from pathlib import Path
 from types import MappingProxyType
 
+from extract.prompt import CURRENT_VERSION
 from graph.batch import EVIDENCE_LISTS, Evidence, NodeRef
 
 FILE_NAME = re.compile(r"(\d{10}-\d{2}-\d{6})-run(\d+)\.jsonl")
 NODE, EDGE, FLAG = "node", "edge", "flag"
+EXTRACT_PROMPT_PREFIX = f"extract/{CURRENT_VERSION}@"
 
 
 class InputError(ValueError):
@@ -91,15 +93,36 @@ class ExtractFile:
     def name(self) -> str:
         return f"{self.accession_no}-run{self.run}.jsonl"
 
+    @property
+    def prompts(self) -> frozenset[str]:
+        """Every extract prompt version its evidence names."""
+        return frozenset(e.extract_prompt for item in (*self.nodes, *self.edges)
+                         for e in item.evidence)
 
-def latest_extract_files(directory: Path) -> tuple[Path, ...]:
-    """The highest-numbered extract file of each accession in *directory*, by accession."""
-    latest: dict[str, tuple[int, Path]] = {}
+
+def current_extract_files(directory: Path) -> tuple[ExtractFile, ...]:
+    """Per filing in *directory*, its latest run made under the current extract prompt.
+
+    Runs are read newest first; a run with evidence from any other prompt version
+    is passed over. InputError when a filing has no such run, or there are no files.
+    """
+    runs: dict[str, list[tuple[int, Path]]] = {}
     if directory.is_dir():
         for path in directory.iterdir():
-            if (m := FILE_NAME.fullmatch(path.name)) and int(m[2]) > latest.get(m[1], (0,))[0]:
-                latest[m[1]] = (int(m[2]), path)
-    return tuple(path for _, (_, path) in sorted(latest.items()))
+            if m := FILE_NAME.fullmatch(path.name):
+                runs.setdefault(m[1], []).append((int(m[2]), path))
+    if not runs:
+        raise InputError(f"no extract files in {directory}")
+    return tuple(_current_run(accession_no, sorted(found, reverse=True))
+                 for accession_no, found in sorted(runs.items()))
+
+
+def _current_run(accession_no: str, runs: list[tuple[int, Path]]) -> ExtractFile:
+    for _, path in runs:
+        found = read_extract_file(path)
+        if all(p.startswith(EXTRACT_PROMPT_PREFIX) for p in found.prompts):
+            return found
+    raise InputError(f"{accession_no} has no extract run under {EXTRACT_PROMPT_PREFIX}…")
 
 
 def read_extract_file(path: Path) -> ExtractFile:
@@ -111,9 +134,13 @@ def read_extract_file(path: Path) -> ExtractFile:
         raw = path.read_bytes()
     except OSError as exc:
         raise InputError(f"cannot read {path.name}: {type(exc).__name__}") from exc
+    try:
+        text_lines = raw.decode("utf-8").splitlines()
+    except UnicodeDecodeError as exc:
+        raise InputError(f"{path.name} is not UTF-8: {exc}") from exc
     nodes: list[ExtractNode] = []
     edges: list[ExtractEdge] = []
-    for number, text in enumerate(raw.decode("utf-8").splitlines(), start=1):
+    for number, text in enumerate(text_lines, start=1):
         try:
             line = _object(json.loads(text), "the line")
             kind = line.get("kind")
