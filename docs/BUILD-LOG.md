@@ -1866,6 +1866,134 @@ None new. The 5 dropped `CONCERNS` edges are still open from ticket 04.
 
 ---
 
+## 2026-10-14 — Step 10 ticket 08: multi-hop check and closing Step 10
+
+Three agent-drafted dev multi_hop questions answered with hand-written Cypher against the loaded graph (load run 3). Spec `.scratch/step-10/spec.md` (Multi-hop check), ticket `.scratch/step-10/issues/08-multi-hop-check-and-close.md`.
+
+- **Result** (`python -m graph.multihop`, commit `397a2d7`, `benchmarks/graph/multihop-run1.json`, agent-drafted questions): **2 of 3 pass.**
+- **Pass rule.** For each company the question asks about, the query's returned `chunk_ids` must include at least one of the record's gold chunks for that company. A question about one company is judged per fiscal period instead. A gold chunk's company and period come from the graph (Chunk -PART_OF-> Filing <-FILED- Company). A gold chunk with no Chunk node stops the run (exit 3) rather than counting as a fail. For q0111 and q0120 each company's gold chunk is in the period asked for that company, so judging by company also covers both periods.
+
+### q0111: How do NVIDIA (fiscal 2026 10-K), AMD (fiscal 2025 10-K) and Intel (fiscal 2025 10-K) each describe their reliance on TSMC? — PASS
+
+```cypher
+// q0111 (agent-drafted, dev, multi_hop): How do NVIDIA (fiscal 2026 10-K), AMD
+// (fiscal 2025 10-K) and Intel (fiscal 2025 10-K) each describe their reliance on TSMC?
+// Hops: TSMC (found by name or alias) -SUPPLIES-> filer; each evidence chunk -PART_OF->
+// the 10-K the question names for that filer. Evidence from other filings is left out.
+UNWIND [{ticker: 'NVDA', period: 'FY2026'},
+        {ticker: 'AMD', period: 'FY2025'},
+        {ticker: 'INTC', period: 'FY2025'}] AS asked
+MATCH (co:Company {ticker: asked.ticker})-[:FILED]->(f:Filing {form_type: '10-K', fiscal_period: asked.period})
+MATCH (tsmc:Organization)-[r:SUPPLIES]->(co)
+WHERE 'TSMC' IN [tsmc.name] + coalesce(tsmc.aliases, [])
+UNWIND range(0, size(r.chunk_ids) - 1) AS i
+MATCH (:Chunk {chunk_id: r.chunk_ids[i]})-[:PART_OF]->(f)
+RETURN co.ticker AS company, f.fiscal_period AS fiscal_period, tsmc.name AS supplier,
+       collect(r.chunk_ids[i]) AS chunk_ids, collect(r.evidence_spans[i]) AS evidence_spans
+ORDER BY company
+```
+
+| Company | 10-K | Returned chunks | Gold hit |
+|---|---|---|---|
+| AMD | FY2025 | 0000002488-26-000018: 0015, 0029, 0032 | 0029 |
+| INTC | FY2025 | 0000050863-26-000011: 0008, 0018, 0063, 0075, 0076 | 0063 |
+| NVDA | FY2026 | 0001045810-26-000021: 0012 | 0012 |
+
+Intel's other side, TSMC as a foundry competitor, is a separate `COMPETES_WITH` edge with its own evidence (0012, 0018, 0061, 0063). The query leaves it out, because the question asks about reliance.
+
+### q0120: In their latest annual reports, how does each company name the other two as competitors? — PASS
+
+```cypher
+// q0120 (agent-drafted, dev, multi_hop): In their latest annual reports (NVIDIA fiscal
+// 2026; AMD and Intel fiscal 2025), how does each company name the other two as competitors?
+// Hops: filer -COMPETES_WITH- another filer (stored one way, matched both ways); each
+// evidence chunk -PART_OF-> the naming filer's own 10-K for the asked year.
+UNWIND [{ticker: 'NVDA', period: 'FY2026'},
+        {ticker: 'AMD', period: 'FY2025'},
+        {ticker: 'INTC', period: 'FY2025'}] AS asked
+MATCH (co:Company {ticker: asked.ticker})-[:FILED]->(f:Filing {form_type: '10-K', fiscal_period: asked.period})
+MATCH (co)-[r:COMPETES_WITH]-(rival:Company)
+UNWIND range(0, size(r.chunk_ids) - 1) AS i
+MATCH (:Chunk {chunk_id: r.chunk_ids[i]})-[:PART_OF]->(f)
+RETURN co.ticker AS company, f.fiscal_period AS fiscal_period, rival.ticker AS names_as_competitor,
+       collect(r.chunk_ids[i]) AS chunk_ids, collect(r.evidence_spans[i]) AS evidence_spans
+ORDER BY company, names_as_competitor
+```
+
+| Company | Names | Returned chunks (own 10-K) |
+|---|---|---|
+| AMD (FY2025) | INTC, NVDA | 0000002488-26-000018: 0014 (gold), 0023 |
+| INTC (FY2025) | AMD | 0000050863-26-000011: 0010, 0011, 0059 (gold) |
+| INTC (FY2025) | NVDA | 0000050863-26-000011: 0011, 0059 (gold) |
+| NVDA (FY2026) | AMD, INTC | 0001045810-26-000021: 0012 (gold) |
+
+`COMPETES_WITH` is stored once per pair and holds every filer's evidence, so the query keeps only the chunks from the naming company's own 10-K.
+
+### q0127: In the risk factor listing what could cause NVIDIA to misestimate demand, how did the customer-investment factor change between the fiscal 2025 and fiscal 2026 10-Ks? — FAIL
+
+```cypher
+// q0127 (agent-drafted, dev, multi_hop): In the risk factor listing what could cause
+// NVIDIA to misestimate demand, how did the customer-investment factor change between
+// the fiscal 2025 and fiscal 2026 10-Ks?
+// Hops: NVIDIA -FILED-> FY2025 10-K -DISCLOSES-> the risk factor whose title names a
+// failure to estimate customer demand -PERSISTS_AS-> its successors disclosed in the
+// FY2026 10-K. Returns each end's EVIDENCED_BY chunks and the link's own evidence.
+MATCH (nvda:Company {ticker: 'NVDA'})-[:FILED]->(:Filing {form_type: '10-K', fiscal_period: 'FY2025'})
+      -[:DISCLOSES]->(earlier:RiskFactor)
+WHERE toLower(earlier.title) CONTAINS 'estimate customer demand'
+MATCH (earlier)-[p:PERSISTS_AS]->(later:RiskFactor)
+      <-[:DISCLOSES]-(:Filing {form_type: '10-K', fiscal_period: 'FY2026'})<-[:FILED]-(nvda)
+RETURN earlier.title AS fy2025_title, later.title AS fy2026_title,
+       p.extract_prompts[0] AS link_method,
+       [(earlier)-[:EVIDENCED_BY]->(c:Chunk) | c.chunk_id]
+         + [(later)-[:EVIDENCED_BY]->(c:Chunk) | c.chunk_id] + p.chunk_ids AS chunk_ids
+ORDER BY fy2025_title, fy2026_title
+```
+
+| FY2025 factor (evidence) | FY2026 successor (evidence) | Link |
+|---|---|---|
+| "Long manufacturing lead times … component availability …" (0020) | the same title with "capacity availability" (0019) | persist/v1 |
+| same (0020) | "Supply constraints" (0023) | persist/v1 |
+| same (0020) | "We have previously experienced … extended lead times of more than 12 months" (0022) | persist/v1 |
+| the same title with a comma (0022) | its FY2026 counterpart with a comma (0021) | persist/v1 |
+
+- FY2026: hit on gold chunk `0001045810-26-000021:0022`. It comes through the "extended lead times" factor, which the adjudicator linked to the FY2025 factor. The matching FY2026 heading itself is evidenced by 0019 and 0021.
+- FY2025: miss. The gold chunk `0001045810-25-000023:0023` holds the bullet list ending in "our customers' ability to invest in AI infrastructure". The factor's heading ends chunk 0022, and its node is evidenced only by that chunk. No node or edge in the graph cites 0023 for this factor. 0023 is evidence only for the next risk factor ("Our reputation and customer relationships could be damaged …").
+- **Reading.** The graph links the right risk factor across years, but a RiskFactor node reaches only its heading chunk, not the body the question is about. That is an ontology finding, and it goes to OPEN-DECISIONS to settle before Step 11. The options there are an `EVIDENCED_BY` edge to every body chunk, or a chunk-order edge local search can walk. The question and the pass rule are unchanged.
+
+### Closing Step 10
+
+- **ADR-0004** gets a dated amendment: evidence is combined before the write under the most-confident rule, and the graph is rebuilt, never appended to.
+- **CLAUDE.md** Decisions gets the Step 10 entry: rebuild model, write path, combining rules, unit-class key, skipped items and the chunk gap, persistence rules and score, load run 3, and the multi-hop check.
+- **OPEN-DECISIONS.** The settled metric-value key item is removed. Kept: ER recall, `MAX_CHUNKS_PER_NODE`, and re-extracting Intel 0017. Added: incremental loads, RiskFactor body evidence (from q0127), the persistence recall finding, and the 5 dropped CONCERNS edges as a proposal for ontology version 4.
+- **RUNBOOK** Step 10 gets its outcome. The stop condition is met in part: the full graph is loaded with zero violations, and it answers two of the three questions.
+- `git_state()` already covers `persist/` (ticket 05).
+
+- **Code.** New `graph/multihop.py` (`python -m graph.multihop`; exit 0 all pass, 2 bad arguments, 3 could not run, 4 a question failed) and three query files under `benchmarks/graph/multihop/`. Queries run in read transactions (`READ_ACCESS`, `execute_read`), and a test checks that a write is refused.
+- **Tests.** Test-first, shown failing before the code: the pass rule on the real q0120 and q0127 records (per company, per period, a hard negative not counting, an asked period with no gold chunk), the query file list, `run_query()` rows, the `chunk_ids` column check and read-only. Written after the code, during review: `chunk_filings()` and the command's exit codes (pass, fail, empty folder).
+- **Code review** (`mattpocock-skills:code-review`).
+  - Fixed:
+    - q0111 also matched `COMPETES_WITH` in either direction, which is not reliance. It now follows TSMC -SUPPLIES-> filer only. The verdict is the same.
+    - q0111 found TSMC by its canonical key; it now matches by name or alias.
+    - file errors gave a traceback instead of exit 3;
+    - an empty query folder passed as "0 of 0";
+    - the report entry was an untyped dict;
+    - the read-session code was repeated;
+    - missing tests for `chunk_filings()` and the command.
+  - Left as it is: the committed run report `multihop-run1.json` was not asked for (the spec says BUILD-LOG). It is kept, because it records the commit, the query hashes and every row.
+- **Regressions.** None.
+- **Evidence.** `uv run ruff check .` is clean. Full suite with the local databases: 2224 passed, 1 skipped. The `neo4j-test` container had exited (code 137, not out of memory) before the first test run and was restarted.
+
+**Decisions needed**
+1. q0127 and RiskFactor body evidence. Recommendation: before Step 11, add `EVIDENCED_BY` edges from each risk factor to every chunk of its body, found from the section text between one heading and the next (deterministic, no API call). Then rebuild and rerun the check. Leave the question and the pass rule as they are.
+2. Still open from ticket 04: the 5 dropped `CONCERNS` edges. Recommendation: keep the drop now and allow Company as a CONCERNS end in an ontology version 4 (added to OPEN-DECISIONS).
+
+**Next session starts with**
+1. Merge this PR once CI is green.
+2. Decide on q0127's finding (above). Then plan Step 11 with `/grill-with-docs`.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.
@@ -1880,3 +2008,4 @@ Short versions of the stories from this build so far, for interviews and write-u
 - **A safety rule cost most of the recall.** The entity resolver never merged two different entities in its scored sample (10 of 10 right), but it found only about 39% of true matches. Most misses were not model errors: the model said "same", and a rule that holds back any group larger than five names or containing a disputed pair blocked the merge. The rule bought precision with recall, and the scoring made the price visible.
 - **A group cut doubled entity-resolution recall at no model cost.** Recall went from 0.387 to 0.783 on agent-labelled pairs from two different draws, with no wrong merge in the sample and no new model call. The resolver now cuts each blocked group by removing the fewest "same" answers that keep every disputed pair apart. It finds that cut exactly, because merging in a fixed order gave a different answer in 11 of 12 groups.
 - **Agent-labelled persistence links: right when made, but few.** 23 of 24 sampled risk-factor links were right, yet recall was 0.43. Almost half the misses were "same" answers dropped by a deliberate rule, that each later risk factor gets at most one predecessor. Filers merge and split risk factors, so a one-to-one link model undercounts by design.
+- **The graph linked the right risk factor and still missed the answer.** NVIDIA's demand risk factor was linked correctly from fiscal 2025 to fiscal 2026, but the graph tied each risk factor only to the chunk holding its heading. The bullet the question asked about sat in the next chunk, so the hand-written query could not reach it. Checking against gold chunks, not just "the query returned something", showed the gap before any retrieval arm was built on it.

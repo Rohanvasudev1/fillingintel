@@ -231,6 +231,8 @@ Build the `PERSISTS_AS` linkage between periods — matching a risk factor in FY
 
 **Stop condition:** full graph loaded across all three companies. Zero constraint violations. Run three multi-hop questions as hand-written Cypher and confirm the graph can actually answer them. If it can't, your ontology is wrong — go back to step 7. Better to find this now.
 
+As built (2026-10-14): `python -m graph.load --rebuild` rebuilds the whole graph from Postgres, the extract files, the alias map and the persistence links in one transaction through the guarded write path (ADR-0004 amendment). Load run 3 (commit `355b332`): all 24 filings of the three companies, 621 `PERSISTS_AS` links (319 by exact title, 302 adjudicated), zero violations from `validate_graph()` with the Postgres check. Persistence links scored once, agent-labelled (gpt-6-luna): precision 0.958, recall 0.428. Multi-hop check (`python -m graph.multihop`, commit `397a2d7`, agent-drafted questions): 2 of 3 pass. TSMC reliance (q0111) and competitors naming each other (q0120) pass. NVIDIA's customer-investment risk factor across FY2025 and FY2026 (q0127) fails for FY2025: the risk factor's node is evidenced only by its heading chunk, and the list the question asks about is in the next chunk. That is an ontology finding (OPEN-DECISIONS), to settle before Step 11; the question and the pass rule are unchanged. The stop condition is met in part: the graph is loaded with zero violations and answers two of the three questions.
+
 ### Step 11. Graph retrieval arms
 
 **Local search:** link the question to anchor entities, expand 1–2 hops, collect the `EVIDENCED_BY` chunks, generate from those.
