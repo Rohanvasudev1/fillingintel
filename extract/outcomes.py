@@ -72,6 +72,12 @@ class Conflict:
     kept_chunk: str
     other_chunk: str
 
+    def to_dict(self) -> dict[str, object]:
+        """The conflict as run and load reports record it."""
+        return {"item": self.item, "property": self.property, "kept": self.kept,
+                "other": self.other, "kept_chunk": self.kept_chunk,
+                "other_chunk": self.other_chunk}
+
 
 @dataclass(frozen=True, slots=True)
 class ChunkFailure:

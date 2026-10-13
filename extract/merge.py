@@ -36,12 +36,11 @@ from graph.batch import (
     Evidence,
     NodeRecord,
 )
-from graph.ontology import CONFIDENCE_LEVELS
+from graph.ontology import CONFIDENCE_RANK
 
 _Item = TypeVar("_Item", CheckedNode, CheckedEdge)
 _FIGURE_PROPERTIES = ("value", "unit")
-# stated outranks implied outranks uncertain
-_RANK = {level: len(CONFIDENCE_LEVELS) - i for i, level in enumerate(CONFIDENCE_LEVELS)}
+_RANK = CONFIDENCE_RANK
 
 
 @dataclass(frozen=True, slots=True)

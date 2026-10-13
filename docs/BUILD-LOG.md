@@ -1773,6 +1773,62 @@ The persistence links have one score, from 100 pairs labelled by gpt-6-luna. Eve
 
 ---
 
+## 2026-10-13 — Step 10 ticket 04: graph builder and loader
+
+`python -m graph.load` rebuilds the whole graph from Postgres, the extract files and the alias map in one transaction, validates it and writes a committed load report. Persistence links come in ticket 07.
+
+- **Real load** (`benchmarks/graph/load-run2.json`, commit `fe3beb9`, ontology version 3, prompt `extract/v2@34a82e2b`): 8,155 nodes and 23,213 edges (10,736 of them `EVIDENCED_BY`), written in 21.9 s. `validate_graph()` with the Postgres check: 0 violations. Run 1 (commit `55d7165`, before the review fixes) has the same counts and stays as a record. A second load without `--rebuild` was refused.
+  - Taken per filing: the latest run under `extract/v2` (run 2; run 3 for NVDA FY2026, whose v1 run 1 is passed over).
+  - Left out and listed: the two Intel metric values without a MEASURES edge, and one REPORTS edge to one of them. Gap: chunk `0000050863-24-000076:0017`.
+  - Merged into a filer's Company: 4 extracted Organization keys (`advanced micro devices, inc.`, `intel corporation`, `nvidia`, `nvidia corporation`). Their evidence is not loaded, since Company is structural.
+  - Dropped and listed: 5 `Agreement-[CONCERNS]->Company` edges. Their Organization end merged into Intel or NVIDIA, and CONCERNS may not end at a Company. Decision needed (below).
+  - One conflict: Intel's stake in Altera, 0.49 (FY2025 10-K, kept) against 1.0 (an earlier 10-Q).
+  - Two metric values have no REPORTS edge, because extraction gave none. The ontology does not require one.
+- **Code.**
+  - `graph/builder.py` is pure. It holds every combining rule:
+    - alias mapping, with a filer key mapped to its Company;
+    - canonical properties from the canonical key's latest filing, with sorted `aliases`;
+    - one evidence entry per chunk, ordered by filing date then chunk, the more confident winning, ties to the later filing;
+    - stake conflicts.
+  - `graph/build_input.py` reads extract files strictly: any malformed line fails with its file and line.
+  - `graph/structural.py` reads filings and chunks.
+  - `rebuild_graph()` in `graph/write.py` deletes every node but `:GraphMeta` inside the write transaction, or refuses a non-empty graph without `--rebuild`.
+  - `graph/load.py` and `graph/load_report.py` are the command and its report.
+  - One confidence ranking now lives in `graph.ontology.CONFIDENCE_RANK`, and one `Conflict.to_dict()` serves both reports.
+- **Exit codes.**
+  - 0: loaded and valid.
+  - 2: bad arguments, or a non-empty graph without `--rebuild`.
+  - 3: could not run, with nothing changed; or the graph was replaced but validation could not run. The report is still written and says so.
+  - 4: violations.
+- **Tests.**
+  - Builder rules: 20 tests on real fixture chunk IDs and spans, shown failing before the code. Two rules were also mutated to check that the tests catch them.
+  - Load tests in `neo4j-test`: the fixture filings load with 0 violations; a non-empty graph is refused and then replaced; a rejected rebuild keeps the previous graph; `:GraphMeta` survives; a validation error after the write is reported.
+  - Written before their tests: the extract-file reader. Its tests use extraction's own writer.
+- **Code review** (`mattpocock-skills:code-review`).
+  - Fixed:
+    - a newer non-v2 run made the load refuse instead of falling back to the latest v2 run;
+    - canonical properties came from the earliest filing;
+    - a losing stake held twice was counted twice;
+    - a validation error after the write printed "nothing was written";
+    - the confidence ranking was duplicated;
+    - ontology names were hard-coded;
+    - an error for a file that is not UTF-8 did not name the file;
+    - an exception handler was too broad.
+  - Left as they are: the builder's own extract-file parser beside resolution's (resolution builds a different record for pairing).
+- **Process.** A first attempt at this ticket on Sonnet 5.5 was discarded at the user's request and redone; it is kept on the local branch `backup/ticket-04-sonnet`. In that attempt the agent sourced `.env` in a shell, and a parse error printed the Anthropic key from line 18 into the session log. It should be rotated, as already planned.
+- **Regressions.** None. One test run lost the `neo4j-test` marker because two pytest runs shared the instance (a stale background run). The marker was put back and the suite rerun alone.
+- **Evidence.** `uv run ruff check .` is clean. Full suite with the local databases: 2205 passed, 1 skipped.
+
+**Decisions needed**
+1. The 5 dropped `CONCERNS` edges. Recommendation: accept the drop for Step 10 and add an OPEN-DECISIONS item proposing Company as a CONCERNS end in an ontology v4, since Step 10 rules out ontology changes.
+2. A non-empty graph without `--rebuild` exits 2, not 3. Recommendation: keep it, since the operator has to add a flag, and record it in the Step 10 Decisions entry.
+
+**Next session starts with**
+1. Merge this PR once CI is green.
+2. Ticket 07 (load the persistence links); it is unblocked.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.

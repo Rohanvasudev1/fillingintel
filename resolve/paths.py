@@ -45,10 +45,15 @@ def read_alias_map(path: Path) -> dict[str, str]:
     """The alias map in *path*; an absent file is an empty map. ValueError if malformed."""
     if not path.exists():
         return {}
-    data = json.loads(path.read_text(encoding="utf-8"))
+    return parse_alias_map(path.read_bytes(), path.name)
+
+
+def parse_alias_map(raw: bytes, name: str = ALIAS_MAP_NAME) -> dict[str, str]:
+    """The alias map in the file contents *raw*. ValueError if malformed."""
+    data = json.loads(raw.decode("utf-8"))
     if not isinstance(data, dict) or not all(
             isinstance(k, str) and isinstance(v, str) for k, v in data.items()):
-        raise ValueError(f"{path.name} is not an object of key to canonical key")
+        raise ValueError(f"{name} is not an object of key to canonical key")
     return data
 
 
