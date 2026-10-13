@@ -1,4 +1,4 @@
-"""The guarded write path into the graph (Step 7; ontology version 2 since Step 8).
+"""The guarded write path into the graph (Step 7; rules of Step 10).
 
 write_batch() is the one way into the graph. In one write transaction it:
 1. refuses a graph without :GraphMeta or built under another ontology;
@@ -7,19 +7,25 @@ write_batch() is the one way into the graph. In one write transaction it:
    list before any write;
 4. merges nodes, then edges, then node evidence.
 
-Nodes merge on their key properties; a node written again takes the batch's
-property values. Edges merge on (start, type, end), plus `role` where the type
-has one, so one person's two roles at a company stay two edges. An extracted
-edge written again gets the batch's new chunk IDs appended with their spans,
-confidences and prompt versions at the same index; chunk IDs it already lists
-are skipped (ADR-0004). Node evidence accumulates the same way: one
-EVIDENCED_BY edge per (node, chunk), and the span, confidence and prompt
-version written first are kept. (Step 10 replaces this first-wins rule.)
+It writes exactly what the batch holds; combining evidence is the caller's job
+(the Step 10 graph builder), so one item never depends on another. Nodes merge
+on their key properties, and edges on (start, type, end), plus `role` where the
+type has one, so one person's two roles at a company stay two edges. A batch
+holding the same node key or edge identity twice is rejected by check_batch().
+Every other property the ontology defines is set by name to the batch's value,
+so a node or edge written again holds the batch's properties and an optional
+property the batch leaves out (or gives as None) is removed. An extracted
+edge's four evidence lists are set as given. Each piece of node evidence is one
+EVIDENCED_BY edge per (node, chunk) whose span, confidence and prompt version
+are the batch's; edges to chunks the batch does not cite are left alone (the
+Step 10 rebuild deletes the old graph first).
 
-Labels, edge types and property keys reach Cypher only from the ontology,
-through graph.cypher.quoted(); every value is a parameter. Dynamic labels are
-not used, since on Neo4j 5.26 a MATCH with them scans every node
-(docs/research/neo4j-driver-and-constraints.md, 6.3).
+Setting each property by name, never `SET +=`, keeps every write query free of
+Eager operators (docs/research/neo4j-bulk-load.md, section 5); a test checks
+the plans with EXPLAIN. Labels, edge types and property keys reach Cypher only
+from the ontology, through graph.cypher.quoted(); every value is a parameter.
+Dynamic labels are not used, since on Neo4j 5.26 a MATCH with them scans every
+node (docs/research/neo4j-driver-and-constraints.md, 6.3).
 """
 from __future__ import annotations
 
@@ -37,6 +43,7 @@ from graph.batch import (
     EVIDENCE_SPAN,
     EVIDENCED_BY,
     EXTRACT_PROMPT,
+    IDENTITY_PROPERTIES,
     ONTOLOGY_VERSION_PROPERTY,
     Batch,
     EdgeRecord,
@@ -44,6 +51,7 @@ from graph.batch import (
     NodeRef,
     Violation,
     check_batch,
+    identity_properties,
     is_well_formed,
     key_values,
 )
@@ -51,7 +59,9 @@ from graph.connection import DATABASE
 from graph.constraints import require_graph_meta
 from graph.cypher import quoted
 from graph.ontology import (
+    EDGE_TYPES,
     EDGE_TYPES_BY_NAME,
+    LABELS,
     LABELS_BY_NAME,
     ONTOLOGY_VERSION,
     Kind,
@@ -59,16 +69,8 @@ from graph.ontology import (
     PropType,
 )
 
-_IDENTITY_PROPERTIES = ("role",)
 # Property names as they appear in Cypher text.
-_CHUNK_ID, _CHUNK_IDS, _VERSION = (
-    quoted(CHUNK_ID), quoted(CHUNK_IDS), quoted(ONTOLOGY_VERSION_PROPERTY),
-)
-# Appends each evidence list's entries at the indexes in `fresh`, keeping the lists parallel.
-_APPEND_EVIDENCE = ", ".join(
-    f"r.{quoted(name)} = coalesce(r.{quoted(name)}, []) + [i IN fresh | row.{quoted(name)}[i]]"
-    for name in EVIDENCE_LISTS
-)
+_CHUNK_ID, _VERSION = quoted(CHUNK_ID), quoted(ONTOLOGY_VERSION_PROPERTY)
 
 T = TypeVar("T")
 K = TypeVar("K", bound=Hashable)
@@ -163,14 +165,42 @@ def _existing_nodes(tx: ManagedTransaction, batch: Batch) -> frozenset[NodeRef]:
 
 # ── writing ────────────────────────────────────────────────────────────────────
 
+def write_queries() -> tuple[str, ...]:
+    """Every query the write path can run: per label, per extracted label's evidence, per edge
+    type and endpoint pair. It builds them with the functions _write uses; a new kind of
+    write query must be added here too, so the plan test sees it.
+    """
+    return (
+        *(_node_query(label.name) for label in LABELS),
+        *(_node_evidence_query(label.name) for label in LABELS if label.kind is Kind.EXTRACTED),
+        *(
+            _edge_query(edge.name, start, end)
+            for edge in EDGE_TYPES if edge.name != EVIDENCED_BY
+            for start in edge.starts for end in edge.ends
+        ),
+    )
+
+
 def _key_map(label: str, source: str) -> str:
     """A Cypher map of *label*'s key properties read from the map *source*."""
     keys = LABELS_BY_NAME[label].keys
     return "{" + ", ".join(f"{quoted(k)}: {source}.{quoted(k)}" for k in keys) + "}"
 
 
+def _named_sets(target: str, names: Iterable[str], source: str) -> list[str]:
+    """`SET` items giving each property in *names* of *target* its value in map *source*."""
+    return [f"{target}.{quoted(n)} = {source}.{quoted(n)}" for n in names]
+
+
+def _set_clause(target: str, items: list[str]) -> str:
+    """A `SET` of *items* plus *target*'s ontology version."""
+    return "SET " + ", ".join([*items, f"{target}.{_VERSION} = $version"]) + " "
+
+
 def _db_value(prop: Prop, value: object) -> object:
-    """*value* as Neo4j should store it: FLOAT as a float, lists as lists."""
+    """*value* as Neo4j should store it: FLOAT as a float, lists as lists, None as None."""
+    if value is None:
+        return None
     if prop.type is PropType.FLOAT:
         return float(value)  # type: ignore[arg-type]  # check_batch allows int | float
     if prop.type is PropType.LIST_STRING:
@@ -178,53 +208,70 @@ def _db_value(prop: Prop, value: object) -> object:
     return value
 
 
+def _settable(props: Iterable[Prop], skip: Iterable[str]) -> tuple[Prop, ...]:
+    """*props* the write path sets by name: all but *skip* and ontology_version."""
+    left_out = {*skip, ONTOLOGY_VERSION_PROPERTY}
+    return tuple(p for p in props if p.name not in left_out)
+
+
 def _db_properties(props: tuple[Prop, ...], values: Mapping[str, object]) -> dict[str, object]:
-    defined = {p.name: p for p in props}
-    return {name: _db_value(defined[name], value) for name, value in values.items()}
+    """Every property in *props* with its value in *values*, None when absent."""
+    return {p.name: _db_value(p, values.get(p.name)) for p in props}
+
+
+def _node_properties(label: str) -> tuple[Prop, ...]:
+    definition = LABELS_BY_NAME[label]
+    return _settable(definition.properties, definition.keys)
+
+
+def _node_query(label: str) -> str:
+    names = [p.name for p in _node_properties(label)]
+    return (
+        f"UNWIND $rows AS row MERGE (n:{quoted(label)} {_key_map(label, 'row.key')}) "
+        f"{_set_clause('n', _named_sets('n', names, 'row.props'))}"
+        "RETURN count(*) AS written"
+    )
 
 
 def _merge_nodes(tx: ManagedTransaction, label: str, nodes: list[NodeRecord]) -> None:
-    definition = LABELS_BY_NAME[label]
+    props = _node_properties(label)
     rows = [
-        {"key": key_values(label, n.properties),
-         "props": _db_properties(definition.properties, n.properties)}
+        {"key": key_values(label, n.properties), "props": _db_properties(props, n.properties)}
         for n in nodes
     ]
-    _run_rows(tx, (
-        f"UNWIND $rows AS row MERGE (n:{quoted(label)} {_key_map(label, 'row.key')}) "
-        f"SET n += row.props, n.{_VERSION} = $version "
-        "RETURN count(*) AS written"
-    ), rows)
+    _run_rows(tx, _node_query(label), rows)
+
+
+def _edge_properties(edge_type: str) -> tuple[Prop, ...]:
+    """An edge type's properties set by name; identity and evidence lists are set apart."""
+    return _settable(EDGE_TYPES_BY_NAME[edge_type].properties,
+                     (*IDENTITY_PROPERTIES, *EVIDENCE_LISTS))
 
 
 def _edge_query(edge_type: str, start: str, end: str) -> str:
     definition = EDGE_TYPES_BY_NAME[edge_type]
-    identity = [p.name for p in definition.properties if p.name in _IDENTITY_PROPERTIES]
-    identity_map = ", ".join(f"{quoted(p)}: row.props.{quoted(p)}" for p in identity)
-    query = (
+    identity = identity_properties(edge_type)
+    identity_map = ", ".join(f"{quoted(p)}: row.identity.{quoted(p)}" for p in identity)
+    names = [p.name for p in _edge_properties(edge_type)]
+    evidence = EVIDENCE_LISTS if definition.kind is Kind.EXTRACTED else ()
+    sets = [*_named_sets("r", names, "row.props"), *_named_sets("r", evidence, "row.evidence")]
+    return (
         f"UNWIND $rows AS row "
         f"MATCH (a:{quoted(start)} {_key_map(start, 'row.start')}) "
         f"MATCH (b:{quoted(end)} {_key_map(end, 'row.end')}) "
         f"MERGE (a)-[r:{quoted(edge_type)}{' {' + identity_map + '}' if identity else ''}]->(b) "
-        f"SET r += row.props, r.{_VERSION} = $version "
+        f"{_set_clause('r', sets)}"
+        "RETURN count(*) AS written"
     )
-    if definition.kind is Kind.EXTRACTED:
-        query += (
-            f"WITH r, row, [i IN range(0, size(row.{_CHUNK_IDS}) - 1) "
-            f"WHERE NOT row.{_CHUNK_IDS}[i] IN coalesce(r.{_CHUNK_IDS}, [])] AS fresh "
-            f"SET {_APPEND_EVIDENCE} "
-        )
-    return query + "RETURN count(*) AS written"
 
 
 def _edge_row(edge: EdgeRecord) -> dict:
-    definition = EDGE_TYPES_BY_NAME[edge.type]
-    plain = {k: v for k, v in edge.properties.items() if k not in EVIDENCE_LISTS}
     return {
         "start": edge.start.key_dict(),
         "end": edge.end.key_dict(),
-        "props": _db_properties(definition.properties, plain),
-        **{name: list(edge.properties.get(name, ())) for name in EVIDENCE_LISTS},
+        "identity": {p: edge.properties[p] for p in identity_properties(edge.type)},
+        "props": _db_properties(_edge_properties(edge.type), edge.properties),
+        "evidence": {name: list(edge.properties.get(name, ())) for name in EVIDENCE_LISTS},
     }
 
 
@@ -234,19 +281,22 @@ def _merge_edges(
     _run_rows(tx, _edge_query(edge_type, start, end), [_edge_row(e) for e in edges])
 
 
-def _merge_node_evidence(tx: ManagedTransaction, label: str, nodes: list[NodeRecord]) -> None:
-    rows = [
-        {"key": key_values(label, n.properties), "chunk_id": e.chunk_id, "span": e.span,
-         "confidence": e.confidence, "extract_prompt": e.extract_prompt}
-        for n in nodes for e in n.evidence
-    ]
-    _run_rows(tx, (
+def _node_evidence_query(label: str) -> str:
+    return (
         f"UNWIND $rows AS row "
         f"MATCH (n:{quoted(label)} {_key_map(label, 'row.key')}) "
         f"MATCH (c:{quoted(CHUNK)} {{{_CHUNK_ID}: row.chunk_id}}) "
         f"MERGE (n)-[e:{quoted(EVIDENCED_BY)}]->(c) "
-        f"ON CREATE SET e.{quoted(EVIDENCE_SPAN)} = row.span, "
+        f"SET e.{quoted(EVIDENCE_SPAN)} = row.span, "
         f"e.{quoted(CONFIDENCE)} = row.confidence, "
         f"e.{quoted(EXTRACT_PROMPT)} = row.extract_prompt, e.{_VERSION} = $version "
         "RETURN count(*) AS written"
-    ), rows)
+    )
+
+
+def _merge_node_evidence(tx: ManagedTransaction, label: str, nodes: list[NodeRecord]) -> None:
+    _run_rows(tx, _node_evidence_query(label), [
+        {"key": key_values(label, n.properties), "chunk_id": e.chunk_id, "span": e.span,
+         "confidence": e.confidence, "extract_prompt": e.extract_prompt}
+        for n in nodes for e in n.evidence
+    ])

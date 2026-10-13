@@ -7,13 +7,17 @@ from dataclasses import replace
 
 from graph.batch import Batch, EdgeRecord, Evidence, NodeRecord, NodeRef, Rule, check_batch
 from tests.graph_test_data import (
+    AMD,
+    AMD_COMPETITION_CHUNK,
     COMPUTE,
     CUSTOMERS_CHUNK,
     DATA_CENTER,
     EXPORT_CHUNK,
     FILING,
+    HUANG,
     NVDA_10K,
     NVIDIA,
+    OFFICERS_CHUNK,
     PERIOD,
     QUOTES,
     SEGMENTS_CHUNK,
@@ -454,6 +458,61 @@ def test_every_confidence_level_is_accepted(graph_test_batch):
         assert _rules(batch) == [], level
 
 
+# ── duplicate items (Step 10) ──────────────────────────────────────────────────
+
+def test_the_same_node_key_twice_is_rejected_naming_the_node(graph_test_batch):
+    tsmc = next(n for n in graph_test_batch.nodes if n.label == "Organization")
+    batch = _with_node(graph_test_batch, _set_props(tsmc, name="TSMC"))
+
+    violations = check_batch(batch)
+
+    assert [v.rule for v in violations] == [Rule.DUPLICATE_ITEM]
+    assert str(TSMC) in str(violations[0])
+
+
+def test_the_same_edge_twice_is_rejected_naming_the_edge(graph_test_batch):
+    batch = _with_edge(graph_test_batch, EdgeRecord("HAS_SEGMENT", NVIDIA, COMPUTE,
+                                                    edge_evidence(SEGMENTS_CHUNK)))
+
+    violations = check_batch(batch)
+
+    assert [v.rule for v in violations] == [Rule.DUPLICATE_ITEM]
+    assert "HAS_SEGMENT" in violations[0].item and str(COMPUTE) in violations[0].item
+
+
+def test_the_same_edge_with_other_evidence_is_still_a_duplicate(graph_test_batch):
+    batch = _with_edge(graph_test_batch, EdgeRecord("SUPPLIES", TSMC, NVIDIA,
+                                                    edge_evidence(EXPORT_CHUNK)))
+    assert _rules(batch) == [Rule.DUPLICATE_ITEM]
+
+
+def test_the_same_structural_edge_twice_is_rejected(graph_test_batch):
+    batch = _with_edge(graph_test_batch, EdgeRecord("FILED", NVIDIA, FILING))
+    assert _rules(batch) == [Rule.DUPLICATE_ITEM]
+
+
+def test_one_role_twice_is_a_duplicate_but_two_roles_are_not(graph_test_batch):
+    # The test graph already holds Huang as President and as Chief Executive Officer.
+    assert _rules(graph_test_batch) == []
+    batch = _with_edge(graph_test_batch, EdgeRecord(
+        "HOLDS_ROLE_AT", HUANG, NVIDIA, {"role": "President", **edge_evidence(OFFICERS_CHUNK)},
+    ))
+    assert _rules(batch) == [Rule.DUPLICATE_ITEM]
+
+
+def test_the_same_edge_type_between_other_nodes_is_not_a_duplicate(graph_test_batch):
+    batch = _with_edge(graph_test_batch, EdgeRecord("COMPETES_WITH", NVIDIA, AMD,
+                                                    edge_evidence(AMD_COMPETITION_CHUNK)))
+    assert _rules(batch) == []
+
+
+def test_a_duplicate_with_its_own_violations_reports_both(graph_test_batch):
+    batch = _with_edge(graph_test_batch, EdgeRecord("SUPPLIES", TSMC, NVIDIA, {
+        **edge_evidence(SUPPLY_CHUNK), "confidences": ["certain"],
+    }))
+    assert sorted(_rules(batch)) == sorted([Rule.DUPLICATE_ITEM, Rule.DISALLOWED_VALUE])
+
+
 # ── several at once ────────────────────────────────────────────────────────────
 
 def test_every_violation_in_a_batch_is_reported(graph_test_batch):
@@ -471,6 +530,8 @@ def test_every_violation_in_a_batch_is_reported(graph_test_batch):
     assert sorted(v.rule for v in violations) == sorted([
         Rule.WRONG_TYPE, Rule.MISSING_EVIDENCE, Rule.DISALLOWED_ENDPOINT,
         Rule.EVIDENCE_LENGTH_MISMATCH, Rule.UNKNOWN_CHUNK,
+        # The second HAS_SEGMENT edge repeats the test graph's own (Step 10).
+        Rule.DUPLICATE_ITEM,
     ])
     messages = "\n".join(str(v) for v in violations)
     assert "Filing" in messages and "filing_date" in messages

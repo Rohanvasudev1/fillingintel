@@ -41,6 +41,8 @@ from tests.graph_test_data import (
 )
 from tests.neo4j_fixtures import MARKER_LABEL
 
+LATER_PROMPT = "extract/v2@89abcdef"
+
 
 def _run(driver, query, **params):
     records, _, _ = driver.execute_query(query, params, database_=DATABASE)
@@ -201,65 +203,109 @@ def test_a_graph_built_under_another_ontology_is_refused(
                 f"{MARKER_LABEL}` RETURN count(n) AS n") == [{"n": 0}]
 
 
-# ── merging evidence ───────────────────────────────────────────────────────────
+# ── writing again: the batch's values, as given (Step 10) ──────────────────────
 
-def test_a_new_chunk_on_an_existing_edge_is_appended_with_its_span(written):
-    again = Batch(edges=(
+def test_a_new_chunk_list_on_an_existing_edge_replaces_the_old_one(written):
+    write_batch(written, Batch(edges=(
         EdgeRecord("HAS_SEGMENT", NVIDIA, COMPUTE, edge_evidence(MDA_SEGMENTS_CHUNK)),
-    ))
-    write_batch(written, again)
+    )))
 
     [edge] = _edges(written, "HAS_SEGMENT")
-    assert edge["p"]["chunk_ids"] == [SEGMENTS_CHUNK, MDA_SEGMENTS_CHUNK]
-    assert edge["p"]["evidence_spans"] == [QUOTES[SEGMENTS_CHUNK], QUOTES[MDA_SEGMENTS_CHUNK]]
-    assert edge["p"]["confidences"] == ["stated", "stated"]
+    assert edge["p"] == {
+        "chunk_ids": [MDA_SEGMENTS_CHUNK], "evidence_spans": [QUOTES[MDA_SEGMENTS_CHUNK]],
+        "confidences": ["stated"], "extract_prompts": [TEST_PROMPT],
+        "ontology_version": ONTOLOGY_VERSION,
+    }
 
+
+def test_an_edge_written_again_takes_every_evidence_list_as_given(written):
+    lists = {
+        "chunk_ids": [MDA_SEGMENTS_CHUNK, SEGMENTS_CHUNK],
+        "evidence_spans": [QUOTES[MDA_SEGMENTS_CHUNK], "Compute & Networking segment"],
+        "confidences": ["implied", "uncertain"],
+        "extract_prompts": [LATER_PROMPT, LATER_PROMPT],
+    }
+    write_batch(written, Batch(edges=(EdgeRecord("HAS_SEGMENT", NVIDIA, COMPUTE, lists),)))
+
+    [edge] = _edges(written, "HAS_SEGMENT")
+    assert edge["p"] == {**lists, "ontology_version": ONTOLOGY_VERSION}
+
+
+def test_the_same_edge_twice_in_one_batch_is_rejected_and_writes_nothing(
+    graph_driver, graph_test_batch,
+):
+    # Before Step 10 this wrote one edge holding both rows' chunks, in batch order.
+    extra = EdgeRecord("HAS_SEGMENT", NVIDIA, COMPUTE, edge_evidence(MDA_SEGMENTS_CHUNK))
+    before = _snapshot(graph_driver)
+
+    with pytest.raises(BatchRejected) as exc:
+        write_batch(graph_driver, replace(graph_test_batch,
+                                          edges=(*graph_test_batch.edges, extra)))
+
+    assert [v.rule for v in exc.value.violations] == [Rule.DUPLICATE_ITEM]
+    assert _snapshot(graph_driver) == before
+
+
+def test_the_same_node_twice_in_one_batch_is_rejected_and_writes_nothing(written):
     before = _snapshot(written)
-    write_batch(written, Batch(edges=(
-        EdgeRecord("HAS_SEGMENT", NVIDIA, COMPUTE,
-                   edge_evidence(MDA_SEGMENTS_CHUNK, SEGMENTS_CHUNK)),
-    )))
+    metric = _metric_node()
+    with pytest.raises(BatchRejected) as exc:
+        write_batch(written, Batch(nodes=(metric, replace(metric, properties={
+            **metric.properties, "value": 23}))))
+    assert [v.rule for v in exc.value.violations] == [Rule.DUPLICATE_ITEM]
     assert _snapshot(written) == before
 
 
-def test_only_the_new_chunks_of_a_mixed_list_are_appended(written):
+def test_a_node_written_again_holds_exactly_the_batch_properties(written):
+    tsmc = NodeRecord("Organization", {"key": TSMC.key_dict()["key"], "name": "TSMC"},
+                      (evidence(SUPPLY_CHUNK),))
+    write_batch(written, Batch(nodes=(tsmc,)))
+
+    [row] = _run(written, "MATCH (o:Organization {key: $key}) RETURN properties(o) AS p",
+                 key=TSMC.key_dict()["key"])
+    # The earlier aliases are gone: the batch left them out.
+    assert row["p"] == {"key": TSMC.key_dict()["key"], "name": "TSMC",
+                        "ontology_version": ONTOLOGY_VERSION}
+
+
+def test_a_null_optional_property_removes_only_itself(written):
+    tsmc = NodeRecord("Organization", {"key": TSMC.key_dict()["key"], "name": "TSMC",
+                                       "aliases": None}, (evidence(SUPPLY_CHUNK),))
+    write_batch(written, Batch(nodes=(tsmc,)))
+
+    [row] = _run(written, "MATCH (o:Organization {key: $key}) RETURN properties(o) AS p",
+                 key=TSMC.key_dict()["key"])
+    assert row["p"] == {"key": TSMC.key_dict()["key"], "name": "TSMC",
+                        "ontology_version": ONTOLOGY_VERSION}
+
+
+def test_an_edge_written_again_without_an_optional_property_loses_it(written):
+    owns = EdgeRecord("OWNS", NVIDIA, TSMC, {"stake": 0.5, **edge_evidence(SUPPLY_CHUNK)})
+    write_batch(written, Batch(edges=(owns,)))
     write_batch(written, Batch(edges=(
-        EdgeRecord("HAS_SEGMENT", NVIDIA, COMPUTE,
-                   edge_evidence(SEGMENTS_CHUNK, MDA_SEGMENTS_CHUNK)),
-    )))
-    [edge] = _edges(written, "HAS_SEGMENT")
-    assert edge["p"]["chunk_ids"] == [SEGMENTS_CHUNK, MDA_SEGMENTS_CHUNK]
-    assert len(edge["p"]["evidence_spans"]) == 2
-
-
-def test_an_appended_chunk_keeps_its_own_confidence_and_prompt_version(written):
-    later_prompt = "extract/v2@89abcdef"
-    write_batch(written, Batch(edges=(
-        EdgeRecord("HAS_SEGMENT", NVIDIA, COMPUTE, {
-            "chunk_ids": [SEGMENTS_CHUNK, MDA_SEGMENTS_CHUNK],
-            "evidence_spans": [QUOTES[SEGMENTS_CHUNK], QUOTES[MDA_SEGMENTS_CHUNK]],
-            "confidences": ["uncertain", "implied"],
-            "extract_prompts": [later_prompt, later_prompt],
-        }),
+        EdgeRecord("OWNS", NVIDIA, TSMC, edge_evidence(SUPPLY_CHUNK)),
     )))
 
-    [edge] = _edges(written, "HAS_SEGMENT")
-    # The chunk already on the edge keeps its first evidence; only the new one is appended.
-    assert edge["p"]["chunk_ids"] == [SEGMENTS_CHUNK, MDA_SEGMENTS_CHUNK]
-    assert edge["p"]["evidence_spans"] == [QUOTES[SEGMENTS_CHUNK], QUOTES[MDA_SEGMENTS_CHUNK]]
-    assert edge["p"]["confidences"] == ["stated", "implied"]
-    assert edge["p"]["extract_prompts"] == [TEST_PROMPT, later_prompt]
+    [edge] = _edges(written, "OWNS")
+    assert "stake" not in edge["p"]
+    assert edge["p"]["chunk_ids"] == [SUPPLY_CHUNK]
 
 
-def test_the_same_edge_twice_in_one_batch_is_one_edge(graph_driver, graph_test_batch):
-    extra = EdgeRecord("HAS_SEGMENT", NVIDIA, COMPUTE, edge_evidence(MDA_SEGMENTS_CHUNK))
-    write_batch(graph_driver, replace(graph_test_batch, edges=(*graph_test_batch.edges, extra)))
+def test_node_evidence_written_again_takes_the_batch_values(written):
+    write_batch(written, Batch(nodes=(replace(_metric_node(), evidence=(
+        Evidence(CUSTOMERS_CHUNK, "22% of total revenue", "implied", LATER_PROMPT),
+    )),)))
 
-    [edge] = _edges(graph_driver, "HAS_SEGMENT")
-    assert edge["p"]["chunk_ids"] == [SEGMENTS_CHUNK, MDA_SEGMENTS_CHUNK]
+    rows = _run(written, "MATCH (:MetricValue {key: $key})-[e:EVIDENCED_BY]->(c:Chunk) "
+                         "RETURN c.chunk_id AS chunk, properties(e) AS p",
+                key=TOP_CUSTOMER_SHARE.key_dict()["key"])
+    assert rows == [{"chunk": CUSTOMERS_CHUNK, "p": {
+        "evidence_span": "22% of total revenue", "confidence": "implied",
+        "extract_prompt": LATER_PROMPT, "ontology_version": ONTOLOGY_VERSION,
+    }}]
 
 
-def test_node_evidence_accumulates_through_evidenced_by_edges(written):
+def test_node_evidence_for_other_chunks_is_kept(written):
     metric = _metric_node()
     write_batch(written, Batch(nodes=(
         replace(metric, evidence=(evidence(MDA_CUSTOMERS_CHUNK),)),
@@ -274,6 +320,38 @@ def test_node_evidence_accumulates_through_evidenced_by_edges(written):
         replace(metric, evidence=(evidence(CUSTOMERS_CHUNK), evidence(MDA_CUSTOMERS_CHUNK))),
     )))
     assert _snapshot(written) == before
+
+
+# ── query plans ────────────────────────────────────────────────────────────────
+
+def _operators(plan):
+    """Operator names without the runtime suffix, such as `Eager` from `Eager@neo4j`."""
+    yield plan["operatorType"].split("@")[0]
+    for child in plan.get("children", ()):
+        yield from _operators(child)
+
+
+# A full scan means a MATCH or MERGE missed its uniqueness constraint's index.
+_SCANS = ("AllNodesScan", "NodeByLabelScan", "DirectedRelationshipTypeScan",
+          "UndirectedRelationshipTypeScan")
+
+
+def test_no_write_query_plans_an_eager_operator_or_a_full_scan(graph_driver):
+    queries = graph.write.write_queries()
+    assert queries
+    eager, scans = [], []
+    for query in queries:
+        _, summary, _ = graph_driver.execute_query(
+            f"EXPLAIN {query}", rows=[], version=ONTOLOGY_VERSION, database_=DATABASE,
+        )
+        # EagerAggregation is count(*), not the Eager barrier.
+        operators = set(_operators(summary.plan))
+        if "Eager" in operators:
+            eager.append(query)
+        if operators.intersection(_SCANS):
+            scans.append(query)
+    assert eager == []
+    assert scans == []
 
 
 def _metric_node():
