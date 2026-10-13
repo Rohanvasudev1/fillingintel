@@ -1,0 +1,21 @@
+{
+  "config_hash": "36673beebe68707192efed7d68371e9d26574225d1b6588789b83f81fc31f0ae",
+  "prompts": {
+    "persist": "persist/v1@5eaa7a2c",
+    "label": "persist_label/v1@9a57ed5c",
+    "persist_model": "claude-haiku-5-5@high",
+    "label_model": "gpt-6-luna@high",
+    "draw": "seed=20261014;near_rank_factor=2;candidate=60/near=25/rest=15"
+  },
+  "provenance": {
+    "commit": "8e796de",
+    "created_at": "2026-10-13T15:33:09+00:00",
+    "run_report": "run1.json",
+    "links_sha256": "6d3551ecde5f74d66f02291d8f00b847c0608385e6bf9992d2791008bac01679",
+    "config": {
+      "top_k": 3,
+      "embedding_model": "voyage-4-large",
+      "embed_input_type": "document"
+    }
+  }
+}
