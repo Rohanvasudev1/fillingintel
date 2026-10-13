@@ -4,9 +4,11 @@
   one filer and two filers may both report a "Gaming" (ADR-0005);
 - other cross-filing labels: `{label}:{norm(name)}`;
 - RiskFactor: `{accession_no}:{norm(title)}`;
-- MetricValue: `{accession_no}:{subject key}:{norm(concept)}:{period}`, where the
-  subject key is the filer's CIK or the built key of a Segment, MarketPlatform
-  or Product.
+- MetricValue: `{accession_no}:{subject key}:{norm(concept)}:{unit class}:{period}`,
+  where the subject key is the filer's CIK or the built key of a Segment,
+  MarketPlatform or Product, and the unit class comes from the printed unit
+  through extract/units.py (Step 10), so a percentage and an amount with one
+  concept name get two keys and one figure at two scales gets one.
 
 `norm` is NFKC, casefold and collapsed whitespace; stripping legal suffixes is
 Step 9's. The period is kept as written (the prompt asks for FY2026 or FY2026-Q3).
@@ -19,6 +21,7 @@ from __future__ import annotations
 
 import unicodedata
 
+from extract.units import unit_of
 from graph.ontology import FILER_SCOPED_LABELS, KEY_SEPARATOR
 
 SEPARATOR = KEY_SEPARATOR
@@ -49,6 +52,11 @@ def node_key(label: str, name: str, accession_no: str, cik: str) -> str:
     return f"{prefix}{SEPARATOR}{_part(name)}"
 
 
-def metric_key(accession_no: str, subject_key: str, concept: str, period: str) -> str:
-    """The key of a MetricValue: one figure for one subject and period in one filing."""
-    return SEPARATOR.join((accession_no, subject_key, _part(concept), _escaped(period.strip())))
+def metric_key(accession_no: str, subject_key: str, concept: str, unit: str, period: str) -> str:
+    """The key of a MetricValue: one figure for one subject, unit class and period in one filing.
+
+    *unit* is the printed unit; an unknown one raises UnknownUnit.
+    """
+    unit_class = unit_of(unit).unit_class
+    return SEPARATOR.join((accession_no, subject_key, _part(concept), unit_class.value,
+                           _escaped(period.strip())))
