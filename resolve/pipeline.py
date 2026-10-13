@@ -93,7 +93,7 @@ def resolve_nodes(nodes: Sequence[ResolveNode], embedder: NodeEmbedder | None,
         return Resolution(merges=new_merges(log, deterministic), proposed=tuple(deterministic),
                           pairs=pairs, pending=pending,
                           counts=_counts(nodes, pairs, deterministic, pending, ()))
-    decisions = tuple(_in_order(lambda p: adjudicator.judge(p, by_key[p.key_a], by_key[p.key_b]),
+    decisions = tuple(in_order(lambda p: adjudicator.judge(p, by_key[p.key_a], by_key[p.key_b]),
                                 pending, workers))
     grouping = group_decisions(decisions, joined=[m.members for m in deterministic],
                                max_names=config.max_group_names)
@@ -107,7 +107,7 @@ def resolve_nodes(nodes: Sequence[ResolveNode], embedder: NodeEmbedder | None,
     )
 
 
-def _in_order(fn: Callable[[_T], _R], items: Sequence[_T], workers: int) -> list[_R]:
+def in_order(fn: Callable[[_T], _R], items: Sequence[_T], workers: int) -> list[_R]:
     """*fn* of each item, in order, *workers* at a time, each in a copy of the caller's
     context so tracing spans keep their parent."""
     if workers == 1:

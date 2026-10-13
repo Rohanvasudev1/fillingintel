@@ -1,0 +1,70 @@
+{
+  "recorded": "real API response, recorded by scripts/capture_persist_responses.py",
+  "prompt_version": "persist/v1@bb7f8fb7",
+  "later": {
+    "key": "0000002488-26-000123:unfavorable currency exchange rate fluctuations could adversely affect us.",
+    "label": "RiskFactor",
+    "name": "Unfavorable currency exchange rate fluctuations could adversely affect us.",
+    "evidence": [
+      {
+        "chunk_id": "0000002488-26-000123:0050",
+        "span": "Unfavorable currency exchange rate fluctuations could adversely affect us."
+      }
+    ]
+  },
+  "earlier": {
+    "key": "0000002488-26-000018:our operating results are subject to quarterly and seasonal sales patterns",
+    "label": "RiskFactor",
+    "name": "Our operating results are subject to quarterly and seasonal sales patterns",
+    "evidence": [
+      {
+        "chunk_id": "0000002488-26-000018:0021",
+        "span": "Our operating results are subject to quarterly and seasonal sales patterns"
+      },
+      {
+        "chunk_id": "0000002488-26-000018:0027",
+        "span": "Our operating results are subject to quarterly and seasonal sales patterns"
+      }
+    ]
+  },
+  "api_ms": 3320.1695419993484,
+  "response": {
+    "id": "msg_011Cfz85VUHDVX9RB8d9WxHr",
+    "container": null,
+    "content": [
+      {
+        "signature": "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",
+        "thinking": "",
+        "type": "thinking"
+      },
+      {
+        "citations": null,
+        "text": "{\"answer\":\"distinct\",\"quote_earlier\":\"A large portion of our quarterly sales have historically been made in the last month of the quarter\",\"chunk_id_earlier\":\"0000002488-26-000018:0027\",\"quote_later\":\"We have costs, assets and liabilities that are denominated in foreign currencies\",\"chunk_id_later\":\"0000002488-26-000123:0050\",\"reason\":\"The earlier risk concerns uneven quarterly and seasonal sales timing, while the later risk concerns foreign currency exchange rate exposure on costs, assets and liabilities. The two risks differ, so they are not the same.\"}",
+        "type": "text"
+      }
+    ],
+    "diagnostics": null,
+    "model": "claude-haiku-5-5",
+    "role": "assistant",
+    "stop_details": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 1374,
+      "inference_geo": "global",
+      "input_tokens": 3938,
+      "output_tokens": 515,
+      "output_tokens_details": {
+        "thinking_tokens": 313
+      },
+      "server_tool_use": null,
+      "service_tier": "standard"
+    }
+  }
+}

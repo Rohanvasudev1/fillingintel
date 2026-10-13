@@ -1,0 +1,66 @@
+{
+  "recorded": "real API response, recorded by scripts/capture_persist_responses.py",
+  "prompt_version": "persist/v1@bb7f8fb7",
+  "later": {
+    "key": "0000002488-26-000123:we are party to litigation and may become a party to other claims or litigation that could cause us to incur substantial costs or pay substantial damages or prohibit us from selling our products.",
+    "label": "RiskFactor",
+    "name": "We are party to litigation and may become a party to other claims or litigation that could cause us to incur substantial costs or pay substantial damages or prohibit us from selling our products.",
+    "evidence": [
+      {
+        "chunk_id": "0000002488-26-000123:0071",
+        "span": "We are party to litigation and may become a party to other claims or litigation that could cause us to incur substantial costs or pay substantial damages or prohibit us from selling our products."
+      }
+    ]
+  },
+  "earlier": {
+    "key": "0000002488-26-000018:supply chain delays resulting from climate change related disruptions may lead to contractual disputes, litigation and increasing costs",
+    "label": "RiskFactor",
+    "name": "Supply chain delays resulting from climate change related disruptions may lead to contractual disputes, litigation and increasing costs",
+    "evidence": [
+      {
+        "chunk_id": "0000002488-26-000018:0041",
+        "span": "Supply chain delays resulting from climate change related disruptions may lead to contractual disputes, litigation and increasing costs"
+      }
+    ]
+  },
+  "api_ms": 3215.3216660080943,
+  "response": {
+    "id": "msg_011Cfz85FmHJmfGxqjU9BzSZ",
+    "container": null,
+    "content": [
+      {
+        "signature": "CAQSrAsKEAgSGAI4AUIIdGhpbmtpbmcSDJ23uqQ319BrrjRfGhoMD1FVHLemiyzOdWyqIjDsUfq7WeuK9k/EzJGnxDE66tDr02gTKatJ397CWKrbK0JbHcgLKGP3cpBZ7ZLcD8gqyQp1/XVu9m+bdZHGLkter4DTgBBrRfV4e0ZHITEsoH7W60aSp5HPyUOqX4Gz173+Qm4acQ27I/boOk83XcSZVlwAmjLiEfZ2sntvAHVZR/SbSEGNY7GP+5MBQEgr6wObXAiiHXE6RK3e2zDWfsbPXRpPUB0fL7OraQodfxjE5rA9OMGAmwscUr6Sk5U2jRXKm9scVPBEwLitp3upzRmezxuKy7zcJ8lg842fACLbpXU2Ouup+9DzxsdSPpauQ4XJPqKG1IS1S8Vt+gmyVL2W/wa+aAhPdgLW6KSmRXxrSPL94JV5HqTJnnF+Lmohxmv+lo7LozCnw+8Y+oTmatNEQN9O0396/G/Far3Kr1j4+E5MKcsK5+r9S7QjKEOlbNSFPx997z/p3pbO1wGFS9nZO+nDbSUrR5+QtDdtPTRGxhwQRRXWkrFuwiL/CQt5d5PWfvKDEKAbeZTzhbcZgiQJ5mUoH+e0NKWIN/f9Lv1UtoXMlps/ZslQdPYfWtIN+J/rBieTH6h25VgKYhI8JE0IdsNJ9sJrlMxUeJvAr/eF0jw5TNaPfyBpsOYoB9ON0eLNUMX1+95ak06VaxW3QXC6STkVp8C2LfeBgl/7WtGLDSsqkp4Nu+f4auT/zJaZdv6zgpMKwvRz6DV7Kzq+oF3eyXSbn7TEnJ7jjhnH2i/uSlXVqxg/O/S7HAasfSkWIkbv/8cI/YfNIXxrljpcQiD5y8ah3zGBkf5Mu1bdsarU+6DjcX1Z4piXRycyqXsAXuTLHqB8mH00tiUNXOC5OuBXxDQsmznYd1GghBVCZng3WM5adz0dfOTvTbXMcYDKF7djzRcq8vmM4v3WPHkgpMzxUdf6S4IfBS23RfJJB5OrQdbmA0Sfz7KXoHWCo420Kn1AlRW5SIEz6oZHmnW3njr91SVkVi27KzyBAuG2lrfG+UHPcSDiBH+RINtCwu0G1Qk0cnNtYjXp3n2JCm9vwbNZDvtG1/ffrZssRmKnnvAwpFHhZpRlostaKrcMOonHxYbTv6+EM3tk4xWR+1j5P4B0L037KpGMG7nk9nyCLOft7ZdjF6Gz//zL7hHfEgwq7Cl46+F0si2Z/lzlc+a9jdvxsT7IUTK4tTrCcfdk+BYPuWFqMp+LFh+fSKUhpyzBmh4+9RSUQOwYuONdfMinAMjhQgQXLEZGBjeSb+DHouYl7uhKez6bCZh4+cAFWLJ/LMilkt2F5TZNs9693dk/AeMQuLGv0Dt7PSoX4SrmVfWAv7gI7BTKMEOjlezbypj+poPPhRMGb/lI+KCjzIgdHY9Fc4nJh+VqdLsODXfUnUq8HSF7a5a4S0lP8l7rS8g+BpU7euSgutg/5y8CES8xtKLpfn8mHuKhCQKd9ktPvmUUpwIyMBqybz7fSSlfP2y1O+dqjEOXkPQDI8+Ked+7gmtI5UvYXB+wNtELncSFPvN7dv47BIV5kG5LtQWv6plyKn1sRRu6+zOI/qWlPiU8KN+PeWql59WOEiBInYz5NSNhMKVLY35PHajtBopbsTUiC7wZugA3Bl76HnQqHOAIZ8B16gvRZIqeZdmdW7hroY9Twqrfat59/6K4PxaNXQY2BmbYM1NTr3m3WphB/EcXtV9h0O2TAnrBEyIjWgZso4/W/RctPRUit+a9u3HAAQPs0zyPZyexJ1umJpp7FhxGLiIP8XGB3WvwqaUfTF8Ty8pV/gtWDMzBayO/mGYy9vEP32fkpRan73ORoDZQNrMiZBmmP2pTtT6E2AcMVW9fSaQEYwC1Y1kqhdmgqpy8kmV2gqPASa/Ut/FLAlhIzZQYAQ==",
+        "thinking": "",
+        "type": "thinking"
+      },
+      {
+        "citations": null,
+        "text": "{\"answer\":\"distinct\",\"quote_earlier\":\"Supply chain delays resulting from climate change related disruptions may lead to contractual disputes, litigation and increasing costs\",\"chunk_id_earlier\":\"0000002488-26-000018:0041\",\"quote_later\":\"We are party to litigation and may become a party to other claims or litigation that could cause us to incur substantial costs or pay substantial damages\",\"chunk_id_later\":\"0000002488-26-000123:0071\",\"reason\":\"The earlier risk is about climate-related supply chain delays, with litigation only as a consequence. The later risk is about the company's own exposure to lawsuits and claims, whatever their source, so the underlying risk differs.\"}",
+        "type": "text"
+      }
+    ],
+    "diagnostics": null,
+    "model": "claude-haiku-5-5",
+    "role": "assistant",
+    "stop_details": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 1374,
+      "inference_geo": "global",
+      "input_tokens": 2110,
+      "output_tokens": 508,
+      "output_tokens_details": {
+        "thinking_tokens": 280
+      },
+      "server_tool_use": null,
+      "service_tier": "standard"
+    }
+  }
+}

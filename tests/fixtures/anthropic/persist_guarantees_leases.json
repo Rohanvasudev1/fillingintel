@@ -1,0 +1,66 @@
+{
+  "recorded": "real API response, recorded by scripts/capture_persist_responses.py",
+  "prompt_version": "persist/v1@bb7f8fb7",
+  "later": {
+    "key": "0000002488-26-000123:we may be required to satisfy financial obligations under guarantees, leases and other commercial commitments.",
+    "label": "RiskFactor",
+    "name": "We may be required to satisfy financial obligations under guarantees, leases and other commercial commitments.",
+    "evidence": [
+      {
+        "chunk_id": "0000002488-26-000123:0078",
+        "span": "We may be required to satisfy financial obligations under guarantees, leases and other commercial commitments."
+      }
+    ]
+  },
+  "earlier": {
+    "key": "0000002488-26-000018:we may be required to satisfy financial obligations under guarantees and other commercial commitments.",
+    "label": "RiskFactor",
+    "name": "We may be required to satisfy financial obligations under guarantees and other commercial commitments.",
+    "evidence": [
+      {
+        "chunk_id": "0000002488-26-000018:0053",
+        "span": "We may be required to satisfy financial obligations under guarantees and other commercial commitments."
+      }
+    ]
+  },
+  "api_ms": 4069.9278340034653,
+  "response": {
+    "id": "msg_011Cfz84hPrdoXiiDY79uMF3",
+    "container": null,
+    "content": [
+      {
+        "signature": "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",
+        "thinking": "",
+        "type": "thinking"
+      },
+      {
+        "citations": null,
+        "text": "{\"answer\":\"same\",\"quote_earlier\":\"We may be required to satisfy financial obligations under guarantees and other commercial commitments.\",\"chunk_id_earlier\":\"0000002488-26-000018:0053\",\"quote_later\":\"We may be required to satisfy financial obligations under guarantees, leases and other commercial commitments.\",\"chunk_id_later\":\"0000002488-26-000123:0078\",\"reason\":\"The later risk keeps the same core risk, being required to satisfy financial obligations under commercial arrangements, and only adds leases and cloud compute capacity commitments. That is an expansion of the earlier risk, not a different one.\"}",
+        "type": "text"
+      }
+    ],
+    "diagnostics": null,
+    "model": "claude-haiku-5-5",
+    "role": "assistant",
+    "stop_details": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 1374,
+      "inference_geo": "global",
+      "input_tokens": 2619,
+      "output_tokens": 503,
+      "output_tokens_details": {
+        "thinking_tokens": 295
+      },
+      "server_tool_use": null,
+      "service_tier": "standard"
+    }
+  }
+}
