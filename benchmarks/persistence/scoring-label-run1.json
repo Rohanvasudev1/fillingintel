@@ -1,0 +1,178 @@
+{
+  "provenance": {
+    "commit": "26f1299",
+    "created_at": "2026-10-13T15:36:11+00:00",
+    "note": "agent-labelled (gpt-6-luna)",
+    "set": "scoring",
+    "labeller": {
+      "provider": "openai",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "max_output_tokens": 16000
+    },
+    "label_prompt": {
+      "version": "persist_label/v1@9a57ed5c",
+      "sha256": "9a57ed5c75dc65277ae0737f20a60927c05baddfc9346de8baefc4af2ac1b3a4",
+      "file_sha256": "4a01855101bbc0c3511fb6a48b912858f32ad08297bcc427436ed57782734f82"
+    },
+    "config_hash": "36673beebe68707192efed7d68371e9d26574225d1b6588789b83f81fc31f0ae",
+    "ontology_version": 3,
+    "inputs": [
+      {
+        "file": "0000002488-24-000056-run1.jsonl",
+        "sha256": "30cf9bf376531f02de3eb8bca592575be01f95b32f773f3938449f701efd48f2",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0000002488-24-000123-run1.jsonl",
+        "sha256": "ec4dc84c513d2627a81b5b73fa184fcacaaf8514e12d33c087c74cabb3c9b09e",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0000002488-24-000163-run1.jsonl",
+        "sha256": "4d88625cbc7490e06061d1fa2ca5e5bd30fb2122a617ca721d6d8e566a9f34c1",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0000002488-25-000012-run1.jsonl",
+        "sha256": "11372f29811a2f633f5d2666bd9cac33fd7f434de0287381f66d21d412844c9c",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0000002488-25-000047-run1.jsonl",
+        "sha256": "958cec79da1a5735b00e6a6f7c469859c235a314c155ebc2b2d7424752b4be4b",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0000002488-25-000108-run1.jsonl",
+        "sha256": "0197374b913615dc255d9f3c1a830b771c57f9f0fd5fa4b9a5163433417dd8fd",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0000002488-25-000166-run1.jsonl",
+        "sha256": "b01c7d34019d2aea140c92e0a724638649cba97cb665f6ddfb0bb013470ea18c",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0000002488-26-000018-run1.jsonl",
+        "sha256": "562cf825cfad94a50dd9693c4041507357f25759b451cf3d4b22459b34a2b007",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0000050863-24-000076-run1.jsonl",
+        "sha256": "3f34ebe7c3d43de8cdfe543839009197031b68f123c4ef96446c72b2f11399ed",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0000050863-24-000124-run1.jsonl",
+        "sha256": "e291fb5cf095dc32bab414a0df85c1173f28dac02340a7b3691ce47f60b15dbd",
+        "skipped_metric_values": [
+          "0000050863-24-000124:50863:receivable for remaining transaction proceeds:FY2024-Q2"
+        ]
+      },
+      {
+        "file": "0000050863-24-000149-run1.jsonl",
+        "sha256": "73c3fa3094be48e0f925fe6735fd85346db038733098f1077d31a5232e0151fc",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0000050863-25-000009-run1.jsonl",
+        "sha256": "33e441d048e14b3dd52802f903a752a8c17995d85ab4490f9624104a02e3a573",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0000050863-25-000074-run1.jsonl",
+        "sha256": "5217d39e0319c08a86765e47484613d8ed282c8362663bc217c5bc30bd400913",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0000050863-25-000109-run1.jsonl",
+        "sha256": "ce7d975b30fef606f54c2b4b8dd4cdb66cefa44e86dd6861ff70031c951b9a13",
+        "skipped_metric_values": [
+          "0000050863-25-000109:50863:total liabilities measured and recorded at fair value:FY2024"
+        ]
+      },
+      {
+        "file": "0000050863-25-000179-run1.jsonl",
+        "sha256": "afba3c68c6b53cb42460b91215d560ca39c02cadebc114821364741f9b785c1d",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0000050863-26-000011-run1.jsonl",
+        "sha256": "c517bb5a8897a4b5eeaa74e29f5a2dc18d802bc867dee6d2d2981554d3269cb2",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0001045810-24-000124-run1.jsonl",
+        "sha256": "37ff8feed44215efc91d19d44649c6c3479b4c1ac6c32937dd0e6594c6af5023",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0001045810-24-000264-run1.jsonl",
+        "sha256": "3919e00d5689ab7ed845e81b41159d40df1d43ac43a74caa831ad3a322aa3a72",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0001045810-24-000316-run1.jsonl",
+        "sha256": "f98ad8d21558724e4f33bbaeaf7cedb6f8e8404cc5a8dd492f04b8bc68625a3b",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0001045810-25-000023-run1.jsonl",
+        "sha256": "3efffe5ebc5e85beead87f2be5697a3a3472742b6c637b21da113352a5bf11cc",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0001045810-25-000116-run1.jsonl",
+        "sha256": "cf58929d34bf86d171837a672e4358c91bac89357f37e4c5c964f1b74e633b2a",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0001045810-25-000209-run1.jsonl",
+        "sha256": "9006f7c13a7dabe55f0956d0a2665c53e5f748df7badbf42c598b7c4e61ff1c5",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0001045810-25-000230-run1.jsonl",
+        "sha256": "6592f34b7090a1fdd5d833fedc1187d746a6f6f5fe68fd3cfc12ebfb51497994",
+        "skipped_metric_values": []
+      },
+      {
+        "file": "0001045810-26-000021-run2.jsonl",
+        "sha256": "9d6d4ed747719257cc7389e19087aa5de8f516fcb1409eb97f9148984af2616b",
+        "skipped_metric_values": []
+      }
+    ],
+    "frozen": "frozen.json",
+    "run_report": "run1.json"
+  },
+  "counts": {
+    "drawn": 100,
+    "labelled": 100,
+    "labelled_this_run": 100,
+    "same": 49,
+    "quotes_unverified": 0,
+    "failures": {},
+    "replayed": 0
+  },
+  "tokens": {
+    "input": 247896,
+    "cached_input": 0,
+    "output": 44977,
+    "reasoning": 30690
+  },
+  "cost_usd": 0.053468,
+  "price_table": {
+    "date": "2026-10-05",
+    "unit": "USD per million tokens",
+    "models": {
+      "gpt-6-luna": {
+        "input_per_mtok": 0.1,
+        "source": "https://developers.openai.com/api/docs/pricing",
+        "output_per_mtok": 0.5,
+        "cache_write_per_mtok": 0.125,
+        "cache_read_per_mtok": 0.01
+      }
+    }
+  }
+}

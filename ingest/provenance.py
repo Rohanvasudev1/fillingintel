@@ -8,6 +8,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 _GIT_TIMEOUT_SECONDS = 10
 # Untracked files here change what the code does (a new module); elsewhere they
 # are scratch output (.coverage, spikes/) and do not make a run "dirty".
+UNKNOWN_COMMIT = "unknown"  # git_state() when git cannot say
 _CODE_PATHS = (
     "ingest", "db", "eval", "retrieve", "prompts", "graph", "extract", "resolve", "persist",
     "tests",
@@ -32,5 +33,5 @@ def git_state(repo: Path = REPO_ROOT) -> str:
         changed = git("status", "--porcelain", "--untracked-files=no")
         new_code = git("status", "--porcelain", "--untracked-files=all", "--", *_CODE_PATHS)
     except (OSError, subprocess.SubprocessError):
-        return "unknown"
+        return UNKNOWN_COMMIT
     return f"{commit}{'+dirty' if changed or new_code else ''}"

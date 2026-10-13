@@ -46,11 +46,12 @@ from pathlib import Path
 import psycopg
 
 from ingest.provenance import REPO_ROOT, git_state
-from ingest.store import ChunkNotFound, list_filings, resolve
+from ingest.store import ChunkNotFound
 from ingest.voyage import API_KEY_ENV as VOYAGE_KEY_ENV
 from ingest.voyage import BatchEmbedder, BatchEmbedding, VoyageClient, VoyageError
 from persist.adjudicate import ClaudePersistAdjudicator
 from persist.config import PersistConfig
+from persist.db import postgres_filings, postgres_texts
 from persist.decisions import Failure
 from persist.filings import Filing
 from persist.links import check_links
@@ -166,23 +167,11 @@ def _anthropic_model() -> AbstractContextManager[AnswerModel]:
     return AnthropicAnswerModel.from_env()
 
 
-def _postgres_filings(url: str) -> list[Filing]:
-    with psycopg.connect(url) as conn:
-        return [Filing(r.accession_no, r.cik, r.form_type, r.report_date)
-                for r in list_filings(conn)]
-
-
-def _postgres_texts(url: str, chunk_ids: Sequence[str]) -> dict[str, str]:
-    """The text resolve() returns for each chunk, from one connection."""
-    with psycopg.connect(url) as conn:
-        return {chunk_id: resolve(conn, chunk_id) for chunk_id in chunk_ids}
-
-
 def main(argv: Sequence[str] | None = None, *, candidates_dir: Path = CANDIDATES_DIR,
          out_dir: Path = OUTPUT_DIR, embed_cache: Path = BATCH_CACHE_DIR,
          response_cache: Path = DEFAULT_CACHE_DIR, open_client: OpenClient = _voyage_client,
          open_model: OpenModel = _anthropic_model,
-         read_filings: ReadFilings = _postgres_filings, read_texts: ReadTexts = _postgres_texts,
+         read_filings: ReadFilings = postgres_filings, read_texts: ReadTexts = postgres_texts,
          config: PersistConfig | None = None) -> int:
     """CLI entry point; see the module docstring for the exit codes."""
     logging.basicConfig(level=logging.INFO)

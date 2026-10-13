@@ -133,13 +133,13 @@ def _run(set_name: str, out_dir: Path) -> int:
         print(f"warning: {warning}", file=sys.stderr)
     record = {"provenance": {**_provenance(set_name, inputs, adjudication),
                              "warnings": warnings},
-              **_body(result, inputs.drawn, inputs.labels)}
+              **score_body(result, len(inputs.drawn.pairs), inputs.labels)}
     try:
         path = next_numbered(out_dir, f"{set_name}-score")
         write_report(path, record)
     except OSError as exc:
         raise _Stop(EXIT_RUN_ERROR, f"cannot write the score report: {exc}") from exc
-    print(_summary(result, path))
+    print(score_summary(result, path))
     return EXIT_OK
 
 
@@ -247,7 +247,9 @@ def _figure(figure: Figure) -> dict[str, object]:
     return {"value": figure.value, "interval": figure.interval}
 
 
-def _body(result: ScoreReport, drawn: Draw, labels: Sequence[PairLabel]) -> dict[str, object]:
+def score_body(result: ScoreReport, drawn_pairs: int,
+               labels: Sequence[PairLabel]) -> dict[str, object]:
+    """The score file's figures, counts and seed; *drawn_pairs* is how many were drawn."""
     return {
         "precision": _figure(result.precision), "recall": _figure(result.recall),
         "rules_share_of_true_matches": _figure(result.rules_share),
@@ -257,8 +259,8 @@ def _body(result: ScoreReport, drawn: Draw, labels: Sequence[PairLabel]) -> dict
                         "accuracy": _figure(result.adjudicator.accuracy)},
         "strata": [{**asdict(s), "stratum": s.stratum.value} for s in result.strata],
         "unrepresented_strata": [s.value for s in result.unrepresented],
-        "counts": {"drawn": len(drawn.pairs), "labelled": len(labels),
-                   "unlabelled": len(drawn.pairs) - len(labels),
+        "counts": {"drawn": drawn_pairs, "labelled": len(labels),
+                   "unlabelled": drawn_pairs - len(labels),
                    "quotes_unverified": sum(not lb.quotes_verified for lb in labels)},
         "seed": result.seed,
     }
@@ -271,7 +273,7 @@ def _show(name: str, figure: Figure) -> str:
     return f"{name} {figure.value:.3f} [{low:.3f}, {high:.3f}]"
 
 
-def _summary(result: ScoreReport, path: Path) -> str:
+def score_summary(result: ScoreReport, path: Path) -> str:
     shown = ", ".join(_show(n, f) for n, f in (
         ("precision", result.precision), ("recall", result.recall),
         ("rules share", result.rules_share), ("adjudicator", result.adjudicator.accuracy)))

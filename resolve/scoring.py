@@ -110,22 +110,31 @@ def score(labels: Sequence[PairView], alias_map: Mapping[str, str],
           strata: Mapping[Stratum, int], *, decisions: Decisions | None = None,
           seed: int = SCORE_SEED) -> ScoreReport:
     """Score *labels* (each pair once) against *alias_map*; *strata* gives population sizes."""
+    def merged(keys: PairKeys) -> bool:
+        return alias_map.get(keys[0], keys[0]) == alias_map.get(keys[1], keys[1])
+    return score_predicted(labels, merged, strata, decisions=decisions, seed=seed)
+
+
+def score_predicted(labels: Sequence[PairView], predicted: Callable[[PairKeys], bool],
+                    strata: Mapping[Stratum, int], *, decisions: Decisions | None = None,
+                    seed: int = SCORE_SEED, namespace: str = "resolve") -> ScoreReport:
+    """Score *labels* against *predicted*, which says whether a pair's keys were put together;
+    *namespace* keeps one task's bootstrap draws apart from another's."""
     _check(labels, strata)
-    canonical = {k: alias_map.get(k, k) for p in labels for k in p.keys}
     by_stratum: dict[Stratum, list[_Row]] = {}
     for stratum in Stratum:
         mine = [p for p in labels if p.stratum is stratum]
         weight = strata.get(stratum, 0) / len(mine) if mine else 0.0
         by_stratum[stratum] = [
-            _Row(weight, p.same, canonical[p.key_a] == canonical[p.key_b],
-                 p.stratum is Stratum.CANDIDATE) for p in mine]
-    figures = {name: _figure(by_stratum, ratio, interval_rng(seed, "resolve", name))
+            _Row(weight, p.same, predicted(p.keys), p.stratum is Stratum.CANDIDATE)
+            for p in mine]
+    figures = {name: _figure(by_stratum, ratio, interval_rng(seed, namespace, name))
                for name, ratio in (("precision", _precision), ("recall", _recall),
                                    ("rules_share", _rules_share))}
     return ScoreReport(
         precision=figures["precision"], recall=figures["recall"],
         rules_share=figures["rules_share"],
-        adjudicator=_adjudicator(labels, decisions or {}, seed),
+        adjudicator=_adjudicator(labels, decisions or {}, seed, namespace),
         strata=tuple(_counts(s, strata.get(s, 0), rows) for s, rows in by_stratum.items()),
         unrepresented=tuple(s for s in Stratum if strata.get(s, 0) and not by_stratum[s]),
         seed=seed,
@@ -180,8 +189,8 @@ def _figure(by_stratum: Mapping[Stratum, Sequence[_Row]], ratio: _Ratio,
                           "resamples": len(values)})
 
 
-def _adjudicator(labels: Sequence[PairView], decisions: Decisions,
-                 seed: int) -> AdjudicatorAccuracy:
+def _adjudicator(labels: Sequence[PairView], decisions: Decisions, seed: int,
+                 namespace: str) -> AdjudicatorAccuracy:
     by_pair = {frozenset(keys): said for keys, said in decisions.items()}
     answered = [(p, by_pair[frozenset(p.keys)]) for p in labels
                 if frozenset(p.keys) in by_pair]
@@ -190,7 +199,7 @@ def _adjudicator(labels: Sequence[PairView], decisions: Decisions,
     correct = int(sum(n for n, _ in outcomes))
     unusable = len(answered) - len(judged)
     value = correct / len(judged) if judged else None
-    interval = ratio_interval(outcomes, interval_rng(seed, "resolve", "adjudicator"))
+    interval = ratio_interval(outcomes, interval_rng(seed, namespace, "adjudicator"))
     return AdjudicatorAccuracy(judged=len(judged), correct=correct, unusable=unusable,
                                accuracy=Figure(value, interval))
 

@@ -96,9 +96,17 @@ def draw(pairs: Sequence[ScoredPair], set_name: str, config: ResolveConfig,
         if (p.key_a, p.key_b) not in excluded:
             stratum = stratum_of(p, config)
             by_stratum[stratum].append(DrawnPair(p.key_a, p.key_b, p.label, stratum))
+    return Draw(set_name=set_name, seed=seed, config_hash=config.config_hash,
+                populations={s: len(p) for s, p in by_stratum.items()},
+                pairs=sample_strata(by_stratum, seed, set_name))
+
+
+def sample_strata(by_stratum: Mapping[Stratum, Sequence[DrawnPair]], seed: int,
+                  set_name: str) -> tuple[DrawnPair, ...]:
+    """SET_SIZES of each stratum's pairs, from a generator seeded by *seed*, *set_name* and the
+    stratum; a smaller stratum is taken whole. Each stratum must come sorted."""
     drawn: list[DrawnPair] = []
     for stratum, population in by_stratum.items():
         rng = random.Random(f"{seed}|{set_name}|{stratum.value}")
-        drawn.extend(rng.sample(population, min(SET_SIZES[stratum], len(population))))
-    return Draw(set_name=set_name, seed=seed, config_hash=config.config_hash,
-                populations={s: len(p) for s, p in by_stratum.items()}, pairs=tuple(drawn))
+        drawn.extend(rng.sample(list(population), min(SET_SIZES[stratum], len(population))))
+    return tuple(drawn)

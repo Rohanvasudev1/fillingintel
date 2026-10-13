@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from string import Template
@@ -44,7 +44,8 @@ LABEL_NOTE = f"agent-labelled ({LABEL_MODEL})"  # on every figure built on these
 LABEL_MAX_OUTPUT_TOKENS = 16_000  # reasoning plus JSON at effort high
 MAX_CHUNKS_PER_NODE = 3  # chunk texts shown per node, in evidence order
 MAX_SPANS_PER_NODE = 10
-PROMPTS_DIR = REPO_ROOT / "prompts" / "label"
+FAMILY = "label"
+PROMPTS_DIR = REPO_ROOT / "prompts" / FAMILY
 CURRENT_VERSION = "v2"
 PUBLISHED = MappingProxyType({
     "v1": "9d65910323ebcd83b0340368a3779d152e54228f788ecb52fcaff91234411f04",
@@ -78,34 +79,38 @@ class LabelPrompt:
     file_sha256: str
     sha256: str  # of the template and the output schema
     template: str
+    family: str = FAMILY  # the prompts/ directory, such as `persist_label` for Step 10
 
     @property
     def prompt_version(self) -> str:
-        return f"label/{self.version}@{self.sha256[:_HASH_CHARS]}"
+        return f"{self.family}/{self.version}@{self.sha256[:_HASH_CHARS]}"
 
 
-def load_label_prompt(version: str = CURRENT_VERSION,
-                      prompts_dir: Path = PROMPTS_DIR) -> LabelPrompt:
-    """The published prompt *version*; LabelPromptError if its file has changed."""
-    if version not in PUBLISHED:
-        raise LabelPromptError(f"label prompt {version} is not published")
+def load_label_prompt(version: str = CURRENT_VERSION, prompts_dir: Path = PROMPTS_DIR, *,
+                      published: Mapping[str, str] = PUBLISHED, family: str = FAMILY,
+                      fields: Sequence[str] = ("label", "node_a", "node_b")) -> LabelPrompt:
+    """The *published* prompt *version* of *family*, whose template fills *fields*;
+    LabelPromptError if its file has changed."""
+    if version not in published:
+        raise LabelPromptError(f"{family} prompt {version} is not published")
     try:
         raw = (prompts_dir / f"{version}.md").read_bytes()
     except OSError as exc:
-        raise LabelPromptError(f"cannot read label prompt {version}: "
+        raise LabelPromptError(f"cannot read {family} prompt {version}: "
                                f"{type(exc).__name__}") from exc
     file_sha = hashlib.sha256(raw).hexdigest()
-    if file_sha != PUBLISHED[version]:
-        raise LabelPromptError(f"label prompt {version} has changed since it was published; "
+    if file_sha != published[version]:
+        raise LabelPromptError(f"{family} prompt {version} has changed since it was published; "
                                "write the change as a new version instead")
     template = raw.decode("utf-8")
     try:
-        Template(template).substitute(label="", node_a="", node_b="")
+        Template(template).substitute(dict.fromkeys(fields, ""))
     except (KeyError, ValueError) as exc:
-        raise LabelPromptError(f"label prompt {version} has a bad placeholder") from exc
+        raise LabelPromptError(f"{family} prompt {version} has a bad placeholder") from exc
     sent = json.dumps({"template": template, "schema": output_schema(LabelReply)},
                       sort_keys=True, ensure_ascii=False)
-    return LabelPrompt(version, file_sha, hashlib.sha256(sent.encode()).hexdigest(), template)
+    return LabelPrompt(version, file_sha, hashlib.sha256(sent.encode()).hexdigest(), template,
+                       family)
 
 
 def shown_chunks(node: ResolveNode) -> tuple[str, ...]:
@@ -130,8 +135,13 @@ def build_label_request(prompt: LabelPrompt, a: ResolveNode, b: ResolveNode,
     """The request for the pair (*a*, *b*); it holds the nodes' own evidence and nothing else."""
     if a.label != b.label:
         raise ValueError(f"{a.key} and {b.key} have different labels")
-    text = Template(prompt.template).substitute(
-        label=a.label, node_a=_node_text(a, chunk_text), node_b=_node_text(b, chunk_text))
+    return label_request(prompt, label=a.label, node_a=_node_text(a, chunk_text),
+                         node_b=_node_text(b, chunk_text))
+
+
+def label_request(prompt: LabelPrompt, **fields: str) -> OpenAIJudgeRequest:
+    """The labeller request for *prompt*'s template filled with *fields*."""
+    text = Template(prompt.template).substitute(fields)
     return OpenAIJudgeRequest(model=LABEL_MODEL, effort=LABEL_EFFORT,
                               max_output_tokens=LABEL_MAX_OUTPUT_TOKENS, prompt=text,
                               schema=output_schema(LabelReply), schema_name="LabelReply",
@@ -156,7 +166,17 @@ def label_pair(pair: DrawnPair, set_name: str, a: ResolveNode, b: ResolveNode,
     """Ask the labeller about *pair*; AnswerModelError (API, cache) stops the caller."""
     if (a.key, b.key) != pair.keys:
         raise ValueError(f"nodes {a.key} / {b.key} are not the pair {pair.key_a} / {pair.key_b}")
-    response = backend.complete(build_label_request(prompt, a, b, chunk_text))
+    return send_label_request(pair, set_name, build_label_request(prompt, a, b, chunk_text),
+                              (shown_chunks(a), shown_chunks(b)), chunk_text, backend,
+                              prompt.prompt_version)
+
+
+def send_label_request(pair: DrawnPair, set_name: str, request: OpenAIJudgeRequest,
+                       shown: tuple[Sequence[str], Sequence[str]], chunk_text: ChunkText,
+                       backend: AnswerModel, prompt_version: str) -> LabelOutcome:
+    """Send *request* for *pair* and check its quotes against *shown*, the chunks shown for
+    each side; AnswerModelError (API, cache) stops the caller."""
+    response = backend.complete(request)
     reply = parse_openai_reply(response.body)
     spent = {"usage": reply.usage, "cost_usd": openai_cost(LABEL_MODEL, reply.usage),
              "from_cache": response.from_cache}
@@ -169,14 +189,14 @@ def label_pair(pair: DrawnPair, set_name: str, a: ResolveNode, b: ResolveNode,
         parsed = LabelReply.model_validate_json(reply.text)
     except ValidationError as exc:
         return LabelOutcome(pair, None, f"invalid_reply ({exc.error_count()} errors)", **spent)
-    verified = (_quote_found(parsed.quote_a, parsed.chunk_id_a, a, chunk_text)
-                and _quote_found(parsed.quote_b, parsed.chunk_id_b, b, chunk_text))
+    verified = (_quote_found(parsed.quote_a, parsed.chunk_id_a, shown[0], chunk_text)
+                and _quote_found(parsed.quote_b, parsed.chunk_id_b, shown[1], chunk_text))
     label = PairLabel(
         set_name=set_name, key_a=pair.key_a, key_b=pair.key_b, label=pair.label,
         stratum=pair.stratum, same=parsed.same, quote_a=parsed.quote_a,
         chunk_id_a=parsed.chunk_id_a, quote_b=parsed.quote_b, chunk_id_b=parsed.chunk_id_b,
         quotes_verified=verified, reason=parsed.reason, model=LABEL_MODEL, effort=LABEL_EFFORT,
-        prompt_version=prompt.prompt_version)
+        prompt_version=prompt_version)
     return LabelOutcome(pair, label, None, **spent)
 
 
@@ -188,6 +208,6 @@ def _unusable(refusal: str | None, status: str | None, reason: str | None) -> st
     return None
 
 
-def _quote_found(quote: str, chunk_id: str, node: ResolveNode, chunk_text: ChunkText) -> bool:
-    return chunk_id in shown_chunks(node) and find_span(quote, chunk_text(chunk_id)) is not None
+def _quote_found(quote: str, chunk_id: str, shown: Sequence[str], chunk_text: ChunkText) -> bool:
+    return chunk_id in shown and find_span(quote, chunk_text(chunk_id)) is not None
 

@@ -54,6 +54,22 @@ The resolver never merged wrongly in the sample, but it misses most true matches
 
 Provenance: scored at commit `68b35fd`; config hash `7a5aa8de76e5` (fuzzy cutoff 85, top_k 3, rare-word rule off, "label: name" embedded); `resolve/v2@5b5e4a7d`; `label/v2@a7f163e9`; ontology version 3. Files: `benchmarks/resolution/scoring-score1.json`, `run2.json`, `tuning-report.json`, `frozen.json`.
 
+## Risk-factor persistence (Step 10)
+
+Each risk factor in a 10-K is linked to the same risk in the company's previous 10-K, and each risk factor in a 10-Q to the same risk in the most recent 10-K before it (12 filing pairs, 767 later risk factors). Identical normalized titles link with no LLM call (319 links). Every other later factor's top 3 voyage-4-large neighbours go to claude-haiku-5-5 (effort `high`, prompt `persist/v1`), and a link needs a `same` answer with quotes from both factors found in their own chunks. A later factor keeps at most one predecessor: its exact-title match, else the highest-ranked `same`. Run 1 made 621 links (302 adjudicated).
+
+All figures here are **agent-labelled (gpt-6-luna)**: gpt-6-luna at effort `high` (prompt `persist_label/v1`) labelled 100 pairs, and no human checked its labels. The settings were frozen before the draw. The pairs were drawn 60 / 25 / 15 from the candidate stratum (exact-title or adjudicated pairs, 1,663), the near stratum (neighbours ranked 4 to 6, 1,344) and the rest (64,018), and the links were scored once. The labeller never saw the linker's output.
+
+| Links | Commit | Config | Precision | Recall | Adjudicator accuracy |
+|---|---|---|---|---|---|
+| run 1 | `26f1299` | `36673beebe68` | **0.958 [0.864, 1.000]** | **0.428 [0.298, 0.572]** | 0.727 [0.591, 0.864] |
+
+Intervals are 95% bootstrap intervals, from 10,000 resamples within strata. The Wilson 95% interval on the sampled links is [0.80, 0.99] (23 of 24 right). The wrong link is an exact-title match on a generic heading, Intel's "Catastrophic events", which the labeller would not call the same risk from the heading alone.
+
+Recall is low, and it is reported as measured, not tuned. The labeller called 44 candidate-stratum pairs the same risk, and 23 of them are links. Of the 21 misses, 9 are `same` answers dropped by the one-predecessor rule, because the later factor was already linked to another earlier factor. The labeller often calls one later factor the same risk as several earlier ones, where the filer merged or split factors. The other 12 are `distinct` or `unsure` answers. The near stratum held 5 matches the adjudicator never saw. The share of true matches in the candidate stratum is 0.819 [0.706, 0.954].
+
+Provenance: `benchmarks/persistence/` holds `run1.json`, `links.jsonl`, `frozen.json`, `scoring-draw.json`, `scoring-labels.jsonl`, `scoring-label-run1.json` (labelling cost $0.05) and `scoring-score1.json`. Prompts `persist/v1@5eaa7a2c` and `persist_label/v1@9a57ed5c`; ontology version 3.
+
 ## Running it
 
 Needs Docker, [uv](https://docs.astral.sh/uv/) and a `.env` made from `.env.example`. `EDGAR_USER_AGENT` must hold a real name and email, as the SEC requires.
