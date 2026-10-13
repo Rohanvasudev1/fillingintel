@@ -155,7 +155,7 @@ def test_this_filing_maps_to_the_accession_number(nvda_chunks):
     assert reports.start == NodeRef.of("Filing", accession_no=NVDA_10K)
     metric = next(n for n in run.nodes if n.label == "MetricValue")
     assert metric.properties["key"] == (
-        f"{NVDA_10K}:Segment:1045810:compute & networking:revenue:FY2026")
+        f"{NVDA_10K}:Segment:1045810:compute & networking:revenue:currency:FY2026")
     assert metric.properties["value"] == 193479.0
     assert (metric.properties["concept"], metric.properties["unit"],
             metric.properties["period"]) == ("Revenue", "USD millions", "FY2026")

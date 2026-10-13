@@ -73,6 +73,18 @@ _Avoid_: division, business unit, market platform
 A market a filer reports revenue by that is not a reportable segment (NVIDIA: Data Center, Gaming, Professional Visualization, Automotive).
 _Avoid_: segment, end market
 
+**Metric value**:
+One figure a filing states for a named subject, a metric, a period and a unit class. A figure the same filing states as a percentage and as an amount is two metric values. A restated figure in a later filing is a new metric value, not an overwrite.
+_Avoid_: fact, data point
+
+**Unit class**:
+The kind of quantity a metric value measures: currency, percent, per share, shares, count or other. Two metric values in different unit classes are never the same figure; the same figure at two scales (millions, billions) is.
+_Avoid_: unit, when meaning the class rather than the printed unit
+
+**Persistence link**:
+The edge from a risk factor in one filing to the same risk in the company's previous 10-K, possibly reworded or expanded. A risk factor has at most one predecessor; a factor the filer later splits may have several successors.
+_Avoid_: risk factor match, lineage
+
 **Structural node**:
 A node taken from EDGAR metadata rather than from text: a Company, Filing, Period or Chunk. Its evidence is the filing record.
 

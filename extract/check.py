@@ -191,7 +191,11 @@ def _evidence(raw: Mapping[str, object], ctx: _Context, confidence: str) -> Evid
 def _key_nodes(
     drafts: Sequence[_Draft], raw_triples: Sequence[object], ctx: _Context,
 ) -> tuple[dict[str, CheckedNode], list[Rejection]]:
-    """Checked nodes by local ID; a MetricValue without one subject is rejected."""
+    """Checked nodes by local ID; a MetricValue without one subject is rejected.
+
+    A MetricValue whose unit the unit table lacks raises UnknownUnit, which is
+    not a rejection: it stops the run, so a new unit is mapped on purpose.
+    """
     accession_no = ctx.filing.accession_no
     nodes = {
         d.local_id: _checked(d, node_key(d.label, d.name, accession_no, ctx.filing.cik))
@@ -202,7 +206,7 @@ def _key_nodes(
         try:
             subject = _subject(draft.local_id, raw_triples, nodes, ctx)
             key = metric_key(accession_no, _subject_key(subject), draft.name,
-                             str(draft.metric["period"]))
+                             str(draft.metric["unit"]), str(draft.metric["period"]))
             nodes[draft.local_id] = _checked(draft, key)
         except Rejected as exc:
             rejections.append(ctx.reject(CandidateKind.NODE, draft.raw, exc))
