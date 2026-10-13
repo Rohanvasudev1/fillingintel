@@ -1,6 +1,6 @@
 {
   "recorded": "real API response, recorded by scripts/capture_persist_responses.py",
-  "prompt_version": "persist/v1@bb7f8fb7",
+  "prompt_version": "persist/v1@5eaa7a2c",
   "later": {
     "key": "0000002488-26-000123:we are party to litigation and may become a party to other claims or litigation that could cause us to incur substantial costs or pay substantial damages or prohibit us from selling our products.",
     "label": "RiskFactor",
@@ -23,19 +23,19 @@
       }
     ]
   },
-  "api_ms": 3478.404000008595,
+  "api_ms": 3594.8155829973985,
   "response": {
-    "id": "msg_011Cfz84zpbf2xTRMHrbFZUQ",
+    "id": "msg_011Cfz9PGqPSDRxf98R3GW3K",
     "container": null,
     "content": [
       {
-        "signature": "CAQS9gwKEAgSGAI4AUIIdGhpbmtpbmcSDKodSStc+XjOksBAWxoM27HBMtSwVIej796UIjBdN34ZPNTQMzrj/ySrmY75MIALZ/FzaGc79Y33ykjsedziAOYdW9WVGEIm58aN/Dkqkww2N0NH9sP8wtluELPD0eXvG0/M786/3SftvQgjRnAjIQTcLzJAa6MmbrQg6OKYWywuiKtUBTw6tUE6Tbyyh+qyC9bEEm5usFsZx/gDCboN+1HO7tXwFLlQmOM7k14rPbxbuFiQE1au2Pj5m1KOMVu1A+NgcsiD6fMbbX/2/ubjgYVd3PKkhjjbqvPq7QzRWlrdFzBaOvsgjWVWxLXRGNtsR0+95heWyPhIDGsiPvux4sDW+U1IKt0iNwa2b+xejt0k00cVPkTlYe3c61/F9Szt3ET61xMGIsteLZ/vURoL97wcD468ONnYFRf5Um5SR2xeTKbbQwxYl/HIdJ3k8tIJTedkWIHYzg7qj0WBfvcqelez70S6X8hp+h5fdkM2CnD7IWKkJVybiWrlV+0uFt0uG8Y4lG3yU8jTxkzZDIM/jG0xHInphK22CB+M+6YaZU92iBF6gSvZ6tUKnvbBIg1ulkjECxRRPpiQ91Whd2XT0A+4NWkxdWJiqz+CvrrogZHSGjiWzKrvDUjCrtQA/cCKHcrXYiTivdlhFiYBTQivcfrNEyxW4uGBqe8HiLE4OuNxHLRsLfbfU/+8HCdN10SmTvcFCYX06oO8RAu+NRhugrrJEZW8pe1+plINBINl/eROKBq48gXJNyTWG3gQxKg2cAzYLXC1RmUn4JkwkAD7l4Hj3+/eBguCE2rHfJAGu2vVSQiOFj+mpqtGwDci2I/cw8OY0vs4GNkhzwote+QPkQq2P5C5dWFhQJmlJYA2J9arG7XZfoc0X6xXCgJD5pcPzbNPZn0XVVcr5DERW6TSpJMY+qOCI7f1Bcuo2VyGJgZjoPbLsqY2svhGM1by/VNx5rDFWWzdBx/3OzGe20J9UQpUGcKchhZgGeEiXDY2dAaFaGTHq34VmK7ji4DSY4o210fBtw9WdP5VJyWS1xKHkJw+3AyFoPd91I9SQCq5uSqri0dNZ/QTW66f3cbXpC5lxp8x9jtRWaS1NWq2ro0VY0lPIL1P/npoxvdSE0E0XFCaSzdbKgl41mVMNt/v+8v9j5QB41kg+UAO56XX4Uz/9jRojNjtvPM4v9eZ/WKaM1qH7MELm6JwK3ziiRGHx93BzyW2irXmsrCHn2G9384aMwxD5WzLRz+BNs4Vba7xubyTwsH7z8AIP/vun/8OWpELu/fhZcRK/Z5z6ufV85WyzTFxThxsv5M7YZG885kkyGbSA6pK7Vu8y8tWNek3RliO70dUzbsijigOOqvBsMw4GxIPF4Zm+c5nf0fYUgARpcb1IKzlPY3Yq7/kiEzX9eu/g4PhP/VWZ++n88ohYFGGIFt6/nRfnIE0EmYcT4BrxWMhAy89WcnPoho2coukGtFtv12wwxhh1e5IKcgxPBvlW6l5TxuG/bE6/VDysj1FKsd67kABwauc0bfaZMVl0q6/A3+9xfG4LUtxOlxD7Pz5ixx2+bMUXZUx9LkcUikys8QROMNcvjJmqrSHPEz+Bh0a25b0yCsqKq4WtniID91omDIVwzQSLScCYBLLOR+erJ+P4inhCX5JyrtaDRmydn0dNlnVh+yeRp5gxkF+pbXkeJassPfZ4Xjx4ViI1p/LsX66IZKKo49ZMhXdGzPdCghJyUPdoWLBK0RF9qdDu4+8Zh36Giww2djtp3JkcNLs1laJVhnSMb6eukJEwcdZwvPrFdcSajODqAnbFWEDHDLaqZT2UN46jWLWQO53LNBiEeks1renaQOY+6ekXOGzgPi7ZuA0cohbQs0+kJmAWq/tS2ux4cY5fs2Jx611adpJbYESOZvr2Fc0+dTmO5Zf84QNGSQCpUHaMZXa8Fr6FV4bnZc3s2/I6QJsTba8GYsR3TBwWRk0L3iVgMcV52C10x1TbKA5jCpW1yNjzNWYmXVHK6uyGpVc5s57tfpn66TAFIzXvNlhYx+xOJCuKmEmorZ7RdpbHOrBJJSgEZHSrmg63YJd3Z+SR6silKrVpfUr7NpbRw5vtNzDzT1+Xry1GNkQ4WWH1EpQmBCiSvQ9wqo8DkIK/t56vECAC4YVt6lkkU+xkyNR5uGKX/2CtyflZBuQUl1QGAE=",
+        "signature": "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",
         "thinking": "",
         "type": "thinking"
       },
       {
         "citations": null,
-        "text": "{\"answer\":\"same\",\"quote_earlier\":\"It is possible that if a claim is successfully asserted against us, it could result in the payment of damages that could be material to our business\",\"chunk_id_earlier\":\"0000002488-26-000018:0047\",\"quote_later\":\"It is possible that if a claim is successfully asserted against us, it could result in the payment of damages that could be material to our business\",\"chunk_id_later\":\"0000002488-26-000123:0071\",\"reason\":\"The risk factor title is identical in both filings, and both passages carry the same litigation text, including the possibility of material damages from claims asserted against the company.\"}",
+        "text": "{\"answer\":\"same\",\"quote_earlier\":\"It is possible that if a claim is successfully asserted against us, it could result in the payment of damages that could be material to our business\",\"chunk_id_earlier\":\"0000002488-26-000018:0047\",\"quote_later\":\"It is possible that if a claim is successfully asserted against us, it could result in the payment of damages that could be material to our business\",\"chunk_id_later\":\"0000002488-26-000123:0071\",\"reason\":\"The risk factor titles are identical, and both passages describe the same litigation exposure, including product liability, consumer class actions, and damages that could be material. The later filing only updates the note reference from Note 12 to Note 10 and the statement's name to condensed financial statements.\"}",
         "type": "text"
       }
     ],
@@ -52,12 +52,12 @@
         "ephemeral_5m_input_tokens": 0
       },
       "cache_creation_input_tokens": 0,
-      "cache_read_input_tokens": 1374,
+      "cache_read_input_tokens": 1366,
       "inference_geo": "global",
       "input_tokens": 1955,
-      "output_tokens": 528,
+      "output_tokens": 541,
       "output_tokens_details": {
-        "thinking_tokens": 333
+        "thinking_tokens": 308
       },
       "server_tool_use": null,
       "service_tier": "standard"

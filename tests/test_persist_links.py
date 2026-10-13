@@ -5,7 +5,7 @@ import pytest
 
 from graph.batch import Batch, NodeRef, check_batch
 from persist.candidates import CandidatePair
-from persist.decisions import Answer
+from persist.decisions import Answer, LinkEvidence
 from persist.links import (
     EXACT_TITLE,
     PersistLink,
@@ -62,7 +62,8 @@ def test_an_exact_title_link_carries_each_factors_own_first_span_earlier_first()
 
 def test_an_adjudicated_link_carries_the_verified_quotes_and_the_prompt_version():
     decision = replace(_decision(NEW_GUARANTEES, OLD_GUARANTEES, 2),
-                       span_earlier="quoted earlier", span_later="quoted later")
+                       verified_earlier=LinkEvidence(OLD_GUARANTEES.chunk_ids[0], "quoted earlier"),
+                       verified_later=LinkEvidence(NEW_GUARANTEES.chunk_ids[0], "quoted later"))
     link = decision_link(decision)
     props = link.edge().properties
     assert props["chunk_ids"] == [decision.chunk_id_earlier, decision.chunk_id_later]

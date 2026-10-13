@@ -1,6 +1,6 @@
 {
   "recorded": "real API response, recorded by scripts/capture_persist_responses.py",
-  "prompt_version": "persist/v1@bb7f8fb7",
+  "prompt_version": "persist/v1@5eaa7a2c",
   "later": {
     "key": "0000002488-26-000123:unfavorable currency exchange rate fluctuations could adversely affect us.",
     "label": "RiskFactor",
@@ -27,19 +27,19 @@
       }
     ]
   },
-  "api_ms": 3320.1695419993484,
+  "api_ms": 3442.0737079926766,
   "response": {
-    "id": "msg_011Cfz85VUHDVX9RB8d9WxHr",
+    "id": "msg_011Cfz9Pne1bq5pZs3ZE8r9g",
     "container": null,
     "content": [
       {
-        "signature": "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",
+        "signature": "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",
         "thinking": "",
         "type": "thinking"
       },
       {
         "citations": null,
-        "text": "{\"answer\":\"distinct\",\"quote_earlier\":\"A large portion of our quarterly sales have historically been made in the last month of the quarter\",\"chunk_id_earlier\":\"0000002488-26-000018:0027\",\"quote_later\":\"We have costs, assets and liabilities that are denominated in foreign currencies\",\"chunk_id_later\":\"0000002488-26-000123:0050\",\"reason\":\"The earlier risk concerns uneven quarterly and seasonal sales timing, while the later risk concerns foreign currency exchange rate exposure on costs, assets and liabilities. The two risks differ, so they are not the same.\"}",
+        "text": "{\"answer\":\"distinct\",\"quote_earlier\":\"Our operating results are subject to quarterly and seasonal sales patterns\",\"chunk_id_earlier\":\"0000002488-26-000018:0021\",\"quote_later\":\"Unfavorable currency exchange rate fluctuations could adversely affect us.\",\"chunk_id_later\":\"0000002488-26-000123:0050\",\"reason\":\"The earlier risk concerns uneven quarterly and seasonal sales timing, while the later risk concerns foreign currency exchange rate movements affecting costs and sales. Their underlying risks differ, so they are not the same risk.\"}",
         "type": "text"
       }
     ],
@@ -56,12 +56,12 @@
         "ephemeral_5m_input_tokens": 0
       },
       "cache_creation_input_tokens": 0,
-      "cache_read_input_tokens": 1374,
+      "cache_read_input_tokens": 1366,
       "inference_geo": "global",
       "input_tokens": 3938,
-      "output_tokens": 515,
+      "output_tokens": 587,
       "output_tokens_details": {
-        "thinking_tokens": 313
+        "thinking_tokens": 385
       },
       "server_tool_use": null,
       "service_tier": "standard"

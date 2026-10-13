@@ -26,18 +26,12 @@ from graph.batch import (
     Violation,
     check_batch,
 )
-from persist.decisions import PersistDecision
+from persist.decisions import LinkEvidence, PersistDecision
 from resolve.nodes import RISK_LABEL, ResolveNode
 
 EDGE_TYPE = "PERSISTS_AS"
 EXACT_TITLE = "persist/exact_title"
 CONFIDENCE = "stated"
-
-
-@dataclass(frozen=True, slots=True)
-class LinkEvidence:
-    chunk_id: str
-    span: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,6 +45,10 @@ class PersistLink:
     later: LinkEvidence
     decision_id: str | None = None  # None for an exact-title link
     rank: int | None = None
+
+    @property
+    def is_exact(self) -> bool:
+        return self.method == EXACT_TITLE
 
     def edge(self) -> EdgeRecord:
         """The PERSISTS_AS edge, as the write path takes it."""
@@ -87,7 +85,7 @@ class PersistLink:
             )
         except (KeyError, TypeError) as exc:
             raise ValueError(f"not a persistence link: {exc}") from exc
-        if (link.method == EXACT_TITLE) != (link.decision_id is None):
+        if link.is_exact != (link.decision_id is None):
             raise ValueError("a persistence link has a decision exactly when it is adjudicated")
         return link
 
@@ -123,14 +121,13 @@ def exact_link(later: ResolveNode, earlier: ResolveNode) -> PersistLink:
 
 def decision_link(decision: PersistDecision) -> PersistLink:
     """The link a verified `same` decision makes; ValueError for any other decision."""
-    if not decision.links or None in (decision.chunk_id_earlier, decision.span_earlier,
-                                      decision.chunk_id_later, decision.span_later):
+    if not decision.links or decision.verified_earlier is None \
+            or decision.verified_later is None:
         raise ValueError(f"decision {decision.decision_id} does not link")
     return PersistLink(
         earlier_key=decision.earlier_key, later_key=decision.later_key,
-        method=decision.prompt_version,
-        earlier=LinkEvidence(str(decision.chunk_id_earlier), str(decision.span_earlier)),
-        later=LinkEvidence(str(decision.chunk_id_later), str(decision.span_later)),
+        method=decision.prompt_version, earlier=decision.verified_earlier,
+        later=decision.verified_later,
         decision_id=decision.decision_id, rank=decision.rank,
     )
 

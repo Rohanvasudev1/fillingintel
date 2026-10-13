@@ -1,8 +1,8 @@
 """The persistence adjudicator's per-pair decision and the adjudicator seam (Step 10).
 
 A decision links only when the answer is `same` and both quotes were found in
-their own risk factor's chunks; the verified spans are then the chunk's own
-text, as Step 8 stores spans.
+their own risk factor's chunks; each verified quote is then held as the
+chunk's own text, as Step 8 stores spans.
 """
 from __future__ import annotations
 
@@ -33,6 +33,14 @@ class Failure(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
+class LinkEvidence:
+    """One evidence entry of a persistence link: a chunk and the span it holds."""
+
+    chunk_id: str
+    span: str
+
+
+@dataclass(frozen=True, slots=True)
 class PersistDecision:
     """One adjudicated candidate pair: a later risk factor and an earlier one."""
 
@@ -45,17 +53,18 @@ class PersistDecision:
     chunk_id_earlier: str | None
     quote_later: str | None
     chunk_id_later: str | None
-    span_earlier: str | None  # the chunk's own text for the quote, once verified
-    span_later: str | None
+    verified_earlier: LinkEvidence | None  # the quote as the chunk's own text, once verified
+    verified_later: LinkEvidence | None
     reason: str
-    failure: str | None  # why the decision cannot link, counted by reason in the report
+    failure: Failure | None  # why the decision cannot link, counted by reason in the report
     prompt_version: str
     usage: TokenUsage | None = None  # None when no reply came back
     from_cache: bool = False
 
     @property
     def links(self) -> bool:
-        return self.answer is Answer.SAME and self.failure is None
+        return (self.answer is Answer.SAME and self.failure is None
+                and self.verified_earlier is not None and self.verified_later is not None)
 
 
 class PersistAdjudicator(Protocol):

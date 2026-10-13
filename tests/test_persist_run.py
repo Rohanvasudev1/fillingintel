@@ -171,6 +171,8 @@ def test_a_run_writes_the_links_and_a_report(harness):
     assert report["counts"]["answers"] == {"distinct": 7, "same": 1}
     assert report["check_batch"] == {"violations": 0, "examples": []}
     assert len(report["decisions"]) == 8 and harness.claude.calls == 8
+    assert len(report["candidates"]) == 8
+    assert all(-1 <= c["cosine"] <= 1 and 1 <= c["rank"] <= 4 for c in report["candidates"])
     assert report["adjudication"]["tokens_this_run"]["output"] > 0
     assert report["adjudication"]["cost_this_run_usd"] > 0
 

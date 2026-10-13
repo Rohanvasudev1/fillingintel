@@ -64,3 +64,9 @@ def test_a_missing_vector_is_refused_with_its_key():
     old, new = [earlier("e", 1)], [later("n", 5)]
     with pytest.raises(ValueError, match="no vector"):
         neighbours(new, old, {old[0].key: (1.0,)}, top_k=3)
+
+
+def test_two_earlier_titles_equal_once_escapes_are_dropped_are_refused():
+    old = [earlier("Supply\\. risk", 1), earlier("Supply. risk", 2)]
+    with pytest.raises(ValueError, match="same normalized title"):
+        exact_matches([later("Supply. risk", 5)], old)

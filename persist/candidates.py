@@ -4,7 +4,8 @@ A later risk factor whose normalized title equals an earlier one's links with
 no LLM call. Normalized means as the RiskFactor key normalizes it (NFKC,
 casefold, collapsed whitespace), with markdown escapes dropped; punctuation
 stays, so "patterns" and "patterns." differ and go to the adjudicator. Keys
-are unique per filing, so an exact match is unique too.
+keep markdown escapes, so two earlier factors may share a normalized title;
+that is refused rather than letting one silently win.
 
 Every other later factor gets its top-k earlier neighbours by cosine, ties
 broken by key. Each factor is embedded as "title: first evidence span".
@@ -43,8 +44,13 @@ def embed_text(factor: ResolveNode) -> str:
 
 def exact_matches(later: Sequence[ResolveNode], earlier: Sequence[ResolveNode]
                   ) -> dict[str, ResolveNode]:
-    """Later key to the earlier factor with the same normalized title."""
-    by_title = {title_key(e.name): e for e in earlier}
+    """Later key to the earlier factor with the same normalized title; ValueError when two
+    earlier factors share one."""
+    by_title: dict[str, ResolveNode] = {}
+    for e in earlier:
+        if (t := title_key(e.name)) in by_title:
+            raise ValueError(f"{by_title[t].key} and {e.key} have the same normalized title")
+        by_title[t] = e
     return {n.key: by_title[t] for n in later if (t := title_key(n.name)) in by_title}
 
 

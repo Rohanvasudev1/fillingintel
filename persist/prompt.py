@@ -25,7 +25,7 @@ from persist.output_schema import output_schema
 PROMPTS_DIR = REPO_ROOT / "prompts" / "persist"
 CURRENT_VERSION = "v1"
 PUBLISHED = MappingProxyType({
-    "v1": "2209a9a74299d580e7ed3e76d6ca473995a9fc78b7bd5b90e83003719996b306",
+    "v1": "9d213176fa3e3da9b36577361269678f74b530fd5e489f2240efe4a93c962379",
 })
 _PARTS = re.compile(r"\A# System\n(?P<system>.*?)\n# User\n(?P<user>.*)\Z", re.DOTALL)
 _HASH_CHARS = 8

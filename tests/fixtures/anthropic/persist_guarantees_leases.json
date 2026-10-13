@@ -1,6 +1,6 @@
 {
   "recorded": "real API response, recorded by scripts/capture_persist_responses.py",
-  "prompt_version": "persist/v1@bb7f8fb7",
+  "prompt_version": "persist/v1@5eaa7a2c",
   "later": {
     "key": "0000002488-26-000123:we may be required to satisfy financial obligations under guarantees, leases and other commercial commitments.",
     "label": "RiskFactor",
@@ -23,19 +23,19 @@
       }
     ]
   },
-  "api_ms": 4069.9278340034653,
+  "api_ms": 3646.3515830109827,
   "response": {
-    "id": "msg_011Cfz84hPrdoXiiDY79uMF3",
+    "id": "msg_011Cfz9P1EXDkTfJfaZpEQK1",
     "container": null,
     "content": [
       {
-        "signature": "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",
+        "signature": "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",
         "thinking": "",
         "type": "thinking"
       },
       {
         "citations": null,
-        "text": "{\"answer\":\"same\",\"quote_earlier\":\"We may be required to satisfy financial obligations under guarantees and other commercial commitments.\",\"chunk_id_earlier\":\"0000002488-26-000018:0053\",\"quote_later\":\"We may be required to satisfy financial obligations under guarantees, leases and other commercial commitments.\",\"chunk_id_later\":\"0000002488-26-000123:0078\",\"reason\":\"The later risk keeps the same core risk, being required to satisfy financial obligations under commercial arrangements, and only adds leases and cloud compute capacity commitments. That is an expansion of the earlier risk, not a different one.\"}",
+        "text": "{\"answer\":\"same\",\"quote_earlier\":\"We may be required to satisfy financial obligations under guarantees and other commercial commitments.\",\"chunk_id_earlier\":\"0000002488-26-000018:0053\",\"quote_later\":\"We may be required to satisfy financial obligations under guarantees, leases and other commercial commitments.\",\"chunk_id_later\":\"0000002488-26-000123:0078\",\"reason\":\"Both risks concern being required to satisfy financial obligations under guarantees and commercial arrangements with customers or partners. The later version adds leases and a cloud compute capacity commitment, which expands the same risk rather than replacing it.\"}",
         "type": "text"
       }
     ],
@@ -52,12 +52,12 @@
         "ephemeral_5m_input_tokens": 0
       },
       "cache_creation_input_tokens": 0,
-      "cache_read_input_tokens": 1374,
+      "cache_read_input_tokens": 1366,
       "inference_geo": "global",
       "input_tokens": 2619,
-      "output_tokens": 503,
+      "output_tokens": 593,
       "output_tokens_details": {
-        "thinking_tokens": 295
+        "thinking_tokens": 383
       },
       "server_tool_use": null,
       "service_tier": "standard"

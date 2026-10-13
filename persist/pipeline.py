@@ -23,7 +23,7 @@ from persist.candidates import CandidatePair, embed_text, exact_matches, neighbo
 from persist.config import PersistConfig
 from persist.decisions import PersistAdjudicator, PersistDecision
 from persist.filings import Filing, FilingPair, filing_pairs
-from persist.links import EXACT_TITLE, PersistLink, exact_link, select_links
+from persist.links import PersistLink, exact_link, select_links
 from resolve.nodes import RISK_LABEL, ResolveNode
 from resolve.pipeline import in_order
 
@@ -147,6 +147,6 @@ def _counts(work: _PairWork, candidates: Sequence[CandidatePair],
         earlier_accession=work.pair.earlier.accession_no,
         later_factors=len(work.later), earlier_factors=len(work.earlier),
         exact=len(work.exact), candidates=sum(c.later_key in later for c in candidates),
-        linked_exact=sum(link.method == EXACT_TITLE for link in linked),
-        linked_adjudicated=sum(link.method != EXACT_TITLE for link in linked),
+        linked_exact=sum(link.is_exact for link in linked),
+        linked_adjudicated=sum(not link.is_exact for link in linked),
     )

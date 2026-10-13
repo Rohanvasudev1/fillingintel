@@ -7,7 +7,7 @@ chunk prints it, so spans pass the Step 8 check against the fixture text.
 """
 from datetime import date
 
-from persist.decisions import Answer, PersistDecision
+from persist.decisions import Answer, Failure, LinkEvidence, PersistDecision
 from persist.filings import Filing
 from resolve.nodes import EvidenceRef, ResolveNode
 
@@ -67,15 +67,15 @@ class ScriptedAdjudicator:
         answer = self._answers.get((later_factor.name, earlier_factor.name), Answer.DISTINCT)
         same = answer is Answer.SAME
         failure = None if same and self._verified else (
-            "quote_not_found" if same else answer.value)
+            Failure.QUOTE_NOT_FOUND if same else Failure(answer.value))
         e, lt = earlier_factor.evidence[0], later_factor.evidence[0]
         return PersistDecision(
             decision_id=f"d-{later_factor.name}-{earlier_factor.name}",
             later_key=candidate.later_key, earlier_key=candidate.earlier_key, rank=candidate.rank,
             answer=answer, quote_earlier=e.span, chunk_id_earlier=e.chunk_id,
             quote_later=lt.span, chunk_id_later=lt.chunk_id,
-            span_earlier=e.span if failure is None else None,
-            span_later=lt.span if failure is None else None,
+            verified_earlier=LinkEvidence(e.chunk_id, e.span) if failure is None else None,
+            verified_later=LinkEvidence(lt.chunk_id, lt.span) if failure is None else None,
             reason="scripted", failure=failure, prompt_version=self.prompt_version,
         )
 

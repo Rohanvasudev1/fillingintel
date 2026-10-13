@@ -19,7 +19,7 @@ from retrieve.answer_model import AnswerModelError, ApiResponse
 from tests.anthropic_fixtures import FIXTURES
 from tests.persist_helpers import RECORDED_PAIRS
 
-RECORDED_UNDER = "persist/v1@bb7f8fb7"
+RECORDED_UNDER = "persist/v1@5eaa7a2c"
 SAME = ("seasonal_period", "guarantees_leases", "litigation")
 DISTINCT = ("litigation_climate", "currency_seasonal")
 

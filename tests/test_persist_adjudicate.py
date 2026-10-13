@@ -75,8 +75,9 @@ def test_the_helper_titles_are_real_spans_of_the_fixture_chunks(texts):
 def test_a_same_with_both_quotes_found_links_with_the_chunks_own_text(texts):
     decision = _judge(texts)
     assert decision.answer is Answer.SAME and decision.links
-    assert decision.span_earlier in texts[decision.chunk_id_earlier]
-    assert decision.span_later in texts[decision.chunk_id_later]
+    assert decision.verified_earlier.span in texts[decision.chunk_id_earlier]
+    assert decision.verified_later.span in texts[decision.chunk_id_later]
+    assert decision.verified_earlier.chunk_id == decision.chunk_id_earlier
     assert (decision.later_key, decision.earlier_key, decision.rank) == (NEW.key, OLD.key, 1)
     assert decision.prompt_version == load_prompt().prompt_version
 
@@ -91,7 +92,7 @@ def test_distinct_and_unsure_do_not_link_and_are_counted_by_answer(texts, answer
 def test_a_quote_not_in_its_chunk_does_not_link(texts):
     decision = _judge(texts, _reply(quote_later="words the filing never prints"))
     assert decision.failure == Failure.QUOTE_NOT_FOUND and not decision.links
-    assert decision.span_later is None
+    assert decision.verified_later is None and decision.verified_earlier is None
 
 
 def test_a_quote_from_the_other_factors_chunk_is_named(texts):

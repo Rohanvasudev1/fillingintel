@@ -25,7 +25,7 @@ from dataclasses import dataclass
 
 from extract.spans import find_span
 from persist.candidates import CandidatePair
-from persist.decisions import Answer, Failure, PersistDecision
+from persist.decisions import Answer, Failure, LinkEvidence, PersistDecision
 from persist.output_schema import FIELDS
 from persist.prompt import PersistPrompt
 from persist.request import PersistRequest, build_request, sent_chunks
@@ -34,6 +34,7 @@ from retrieve.answer_model import AnswerModel, AnswerModelError, TokenUsage, par
 
 logger = logging.getLogger(__name__)
 _UNUSABLE_STOPS = frozenset({"max_tokens", "refusal"})
+_ANSWER_FAILURES = {Answer.DISTINCT: Failure.DISTINCT, Answer.UNSURE: Failure.UNSURE}
 
 
 class ReplyError(ValueError):
@@ -102,31 +103,32 @@ class ClaudePersistAdjudicator:
             reply.quote_earlier, reply.chunk_id_earlier, earlier_own, later_own - earlier_own)
         span_later, later_failure = self._verify(
             reply.quote_later, reply.chunk_id_later, later_own, earlier_own - later_own)
-        if reply.answer is Answer.SAME:
-            failure = earlier_failure or later_failure
-        else:
-            failure = reply.answer.value
-        verified = failure is None
+        failure = earlier_failure or later_failure if reply.answer is Answer.SAME \
+            else _ANSWER_FAILURES[reply.answer]
+        verified = failure is None and span_earlier is not None and span_later is not None
         return PersistDecision(
             decision_id=base.decision_id, later_key=base.candidate.later_key,
             earlier_key=base.candidate.earlier_key, rank=base.candidate.rank,
             answer=reply.answer, quote_earlier=reply.quote_earlier,
             chunk_id_earlier=reply.chunk_id_earlier, quote_later=reply.quote_later,
             chunk_id_later=reply.chunk_id_later,
-            span_earlier=span_earlier if verified else None,
-            span_later=span_later if verified else None, reason=reply.reason,
+            verified_earlier=LinkEvidence(reply.chunk_id_earlier, span_earlier)
+            if verified and span_earlier is not None else None,
+            verified_later=LinkEvidence(reply.chunk_id_later, span_later)
+            if verified and span_later is not None else None,
+            reason=reply.reason,
             failure=failure, prompt_version=base.prompt_version, usage=usage,
             from_cache=from_cache,
         )
 
     def _verify(self, quote: str, chunk_id: str, own: set[str],
-                others: set[str]) -> tuple[str | None, str | None]:
+                others: set[str]) -> tuple[str | None, Failure | None]:
         """The chunk's own text for *quote* and no failure, or None and the failure."""
         if chunk_id in own and (span := find_span(quote, self._texts[chunk_id])) is not None:
             return span, None
         if chunk_id in others or any(find_span(quote, self._texts[c]) is not None for c in others):
-            return None, Failure.QUOTE_FROM_OTHER_FACTOR.value
-        return None, Failure.QUOTE_NOT_FOUND.value
+            return None, Failure.QUOTE_FROM_OTHER_FACTOR
+        return None, Failure.QUOTE_NOT_FOUND
 
 
 @dataclass(frozen=True, slots=True)
@@ -141,7 +143,7 @@ class _Base:
             decision_id=self.decision_id, later_key=self.candidate.later_key,
             earlier_key=self.candidate.earlier_key, rank=self.candidate.rank, answer=None,
             quote_earlier=None, chunk_id_earlier=None, quote_later=None, chunk_id_later=None,
-            span_earlier=None, span_later=None, reason=reason, failure=failure.value,
+            verified_earlier=None, verified_later=None, reason=reason, failure=failure,
             prompt_version=self.prompt_version, usage=usage, from_cache=from_cache,
         )
 

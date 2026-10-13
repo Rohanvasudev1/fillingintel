@@ -4,7 +4,8 @@
 and hash, prompt, model settings, inputs, the link file's hash), counts (filing
 pairs, risk factors, candidates, answers, reasons not linked, links by method,
 per filing pair), embedding use, the adjudication section (estimate, calls,
-tokens and cost), the check_batch() dry run, and every decision.
+tokens and cost), the check_batch() dry run, every candidate pair with its rank
+and cosine, and every decision.
 """
 from __future__ import annotations
 
@@ -82,7 +83,8 @@ def _decision(d: PersistDecision) -> dict[str, object]:
             "answer": None if d.answer is None else d.answer.value,
             "quote_earlier": d.quote_earlier, "chunk_id_earlier": d.chunk_id_earlier,
             "quote_later": d.quote_later, "chunk_id_later": d.chunk_id_later,
-            "reason": d.reason, "failure": d.failure, "links": d.links,
+            "reason": d.reason, "failure": None if d.failure is None else d.failure.value,
+            "links": d.links,
             "from_cache": d.from_cache, "prompt_version": d.prompt_version}
 
 
@@ -132,7 +134,7 @@ def build_report(result: Linking, violations: Sequence[Violation],
             "candidates": len(result.candidates),
             "answers": dict(sorted(Counter(d.answer.value if d.answer else "none"
                                            for d in decisions).items())),
-            "not_linked_by_reason": dict(sorted(Counter(d.failure for d in decisions
+            "not_linked_by_reason": dict(sorted(Counter(d.failure.value for d in decisions
                                                         if d.failure).items())),
             "links": len(result.links),
             "links_by_method": dict(sorted(Counter(lk.method for lk in result.links).items())),
@@ -147,6 +149,9 @@ def build_report(result: Linking, violations: Sequence[Violation],
         "adjudication": _adjudication(decisions, info),
         "check_batch": {"violations": len(violations),
                         "examples": [str(v) for v in violations[:_EXAMPLES]]},
+        "candidates": [{"later_key": c.later_key, "earlier_key": c.earlier_key,
+                        "rank": c.rank, "cosine": round(c.cosine, 4)}
+                       for c in result.candidates],
         "decisions": [_decision(d) for d in decisions],
     }
 
