@@ -1,11 +1,14 @@
 """The guarded write path into the graph (Step 7; rules of Step 10).
 
-write_batch() is the one way into the graph. In one write transaction it:
+write_batch() and rebuild_graph() are the only ways into the graph. In one write
+transaction write_batch():
 1. refuses a graph without :GraphMeta or built under another ontology;
 2. reads which cited chunks and edge endpoints already exist;
 3. runs check_batch() and, on any violation, raises BatchRejected with the full
    list before any write;
 4. merges nodes, then edges, then node evidence.
+rebuild_graph() runs the same steps after deleting every node but :GraphMeta in
+the same transaction, so a Step 10 load replaces the graph or changes nothing.
 
 It writes exactly what the batch holds; combining evidence is the caller's job
 (the Step 10 graph builder), so one item never depends on another. Nodes merge
@@ -56,7 +59,7 @@ from graph.batch import (
     key_values,
 )
 from graph.connection import DATABASE
-from graph.constraints import require_graph_meta
+from graph.constraints import GRAPH_META, require_graph_meta
 from graph.cypher import quoted
 from graph.ontology import (
     EDGE_TYPES,
@@ -80,6 +83,10 @@ class IncompleteWrite(RuntimeError):
     """A query wrote fewer rows than it was given; the transaction is rolled back."""
 
 
+class GraphNotEmpty(RuntimeError):
+    """The graph holds nodes besides :GraphMeta and the caller did not ask to replace them."""
+
+
 class BatchRejected(ValueError):
     """The batch breaks the ontology or evidence rules; nothing was written."""
 
@@ -97,6 +104,35 @@ def write_batch(driver: Driver, batch: Batch, database: str = DATABASE) -> None:
     """
     with driver.session(database=database) as session:
         session.execute_write(_write, batch)
+
+
+def rebuild_graph(
+    driver: Driver, batch: Batch, *, replace: bool = True, database: str = DATABASE,
+) -> None:
+    """Make *batch* the whole graph, keeping only :GraphMeta, in one transaction.
+
+    With *replace* false, a graph holding any other node raises GraphNotEmpty.
+    With it true, every node but :GraphMeta is deleted first, inside the same
+    transaction, so the batch's checks see the emptied graph and any rejection
+    or failure rolls the delete back: the previous graph stays. The delete is
+    one full scan, which is what a rebuild needs. Same errors as write_batch().
+    """
+    with driver.session(database=database) as session:
+        session.execute_write(_rebuild, batch, replace)
+
+
+_OTHER_NODES = f"MATCH (n) WHERE NOT n:{quoted(GRAPH_META)}"
+
+
+def _rebuild(tx: ManagedTransaction, batch: Batch, replace: bool) -> None:
+    require_graph_meta(tx)
+    if replace:
+        tx.run(f"{_OTHER_NODES} DETACH DELETE n").consume()
+    else:
+        found = tx.run(f"{_OTHER_NODES} RETURN count(n) AS n").single(strict=True)["n"]
+        if found:
+            raise GraphNotEmpty(f"the graph holds {found} nodes besides :{GRAPH_META}")
+    _write(tx, batch)
 
 
 def _write(tx: ManagedTransaction, batch: Batch) -> None:
