@@ -1,0 +1,278 @@
+{
+  "accession_no": "0000050863-25-000074",
+  "run": 2,
+  "status": "complete",
+  "commit": "67662a2",
+  "created_at": "2026-10-13T15:16:29+00:00",
+  "prompt": {
+    "version": "v2",
+    "path": "prompts/extract/v2.md",
+    "sha256": "34a82e2b107b550f9d2689fa43d20afb246bab0d4baeb15cf32170ce36c67d77",
+    "file_sha256": "df67f16a26dfa2ac60a7cb8eb0f5e82fad1c3dd1fc607b2214e233fb8383e601",
+    "prompt_version": "extract/v2@34a82e2b"
+  },
+  "model": "claude-haiku-5-5",
+  "effort": "high",
+  "max_tokens": 16000,
+  "ontology_version": 3,
+  "workers": 4,
+  "chunk_count": 52,
+  "candidates": 916,
+  "nodes": 266,
+  "edges": 432,
+  "rejections": {
+    "total": 6,
+    "rate": 0.006550218340611353,
+    "by_reason": {
+      "disallowed_endpoint": 3,
+      "endpoint_node_rejected": 2,
+      "span_not_found": 1
+    },
+    "examples": {
+      "span_not_found": [
+        {
+          "chunk_id": "0000050863-25-000074:0026",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n2",
+            "label": "MetricValue",
+            "name": "Reverse repurchase agreements",
+            "value": 2599,
+            "unit": "USD millions",
+            "period": "FY2025-Q1",
+            "evidence_span": "Reverse repurchase agreements | 2,599 | — | 2,599 | — | (2,599) | —",
+            "confidence": "implied"
+          }
+        }
+      ],
+      "endpoint_node_rejected": [
+        {
+          "chunk_id": "0000050863-25-000074:0026",
+          "kind": "triple",
+          "message": "end node 'n2' was rejected",
+          "candidate": {
+            "start": "THIS_FILING",
+            "type": "REPORTS",
+            "end": "n2",
+            "role": null,
+            "stake": null,
+            "evidence_span": "Reverse repurchase agreements | 2,599 | — | 2,599 | — | (2,599) | —",
+            "confidence": "implied"
+          }
+        },
+        {
+          "chunk_id": "0000050863-25-000074:0026",
+          "kind": "triple",
+          "message": "start node 'n2' was rejected",
+          "candidate": {
+            "start": "n2",
+            "type": "MEASURES",
+            "end": "FILER",
+            "role": null,
+            "stake": null,
+            "evidence_span": "Reverse repurchase agreements | 2,599 | — | 2,599 | — | (2,599) | —",
+            "confidence": "implied"
+          }
+        }
+      ],
+      "disallowed_endpoint": [
+        {
+          "chunk_id": "0000050863-25-000074:0044",
+          "kind": "triple",
+          "message": "REPORTS start MetricValue is not one of Filing",
+          "candidate": {
+            "start": "n4",
+            "type": "REPORTS",
+            "end": "THIS_FILING",
+            "role": null,
+            "stake": null,
+            "evidence_span": "from which we received $1\\.1 billion of cash in Q1 2025",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0000050863-25-000074:0044",
+          "kind": "triple",
+          "message": "REPORTS start MetricValue is not one of Filing",
+          "candidate": {
+            "start": "n6",
+            "type": "REPORTS",
+            "end": "THIS_FILING",
+            "role": null,
+            "stake": null,
+            "evidence_span": "received $1\\.9 billion of cash proceeds, net of certain adjustments",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0000050863-25-000074:0044",
+          "kind": "triple",
+          "message": "REPORTS start MetricValue is not one of Filing",
+          "candidate": {
+            "start": "n9",
+            "type": "REPORTS",
+            "end": "THIS_FILING",
+            "role": null,
+            "stake": null,
+            "evidence_span": "we had $1\\.5 billion of commercial paper obligations outstanding",
+            "confidence": "stated"
+          }
+        }
+      ]
+    }
+  },
+  "flags": {
+    "name_not_in_span": 65,
+    "uncertain": 3
+  },
+  "conflicts": {
+    "total": 14,
+    "items": [
+      {
+        "item": "MetricValue(key='0000050863-25-000074:50863:total assets:currency:FY2025-Q1')",
+        "property": "value",
+        "kept": 192242.0,
+        "other": 2948.0,
+        "kept_chunk": "0000050863-25-000074:0006",
+        "other_chunk": "0000050863-25-000074:0026"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000074:50863:revenue:currency:FY2025-Q1')",
+        "property": "value",
+        "kept": 12724.0,
+        "other": 12667.0,
+        "kept_chunk": "0000050863-25-000074:0014",
+        "other_chunk": "0000050863-25-000074:0013"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000074:50863:operating income (loss):currency:FY2025-Q1')",
+        "property": "value",
+        "kept": -1069.0,
+        "other": -301.0,
+        "kept_chunk": "0000050863-25-000074:0014",
+        "other_chunk": "0000050863-25-000074:0013"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000074:50863:operating income (loss):currency:FY2025-Q1')",
+        "property": "value",
+        "kept": -301.0,
+        "other": -1069.0,
+        "kept_chunk": "0000050863-25-000074:0040",
+        "other_chunk": "0000050863-25-000074:0014"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000074:Segment:50863:ccg:revenue:currency:FY2025-Q1')",
+        "property": "value",
+        "kept": 8273.0,
+        "other": 7629.0,
+        "kept_chunk": "0000050863-25-000074:0014",
+        "other_chunk": "0000050863-25-000074:0013"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000074:Segment:50863:ccg:revenue:currency:FY2025-Q1')",
+        "property": "value",
+        "kept": 7629.0,
+        "other": 8273.0,
+        "kept_chunk": "0000050863-25-000074:0036",
+        "other_chunk": "0000050863-25-000074:0014"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000074:Segment:50863:ccg:operating income (loss):currency:FY2025-Q1')",
+        "property": "value",
+        "kept": 2822.0,
+        "other": 2361.0,
+        "kept_chunk": "0000050863-25-000074:0014",
+        "other_chunk": "0000050863-25-000074:0013"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000074:Segment:50863:dcai:revenue:currency:FY2025-Q1')",
+        "property": "value",
+        "kept": 3828.0,
+        "other": 4126.0,
+        "kept_chunk": "0000050863-25-000074:0014",
+        "other_chunk": "0000050863-25-000074:0013"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000074:Segment:50863:dcai:revenue:currency:FY2025-Q1')",
+        "property": "value",
+        "kept": 4126.0,
+        "other": 3828.0,
+        "kept_chunk": "0000050863-25-000074:0036",
+        "other_chunk": "0000050863-25-000074:0014"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000074:Segment:50863:dcai:operating income (loss):currency:FY2025-Q1')",
+        "property": "value",
+        "kept": 417.0,
+        "other": 575.0,
+        "kept_chunk": "0000050863-25-000074:0014",
+        "other_chunk": "0000050863-25-000074:0013"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000074:Segment:50863:intel foundry:revenue:currency:FY2025-Q1')",
+        "property": "value",
+        "kept": 4356.0,
+        "other": 4667.0,
+        "kept_chunk": "0000050863-25-000074:0014",
+        "other_chunk": "0000050863-25-000074:0013"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000074:Segment:50863:intel foundry:revenue:currency:FY2025-Q1')",
+        "property": "value",
+        "kept": 4667.0,
+        "other": 4356.0,
+        "kept_chunk": "0000050863-25-000074:0038",
+        "other_chunk": "0000050863-25-000074:0014"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000074:Segment:50863:intel foundry:operating income (loss):currency:FY2025-Q1')",
+        "property": "value",
+        "kept": -2441.0,
+        "other": -2320.0,
+        "kept_chunk": "0000050863-25-000074:0014",
+        "other_chunk": "0000050863-25-000074:0013"
+      },
+      {
+        "item": "Company(cik='50863')-[OWNS]->Organization(key='Organization:altera')",
+        "property": "stake",
+        "kept": 0.49,
+        "other": 1.0,
+        "kept_chunk": "0000050863-25-000074:0022",
+        "other_chunk": "0000050863-25-000074:0021"
+      }
+    ]
+  },
+  "failed_chunks": [],
+  "violations": [],
+  "calls": {
+    "made": 0,
+    "from_cache": 52
+  },
+  "tokens": {
+    "input": 57204,
+    "cache_read": 405340,
+    "cache_write": 0,
+    "output": 220584
+  },
+  "cost_usd": 0.12006579999999996,
+  "cost_this_run_usd": 0,
+  "estimate": {
+    "calls": 0,
+    "usd": 0
+  },
+  "price_table": {
+    "date": "2026-10-10",
+    "unit": "USD per million tokens",
+    "models": {
+      "claude-haiku-5-5": {
+        "input_per_mtok": 0.1,
+        "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "output_per_mtok": 0.5,
+        "cache_write_per_mtok": 0.125,
+        "cache_read_per_mtok": 0.01
+      }
+    }
+  },
+  "candidates_file": "/Users/rohanvasudev/Downloads/GitHub/fillingintel/.claude/worktrees/cache-only-replay-resolution-451140/data/extract/0000050863-25-000074-run2.jsonl"
+}

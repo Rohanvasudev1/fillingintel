@@ -1,0 +1,229 @@
+{
+  "accession_no": "0000050863-26-000011",
+  "run": 2,
+  "status": "complete",
+  "commit": "67662a2",
+  "created_at": "2026-10-13T15:16:42+00:00",
+  "prompt": {
+    "version": "v2",
+    "path": "prompts/extract/v2.md",
+    "sha256": "34a82e2b107b550f9d2689fa43d20afb246bab0d4baeb15cf32170ce36c67d77",
+    "file_sha256": "df67f16a26dfa2ac60a7cb8eb0f5e82fad1c3dd1fc607b2214e233fb8383e601",
+    "prompt_version": "extract/v2@34a82e2b"
+  },
+  "model": "claude-haiku-5-5",
+  "effort": "high",
+  "max_tokens": 16000,
+  "ontology_version": 3,
+  "workers": 4,
+  "chunk_count": 193,
+  "candidates": 2417,
+  "nodes": 717,
+  "edges": 1140,
+  "rejections": {
+    "total": 24,
+    "rate": 0.00992966487381051,
+    "by_reason": {
+      "endpoint_node_rejected": 18,
+      "span_not_found": 6
+    },
+    "examples": {
+      "span_not_found": [
+        {
+          "chunk_id": "0000050863-26-000011:0045",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n3",
+            "label": "MetricValue",
+            "name": "Gains (Losses) on equity investments, net",
+            "value": 40,
+            "unit": "USD millions",
+            "period": "FY2023",
+            "evidence_span": "| Gains (Losses) on equity investments, net | $ | 514 | $ | 242 | $ | 40 |",
+            "confidence": "implied"
+          }
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0122",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n6",
+            "label": "MetricValue",
+            "name": "Total net revenue",
+            "value": 53101,
+            "unit": "USD millions",
+            "period": "FY2024",
+            "evidence_span": "Total net revenue | $ | 53,101",
+            "confidence": "implied"
+          }
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0122",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n7",
+            "label": "MetricValue",
+            "name": "Total net revenue",
+            "value": 54228,
+            "unit": "USD millions",
+            "period": "FY2023",
+            "evidence_span": "Total net revenue | $ | 54,228",
+            "confidence": "implied"
+          }
+        }
+      ],
+      "endpoint_node_rejected": [
+        {
+          "chunk_id": "0000050863-26-000011:0045",
+          "kind": "triple",
+          "message": "end node 'n3' was rejected",
+          "candidate": {
+            "start": "THIS_FILING",
+            "type": "REPORTS",
+            "end": "n3",
+            "role": null,
+            "stake": null,
+            "evidence_span": "| Gains (Losses) on equity investments, net | $ | 514 | $ | 242 | $ | 40 |",
+            "confidence": "implied"
+          }
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0045",
+          "kind": "triple",
+          "message": "start node 'n3' was rejected",
+          "candidate": {
+            "start": "n3",
+            "type": "MEASURES",
+            "end": "FILER",
+            "role": null,
+            "stake": null,
+            "evidence_span": "| Gains (Losses) on equity investments, net | $ | 514 | $ | 242 | $ | 40 |",
+            "confidence": "implied"
+          }
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0122",
+          "kind": "triple",
+          "message": "end node 'n6' was rejected",
+          "candidate": {
+            "start": "THIS_FILING",
+            "type": "REPORTS",
+            "end": "n6",
+            "role": null,
+            "stake": null,
+            "evidence_span": "Total net revenue | $ | 53,101",
+            "confidence": "implied"
+          }
+        }
+      ]
+    }
+  },
+  "flags": {
+    "name_not_in_span": 311,
+    "uncertain": 10
+  },
+  "conflicts": {
+    "total": 8,
+    "items": [
+      {
+        "item": "Agreement(key='Agreement:altera divestiture')",
+        "property": "name",
+        "kept": "Altera Divestiture",
+        "other": "Altera divestiture",
+        "kept_chunk": "0000050863-26-000011:0145",
+        "other_chunk": "0000050863-26-000011:0010"
+      },
+      {
+        "item": "MetricValue(key='0000050863-26-000011:50863:non-cash asset impairment charges:currency:FY2025')",
+        "property": "value",
+        "kept": 494.0,
+        "other": 474.0,
+        "kept_chunk": "0000050863-26-000011:0131",
+        "other_chunk": "0000050863-26-000011:0032"
+      },
+      {
+        "item": "MetricValue(key='0000050863-26-000011:50863:gains (losses) on equity investments, net:currency:FY2025')",
+        "property": "concept",
+        "kept": "Gains (Losses) on equity investments, net",
+        "other": "Gains (losses) on equity investments, net",
+        "kept_chunk": "0000050863-26-000011:0045",
+        "other_chunk": "0000050863-26-000011:0144"
+      },
+      {
+        "item": "MetricValue(key='0000050863-26-000011:50863:gains (losses) on equity investments, net:currency:FY2024')",
+        "property": "concept",
+        "kept": "Gains (Losses) on equity investments, net",
+        "other": "Gains (losses) on equity investments, net",
+        "kept_chunk": "0000050863-26-000011:0045",
+        "other_chunk": "0000050863-26-000011:0144"
+      },
+      {
+        "item": "MetricValue(key='0000050863-26-000011:50863:property, plant and equipment, net:currency:FY2025')",
+        "property": "value",
+        "kept": 105414.0,
+        "other": 100.0,
+        "kept_chunk": "0000050863-26-000011:0102",
+        "other_chunk": "0000050863-26-000011:0066"
+      },
+      {
+        "item": "MetricValue(key='0000050863-26-000011:50863:property, plant and equipment, net:currency:FY2025')",
+        "property": "unit",
+        "kept": "USD millions",
+        "other": "USD billions",
+        "kept_chunk": "0000050863-26-000011:0102",
+        "other_chunk": "0000050863-26-000011:0066"
+      },
+      {
+        "item": "Company(cik='50863')-[OWNS]->Organization(key='Organization:altera')",
+        "property": "stake",
+        "kept": 0.48,
+        "other": 0.49,
+        "kept_chunk": "0000050863-26-000011:0145",
+        "other_chunk": "0000050863-26-000011:0031"
+      },
+      {
+        "item": "Company(cik='50863')-[OWNS]->Organization(key='Organization:altera')",
+        "property": "stake",
+        "kept": 0.49,
+        "other": 0.48,
+        "kept_chunk": "0000050863-26-000011:0146",
+        "other_chunk": "0000050863-26-000011:0145"
+      }
+    ]
+  },
+  "failed_chunks": [],
+  "violations": [],
+  "calls": {
+    "made": 0,
+    "from_cache": 193
+  },
+  "tokens": {
+    "input": 215772,
+    "cache_read": 1504435,
+    "cache_write": 0,
+    "output": 646446
+  },
+  "cost_usd": 0.35984455000000015,
+  "cost_this_run_usd": 0,
+  "estimate": {
+    "calls": 0,
+    "usd": 0
+  },
+  "price_table": {
+    "date": "2026-10-10",
+    "unit": "USD per million tokens",
+    "models": {
+      "claude-haiku-5-5": {
+        "input_per_mtok": 0.1,
+        "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "output_per_mtok": 0.5,
+        "cache_write_per_mtok": 0.125,
+        "cache_read_per_mtok": 0.01
+      }
+    }
+  },
+  "candidates_file": "/Users/rohanvasudev/Downloads/GitHub/fillingintel/.claude/worktrees/cache-only-replay-resolution-451140/data/extract/0000050863-26-000011-run2.jsonl"
+}

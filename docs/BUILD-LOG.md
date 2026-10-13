@@ -1701,6 +1701,34 @@ Each risk factor now links to the same risk in the company's earlier 10-K. A 10-
 
 ---
 
+## 2026-10-13 — Step 10 ticket 03: cache-only replay and resolution rerun
+
+All 24 filings were extracted again from the response cache under ticket 02's metric-value key, which now includes the unit class. Resolution was then rerun, so the alias map's metric-value entries follow the new keys.
+
+- **Replay** (`extract.run --cache-only`, commit `67662a2`, prompt `extract/v2@34a82e2b`). Run 2 for 23 filings, run 3 for NVDA FY2026 (its v1 run 1 is not replayed). 0 calls, $0. Lines for labels other than MetricValue are byte-identical to the previous runs in all 24 files.
+
+  | Latest v2 runs | Before | After |
+  |---|---|---|
+  | Conflicts, corpus | 332 | 120 |
+  | On metric values | 301 (90.7%) | 89 (74.2%) |
+  | Nodes | 8,084 | 8,102 |
+  | Metric values | 4,142 | 4,160 |
+  | Failed chunks | 1 | 1 |
+
+  The 18 new metric values come from keys that held figures of two unit classes under one name and now split in two. Intel chunk `0000050863-24-000076:0017` fails again on `max_tokens`. Its cut-off reply is in the cache, so the ticket's "no cached reply" was wrong, but the result is the same.
+- **Resolution** (`resolve.run`, run 4, commit `67662a2`, config unchanged). A first pass with `--max-cost 0` refused: 19 metric-value pairs were not cached, because the key split changed those nodes' values or evidence (for example AMD "net revenue" against "total net revenue"). The user chose to pay for them: 19 Haiku 5.5 calls under `resolve/v2`, $0.016 (estimate $0.019). So the ticket's "no API call" is not met. That pass ran on uncommitted code, so its outputs were discarded and both commands rerun at `67662a2`. The committed run 4 replays all 3,836 pairs from the cache at $0. It appended 349 merges, all MetricValue (348 adjudicated, 1 deterministic).
+- **Alias map check** (`python -m resolve.check_aliases --before <map at b74ffe0>`): 0 changes outside MetricValue. The map went from 1,391 entries to 2,119; 1,433 are MetricValue. The 705 MetricValue entries under the old keys stay (user decision): the log is append-only, no current node has those keys, and scoring rounds 1 and 2 (11 metric-value pairs in round 2) still see the merges they scored. The check compares entries, which for this sorted file means the same thing as bytes.
+- **Code.** `extract.run --cache-only` names every uncached chunk and stops before any call. New `resolve/check_aliases.py` lists each entry outside MetricValue that was added, removed or moved, with exit codes 0 / 2 / 3 / 4. Tests first: a cache missing one chunk (refused, only that chunk named, no call, no report), a fully cached replay, and the check's pure function and CLI.
+- **Code review** (`mattpocock-skills:code-review`). Fixed: a missing alias map or merge log was read as empty (a wrong folder looked like every key removed); an unknown key now exits 3, as in `check_tuning`; the read step flattened. Left as is: the `_Stop` class and exit constants copied into one more module (local idiom; a shared module is a separate cleanup); the check writes no report file, since its output is here.
+- **Regressions.** None.
+- **Evidence.** `uv run ruff check .` is clean. Full suite with the local databases: 2135 passed, 1 skipped (before the review fixes); `tests/test_resolve_check_aliases.py` and `tests/test_extract_run.py` pass after them.
+
+**Next session starts with**
+1. Merge this PR once CI is green.
+2. Ticket 04 (graph builder and loader) is unblocked; ticket 06 (persistence scoring) also has no blocker.
+
+---
+
 ## 2026-10-13 — Step 10 ticket 06: persistence scoring
 
 The persistence links have one score, from 100 pairs labelled by gpt-6-luna. Every figure is **agent-labelled (gpt-6-luna)**.
@@ -1741,7 +1769,7 @@ The persistence links have one score, from 100 pairs labelled by gpt-6-luna. Eve
 **Next session starts with**
 1. Merge this PR once CI is green.
 2. Decide whether the persistence recall finding changes Step 10's design (OPEN-DECISIONS candidate: allow several predecessors, or send ranks 4–6 to the adjudicator). Recommendation: keep the one-predecessor rule for the Step 10 load and note the finding; revisit only if the multi-hop check (ticket 08) needs it.
-3. Ticket 04 or 07 once ticket 03 lands.
+3. Ticket 04 (graph builder and loader); ticket 03 has landed.
 
 ---
 
