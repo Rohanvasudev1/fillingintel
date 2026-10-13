@@ -1701,6 +1701,50 @@ Each risk factor now links to the same risk in the company's earlier 10-K. A 10-
 
 ---
 
+## 2026-10-13 — Step 10 ticket 06: persistence scoring
+
+The persistence links have one score, from 100 pairs labelled by gpt-6-luna. Every figure is **agent-labelled (gpt-6-luna)**.
+
+- **Score** (`persist.score`, commit `26f1299`, config `36673beebe68`, `persist/v1@5eaa7a2c`, `persist_label/v1@9a57ed5c`): precision 0.958 [0.864, 1.000], recall 0.428 [0.298, 0.572], adjudicator accuracy 0.727 [0.591, 0.864] (32 of 44), share of true matches in the candidate stratum 0.819 [0.706, 0.954]. These are bootstrap 95% intervals within strata, and the score is in the README. Labelled same: 44 of 60 candidate pairs, 5 of 25 near, 0 of 15 rest.
+- **Why recall is low** (reported, not tuned). 23 of the 44 labelled-same candidate pairs are links. Of the 21 misses:
+  - 9 are `same` answers that the one-predecessor rule dropped, because the later factor already linked elsewhere;
+  - 6 are `distinct` or `unsure` answers on a later factor linked elsewhere;
+  - 6 are `distinct` or `unsure` answers on a factor left unlinked.
+  The near stratum's 5 matches were never adjudicated. The one wrong link is an exact-title match on Intel's generic "Catastrophic events" heading.
+- **Costs.** Labelling $0.05 (estimate $0.23, cap $0.50). Recording five test replies: $0.01.
+- **Code.**
+  - `persist/sample.py`: the population is every (earlier, later) pair inside the 12 filing pairs. Strata: candidate (exact title or adjudicated), near (neighbour ranks 4–6), rest. The draw is 60 / 25 / 15, seed 20261014.
+  - `persist/labeller.py`, with prompt `prompts/persist_label/v1.md`: the same-risk rule with its own invented examples. The labeller sees titles, filing, spans and chunks, never the linker's output.
+  - `persist/freeze.py`, `persist/label.py`, `persist/score.py`, `persist/score_files.py`, `persist/scoring.py`, plus `persist/cli.py` and `persist/db.py`, both shared.
+  - Step 9 code is generalised for reuse: `sample_strata`, `score_predicted`, `send_label_request` and `label_request`, `load_label_prompt(family=...)`, `write_once`, and a protocol-typed `build_label_report`. Resolution's draws and scores are unchanged, and their tests pass.
+- **Agent choices.**
+  - The ticket's "60 adjudicated" stratum includes exact-title pairs, following Step 9, where the candidate stratum covered every pair a rule fired on. Without them, the 319 deterministic links would sit in "rest".
+  - The freeze also pins the draw's seed, near factor and sizes, which `PersistConfig` does not hold. The freeze is written once, from a clean tree, and before the draw.
+  - The label step rebuilds the population from cached embeddings only. It refuses unless the candidate stratum equals the run's exact-title links plus its adjudicated pairs.
+  - A second score is refused.
+  - An `unsure` answer counts as "not same" in adjudicator accuracy, as in Step 9.
+- **Code review** (`mattpocock-skills:code-review`). No hard violations. Fixed:
+  - the draw settings were not pinned;
+  - exit codes and the stop class were copied across commands (now `persist/cli.py`);
+  - the label command imported Postgres readers from another command (now `persist/db.py`);
+  - the `"unknown"` and `"label"` strings were repeated;
+  - `_Drawn.pairs` was too loosely typed;
+  - a non-dict provenance was not caught;
+  - a file error while writing the score was not caught;
+  - the unlabelled count included stray labels;
+  - recorded real labeller replies were missing (now 5 AMD pairs, `tests/test_persist_label_recorded.py`).
+  Left as they are: `PersistDraw` holds plain dicts, as Step 9's `Draw` does, and `read_draw` keeps its own fields because the persistence draw has no fuzzy margin.
+- **Tests.** Strata, draw, scoring, labeller and draw-file tests were shown failing before the code. The CLI chain test (run, freeze, label, score with fakes behind the real caches) was written after the commands.
+- **Regressions.** None. One full-suite attempt hit `neo4j-test` while it held 21 unmarked nodes, likely the ticket 03 session; it was left alone and the rerun passed.
+- **Evidence.** `uv run ruff check .` is clean. Full suite with the local databases: 2161 passed, 1 skipped.
+
+**Next session starts with**
+1. Merge this PR once CI is green.
+2. Decide whether the persistence recall finding changes Step 10's design (OPEN-DECISIONS candidate: allow several predecessors, or send ranks 4–6 to the adjudicator). Recommendation: keep the one-predecessor rule for the Step 10 load and note the finding; revisit only if the multi-hop check (ticket 08) needs it.
+3. Ticket 04 or 07 once ticket 03 lands.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.
@@ -1714,3 +1758,4 @@ Short versions of the stories from this build so far, for interviews and write-u
 - **A pace check caught a rubber-stamp review.** The first extraction review came back 30 of 30 correct, with a median of under a second per answer. The tool logs how long each judgment takes, so the round was set aside rather than reported, and it also exposed that the review screen hid the metric values being judged. A human-in-the-loop number is only as good as the evidence that the human looked.
 - **A safety rule cost most of the recall.** The entity resolver never merged two different entities in its scored sample (10 of 10 right), but it found only about 39% of true matches. Most misses were not model errors: the model said "same", and a rule that holds back any group larger than five names or containing a disputed pair blocked the merge. The rule bought precision with recall, and the scoring made the price visible.
 - **A group cut doubled entity-resolution recall at no model cost.** Recall went from 0.387 to 0.783 on agent-labelled pairs from two different draws, with no wrong merge in the sample and no new model call. The resolver now cuts each blocked group by removing the fewest "same" answers that keep every disputed pair apart. It finds that cut exactly, because merging in a fixed order gave a different answer in 11 of 12 groups.
+- **Agent-labelled persistence links: right when made, but few.** 23 of 24 sampled risk-factor links were right, yet recall was 0.43. Almost half the misses were "same" answers dropped by a deliberate rule, that each later risk factor gets at most one predecessor. Filers merge and split risk factors, so a one-to-one link model undercounts by design.

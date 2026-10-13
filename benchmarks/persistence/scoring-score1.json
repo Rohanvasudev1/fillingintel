@@ -1,0 +1,128 @@
+{
+  "provenance": {
+    "note": "agent-labelled (gpt-6-luna)",
+    "set": "scoring",
+    "commit": "26f1299",
+    "created_at": "2026-10-13T15:36:22+00:00",
+    "labeller": {
+      "provider": "openai",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "prompt_version": "persist_label/v1@9a57ed5c"
+    },
+    "adjudicator": {
+      "model": "claude-haiku-5-5",
+      "effort": "high",
+      "prompt_version": "persist/v1@5eaa7a2c"
+    },
+    "config_hash": "36673beebe68707192efed7d68371e9d26574225d1b6588789b83f81fc31f0ae",
+    "config": {
+      "top_k": 3,
+      "embedding_model": "voyage-4-large",
+      "embed_input_type": "document"
+    },
+    "ontology_version": 3,
+    "files": {
+      "frozen": {
+        "file": "frozen.json",
+        "sha256": "93bda5a53b6abe83e80bcce6adee1fdc13f0bb1cff4c348d5acb21c922b030de"
+      },
+      "draw": {
+        "file": "scoring-draw.json",
+        "sha256": "8d7a96d5b04e7607d1066927eaf8e0940a34a74c06e8a7070b315f8f67cb07cb"
+      },
+      "labels": {
+        "file": "scoring-labels.jsonl",
+        "sha256": "f0f045b0c64e550ecd07f7452897e8da180531a910f5f9ba09b83c9d510afc13"
+      },
+      "links": {
+        "file": "links.jsonl",
+        "sha256": "6d3551ecde5f74d66f02291d8f00b847c0608385e6bf9992d2791008bac01679"
+      },
+      "run_report": {
+        "file": "run1.json",
+        "sha256": "3040643cefbb550f296584d1f90a32396da7586b8401598ab37b709284486622"
+      }
+    },
+    "bootstrap": {
+      "resamples": 10000,
+      "confidence": 0.95,
+      "within_strata": true,
+      "namespace": "persist"
+    }
+  },
+  "precision": {
+    "value": 0.9583333333333333,
+    "interval": {
+      "low": 0.8636363636363634,
+      "high": 1.0,
+      "resamples": 10000
+    }
+  },
+  "recall": {
+    "value": 0.4283202687569987,
+    "interval": {
+      "low": 0.29829730178162217,
+      "high": 0.5719439941282954,
+      "resamples": 10000
+    }
+  },
+  "rules_share_of_true_matches": {
+    "value": 0.8193952967525197,
+    "interval": {
+      "low": 0.7063970775635037,
+      "high": 0.9537519212681517,
+      "resamples": 10000
+    }
+  },
+  "adjudicator": {
+    "judged": 44,
+    "correct": 32,
+    "unusable": 0,
+    "accuracy": {
+      "value": 0.7272727272727273,
+      "interval": {
+        "low": 0.5909090909090909,
+        "high": 0.8636363636363636,
+        "resamples": 10000
+      }
+    }
+  },
+  "strata": [
+    {
+      "stratum": "candidate",
+      "population": 1663,
+      "labelled": 60,
+      "weight": 27.716666666666665,
+      "same": 44,
+      "predicted_same": 24,
+      "true_positives": 23
+    },
+    {
+      "stratum": "near",
+      "population": 1344,
+      "labelled": 25,
+      "weight": 53.76,
+      "same": 5,
+      "predicted_same": 0,
+      "true_positives": 0
+    },
+    {
+      "stratum": "rest",
+      "population": 64018,
+      "labelled": 15,
+      "weight": 4267.866666666667,
+      "same": 0,
+      "predicted_same": 0,
+      "true_positives": 0
+    }
+  ],
+  "unrepresented_strata": [],
+  "counts": {
+    "drawn": 100,
+    "labelled": 100,
+    "unlabelled": 0,
+    "quotes_unverified": 0
+  },
+  "seed": 20261015
+}
