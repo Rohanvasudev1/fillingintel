@@ -33,8 +33,6 @@ FROZEN_FILES = MappingProxyType({"scoring": FROZEN_NAME, "scoring2": FROZEN_2_NA
 GROUP_CUT_SETS = frozenset({"scoring2"})
 TUNING_REPORT_NAME = "tuning-report.json"
 CHECK_REPORT_NAME = "tuning-check.json"  # Step 9b: python -m resolve.check_tuning
-_DRAW_FIELDS = ("set", "seed", "config_hash", "sizes", "populations", "near_fuzzy_margin",
-                "near_rank_factor", "pairs")
 
 
 class LabelFileError(ValueError):
@@ -103,10 +101,16 @@ def draw_record(draw: Draw) -> dict[str, object]:
 
 def write_draw(path: Path, draw: Draw, provenance: Mapping[str, object]) -> bool:
     """Write the draw file; False if it already holds this draw. LabelFileError if another."""
-    record = draw_record(draw)
+    return write_once(path, draw_record(draw), provenance)
+
+
+def write_once(path: Path, record: Mapping[str, object],
+               provenance: Mapping[str, object]) -> bool:
+    """Write *record* and its *provenance* to *path*; False if the file already holds
+    *record*, LabelFileError if it holds another."""
     if path.exists():
         kept = read_json(path)
-        if {k: kept.get(k) for k in _DRAW_FIELDS} != record:
+        if {k: kept.get(k) for k in record} != record:
             raise LabelFileError(f"{path.name} holds another draw; the pairs, strata or config "
                                  "changed since it was written")
         return False

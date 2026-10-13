@@ -75,7 +75,7 @@ def link_factors(filings: Sequence[Filing], factors: Sequence[ResolveNode],
                  embedder: FactorEmbedder | None, adjudicator: PersistAdjudicator | None,
                  config: PersistConfig, *, workers: int = 1) -> Linking:
     """Link *factors* across the filing pairs of *filings*; see the module docstring."""
-    by_filing = _by_filing(factors, {f.accession_no for f in filings})
+    by_filing = factors_by_filing(factors, {f.accession_no for f in filings})
     work = [_pair_work(pair, by_filing) for pair in filing_pairs(filings)]
     to_embed = {n.key: n for w in work if w.unmatched and w.earlier
                 for n in (*w.unmatched, *w.earlier)}
@@ -98,7 +98,7 @@ def link_factors(filings: Sequence[Filing], factors: Sequence[ResolveNode],
     )
 
 
-def _by_filing(factors: Sequence[ResolveNode], accessions: set[str]
+def factors_by_filing(factors: Sequence[ResolveNode], accessions: set[str]
                ) -> dict[str, tuple[ResolveNode, ...]]:
     """The risk factors of each filing, by key; ValueError on a node pairing cannot use."""
     if repeated := [k for k, n in Counter(f.key for f in factors).items() if n > 1]:

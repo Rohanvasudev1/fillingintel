@@ -10,11 +10,11 @@ import math
 from collections import Counter
 from collections.abc import Sequence
 from datetime import UTC, datetime
+from typing import Protocol
 
 from eval.judging.openai_backend import total_usage
 from graph.ontology import ONTOLOGY_VERSION
 from ingest.provenance import git_state
-from resolve.config import ResolveConfig
 from resolve.labeller import (
     LABEL_EFFORT,
     LABEL_MAX_OUTPUT_TOKENS,
@@ -26,7 +26,7 @@ from resolve.labeller import (
 )
 from resolve.labels import PairLabel
 from resolve.nodes import InputFile
-from resolve.sample import Draw
+from resolve.sample import DrawnPair
 from retrieve.pricing import price_table
 
 
@@ -34,9 +34,26 @@ def now() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds")
 
 
-def build_label_report(drawn: Draw, labels: Sequence[PairLabel],
+class _Drawn(Protocol):
+    """A draw as the report needs it: resolve.sample.Draw, or Step 10's persistence draw."""
+
+    @property
+    def set_name(self) -> str: ...
+
+    @property
+    def pairs(self) -> Sequence[DrawnPair]: ...
+
+
+class _Configured(Protocol):
+    """A config with a hash: ResolveConfig, or Step 10's PersistConfig."""
+
+    @property
+    def config_hash(self) -> str: ...
+
+
+def build_label_report(drawn: _Drawn, labels: Sequence[PairLabel],
                        outcomes: Sequence[LabelOutcome], prompt: LabelPrompt,
-                       inputs: Sequence[InputFile], config: ResolveConfig) -> dict[str, object]:
+                       inputs: Sequence[InputFile], config: _Configured) -> dict[str, object]:
     failures = Counter(o.failure.split(" ", 1)[0] for o in outcomes if o.failure)
     usage = total_usage(o.usage for o in outcomes)
     return {
