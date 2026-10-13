@@ -1829,6 +1829,43 @@ The persistence links have one score, from 100 pairs labelled by gpt-6-luna. Eve
 
 ---
 
+## 2026-10-13 — Step 10 ticket 07: load the persistence links
+
+- **What changed.**
+  - `build_graph()` takes the link file. Each link becomes one PERSISTS_AS edge carrying the link's two evidence entries, earlier first.
+  - A link fails the build in three cases: it names a risk factor no extract file holds (the error gives both keys), it cites a chunk that is not that factor's own evidence, or it gives a later factor a second predecessor.
+  - `python -m graph.load` reads `benchmarks/persistence/links.jsonl`. The load report records the file's SHA-256 and its links by method.
+  - `persist/paths.py` gains `parse_links()`, so the loader hashes the same bytes it parses.
+  - The README gets a table of the load report.
+- **Load run 3** (commit `355b332`, `benchmarks/graph/load-run3.json`).
+  - Full rebuild of the local Neo4j, written in 12 s. `validate_graph()` found zero violations, with the Postgres check included.
+  - 621 PERSISTS_AS edges: 319 `persist/exact_title` and 302 `persist/v1@5eaa7a2c`.
+  - Every other node and edge count matches load run 2. Also unchanged from run 2: 1 conflict, 2 skipped metric values, 6 dropped edges and 1 chunk gap.
+- **Tests.**
+  - Test-first: the link edge and its evidence, the missing-factor error, the two-predecessor error, chunks outside a factor's evidence, a fixture rebuild with one link (zero violations), and the report's hash and per-method counts.
+  - The missing-link-file test was written after the code and passed on its first run.
+- **Code review** (`mattpocock-skills:code-review`).
+  - Fixed:
+    - added the one-predecessor check and the check that a cited chunk is the factor's own evidence (the second replaces a plain "chunk is in Postgres" check);
+    - `links` is now a required argument of `build_graph()`;
+    - added a test for a missing link file;
+    - renamed a local variable;
+    - reflowed a docstring.
+  - Left as they are, judgement calls:
+    - the repeated read-hash-parse code for the alias map and the link file (two uses);
+    - `read_links()` as a thin wrapper, which persist's own code still calls.
+- **Regressions.** None.
+- **Evidence.** `uv run ruff check .` is clean. Full suite with the local databases: 2211 passed, 1 skipped.
+
+**Decisions needed**
+None new. The 5 dropped `CONCERNS` edges are still open from ticket 04.
+
+**Next session starts with**
+1. Merge this PR once CI is green.
+2. Ticket 08 (multi-hop check and close).
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.
