@@ -11,6 +11,7 @@ from graph.batch import (
     CHUNK_IDS,
     CONFIDENCES,
     EVIDENCE_SPANS,
+    EXTRACT_PROMPTS,
     Evidence,
     NodeRef,
     check_batch,
@@ -24,6 +25,8 @@ from graph.build_input import (
     StructuralRows,
 )
 from graph.builder import BuildError, DropReason, PromptMix, build_graph
+from persist.decisions import LinkEvidence
+from persist.links import EXACT_TITLE, PersistLink
 from tests.graph_test_data import (
     AMD_10K,
     AMD_COMPETITION_CHUNK,
@@ -77,8 +80,8 @@ def _file(accession_no, nodes=(), edges=(), run=1):
     return ExtractFile(accession_no, run, "0" * 64, tuple(nodes), tuple(edges))
 
 
-def _build(files, alias_map=None):
-    return build_graph(_rows(), files, alias_map or {})
+def _build(files, alias_map=None, links=()):
+    return build_graph(_rows(), files, alias_map or {}, links)
 
 
 def _node(built, label, key):
@@ -113,7 +116,7 @@ def test_a_filing_from_a_company_outside_the_three_filers_is_refused():
     rows = _rows()
     stranger = FilingRow("0000000001-26-000001", "1", "X", "10-K", "FY2026", date(2026, 1, 1))
     with pytest.raises(BuildError, match="0000000001-26-000001"):
-        build_graph(replace(rows, filings=(*rows.filings, stranger)), [], {})
+        build_graph(replace(rows, filings=(*rows.filings, stranger)), [], {}, ())
 
 
 # ── alias mapping and merged nodes ─────────────────────────────────────────────
@@ -315,6 +318,59 @@ def test_files_under_another_prompt_version_are_refused():
     files = [_file(NVDA_10K, [_org(TSMC, "TSMC", _ev(SUPPLY_CHUNK, prompt="extract/v1@4b83bf9b"))])]
     with pytest.raises(PromptMix, match="extract/v2"):
         _build(files)
+
+
+# ── persistence links ─────────────────────────────────────────────────────────
+
+EARLIER_RISK = f"{EARLIER_10K}:export controls"
+LATER_RISK = f"{NVDA_10K}:export controls"
+
+
+def _risk(key, chunk_id):
+    return ExtractNode("RiskFactor", {"key": key, "title": "Export controls"},
+                       (_ev(chunk_id),))
+
+
+def _risk_files():
+    return [_file(EARLIER_10K, [_risk(EARLIER_RISK, EARLIER_CHUNK)]),
+            _file(NVDA_10K, [_risk(LATER_RISK, EXPORT_CHUNK)])]
+
+
+def _link(earlier_key=EARLIER_RISK, later_key=LATER_RISK, later_chunk=EXPORT_CHUNK):
+    return PersistLink(earlier_key, later_key, EXACT_TITLE,
+                       LinkEvidence(EARLIER_CHUNK, "a span"),
+                       LinkEvidence(later_chunk, QUOTES[EXPORT_CHUNK]))
+
+
+def test_a_persistence_link_is_one_persists_as_edge_with_both_evidence_entries():
+    built = _build(_risk_files(), links=[_link()])
+    [edge] = _edges(built, "PERSISTS_AS")
+    assert (edge.start, edge.end) == (NodeRef.of("RiskFactor", key=EARLIER_RISK),
+                                      NodeRef.of("RiskFactor", key=LATER_RISK))
+    assert list(edge.properties[CHUNK_IDS]) == [EARLIER_CHUNK, EXPORT_CHUNK]
+    assert list(edge.properties[EVIDENCE_SPANS]) == ["a span", QUOTES[EXPORT_CHUNK]]
+    assert list(edge.properties[CONFIDENCES]) == ["stated", "stated"]
+    assert list(edge.properties[EXTRACT_PROMPTS]) == [EXACT_TITLE, EXACT_TITLE]
+    assert check_batch(built.batch) == ()
+
+
+def test_a_link_naming_a_missing_risk_factor_fails_with_its_keys():
+    missing = f"{NVDA_10K}:tariffs"
+    with pytest.raises(BuildError, match=f"{EARLIER_RISK}.*{missing}"):
+        _build(_risk_files(), links=[_link(later_key=missing)])
+
+
+def test_a_link_citing_a_chunk_outside_its_risk_factors_evidence_is_refused():
+    with pytest.raises(BuildError, match=f"{SUPPLY_CHUNK}.*{LATER_RISK}"):
+        _build(_risk_files(), links=[_link(later_chunk=SUPPLY_CHUNK)])
+
+
+def test_two_links_to_one_later_risk_factor_are_refused():
+    other = f"{EARLIER_10K}:tariffs"
+    files = [_file(EARLIER_10K, [_risk(EARLIER_RISK, EARLIER_CHUNK), _risk(other, EARLIER_CHUNK)]),
+             _file(NVDA_10K, [_risk(LATER_RISK, EXPORT_CHUNK)])]
+    with pytest.raises(BuildError, match=f"{LATER_RISK} has two predecessors"):
+        _build(files, links=[_link(), _link(earlier_key=other)])
 
 
 # ── determinism ────────────────────────────────────────────────────────────────

@@ -14,16 +14,25 @@ import pytest
 from extract.pipeline import ExtractionRun
 from extract.report import candidate_lines, write_candidates
 from graph.batch import Batch, NodeRecord
-from graph.build_input import ChunkRow, FilingRow, StructuralRows
+from graph.build_input import ChunkRow, FilingRow, InputError, StructuralRows
 from graph.connection import DATABASE
 from graph.constraints import GRAPH_META, apply_constraints
 from graph.load import load_graph, read_inputs
+from graph.load_report import load_report
 from graph.ontology import LABELS_BY_NAME, ONTOLOGY_VERSION, Kind
 from graph.write import BatchRejected, GraphNotEmpty, rebuild_graph
-from tests.graph_test_data import AMD_10K, NVDA_10K
+from persist.decisions import LinkEvidence
+from persist.links import EXACT_TITLE, PersistLink
+from persist.paths import write_links
+from tests.graph_test_data import AMD_10K, EXPORT_CHUNK, NVDA_10K, QUOTES, SUPPLY_CHUNK, evidence
 from tests.neo4j_fixtures import MARKER_LABEL
 
 PROMPT = "extract/v2@34a82e2b"
+SUPPLY_RISK = f"{NVDA_10K}:supply"
+EXPORT_RISK = f"{NVDA_10K}:export controls"
+LINK = PersistLink(SUPPLY_RISK, EXPORT_RISK, EXACT_TITLE,
+                   LinkEvidence(SUPPLY_CHUNK, QUOTES[SUPPLY_CHUNK]),
+                   LinkEvidence(EXPORT_CHUNK, QUOTES[EXPORT_CHUNK]))
 
 
 def _run(driver, query):
@@ -53,13 +62,17 @@ def rows(nvda_10k_meta, amd_10k_meta, test_graph_chunks):
 
 @pytest.fixture
 def inputs(tmp_path, graph_test_batch):
-    """Extract files for both fixture 10-Ks, an alias map and the extraction reports."""
+    """Extract files for both fixture 10-Ks, an alias map, the extraction reports and a
+    link file joining two NVIDIA risk factors."""
     extract_dir, reports_dir = tmp_path / "extract", tmp_path / "extraction"
     reports_dir.mkdir()
     for accession_no in (NVDA_10K, AMD_10K):
         nodes = tuple(_v2(n) for n in graph_test_batch.nodes
                       if LABELS_BY_NAME[n.label].kind is Kind.EXTRACTED
                       and n.evidence[0].chunk_id.startswith(accession_no))
+        if accession_no == NVDA_10K:
+            nodes = (*nodes, *(_risk(key, chunk) for key, chunk in
+                               ((SUPPLY_RISK, SUPPLY_CHUNK), (EXPORT_RISK, EXPORT_CHUNK))))
         edges = tuple(_v2_edge(e) for e in graph_test_batch.edges if "chunk_ids" in e.properties
                       and e.properties["chunk_ids"][0].startswith(accession_no))
         run = ExtractionRun(accession_no, PROMPT, nodes, edges, (), (), (), (), (), ())
@@ -68,7 +81,14 @@ def inputs(tmp_path, graph_test_batch):
             '{"failed_chunks": [{"chunk_id": "' + accession_no + ':0001", "reason": "x"}]}')
     alias_map = tmp_path / "alias_map.json"
     alias_map.write_text('{"org:tsmc": "org:tsmc"}')
-    return read_inputs(extract_dir, alias_map, reports_dir)
+    links = tmp_path / "links.jsonl"
+    write_links(links, [LINK])
+    return read_inputs(extract_dir, alias_map, reports_dir, links)
+
+
+def _risk(key, chunk_id):
+    return NodeRecord("RiskFactor", {"key": key, "title": key.split(":")[-1]},
+                      (evidence(chunk_id, prompt=PROMPT),))
 
 
 def _v2(node):
@@ -95,6 +115,10 @@ def test_the_fixture_filings_load_and_validate_with_zero_violations(
     assert counts["Chunk"] == len(test_graph_chunks)
     assert (counts["Company"], counts["Filing"], counts["Period"]) == (2, 2, 2)
     assert counts["Organization"] == 1 and counts["MetricValue"] == 1
+    persists = _run(unmarked, "MATCH (a)-[e:PERSISTS_AS]->(b) "
+                              "RETURN a.key AS a, b.key AS b, e.chunk_ids AS chunks")
+    assert persists == [{"a": SUPPLY_RISK, "b": EXPORT_RISK,
+                         "chunks": [SUPPLY_CHUNK, EXPORT_CHUNK]}]
     assert inputs.gaps == {NVDA_10K: (f"{NVDA_10K}:0001",), AMD_10K: (f"{AMD_10K}:0001",)}
 
 
@@ -141,3 +165,22 @@ def test_a_validation_that_cannot_run_after_the_write_is_reported_not_hidden(
     assert result.validation is None
     assert "ServiceUnavailable" in result.validation_error
     assert _counts(unmarked)["Filing"] == 2  # the write stands
+
+
+def test_a_missing_link_file_is_an_input_error(inputs, tmp_path):
+    (tmp_path / "links.jsonl").unlink()
+    with pytest.raises(InputError, match="links.jsonl"):
+        read_inputs(tmp_path / "extract", tmp_path / "alias_map.json", tmp_path / "extraction",
+                    tmp_path / "links.jsonl")
+
+
+def test_the_load_report_records_the_link_files_hash_and_links_by_method(
+    unmarked, rows, inputs, tmp_path,
+):
+    import hashlib
+
+    result = load_graph(unmarked, rows, inputs, rebuild=False)
+    report = load_report("abc123", inputs, result)
+    digest = hashlib.sha256((tmp_path / "links.jsonl").read_bytes()).hexdigest()
+    assert report["persistence_links"] == {"sha256": digest, "by_method": {EXACT_TITLE: 1}}
+    assert report["counts"]["edges"]["PERSISTS_AS"] == 1
