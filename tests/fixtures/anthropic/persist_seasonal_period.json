@@ -1,0 +1,70 @@
+{
+  "recorded": "real API response, recorded by scripts/capture_persist_responses.py",
+  "prompt_version": "persist/v1@5eaa7a2c",
+  "later": {
+    "key": "0000002488-26-000123:our operating results are subject to quarterly and seasonal sales patterns.",
+    "label": "RiskFactor",
+    "name": "Our operating results are subject to quarterly and seasonal sales patterns.",
+    "evidence": [
+      {
+        "chunk_id": "0000002488-26-000123:0049",
+        "span": "Our operating results are subject to quarterly and seasonal sales patterns."
+      }
+    ]
+  },
+  "earlier": {
+    "key": "0000002488-26-000018:our operating results are subject to quarterly and seasonal sales patterns",
+    "label": "RiskFactor",
+    "name": "Our operating results are subject to quarterly and seasonal sales patterns",
+    "evidence": [
+      {
+        "chunk_id": "0000002488-26-000018:0021",
+        "span": "Our operating results are subject to quarterly and seasonal sales patterns"
+      },
+      {
+        "chunk_id": "0000002488-26-000018:0027",
+        "span": "Our operating results are subject to quarterly and seasonal sales patterns"
+      }
+    ]
+  },
+  "api_ms": 5218.430207998608,
+  "response": {
+    "id": "msg_011Cfz9NesBGX7PvvZUpbmLK",
+    "container": null,
+    "content": [
+      {
+        "signature": "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",
+        "thinking": "",
+        "type": "thinking"
+      },
+      {
+        "citations": null,
+        "text": "{\"answer\":\"same\",\"quote_earlier\":\"A large portion of our quarterly sales have historically been made in the last month of the quarter\",\"chunk_id_earlier\":\"0000002488-26-000018:0027\",\"quote_later\":\"Our operating results tend to vary seasonally with the markets in which our products are sold\",\"chunk_id_later\":\"0000002488-26-000123:0049\",\"reason\":\"The later risk factor has the identical title and keeps the same risk that operating results vary with quarterly and seasonal sales patterns. It drops the detail about sales concentrated in the last month of the quarter but still describes the same underlying risk.\"}",
+        "type": "text"
+      }
+    ],
+    "diagnostics": null,
+    "model": "claude-haiku-5-5",
+    "role": "assistant",
+    "stop_details": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 1366
+      },
+      "cache_creation_input_tokens": 1366,
+      "cache_read_input_tokens": 0,
+      "inference_geo": "global",
+      "input_tokens": 4097,
+      "output_tokens": 724,
+      "output_tokens_details": {
+        "thinking_tokens": 521
+      },
+      "server_tool_use": null,
+      "service_tier": "standard"
+    }
+  }
+}

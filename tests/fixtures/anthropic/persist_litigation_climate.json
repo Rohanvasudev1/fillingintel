@@ -1,0 +1,66 @@
+{
+  "recorded": "real API response, recorded by scripts/capture_persist_responses.py",
+  "prompt_version": "persist/v1@5eaa7a2c",
+  "later": {
+    "key": "0000002488-26-000123:we are party to litigation and may become a party to other claims or litigation that could cause us to incur substantial costs or pay substantial damages or prohibit us from selling our products.",
+    "label": "RiskFactor",
+    "name": "We are party to litigation and may become a party to other claims or litigation that could cause us to incur substantial costs or pay substantial damages or prohibit us from selling our products.",
+    "evidence": [
+      {
+        "chunk_id": "0000002488-26-000123:0071",
+        "span": "We are party to litigation and may become a party to other claims or litigation that could cause us to incur substantial costs or pay substantial damages or prohibit us from selling our products."
+      }
+    ]
+  },
+  "earlier": {
+    "key": "0000002488-26-000018:supply chain delays resulting from climate change related disruptions may lead to contractual disputes, litigation and increasing costs",
+    "label": "RiskFactor",
+    "name": "Supply chain delays resulting from climate change related disruptions may lead to contractual disputes, litigation and increasing costs",
+    "evidence": [
+      {
+        "chunk_id": "0000002488-26-000018:0041",
+        "span": "Supply chain delays resulting from climate change related disruptions may lead to contractual disputes, litigation and increasing costs"
+      }
+    ]
+  },
+  "api_ms": 3362.530415994115,
+  "response": {
+    "id": "msg_011Cfz9PYCrrf4hx7TjGQKxU",
+    "container": null,
+    "content": [
+      {
+        "signature": "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",
+        "thinking": "",
+        "type": "thinking"
+      },
+      {
+        "citations": null,
+        "text": "{\"answer\":\"distinct\",\"quote_earlier\":\"Supply chain delays resulting from climate change related disruptions may lead to contractual disputes, litigation and increasing costs\",\"chunk_id_earlier\":\"0000002488-26-000018:0041\",\"quote_later\":\"From time to time, we are a defendant or plaintiff in various legal actions\",\"chunk_id_later\":\"0000002488-26-000123:0071\",\"reason\":\"The earlier risk is that climate-related supply chain delays cause contractual disputes and cost increases, which may end in litigation. The later risk is general exposure to litigation and claims, so it is a risk about litigation rather than the supply chain risk that leads to it.\"}",
+        "type": "text"
+      }
+    ],
+    "diagnostics": null,
+    "model": "claude-haiku-5-5",
+    "role": "assistant",
+    "stop_details": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 1366,
+      "inference_geo": "global",
+      "input_tokens": 2110,
+      "output_tokens": 639,
+      "output_tokens_details": {
+        "thinking_tokens": 415
+      },
+      "server_tool_use": null,
+      "service_tier": "standard"
+    }
+  }
+}
