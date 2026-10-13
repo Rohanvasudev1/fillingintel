@@ -20,13 +20,18 @@ the write path writes exactly what it is given (ADR-0004, ADR-0006):
 - A MetricValue with no MEASURES edge in its own file is left out with every
   edge touching it, and listed. An edge a merge turns into a self-loop, or
   whose new endpoint its type does not allow, is dropped and listed.
+- Each persistence link is one PERSISTS_AS edge with the link's own two
+  evidence entries, earlier first. A link fails the build when it names a risk
+  factor no extract file holds, cites a chunk that is not that factor's own
+  evidence, or gives a later factor a second predecessor.
 """
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from extract.filers import TICKER_BY_CIK
 from extract.outcomes import Conflict
@@ -49,6 +54,9 @@ from graph.build_input import (
     StructuralRows,
 )
 from graph.ontology import CONFIDENCE_RANK, EDGE_TYPES_BY_NAME, LABELS_BY_NAME, Kind
+
+if TYPE_CHECKING:
+    from persist.links import PersistLink
 
 # Looked up in the ontology, so renaming one there fails at import, not silently.
 COMPANY, FILING, PERIOD, CHUNK, METRIC = (
@@ -147,6 +155,7 @@ class _Context:
 
 def build_graph(
     rows: StructuralRows, files: Sequence[ExtractFile], alias_map: Mapping[str, str],
+    links: Sequence[PersistLink],
 ) -> Built:
     """The batch that is the whole graph, and what the build left out or found."""
     _check_prompts(files)
@@ -161,9 +170,10 @@ def build_graph(
                                            f.accession_no))
     nodes, into_company = _nodes(ordered, context)
     edges, conflicts, dropped = _edges(ordered, context, frozenset(nodes))
+    persistence_edges = _persistence_edges(links, context, nodes)
     return Built(
         Batch(nodes=(*structural_nodes(rows), *(nodes[r] for r in sorted(nodes, key=str))),
-              edges=(*structural_edges(rows), *edges)),
+              edges=(*structural_edges(rows), *edges, *persistence_edges)),
         BuildReport(tuple(conflicts), tuple(sorted(context.skipped)), tuple(dropped),
                     tuple(sorted(into_company))),
     )
@@ -322,6 +332,31 @@ def _stake(
             losers[other] = entry
     return value, [Conflict(item, STAKE, value, other, best.chunk_id, entry.chunk_id)
                    for other, entry in sorted(losers.items())]
+
+
+# ── persistence links ─────────────────────────────────────────────────────────
+
+def _persistence_edges(
+    links: Sequence[PersistLink], context: _Context, nodes: Mapping[NodeRef, NodeRecord],
+) -> tuple[EdgeRecord, ...]:
+    """One PERSISTS_AS edge per link, its evidence as the link gives it, sorted."""
+    edges, predecessor = [], {}
+    for link in links:
+        if link.later_key in predecessor:
+            raise BuildError(f"risk factor {link.later_key} has two predecessors: "
+                             f"{predecessor[link.later_key]} and {link.earlier_key}")
+        predecessor[link.later_key] = link.earlier_key
+        edge = link.edge()
+        start, end = context.canonical(edge.start), context.canonical(edge.end)
+        if start not in nodes or end not in nodes:
+            raise BuildError(f"a persistence link names a risk factor no extract file holds: "
+                             f"{link.earlier_key} -> {link.later_key}")
+        for ref, cited in ((start, link.earlier.chunk_id), (end, link.later.chunk_id)):
+            if cited not in {e.chunk_id for e in nodes[ref].evidence}:
+                raise BuildError(f"a persistence link cites chunk {cited!r}, which is not "
+                                 f"evidence of {ref.key_dict()['key']}")
+        edges.append(replace(edge, start=start, end=end))
+    return tuple(sorted(edges, key=lambda e: (str(e.start), str(e.end))))
 
 
 # ── structural nodes and edges ────────────────────────────────────────────────

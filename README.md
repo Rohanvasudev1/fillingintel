@@ -70,6 +70,44 @@ Recall is low, and it is reported as measured, not tuned. The labeller called 44
 
 Provenance: `benchmarks/persistence/` holds `run1.json`, `links.jsonl`, `frozen.json`, `scoring-draw.json`, `scoring-labels.jsonl`, `scoring-label-run1.json` (labelling cost $0.05) and `scoring-score1.json`. Prompts `persist/v1@5eaa7a2c` and `persist_label/v1@9a57ed5c`; ontology version 3.
 
+## Knowledge graph (Step 10)
+
+`python -m graph.load --rebuild` rebuilds the whole Neo4j graph in one transaction from Postgres, the extract files, the alias map and the persistence links, then validates it. Load run 3 (commit `355b332`, ontology version 3) passed `validate_graph()` with zero violations, the Postgres chunk check included.
+
+| Nodes | Count | | Edges | Count |
+|---|---|---|---|---|
+| Chunk | 2,144 | | EVIDENCED_BY | 10,736 |
+| MetricValue | 3,779 | | MEASURES | 3,779 |
+| RiskFactor | 1,405 | | REPORTS | 3,777 |
+| Product | 278 | | PART_OF | 2,144 |
+| Organization | 147 | | DISCLOSES | 1,405 |
+| Agreement | 120 | | PERSISTS_AS | 621 |
+| Regulation | 98 | | OFFERS | 317 |
+| LegalProceeding | 47 | | AFFECTS | 235 |
+| Person | 27 | | PARTY_TO | 209 |
+| Filing | 24 | | SUBJECT_TO | 182 |
+| Period | 24 | | INVOLVED_IN | 134 |
+| Facility | 23 | | CONCERNS | 51 |
+| MarketPlatform | 19 | | COMPETES_WITH | 47 |
+| Segment | 17 | | HOLDS_ROLE_AT | 34 |
+| Company | 3 | | OWNS | 33 |
+| | | | SUPPLIES | 27 |
+| | | | FILED, COVERS_PERIOD | 24 each |
+| | | | CUSTOMER_OF | 20 |
+| | | | HAS_MARKET_PLATFORM | 19 |
+| | | | HAS_SEGMENT | 16 |
+
+PERSISTS_AS holds 319 exact-title links and 302 adjudicated ones (`persist/v1@5eaa7a2c`).
+
+| Left out or flagged | Count | Detail |
+|---|---|---|
+| Conflicts | 1 | Intel's stake in Altera: 0.49 kept (FY2025 10-K) over 1.0 (Q2 FY2025 10-Q) |
+| Skipped metric values | 2 | Intel figures whose MEASURES edge extraction dropped |
+| Dropped edges | 6 | 5 `CONCERNS` edges whose merged end is a filer's Company, which the ontology does not allow; 1 `REPORTS` edge of a skipped metric value |
+| Chunk gap | 1 | `0000050863-24-000076:0017`, which extraction failed on |
+
+Provenance: `benchmarks/graph/load-run3.json` holds the SHA-256 of the alias map, the link file and every extract file.
+
 ## Running it
 
 Needs Docker, [uv](https://docs.astral.sh/uv/) and a `.env` made from `.env.example`. `EDGAR_USER_AGENT` must hold a real name and email, as the SEC requires.

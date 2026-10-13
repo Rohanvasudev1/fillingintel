@@ -2,7 +2,8 @@
 
 Offline. Postgres gives the structural rows; `data/extract/` the extract files
 (the latest run per filing); `benchmarks/resolution/alias_map.json` the merges;
-`benchmarks/extraction/` the chunks extraction failed on (gaps). The builder
+`benchmarks/extraction/` the chunks extraction failed on (gaps);
+`benchmarks/persistence/links.jsonl` the PERSISTS_AS links. The builder
 combines everything in Python, then one transaction replaces the graph through
 the guarded write path, so a failed or rejected write leaves the previous
 graph. validate_graph() then checks the result against Neo4j and Postgres,
@@ -55,6 +56,8 @@ from graph.validate import (
 from graph.write import BatchRejected, GraphNotEmpty, rebuild_graph
 from ingest.atomic_json import write_json_atomic
 from ingest.provenance import REPO_ROOT, git_state
+from persist.links import PersistLink
+from persist.paths import LINKS, parse_links
 from resolve.paths import ALIAS_MAP, CANDIDATES_DIR, parse_alias_map
 
 __all__ = ["LoadInputs", "LoadResult", "load_graph", "main", "read_inputs"]
@@ -69,6 +72,8 @@ class LoadInputs:
     alias_map: Mapping[str, str]
     alias_map_sha256: str
     gaps: Mapping[str, tuple[str, ...]]  # accession_no -> chunks extraction failed on
+    links: tuple[PersistLink, ...]
+    links_sha256: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -81,9 +86,12 @@ class LoadResult:
     validation_error: str | None = None
 
 
-def read_inputs(extract_dir: Path, alias_map: Path, reports_dir: Path) -> LoadInputs:
-    """Per filing its latest extract run under the current prompt, the alias map and each
-    run's chunk gaps. InputError when a file is missing or malformed.
+def read_inputs(
+    extract_dir: Path, alias_map: Path, reports_dir: Path, links: Path,
+) -> LoadInputs:
+    """Per filing its latest extract run under the current prompt, the alias map, each
+    run's chunk gaps and the persistence links. InputError when a file is missing or
+    malformed.
     """
     files = current_extract_files(extract_dir)
     try:
@@ -93,7 +101,13 @@ def read_inputs(extract_dir: Path, alias_map: Path, reports_dir: Path) -> LoadIn
         raise InputError(f"cannot read the alias map {alias_map.name}: {exc}") from exc
     gaps = {f.accession_no: _failed_chunks(reports_dir / f"{f.accession_no}-run{f.run}.json")
             for f in files}
-    return LoadInputs(files, aliases, hashlib.sha256(raw).hexdigest(), gaps)
+    try:
+        raw_links = links.read_bytes()
+        persist_links = parse_links(raw_links, links.name)
+    except (OSError, ValueError) as exc:
+        raise InputError(f"cannot read the link file {links.name}: {exc}") from exc
+    return LoadInputs(files, aliases, hashlib.sha256(raw).hexdigest(), gaps,
+                      persist_links, hashlib.sha256(raw_links).hexdigest())
 
 
 def _failed_chunks(report: Path) -> tuple[str, ...]:
@@ -118,7 +132,7 @@ def load_graph(
     before anything changes. Once the write has committed nothing is raised:
     violations, or an error that stopped validation, come back in the result.
     """
-    built = build_graph(rows, inputs.files, inputs.alias_map)
+    built = build_graph(rows, inputs.files, inputs.alias_map, inputs.links)
     started = time.monotonic()
     rebuild_graph(driver, built.batch, replace=rebuild)
     seconds = time.monotonic() - started
@@ -141,7 +155,7 @@ def _run(rebuild: bool) -> tuple[LoadInputs, LoadResult]:
     if not url:
         raise _CouldNotRun("DATABASE_URL is not set")
     try:
-        inputs = read_inputs(CANDIDATES_DIR, ALIAS_MAP, EXTRACTION_REPORTS)
+        inputs = read_inputs(CANDIDATES_DIR, ALIAS_MAP, EXTRACTION_REPORTS, LINKS)
     except InputError as exc:
         raise _CouldNotRun(str(exc)) from exc
     try:
@@ -162,7 +176,8 @@ def _run(rebuild: bool) -> tuple[LoadInputs, LoadResult]:
 def main(argv: Sequence[str] | None = None, *, out_dir: Path = OUTPUT_DIR) -> int:
     """CLI entry point; exit codes in the module docstring."""
     parser = argparse.ArgumentParser(
-        description="Rebuild the graph from Postgres, the extract files and the alias map.")
+        description="Rebuild the graph from Postgres, the extract files, the alias map "
+                    "and the persistence links.")
     parser.add_argument("--rebuild", action="store_true",
                         help="replace a graph that already holds data")
     args = parser.parse_args(argv)

@@ -1,9 +1,10 @@
 """The committed load report, `benchmarks/graph/load-run{N}.json` (Step 10).
 
-It records what was loaded and from what: the commit, the alias map's and
-every extract file's SHA-256, the ontology version, node counts per label and
-edge counts per type (EVIDENCED_BY counted from node evidence), what the build
-left out or found, the chunk gaps, write time and the validation result.
+It records what was loaded and from what: the commit, the SHA-256 of the alias
+map, the link file and every extract file, PERSISTS_AS links by method, the
+ontology version, node counts per label and edge counts per type (EVIDENCED_BY
+counted from node evidence), what the build left out or found, the chunk gaps,
+write time and the validation result.
 """
 from __future__ import annotations
 
@@ -42,6 +43,10 @@ def load_report(commit: str, inputs: LoadInputs, result: LoadResult) -> dict[str
         "ontology_version": ONTOLOGY_VERSION,
         "alias_map_sha256": inputs.alias_map_sha256,
         "extract_files": {f.name: f.sha256 for f in inputs.files},
+        "persistence_links": {
+            "sha256": inputs.links_sha256,
+            "by_method": dict(sorted(Counter(link.method for link in inputs.links).items())),
+        },
         "counts": graph_counts(result.built.batch),
         "conflicts": [c.to_dict() for c in build.conflicts],
         "skipped_metric_values": list(build.skipped_metric_values),

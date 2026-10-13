@@ -1,0 +1,154 @@
+{
+  "commit": "355b332",
+  "ontology_version": 3,
+  "alias_map_sha256": "59626859127786e93ee9ecdcb1dcaf337584539376e6109c34c036e7c07fd002",
+  "extract_files": {
+    "0000002488-24-000056-run2.jsonl": "326ecfe23e01e0c31a2dacd8d051bbc26e0993e6a1d4b166c56695418546f466",
+    "0000002488-24-000123-run2.jsonl": "f2c6808b564d30fbd2816a91751b4a9f788935ef88f9f88e6582d7af4588604d",
+    "0000002488-24-000163-run2.jsonl": "65aefe1dc74a267365ebf26d1fac79d027d9eb992322fe671a9c1d347b051b67",
+    "0000002488-25-000012-run2.jsonl": "eaddc6c7e9450f001a55f9e642f5133db71e242592dbc107f48b5555fb7b6e48",
+    "0000002488-25-000047-run2.jsonl": "17dddb7012b84be19facbb341e762504608e7af07694669ff1bfb9d9626ed1b0",
+    "0000002488-25-000108-run2.jsonl": "3449d74e94017f5416f8ad502886a976247c8b9193ffb2a9ee9bcde693758417",
+    "0000002488-25-000166-run2.jsonl": "ab6ea84385fe59af6ba5a35a5c42ac8942a307bbdb072921655293156de0096b",
+    "0000002488-26-000018-run2.jsonl": "d8a704b4ea96f5b4cf9b38d74c5eb13cc589b024d2e6baca587a782e23980921",
+    "0000050863-24-000076-run2.jsonl": "c3d0293a698be65e7b0751c3a22d8f5850ca2cf74107da813b8f59ba457265dc",
+    "0000050863-24-000124-run2.jsonl": "459f7c34cb2a6dc7cbb070e9b4d94da7a4feb398070077d79bcbbf189d3f2c96",
+    "0000050863-24-000149-run2.jsonl": "96076e0bdc8e5bbe8cbd029ce6bf1b521426c717e713c990c0bc96c9a5773886",
+    "0000050863-25-000009-run2.jsonl": "beea77cbf5305483b56d983419b245859649186b504838db6303f98dac4928ae",
+    "0000050863-25-000074-run2.jsonl": "7c64e9b3304cb8381e81c6b472cb25ef58939ebbdf08e39ce8a865aa05aabc5f",
+    "0000050863-25-000109-run2.jsonl": "d8b683f6f7b70867b0f2a2936456fefdfa782a37b9b1f265845ebae375100c95",
+    "0000050863-25-000179-run2.jsonl": "9ca2a201d3901e0953c6fbee973da48ec484ee467a4b20ceda73ab3db41c2023",
+    "0000050863-26-000011-run2.jsonl": "63695717903b16ad678ca9742a5d0b1ad451537520e1abd7eebaf10487428747",
+    "0001045810-24-000124-run2.jsonl": "9c57cb6dcdd14c866158ce33b95e1f7cb393da7b14a01805f9a6d74dda70882c",
+    "0001045810-24-000264-run2.jsonl": "9cd40184851e73234e252db0dc8f40af1b4a8ffabd8b75235dc9f932c167ecf4",
+    "0001045810-24-000316-run2.jsonl": "136dc96151fc455377916dd5c6edadd0cff71ea1f59f1f981094c0dc0a0afa27",
+    "0001045810-25-000023-run2.jsonl": "789b83d3d2b5b0b49678c92f5741bd528c491494376b863a9e2af8386421bc87",
+    "0001045810-25-000116-run2.jsonl": "4cc4ca8f76fe656a7b495ac09e4fdc90bdf7c2cc0f8966352a4d33c5982f8781",
+    "0001045810-25-000209-run2.jsonl": "9996fc0691cda23bd1a218d99f796b119f23276d415e6f4f99fbcce217c9d6ef",
+    "0001045810-25-000230-run2.jsonl": "f4420929bdd2ab8d2f0d20ec5692025e2a8cc1db0beacfb97ba5295c2f176c52",
+    "0001045810-26-000021-run3.jsonl": "cf46c16e50180474f0a2794b27cb7d69ece37a4484f1c66a7054ae8e09372677"
+  },
+  "persistence_links": {
+    "sha256": "6d3551ecde5f74d66f02291d8f00b847c0608385e6bf9992d2791008bac01679",
+    "by_method": {
+      "persist/exact_title": 319,
+      "persist/v1@5eaa7a2c": 302
+    }
+  },
+  "counts": {
+    "nodes": {
+      "Agreement": 120,
+      "Chunk": 2144,
+      "Company": 3,
+      "Facility": 23,
+      "Filing": 24,
+      "LegalProceeding": 47,
+      "MarketPlatform": 19,
+      "MetricValue": 3779,
+      "Organization": 147,
+      "Period": 24,
+      "Person": 27,
+      "Product": 278,
+      "Regulation": 98,
+      "RiskFactor": 1405,
+      "Segment": 17
+    },
+    "edges": {
+      "AFFECTS": 235,
+      "COMPETES_WITH": 47,
+      "CONCERNS": 51,
+      "COVERS_PERIOD": 24,
+      "CUSTOMER_OF": 20,
+      "DISCLOSES": 1405,
+      "EVIDENCED_BY": 10736,
+      "FILED": 24,
+      "HAS_MARKET_PLATFORM": 19,
+      "HAS_SEGMENT": 16,
+      "HOLDS_ROLE_AT": 34,
+      "INVOLVED_IN": 134,
+      "MEASURES": 3779,
+      "OFFERS": 317,
+      "OWNS": 33,
+      "PARTY_TO": 209,
+      "PART_OF": 2144,
+      "PERSISTS_AS": 621,
+      "REPORTS": 3777,
+      "SUBJECT_TO": 182,
+      "SUPPLIES": 27
+    }
+  },
+  "conflicts": [
+    {
+      "item": "Company(cik='50863')-[OWNS]->Organization(key='Organization:altera')",
+      "property": "stake",
+      "kept": 0.49,
+      "other": 1.0,
+      "kept_chunk": "0000050863-26-000011:0031",
+      "other_chunk": "0000050863-25-000109:0012"
+    }
+  ],
+  "skipped_metric_values": [
+    "0000050863-24-000124:50863:receivable for remaining transaction proceeds:currency:FY2024-Q2",
+    "0000050863-25-000109:50863:total liabilities measured and recorded at fair value:currency:FY2024"
+  ],
+  "dropped_edges": [
+    {
+      "reason": "disallowed_endpoint",
+      "edge": "Agreement(key='Agreement:settlement agreement between advanced micro devices, inc. and intel corporation, dated november 11, 2009')-[CONCERNS]->Company(cik='50863')",
+      "file": "0000002488-25-000012-run2.jsonl"
+    },
+    {
+      "reason": "disallowed_endpoint",
+      "edge": "Agreement(key='Agreement:patent cross license agreement')-[CONCERNS]->Company(cik='50863')",
+      "file": "0000002488-25-000012-run2.jsonl"
+    },
+    {
+      "reason": "skipped_metric_value",
+      "edge": "Filing(accession_no='0000050863-25-000109')-[REPORTS]->MetricValue(key='0000050863-25-000109:50863:total liabilities measured and recorded at fair value:currency:FY2024')",
+      "file": "0000050863-25-000109-run2.jsonl"
+    },
+    {
+      "reason": "disallowed_endpoint",
+      "edge": "Agreement(key='Agreement:equity investment in intel corporation')-[CONCERNS]->Company(cik='50863')",
+      "file": "0001045810-25-000230-run2.jsonl"
+    },
+    {
+      "reason": "disallowed_endpoint",
+      "edge": "Agreement(key='Agreement:equity investment in intel corporation')-[CONCERNS]->Company(cik='50863')",
+      "file": "0001045810-25-000230-run2.jsonl"
+    },
+    {
+      "reason": "disallowed_endpoint",
+      "edge": "Agreement(key='Agreement:private placement share sale to nvidia')-[CONCERNS]->Company(cik='1045810')",
+      "file": "0000050863-26-000011-run2.jsonl"
+    }
+  ],
+  "merged_into_company": [
+    "Organization:advanced micro devices, inc.",
+    "Organization:intel corporation",
+    "Organization:nvidia",
+    "Organization:nvidia corporation"
+  ],
+  "chunk_gaps": [
+    "0000050863-24-000076:0017"
+  ],
+  "write_seconds": 12.0,
+  "validation": {
+    "ran": true,
+    "ok": true,
+    "violations": 0,
+    "postgres_checked": true,
+    "checks": {
+      "graph_meta": 0,
+      "node_labels": 0,
+      "edge_types": 0,
+      "endpoints": 0,
+      "node_properties": 0,
+      "edge_properties": 0,
+      "node_evidence": 0,
+      "edge_evidence": 0,
+      "structure": 0,
+      "postgres_chunks": 0
+    }
+  }
+}

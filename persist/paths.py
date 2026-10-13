@@ -22,15 +22,21 @@ LINKS = OUTPUT_DIR / LINKS_NAME
 
 def read_links(path: Path) -> tuple[PersistLink, ...]:
     """The links in *path*; ValueError names the first bad line."""
+    return parse_links(path.read_bytes(), path.name)
+
+
+def parse_links(raw: bytes, name: str) -> tuple[PersistLink, ...]:
+    """The links in a link file's bytes, so a caller can hash the same bytes it parsed;
+    ValueError names the first bad line."""
     links = []
-    for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+    for number, line in enumerate(raw.decode("utf-8").splitlines(), start=1):
         try:
             data = json.loads(line)
             if not isinstance(data, dict):
                 raise ValueError("not an object")
             links.append(PersistLink.from_dict(data))
         except ValueError as exc:
-            raise ValueError(f"{path.name} line {number}: {exc}") from exc
+            raise ValueError(f"{name} line {number}: {exc}") from exc
     return tuple(links)
 
 
