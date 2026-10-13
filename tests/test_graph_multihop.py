@@ -4,18 +4,26 @@ The pass rule is tested on the real agent-drafted records with chunk metadata
 from the corpus filing list. Running a query needs the test database and skips
 without NEO4J_TEST_URI.
 """
+import json
+import os
+from pathlib import Path
+
 import pytest
 from neo4j.exceptions import Neo4jError
 
 from eval.schema import EvalRecord, load_records
 from graph.multihop import (
+    LABEL,
     QUERY_DIR,
     ChunkFiling,
     QueryError,
+    chunk_filings,
     judge,
+    main,
     query_files,
     run_query,
 )
+from graph.validate import EXIT_OK, EXIT_RUN_ERROR, EXIT_VIOLATIONS
 from ingest.provenance import REPO_ROOT
 from tests.corpus_filings import corpus_filings
 
@@ -94,3 +102,62 @@ def test_run_query_is_read_only(neo4j_driver):
         run_query(neo4j_driver, "CREATE (n:Scratch) RETURN [] AS chunk_ids")
     records, _, _ = neo4j_driver.execute_query("MATCH (n:Scratch) RETURN count(n) AS n")
     assert records[0]["n"] == 0
+
+
+# ── the graph read and the command ────────────────────────────────────────────
+
+NVDA_GOLD, AMD_GOLD, INTC_GOLD = COMPETITORS.gold_chunk_ids
+
+
+def _structural(driver) -> None:
+    """Company -FILED-> Filing <-PART_OF- Chunk for q0120's three gold chunks."""
+    driver.execute_query(
+        "UNWIND $rows AS row "
+        "CREATE (:Company {ticker: row.ticker})-[:FILED]->"
+        "(f:Filing {fiscal_period: row.period})<-[:PART_OF]-(:Chunk {chunk_id: row.chunk})",
+        rows=[{"ticker": "NVDA", "period": "FY2026", "chunk": NVDA_GOLD},
+              {"ticker": "AMD", "period": "FY2025", "chunk": AMD_GOLD},
+              {"ticker": "INTC", "period": "FY2025", "chunk": INTC_GOLD}],
+    )
+
+
+def test_chunk_filings_reads_ticker_and_period_from_the_graph(neo4j_driver):
+    _structural(neo4j_driver)
+    assert chunk_filings(neo4j_driver, [AMD_GOLD, "0000002488-26-000018:9999"]) == {
+        AMD_GOLD: ChunkFiling("AMD", "FY2025")}
+
+
+@pytest.fixture
+def graph_env(neo4j_driver, monkeypatch):
+    """The command's NEO4J_* settings pointed at the test database, with q0120's chunks."""
+    _structural(neo4j_driver)
+    for suffix in ("URI", "USER", "PASSWORD"):
+        monkeypatch.setenv(f"NEO4J_{suffix}", os.environ[f"NEO4J_TEST_{suffix}"])
+
+
+def _query_dir(tmp_path, chunk_ids) -> Path:
+    queries = tmp_path / "queries"
+    queries.mkdir()
+    (queries / "q0120.cypher").write_text(f"RETURN {list(chunk_ids)!r} AS chunk_ids")
+    return queries
+
+
+def test_the_command_passes_and_writes_a_labelled_report(graph_env, tmp_path, capsys):
+    queries = _query_dir(tmp_path, COMPETITORS.gold_chunk_ids)
+    assert main([], query_dir=queries, report_dir=tmp_path) == EXIT_OK
+    report = json.loads((tmp_path / "multihop-run1.json").read_text())
+    assert (report["label"], report["passed"], report["total"]) == (LABEL, 1, 1)
+    assert report["questions"][0]["returned_chunk_ids"] == sorted(COMPETITORS.gold_chunk_ids)
+    assert "q0120: PASS" in capsys.readouterr().out
+
+
+def test_the_command_exits_4_when_a_question_fails(graph_env, tmp_path, capsys):
+    queries = _query_dir(tmp_path, [NVDA_GOLD, AMD_GOLD])
+    assert main([], query_dir=queries, report_dir=tmp_path) == EXIT_VIOLATIONS
+    assert "INTC MISS" in capsys.readouterr().out
+
+
+def test_the_command_refuses_an_empty_query_folder(tmp_path, capsys):
+    assert main([], query_dir=tmp_path, report_dir=tmp_path) == EXIT_RUN_ERROR
+    assert "no *.cypher" in capsys.readouterr().err
+    assert not list(tmp_path.glob("multihop-run*.json"))

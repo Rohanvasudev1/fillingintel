@@ -25,7 +25,7 @@ import sys
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, NamedTuple
+from typing import Literal, NamedTuple, TypeAlias
 
 from neo4j import READ_ACCESS, Driver
 from neo4j.exceptions import DriverError, Neo4jError
@@ -50,6 +50,9 @@ _CHUNK_FILINGS = (
 )
 
 
+JudgedBy: TypeAlias = Literal["company", "period"]
+
+
 class QueryError(RuntimeError):
     """A query or its question cannot be judged; the message says why."""
 
@@ -72,7 +75,7 @@ class GroupResult:
 
 @dataclass(frozen=True)
 class Verdict:
-    by: Literal["company", "period"]
+    by: JudgedBy
     groups: tuple[GroupResult, ...]
 
     @property
@@ -88,7 +91,7 @@ def judge(record: EvalRecord, returned: Iterable[str],
     question per fiscal period. Raises QueryError when a gold chunk's filing is
     unknown or an asked company or period has no gold chunk.
     """
-    by: Literal["company", "period"] = "company" if len(record.tickers) > 1 else "period"
+    by: JudgedBy = "company" if len(record.tickers) > 1 else "period"
     asked = record.tickers if by == "company" else record.fiscal_periods
     unknown = [c for c in record.gold_chunk_ids if c not in gold_filings]
     if unknown:
@@ -104,7 +107,7 @@ def judge(record: EvalRecord, returned: Iterable[str],
     return Verdict(by, tuple(groups))
 
 
-def _group_of(filing: ChunkFiling, by: str) -> str:
+def _group_of(filing: ChunkFiling, by: JudgedBy) -> str:
     return filing.ticker if by == "company" else filing.fiscal_period
 
 
@@ -113,13 +116,16 @@ def query_files(directory: Path) -> dict[str, Path]:
     return {p.stem: p for p in sorted(directory.glob("*.cypher"))}
 
 
+def _read(driver: Driver, database: str, cypher: str,
+          **params: object) -> list[dict[str, object]]:
+    """The rows of *cypher*, run in a read transaction."""
+    with driver.session(database=database, default_access_mode=READ_ACCESS) as session:
+        return session.execute_read(lambda tx: [r.data() for r in tx.run(cypher, params)])
+
+
 def run_query(driver: Driver, cypher: str, database: str = DATABASE) -> list[dict[str, object]]:
     """The query's rows, read in a read transaction; each must have a `chunk_ids` list."""
-    def read(tx):
-        return [r.data() for r in tx.run(cypher)]
-
-    with driver.session(database=database, default_access_mode=READ_ACCESS) as session:
-        rows = session.execute_read(read)
+    rows = _read(driver, database, cypher)
     bad = [r for r in rows if not isinstance(r.get(CHUNK_IDS), list)]
     if bad:
         raise QueryError(f"every row needs a {CHUNK_IDS} list; got {bad[0]}")
@@ -129,30 +135,50 @@ def run_query(driver: Driver, cypher: str, database: str = DATABASE) -> list[dic
 def chunk_filings(driver: Driver, chunk_ids: Sequence[str],
                   database: str = DATABASE) -> dict[str, ChunkFiling]:
     """chunk_id -> its filer's ticker and fiscal period, read from the graph."""
-    with driver.session(database=database, default_access_mode=READ_ACCESS) as session:
-        rows = session.execute_read(lambda tx: [r.data() for r in tx.run(
-            _CHUNK_FILINGS, ids=list(chunk_ids))])
-    return {r["chunk_id"]: ChunkFiling(r["ticker"], r["fiscal_period"]) for r in rows}
+    rows = _read(driver, database, _CHUNK_FILINGS, ids=list(chunk_ids))
+    return {str(r["chunk_id"]): ChunkFiling(str(r["ticker"]), str(r["fiscal_period"]))
+            for r in rows}
 
 
-def check_question(driver: Driver, record: EvalRecord, path: Path) -> dict[str, object]:
-    """Run one query file and judge it; the report entry for *record*."""
+@dataclass(frozen=True)
+class QuestionResult:
+    record: EvalRecord
+    query_file: Path
+    cypher: str
+    rows: list[dict[str, object]]
+    verdict: Verdict
+
+    @property
+    def returned(self) -> list[str]:
+        return sorted({str(c) for row in self.rows for c in row[CHUNK_IDS]})  # type: ignore[union-attr]
+
+    def summary(self) -> str:
+        groups = ", ".join(f"{g.group} {'hit' if g.passed else 'MISS'}"
+                           for g in self.verdict.groups)
+        return f"{self.record.id}: {'PASS' if self.verdict.passed else 'FAIL'} ({groups})"
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "id": self.record.id,
+            "question": self.record.question,
+            "query_file": self.query_file.name,
+            "query_sha256": hashlib.sha256(self.cypher.encode("utf-8")).hexdigest(),
+            "rows": self.rows,
+            "returned_chunk_ids": self.returned,
+            "judged_by": self.verdict.by,
+            "groups": [{"group": g.group, "gold": list(g.gold), "hits": list(g.hits),
+                        "passed": g.passed} for g in self.verdict.groups],
+            "passed": self.verdict.passed,
+        }
+
+
+def check_question(driver: Driver, record: EvalRecord, path: Path) -> QuestionResult:
+    """Run one query file and judge it against *record*."""
     cypher = path.read_text(encoding="utf-8")
     rows = run_query(driver, cypher)
-    returned = sorted({c for row in rows for c in row[CHUNK_IDS]})
+    returned = {c for row in rows for c in row[CHUNK_IDS]}  # type: ignore[union-attr]
     verdict = judge(record, returned, chunk_filings(driver, record.gold_chunk_ids))
-    return {
-        "id": record.id,
-        "question": record.question,
-        "query_file": path.relative_to(REPO_ROOT).as_posix(),
-        "query_sha256": hashlib.sha256(cypher.encode("utf-8")).hexdigest(),
-        "rows": rows,
-        "returned_chunk_ids": returned,
-        "judged_by": verdict.by,
-        "groups": [{"group": g.group, "gold": list(g.gold), "hits": list(g.hits),
-                    "passed": g.passed} for g in verdict.groups],
-        "passed": verdict.passed,
-    }
+    return QuestionResult(record, path, cypher, rows, verdict)
 
 
 def next_report_path(directory: Path) -> Path:
@@ -161,8 +187,10 @@ def next_report_path(directory: Path) -> Path:
     return directory / f"multihop-run{max(used, default=0) + 1}.json"
 
 
-def _records_for(files: Mapping[str, Path]) -> dict[str, EvalRecord]:
-    records = {r.id: r for r in load_records(EVAL_SET)}
+def _records_for(files: Mapping[str, Path], eval_set: Path) -> dict[str, EvalRecord]:
+    if not files:
+        raise QueryError("no *.cypher query files found")
+    records = {r.id: r for r in load_records(eval_set)}
     missing = sorted(set(files) - set(records))
     if missing:
         raise QueryError(f"query files name no eval record: {missing}")
@@ -172,36 +200,34 @@ def _records_for(files: Mapping[str, Path]) -> dict[str, EvalRecord]:
     return {q: records[q] for q in files}
 
 
-def _summary(entry: Mapping[str, object]) -> str:
-    groups = ", ".join(f"{g['group']} {'hit' if g['passed'] else 'MISS'}"
-                       for g in entry["groups"])  # type: ignore[union-attr]
-    return f"{entry['id']}: {'PASS' if entry['passed'] else 'FAIL'} ({groups})"
-
-
-def main(argv: Sequence[str] | None = None) -> int:
+def main(argv: Sequence[str] | None = None, *, query_dir: Path = QUERY_DIR,
+         report_dir: Path = REPORT_DIR, eval_set: Path = EVAL_SET) -> int:
     """CLI entry point. Exit codes: 0 all passed; 2 bad arguments; 3 could not run; 4 a failure."""
     argparse.ArgumentParser(
         description="Run the hand-written multi-hop Cypher queries read-only and apply the "
                     "pass rule. Uses NEO4J_URI, NEO4J_USER and NEO4J_PASSWORD.",
     ).parse_args(argv)
-    files = query_files(QUERY_DIR)
     try:
-        records = _records_for(files)
+        files = query_files(query_dir)
+        records = _records_for(files, eval_set)
         with driver_from_env() as driver:
             driver.verify_connectivity()
-            entries = [check_question(driver, records[q], path) for q, path in files.items()]
-    except (QueryError, GraphSettingsMissing, ValueError, Neo4jError, DriverError) as exc:
+            results = [check_question(driver, records[q], path) for q, path in files.items()]
+        passed = sum(r.verdict.passed for r in results)
+        path = next_report_path(report_dir)
+        write_json_atomic(path, {
+            "commit": git_state(), "label": LABEL, "query_dir": query_dir.name,
+            "questions": [r.to_dict() for r in results],
+            "passed": passed, "total": len(results),
+        }, indent=2)
+    except (QueryError, GraphSettingsMissing, OSError, ValueError, Neo4jError,
+            DriverError) as exc:
         print(f"multi-hop check could not run: {type(exc).__name__}: {exc}", file=sys.stderr)
         return EXIT_RUN_ERROR
-    report = {"commit": git_state(), "label": LABEL, "questions": entries,
-              "passed": sum(bool(e["passed"]) for e in entries), "total": len(entries)}
-    path = next_report_path(REPORT_DIR)
-    write_json_atomic(path, report, indent=2)
-    for entry in entries:
-        print(_summary(entry))
-    print(f"{report['passed']} of {report['total']} passed ({LABEL}); report: "
-          f"{path.relative_to(REPO_ROOT).as_posix()}")
-    return EXIT_OK if report["passed"] == report["total"] else EXIT_VIOLATIONS
+    for result in results:
+        print(result.summary())
+    print(f"{passed} of {len(results)} passed ({LABEL}); report: {path}")
+    return EXIT_OK if passed == len(results) else EXIT_VIOLATIONS
 
 
 if __name__ == "__main__":
