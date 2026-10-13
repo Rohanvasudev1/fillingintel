@@ -421,3 +421,26 @@ def test_an_unreadable_past_report_exits_3(env, conn, recorded, tmp_path, capsys
 def test_the_default_per_run_cap_is_one_dollar():
     assert run_module.DEFAULT_MAX_COST_USD == 1.0
     assert run_module._parse_args(["--accession", NVDA_10K]).max_cost == 1.0
+
+
+# ── Cache-only replay ─────────────────────────────────────────────────────────
+
+def test_cache_only_refuses_a_chunk_not_in_the_cache_and_names_it(env, conn, recorded,
+                                                                   tmp_path, capsys):
+    missing = sorted(recorded)[1]
+    _main(tmp_path, CountingModel(recorded, failing=[missing]), conn)  # caches all but one
+    model = CountingModel(recorded)
+    assert _main(tmp_path, model, conn, ["--cache-only"]) == EXIT_RUN_ERROR
+    assert model.calls == 0
+    assert not (tmp_path / "reports" / f"{NVDA_10K}-run2.json").exists()
+    err = capsys.readouterr().err
+    assert missing in err
+    assert all(chunk_id not in err for chunk_id in recorded if chunk_id != missing)
+
+
+def test_cache_only_replays_a_fully_cached_filing_with_no_calls(env, conn, recorded, tmp_path):
+    assert _main(tmp_path, CountingModel(recorded), conn) == EXIT_OK
+    model = CountingModel(recorded)
+    assert _main(tmp_path, model, conn, ["--cache-only"]) == EXIT_OK
+    assert model.calls == 0
+    assert _report(tmp_path, run=2)["calls"] == {"made": 0, "from_cache": len(recorded)}

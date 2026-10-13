@@ -1,0 +1,173 @@
+{
+  "accession_no": "0000050863-24-000149",
+  "run": 2,
+  "status": "complete",
+  "commit": "67662a2",
+  "created_at": "2026-10-13T15:16:20+00:00",
+  "prompt": {
+    "version": "v2",
+    "path": "prompts/extract/v2.md",
+    "sha256": "34a82e2b107b550f9d2689fa43d20afb246bab0d4baeb15cf32170ce36c67d77",
+    "file_sha256": "df67f16a26dfa2ac60a7cb8eb0f5e82fad1c3dd1fc607b2214e233fb8383e601",
+    "prompt_version": "extract/v2@34a82e2b"
+  },
+  "model": "claude-haiku-5-5",
+  "effort": "high",
+  "max_tokens": 16000,
+  "ontology_version": 3,
+  "workers": 4,
+  "chunk_count": 64,
+  "candidates": 852,
+  "nodes": 258,
+  "edges": 431,
+  "rejections": {
+    "total": 40,
+    "rate": 0.046948356807511735,
+    "by_reason": {
+      "endpoint_node_rejected": 26,
+      "span_not_found": 14
+    },
+    "examples": {
+      "span_not_found": [
+        {
+          "chunk_id": "0000050863-24-000149:0007",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n3",
+            "label": "MetricValue",
+            "name": "Gross margin",
+            "value": 1997,
+            "unit": "USD millions",
+            "period": "FY2024-Q3",
+            "evidence_span": "Gross margin | 1,997 | 6,018",
+            "confidence": "implied"
+          }
+        },
+        {
+          "chunk_id": "0000050863-24-000149:0007",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n4",
+            "label": "MetricValue",
+            "name": "Gross margin",
+            "value": 6018,
+            "unit": "USD millions",
+            "period": "FY2023-Q3",
+            "evidence_span": "Gross margin | 1,997 | 6,018",
+            "confidence": "implied"
+          }
+        },
+        {
+          "chunk_id": "0000050863-24-000149:0007",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n5",
+            "label": "MetricValue",
+            "name": "Operating income (loss)",
+            "value": -9057,
+            "unit": "USD millions",
+            "period": "FY2024-Q3",
+            "evidence_span": "Operating income (loss) | (9,057) | (8)",
+            "confidence": "implied"
+          }
+        }
+      ],
+      "endpoint_node_rejected": [
+        {
+          "chunk_id": "0000050863-24-000149:0007",
+          "kind": "triple",
+          "message": "end node 'n3' was rejected",
+          "candidate": {
+            "start": "THIS_FILING",
+            "type": "REPORTS",
+            "end": "n3",
+            "role": null,
+            "stake": null,
+            "evidence_span": "Gross margin | 1,997 | 6,018",
+            "confidence": "implied"
+          }
+        },
+        {
+          "chunk_id": "0000050863-24-000149:0007",
+          "kind": "triple",
+          "message": "start node 'n3' was rejected",
+          "candidate": {
+            "start": "n3",
+            "type": "MEASURES",
+            "end": "FILER",
+            "role": null,
+            "stake": null,
+            "evidence_span": "Gross margin | 1,997 | 6,018",
+            "confidence": "implied"
+          }
+        },
+        {
+          "chunk_id": "0000050863-24-000149:0007",
+          "kind": "triple",
+          "message": "end node 'n4' was rejected",
+          "candidate": {
+            "start": "THIS_FILING",
+            "type": "REPORTS",
+            "end": "n4",
+            "role": null,
+            "stake": null,
+            "evidence_span": "Gross margin | 1,997 | 6,018",
+            "confidence": "implied"
+          }
+        }
+      ]
+    }
+  },
+  "flags": {
+    "name_not_in_span": 122,
+    "uncertain": 18
+  },
+  "conflicts": {
+    "total": 1,
+    "items": [
+      {
+        "item": "MetricValue(key='0000050863-24-000149:Segment:50863:intel foundry:revenue:currency:FY2024-Q3')",
+        "property": "value",
+        "kept": 4400.0,
+        "other": 4352.0,
+        "kept_chunk": "0000050863-24-000149:0046",
+        "other_chunk": "0000050863-24-000149:0016"
+      }
+    ]
+  },
+  "failed_chunks": [],
+  "violations": [],
+  "calls": {
+    "made": 0,
+    "from_cache": 64
+  },
+  "tokens": {
+    "input": 74834,
+    "cache_read": 498880,
+    "cache_write": 0,
+    "output": 248465
+  },
+  "cost_usd": 0.13670469999999998,
+  "cost_this_run_usd": 0,
+  "estimate": {
+    "calls": 0,
+    "usd": 0
+  },
+  "price_table": {
+    "date": "2026-10-10",
+    "unit": "USD per million tokens",
+    "models": {
+      "claude-haiku-5-5": {
+        "input_per_mtok": 0.1,
+        "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "output_per_mtok": 0.5,
+        "cache_write_per_mtok": 0.125,
+        "cache_read_per_mtok": 0.01
+      }
+    }
+  },
+  "candidates_file": "/Users/rohanvasudev/Downloads/GitHub/fillingintel/.claude/worktrees/cache-only-replay-resolution-451140/data/extract/0000050863-24-000149-run2.jsonl"
+}

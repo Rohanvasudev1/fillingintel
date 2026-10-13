@@ -1,0 +1,181 @@
+{
+  "accession_no": "0000002488-24-000163",
+  "run": 2,
+  "status": "complete",
+  "commit": "67662a2",
+  "created_at": "2026-10-13T15:15:47+00:00",
+  "prompt": {
+    "version": "v2",
+    "path": "prompts/extract/v2.md",
+    "sha256": "34a82e2b107b550f9d2689fa43d20afb246bab0d4baeb15cf32170ce36c67d77",
+    "file_sha256": "df67f16a26dfa2ac60a7cb8eb0f5e82fad1c3dd1fc607b2214e233fb8383e601",
+    "prompt_version": "extract/v2@34a82e2b"
+  },
+  "model": "claude-haiku-5-5",
+  "effort": "high",
+  "max_tokens": 16000,
+  "ontology_version": 3,
+  "workers": 4,
+  "chunk_count": 77,
+  "candidates": 882,
+  "nodes": 268,
+  "edges": 395,
+  "rejections": {
+    "total": 22,
+    "rate": 0.024943310657596373,
+    "by_reason": {
+      "endpoint_node_rejected": 14,
+      "span_not_found": 8
+    },
+    "examples": {
+      "span_not_found": [
+        {
+          "chunk_id": "0000002488-24-000163:0004",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n3",
+            "label": "MetricValue",
+            "name": "Total stockholders’ equity",
+            "value": 56985,
+            "unit": "USD millions",
+            "period": "FY2024-Q3",
+            "evidence_span": "Total stockholders’ equity | 56,985 | 55,892",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0000002488-24-000163:0004",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n4",
+            "label": "MetricValue",
+            "name": "Total stockholders’ equity",
+            "value": 55892,
+            "unit": "USD millions",
+            "period": "FY2023",
+            "evidence_span": "Total stockholders’ equity | 56,985 | 55,892",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0000002488-24-000163:0004",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n7",
+            "label": "MetricValue",
+            "name": "Total current liabilities",
+            "value": 7500,
+            "unit": "USD millions",
+            "period": "FY2024-Q3",
+            "evidence_span": "Total current liabilities | 7,500 | 6,689",
+            "confidence": "stated"
+          }
+        }
+      ],
+      "endpoint_node_rejected": [
+        {
+          "chunk_id": "0000002488-24-000163:0004",
+          "kind": "triple",
+          "message": "end node 'n3' was rejected",
+          "candidate": {
+            "start": "THIS_FILING",
+            "type": "REPORTS",
+            "end": "n3",
+            "role": null,
+            "stake": null,
+            "evidence_span": "Total stockholders’ equity | 56,985 | 55,892",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0000002488-24-000163:0004",
+          "kind": "triple",
+          "message": "start node 'n3' was rejected",
+          "candidate": {
+            "start": "n3",
+            "type": "MEASURES",
+            "end": "FILER",
+            "role": null,
+            "stake": null,
+            "evidence_span": "Total stockholders’ equity | 56,985 | 55,892",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0000002488-24-000163:0004",
+          "kind": "triple",
+          "message": "end node 'n4' was rejected",
+          "candidate": {
+            "start": "THIS_FILING",
+            "type": "REPORTS",
+            "end": "n4",
+            "role": null,
+            "stake": null,
+            "evidence_span": "Total stockholders’ equity | 56,985 | 55,892",
+            "confidence": "stated"
+          }
+        }
+      ]
+    }
+  },
+  "flags": {
+    "name_not_in_span": 95,
+    "uncertain": 18
+  },
+  "conflicts": {
+    "total": 2,
+    "items": [
+      {
+        "item": "Agreement(key='Agreement:acquisition of silo ai')",
+        "property": "name",
+        "kept": "acquisition of Silo AI",
+        "other": "Acquisition of Silo AI",
+        "kept_chunk": "0000002488-24-000163:0025",
+        "other_chunk": "0000002488-24-000163:0011"
+      },
+      {
+        "item": "Agreement(key='Agreement:acquisition of zt systems')",
+        "property": "name",
+        "kept": "Acquisition of ZT Systems",
+        "other": "acquisition of ZT Systems",
+        "kept_chunk": "0000002488-24-000163:0032",
+        "other_chunk": "0000002488-24-000163:0038"
+      }
+    ]
+  },
+  "failed_chunks": [],
+  "violations": [],
+  "calls": {
+    "made": 0,
+    "from_cache": 77
+  },
+  "tokens": {
+    "input": 84674,
+    "cache_read": 600215,
+    "cache_write": 0,
+    "output": 248500
+  },
+  "cost_usd": 0.13871954999999997,
+  "cost_this_run_usd": 0,
+  "estimate": {
+    "calls": 0,
+    "usd": 0
+  },
+  "price_table": {
+    "date": "2026-10-10",
+    "unit": "USD per million tokens",
+    "models": {
+      "claude-haiku-5-5": {
+        "input_per_mtok": 0.1,
+        "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "output_per_mtok": 0.5,
+        "cache_write_per_mtok": 0.125,
+        "cache_read_per_mtok": 0.01
+      }
+    }
+  },
+  "candidates_file": "/Users/rohanvasudev/Downloads/GitHub/fillingintel/.claude/worktrees/cache-only-replay-resolution-451140/data/extract/0000002488-24-000163-run2.jsonl"
+}

@@ -7,6 +7,7 @@ network)::
     uv run --env-file .env python -m extract.run --accession 0001045810-26-000021
     uv run --env-file .env python -m extract.run --accession <no> --max-cost 0.5
     uv run --env-file .env python -m extract.run --accession <no> --allow-over-total
+    uv run --env-file .env python -m extract.run --accession <no> --cache-only
 
 The command reads the filing and its chunk texts (the text ``resolve()``
 returns) from Postgres, prints a cost estimate for the calls not already in the
@@ -17,14 +18,16 @@ past $5, unless ``--allow-over-total`` is given. It then
 runs ``extract_filing()`` 4 calls at a time and writes the candidates file
 (``data/extract/``, gitignored) and the run report (``benchmarks/extraction/``,
 committed). A rerun with the same prompt replays every reply from the cache.
+With ``--cache-only`` the command refuses, naming the chunks, if any chunk's
+reply is not in the response cache, so a replay can never start paid calls.
 
 With ``PHOENIX_COLLECTOR_ENDPOINT`` set, the run is one trace: a root span and
 one LLM span per chunk call (``extract.tracing``). Unset, nothing is traced.
 
 Exit codes: 0 every chunk extracted and ``check_batch()`` found nothing;
 2 bad arguments; 3 could not run (a setting missing, Postgres unreachable, an
-unknown accession, an estimate over either cap, an unreadable run report, a
-cache or file error); 4 the run
+unknown accession, an estimate over either cap, a chunk not cached under
+``--cache-only``, an unreadable run report, a cache or file error); 4 the run
 finished incomplete (a failed chunk or a ``check_batch()`` violation).
 """
 from __future__ import annotations
@@ -136,6 +139,9 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser.add_argument("--allow-over-total", action="store_true",
                         help=f"run even if the total extraction spend would pass "
                              f"${TOTAL_CAP_USD:g}")
+    parser.add_argument("--cache-only", action="store_true",
+                        help="refuse the run, before any call, if a chunk's reply is not in "
+                             "the response cache")
     return parser.parse_args(argv)
 
 
@@ -237,8 +243,10 @@ def _run(args: argparse.Namespace, filing: FilingInfo, chunks: Sequence[ChunkInp
         EXTRACTION_PRICES.price(requests[0].model)  # an unpriced model stops before any call
         with open_model() as inner:
             cached = CachedAnswerModel(inner, response_cache)
-            estimate = _check_estimate([r for r in requests if not cached.contains(r)],
-                                       filing, len(chunks), args.max_cost)
+            uncached = [r for r in requests if not cached.contains(r)]
+            if args.cache_only:
+                _check_cached(uncached, filing)
+            estimate = _check_estimate(uncached, filing, len(chunks), args.max_cost)
             _check_total(estimate, spent, args.allow_over_total)
             model = TracedExtractModel(cached, spans, prompt.prompt_version, EXTRACTION_PRICES)
             with spans.span(RUN_SPAN, Kind.CHAIN, run_attributes(filing.accession_no)):
@@ -255,6 +263,15 @@ def _run(args: argparse.Namespace, filing: FilingInfo, chunks: Sequence[ChunkInp
         candidates_file=_display(candidates),
     )
     return _write(run, info, candidates, report_path(reports_dir, filing.accession_no, number))
+
+
+def _check_cached(uncached: Sequence[ExtractRequest], filing: FilingInfo) -> None:
+    """Stops, naming the chunks, when any request would need a call (``--cache-only``)."""
+    if uncached:
+        names = ", ".join(r.chunk_id for r in uncached)
+        raise _Stop(EXIT_RUN_ERROR, f"--cache-only: {len(uncached)} chunks of "
+                                    f"{filing.accession_no} are not in the response cache: "
+                                    f"{names}; no call was made")
 
 
 def _check_estimate(uncached: Sequence[ExtractRequest], filing: FilingInfo, chunk_count: int,
