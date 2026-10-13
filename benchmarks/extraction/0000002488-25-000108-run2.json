@@ -1,0 +1,94 @@
+{
+  "accession_no": "0000002488-25-000108",
+  "run": 2,
+  "status": "complete",
+  "commit": "67662a2",
+  "created_at": "2026-10-13T15:16:00+00:00",
+  "prompt": {
+    "version": "v2",
+    "path": "prompts/extract/v2.md",
+    "sha256": "34a82e2b107b550f9d2689fa43d20afb246bab0d4baeb15cf32170ce36c67d77",
+    "file_sha256": "df67f16a26dfa2ac60a7cb8eb0f5e82fad1c3dd1fc607b2214e233fb8383e601",
+    "prompt_version": "extract/v2@34a82e2b"
+  },
+  "model": "claude-haiku-5-5",
+  "effort": "high",
+  "max_tokens": 16000,
+  "ontology_version": 3,
+  "workers": 4,
+  "chunk_count": 87,
+  "candidates": 892,
+  "nodes": 278,
+  "edges": 396,
+  "rejections": {
+    "total": 0,
+    "rate": 0.0,
+    "by_reason": {},
+    "examples": {}
+  },
+  "flags": {
+    "name_not_in_span": 95,
+    "uncertain": 2
+  },
+  "conflicts": {
+    "total": 3,
+    "items": [
+      {
+        "item": "MetricValue(key='0000002488-25-000108:2488:remaining performance obligations:currency:FY2025-Q2')",
+        "property": "concept",
+        "kept": "remaining performance obligations",
+        "other": "Remaining performance obligations",
+        "kept_chunk": "0000002488-25-000108:0012",
+        "other_chunk": "0000002488-25-000108:0011"
+      },
+      {
+        "item": "Agreement(key='Agreement:zt systems acquisition')",
+        "property": "name",
+        "kept": "ZT Systems acquisition",
+        "other": "ZT Systems Acquisition",
+        "kept_chunk": "0000002488-25-000108:0015",
+        "other_chunk": "0000002488-25-000108:0014"
+      },
+      {
+        "item": "Agreement(key='Agreement:equity purchase agreement')",
+        "property": "name",
+        "kept": "Equity Purchase Agreement",
+        "other": "equity purchase agreement",
+        "kept_chunk": "0000002488-25-000108:0086",
+        "other_chunk": "0000002488-25-000108:0079"
+      }
+    ]
+  },
+  "failed_chunks": [],
+  "violations": [],
+  "calls": {
+    "made": 0,
+    "from_cache": 87
+  },
+  "tokens": {
+    "input": 93422,
+    "cache_read": 678165,
+    "cache_write": 0,
+    "output": 268693
+  },
+  "cost_usd": 0.15047035,
+  "cost_this_run_usd": 0,
+  "estimate": {
+    "calls": 0,
+    "usd": 0
+  },
+  "price_table": {
+    "date": "2026-10-10",
+    "unit": "USD per million tokens",
+    "models": {
+      "claude-haiku-5-5": {
+        "input_per_mtok": 0.1,
+        "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "output_per_mtok": 0.5,
+        "cache_write_per_mtok": 0.125,
+        "cache_read_per_mtok": 0.01
+      }
+    }
+  },
+  "candidates_file": "/Users/rohanvasudev/Downloads/GitHub/fillingintel/.claude/worktrees/cache-only-replay-resolution-451140/data/extract/0000002488-25-000108-run2.jsonl"
+}

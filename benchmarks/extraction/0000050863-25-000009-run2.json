@@ -1,0 +1,126 @@
+{
+  "accession_no": "0000050863-25-000009",
+  "run": 2,
+  "status": "complete",
+  "commit": "67662a2",
+  "created_at": "2026-10-13T15:16:25+00:00",
+  "prompt": {
+    "version": "v2",
+    "path": "prompts/extract/v2.md",
+    "sha256": "34a82e2b107b550f9d2689fa43d20afb246bab0d4baeb15cf32170ce36c67d77",
+    "file_sha256": "df67f16a26dfa2ac60a7cb8eb0f5e82fad1c3dd1fc607b2214e233fb8383e601",
+    "prompt_version": "extract/v2@34a82e2b"
+  },
+  "model": "claude-haiku-5-5",
+  "effort": "high",
+  "max_tokens": 16000,
+  "ontology_version": 3,
+  "workers": 4,
+  "chunk_count": 175,
+  "candidates": 2350,
+  "nodes": 711,
+  "edges": 1164,
+  "rejections": {
+    "total": 0,
+    "rate": 0.0,
+    "by_reason": {},
+    "examples": {}
+  },
+  "flags": {
+    "name_not_in_span": 299,
+    "uncertain": 17
+  },
+  "conflicts": {
+    "total": 7,
+    "items": [
+      {
+        "item": "RiskFactor(key='0000050863-25-000009:strategic transactions and investments')",
+        "property": "title",
+        "kept": "strategic transactions and investments",
+        "other": "Strategic transactions and investments",
+        "kept_chunk": "0000050863-25-000009:0003",
+        "other_chunk": "0000050863-25-000009:0004"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000009:50863:cost of sales:currency:FY2024')",
+        "property": "value",
+        "kept": 25.6,
+        "other": 35756.0,
+        "kept_chunk": "0000050863-25-000009:0033",
+        "other_chunk": "0000050863-25-000009:0036"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000009:50863:cost of sales:currency:FY2024')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0000050863-25-000009:0033",
+        "other_chunk": "0000050863-25-000009:0036"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000009:50863:cost of sales:currency:FY2023')",
+        "property": "value",
+        "kept": 21.5,
+        "other": 32517.0,
+        "kept_chunk": "0000050863-25-000009:0033",
+        "other_chunk": "0000050863-25-000009:0036"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000009:50863:cost of sales:currency:FY2023')",
+        "property": "unit",
+        "kept": "USD billions",
+        "other": "USD millions",
+        "kept_chunk": "0000050863-25-000009:0033",
+        "other_chunk": "0000050863-25-000009:0036"
+      },
+      {
+        "item": "LegalProceeding(key='LegalProceeding:european commission competition matter')",
+        "property": "name",
+        "kept": "European Commission Competition Matter",
+        "other": "European Commission competition matter",
+        "kept_chunk": "0000050863-25-000009:0155",
+        "other_chunk": "0000050863-25-000009:0040"
+      },
+      {
+        "item": "MetricValue(key='0000050863-25-000009:50863:non-cash asset impairment charges:currency:FY2024')",
+        "property": "concept",
+        "kept": "non-cash asset impairment charges",
+        "other": "Non-cash asset impairment charges",
+        "kept_chunk": "0000050863-25-000009:0120",
+        "other_chunk": "0000050863-25-000009:0119"
+      }
+    ]
+  },
+  "failed_chunks": [],
+  "violations": [],
+  "calls": {
+    "made": 0,
+    "from_cache": 175
+  },
+  "tokens": {
+    "input": 198922,
+    "cache_read": 1364125,
+    "cache_write": 0,
+    "output": 613995
+  },
+  "cost_usd": 0.3405309499999999,
+  "cost_this_run_usd": 0,
+  "estimate": {
+    "calls": 0,
+    "usd": 0
+  },
+  "price_table": {
+    "date": "2026-10-10",
+    "unit": "USD per million tokens",
+    "models": {
+      "claude-haiku-5-5": {
+        "input_per_mtok": 0.1,
+        "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "output_per_mtok": 0.5,
+        "cache_write_per_mtok": 0.125,
+        "cache_read_per_mtok": 0.01
+      }
+    }
+  },
+  "candidates_file": "/Users/rohanvasudev/Downloads/GitHub/fillingintel/.claude/worktrees/cache-only-replay-resolution-451140/data/extract/0000050863-25-000009-run2.jsonl"
+}

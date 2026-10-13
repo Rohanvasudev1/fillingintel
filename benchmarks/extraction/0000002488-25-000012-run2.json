@@ -1,0 +1,214 @@
+{
+  "accession_no": "0000002488-25-000012",
+  "run": 2,
+  "status": "complete",
+  "commit": "67662a2",
+  "created_at": "2026-10-13T15:15:52+00:00",
+  "prompt": {
+    "version": "v2",
+    "path": "prompts/extract/v2.md",
+    "sha256": "34a82e2b107b550f9d2689fa43d20afb246bab0d4baeb15cf32170ce36c67d77",
+    "file_sha256": "df67f16a26dfa2ac60a7cb8eb0f5e82fad1c3dd1fc607b2214e233fb8383e601",
+    "prompt_version": "extract/v2@34a82e2b"
+  },
+  "model": "claude-haiku-5-5",
+  "effort": "high",
+  "max_tokens": 16000,
+  "ontology_version": 3,
+  "workers": 4,
+  "chunk_count": 145,
+  "candidates": 1773,
+  "nodes": 532,
+  "edges": 799,
+  "rejections": {
+    "total": 10,
+    "rate": 0.0056401579244218835,
+    "by_reason": {
+      "disallowed_endpoint": 1,
+      "endpoint_node_rejected": 6,
+      "span_not_found": 3
+    },
+    "examples": {
+      "disallowed_endpoint": [
+        {
+          "chunk_id": "0000002488-25-000012:0102",
+          "kind": "triple",
+          "message": "HAS_SEGMENT start Segment is not one of Company",
+          "candidate": {
+            "start": "n3",
+            "type": "HAS_SEGMENT",
+            "end": "FILER",
+            "role": null,
+            "stake": null,
+            "evidence_span": "IPR&D recorded within the Data Center segment",
+            "confidence": "stated"
+          }
+        }
+      ],
+      "span_not_found": [
+        {
+          "chunk_id": "0000002488-25-000012:0104",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n13",
+            "label": "MetricValue",
+            "name": "Gains recorded in equity income in investee",
+            "value": 33,
+            "unit": "USD millions",
+            "period": "FY2024",
+            "evidence_span": "the Company recorded gains of $ 33 million, $ 16 million and $ 14 million in Equity income in investee on its Consolidated Statement of Operations, respectively",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0104",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n14",
+            "label": "MetricValue",
+            "name": "Gains recorded in equity income in investee",
+            "value": 16,
+            "unit": "USD millions",
+            "period": "FY2023",
+            "evidence_span": "the Company recorded gains of $ 33 million, $ 16 million and $ 14 million in Equity income in investee on its Consolidated Statement of Operations, respectively",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0104",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n15",
+            "label": "MetricValue",
+            "name": "Gains recorded in equity income in investee",
+            "value": 14,
+            "unit": "USD millions",
+            "period": "FY2022",
+            "evidence_span": "the Company recorded gains of $ 33 million, $ 16 million and $ 14 million in Equity income in investee on its Consolidated Statement of Operations, respectively",
+            "confidence": "stated"
+          }
+        }
+      ],
+      "endpoint_node_rejected": [
+        {
+          "chunk_id": "0000002488-25-000012:0104",
+          "kind": "triple",
+          "message": "start node 'n13' was rejected",
+          "candidate": {
+            "start": "n13",
+            "type": "MEASURES",
+            "end": "FILER",
+            "role": null,
+            "stake": null,
+            "evidence_span": "the Company recorded gains of $ 33 million, $ 16 million and $ 14 million in Equity income in investee on its Consolidated Statement of Operations, respectively",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0104",
+          "kind": "triple",
+          "message": "end node 'n13' was rejected",
+          "candidate": {
+            "start": "THIS_FILING",
+            "type": "REPORTS",
+            "end": "n13",
+            "role": null,
+            "stake": null,
+            "evidence_span": "the Company recorded gains of $ 33 million, $ 16 million and $ 14 million in Equity income in investee on its Consolidated Statement of Operations, respectively",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0104",
+          "kind": "triple",
+          "message": "start node 'n14' was rejected",
+          "candidate": {
+            "start": "n14",
+            "type": "MEASURES",
+            "end": "FILER",
+            "role": null,
+            "stake": null,
+            "evidence_span": "the Company recorded gains of $ 33 million, $ 16 million and $ 14 million in Equity income in investee on its Consolidated Statement of Operations, respectively",
+            "confidence": "stated"
+          }
+        }
+      ]
+    }
+  },
+  "flags": {
+    "name_not_in_span": 274,
+    "uncertain": 5
+  },
+  "conflicts": {
+    "total": 4,
+    "items": [
+      {
+        "item": "Product(key='Product:semi-custom soc products')",
+        "property": "name",
+        "kept": "semi-custom SoC products",
+        "other": "Semi-Custom SoC products",
+        "kept_chunk": "0000002488-25-000012:0020",
+        "other_chunk": "0000002488-25-000012:0008"
+      },
+      {
+        "item": "Product(key='Product:adaptive socs')",
+        "property": "name",
+        "kept": "Adaptive SOCs",
+        "other": "Adaptive SoCs",
+        "kept_chunk": "0000002488-25-000012:0012",
+        "other_chunk": "0000002488-25-000012:0010"
+      },
+      {
+        "item": "Agreement(key='Agreement:acquisition of zt systems')",
+        "property": "name",
+        "kept": "Acquisition of ZT Systems",
+        "other": "acquisition of ZT Systems",
+        "kept_chunk": "0000002488-25-000012:0052",
+        "other_chunk": "0000002488-25-000012:0053"
+      },
+      {
+        "item": "MetricValue(key='0000002488-25-000012:2488:net income:currency:FY2024')",
+        "property": "value",
+        "kept": 1600.0,
+        "other": 1641.0,
+        "kept_chunk": "0000002488-25-000012:0077",
+        "other_chunk": "0000002488-25-000012:0081"
+      }
+    ]
+  },
+  "failed_chunks": [],
+  "violations": [],
+  "calls": {
+    "made": 0,
+    "from_cache": 145
+  },
+  "tokens": {
+    "input": 156445,
+    "cache_read": 1130275,
+    "cache_write": 0,
+    "output": 442600
+  },
+  "cost_usd": 0.24824724999999984,
+  "cost_this_run_usd": 0,
+  "estimate": {
+    "calls": 0,
+    "usd": 0
+  },
+  "price_table": {
+    "date": "2026-10-10",
+    "unit": "USD per million tokens",
+    "models": {
+      "claude-haiku-5-5": {
+        "input_per_mtok": 0.1,
+        "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "output_per_mtok": 0.5,
+        "cache_write_per_mtok": 0.125,
+        "cache_read_per_mtok": 0.01
+      }
+    }
+  },
+  "candidates_file": "/Users/rohanvasudev/Downloads/GitHub/fillingintel/.claude/worktrees/cache-only-replay-resolution-451140/data/extract/0000002488-25-000012-run2.jsonl"
+}

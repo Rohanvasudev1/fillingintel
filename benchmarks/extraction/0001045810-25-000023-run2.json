@@ -1,0 +1,181 @@
+{
+  "accession_no": "0001045810-25-000023",
+  "run": 2,
+  "status": "complete",
+  "commit": "67662a2",
+  "created_at": "2026-10-13T15:16:57+00:00",
+  "prompt": {
+    "version": "v2",
+    "path": "prompts/extract/v2.md",
+    "sha256": "34a82e2b107b550f9d2689fa43d20afb246bab0d4baeb15cf32170ce36c67d77",
+    "file_sha256": "df67f16a26dfa2ac60a7cb8eb0f5e82fad1c3dd1fc607b2214e233fb8383e601",
+    "prompt_version": "extract/v2@34a82e2b"
+  },
+  "model": "claude-haiku-5-5",
+  "effort": "high",
+  "max_tokens": 16000,
+  "ontology_version": 3,
+  "workers": 4,
+  "chunk_count": 137,
+  "candidates": 1674,
+  "nodes": 484,
+  "edges": 824,
+  "rejections": {
+    "total": 14,
+    "rate": 0.008363201911589008,
+    "by_reason": {
+      "endpoint_node_rejected": 9,
+      "span_not_found": 5
+    },
+    "examples": {
+      "span_not_found": [
+        {
+          "chunk_id": "0001045810-25-000023:0013",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n5",
+            "label": "Organization",
+            "name": "Baidu, Inc.",
+            "value": null,
+            "unit": null,
+            "period": null,
+            "evidence_span": "Baidu, Inc\\., or Baidu",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0001045810-25-000023:0070",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n15",
+            "label": "MetricValue",
+            "name": "Other, net",
+            "value": 1034,
+            "unit": "USD millions",
+            "period": "FY2025",
+            "evidence_span": "Other, net | 1,034 | 237",
+            "confidence": "implied"
+          }
+        },
+        {
+          "chunk_id": "0001045810-25-000023:0070",
+          "kind": "node",
+          "message": "the evidence span is not in the chunk's text",
+          "candidate": {
+            "id": "n16",
+            "label": "MetricValue",
+            "name": "Other, net",
+            "value": 237,
+            "unit": "USD millions",
+            "period": "FY2024",
+            "evidence_span": "Other, net | 1,034 | 237",
+            "confidence": "implied"
+          }
+        }
+      ],
+      "endpoint_node_rejected": [
+        {
+          "chunk_id": "0001045810-25-000023:0013",
+          "kind": "triple",
+          "message": "end node 'n5' was rejected",
+          "candidate": {
+            "start": "FILER",
+            "type": "COMPETES_WITH",
+            "end": "n5",
+            "role": null,
+            "stake": null,
+            "evidence_span": "Baidu, Inc\\., or Baidu",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0001045810-25-000023:0070",
+          "kind": "triple",
+          "message": "end node 'n15' was rejected",
+          "candidate": {
+            "start": "THIS_FILING",
+            "type": "REPORTS",
+            "end": "n15",
+            "role": null,
+            "stake": null,
+            "evidence_span": "Other, net | 1,034 | 237",
+            "confidence": "stated"
+          }
+        },
+        {
+          "chunk_id": "0001045810-25-000023:0070",
+          "kind": "triple",
+          "message": "start node 'n15' was rejected",
+          "candidate": {
+            "start": "n15",
+            "type": "MEASURES",
+            "end": "FILER",
+            "role": null,
+            "stake": null,
+            "evidence_span": "Other, net | 1,034 | 237",
+            "confidence": "implied"
+          }
+        }
+      ]
+    }
+  },
+  "flags": {
+    "name_not_in_span": 184,
+    "uncertain": 19
+  },
+  "conflicts": {
+    "total": 2,
+    "items": [
+      {
+        "item": "MetricValue(key=\"0001045810-25-000023:1045810:total shareholders' equity:currency:FY2025\")",
+        "property": "concept",
+        "kept": "Total shareholders' equity",
+        "other": "Total Shareholders' Equity",
+        "kept_chunk": "0001045810-25-000023:0090",
+        "other_chunk": "0001045810-25-000023:0092"
+      },
+      {
+        "item": "MetricValue(key=\"0001045810-25-000023:1045810:total shareholders' equity:currency:FY2024\")",
+        "property": "concept",
+        "kept": "Total shareholders' equity",
+        "other": "Total Shareholders' Equity",
+        "kept_chunk": "0001045810-25-000023:0090",
+        "other_chunk": "0001045810-25-000023:0092"
+      }
+    ]
+  },
+  "failed_chunks": [],
+  "violations": [],
+  "calls": {
+    "made": 0,
+    "from_cache": 137
+  },
+  "tokens": {
+    "input": 146984,
+    "cache_read": 1067915,
+    "cache_write": 0,
+    "output": 398103
+  },
+  "cost_usd": 0.2244290500000001,
+  "cost_this_run_usd": 0,
+  "estimate": {
+    "calls": 0,
+    "usd": 0
+  },
+  "price_table": {
+    "date": "2026-10-10",
+    "unit": "USD per million tokens",
+    "models": {
+      "claude-haiku-5-5": {
+        "input_per_mtok": 0.1,
+        "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+        "output_per_mtok": 0.5,
+        "cache_write_per_mtok": 0.125,
+        "cache_read_per_mtok": 0.01
+      }
+    }
+  },
+  "candidates_file": "/Users/rohanvasudev/Downloads/GitHub/fillingintel/.claude/worktrees/cache-only-replay-resolution-451140/data/extract/0001045810-25-000023-run2.jsonl"
+}
