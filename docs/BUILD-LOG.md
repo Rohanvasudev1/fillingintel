@@ -1649,6 +1649,28 @@ Spec `.scratch/step-9b/spec.md`, ticket `.scratch/step-9b/issues/01-group-cut-an
 
 ---
 
+## 2026-10-13 — Step 10 ticket 05: persistence links
+
+Each risk factor now links to the same risk in the company's earlier 10-K. A 10-K links to the previous 10-K, and a 10-Q to the most recent 10-K before it. The corpus has 12 such filing pairs; the first year's filings have no earlier 10-K in the corpus and get no links.
+
+- **Run 1** (`persist.run`, commit `cb39fa4`, config `36673bee`, prompt `persist/v1@5eaa7a2c`, claude-haiku-5-5 at effort high). Of 767 later risk factors, 319 linked by identical normalized title with no call. The other 448 sent their top 3 Voyage neighbours to the adjudicator: 1,344 calls, answers 549 same, 666 distinct, 129 unsure. One `same` failed the quote check (a quote from the other factor's chunk). Selection kept one predecessor per later factor: 302 adjudicated links, 621 links in all (81% of later factors). All 621 pass `check_batch()` as PERSISTS_AS edges. Links per pair run from 12 of 22 (NVDA FY2026-Q2) to 92 of 99 (AMD FY2025-Q3). These links are not scored yet; ticket 06 scores them.
+- **Costs.** Adjudication $0.93 (estimate $1.13, cap $2); Voyage embeddings of 701 factors $0.003; recording the five test replies, twice, under $0.02.
+- **Code.**
+  - New package `persist/`: filing pairs, exact titles and neighbours, the adjudicator with Step 8's quote check, selection (exact match first, else the highest-ranked verified `same`), the PERSISTS_AS edge, the link file and `python -m persist.run`. Outputs: `benchmarks/persistence/links.jsonl` and `run1.json` (provenance, counts by method and filing pair, every candidate with its cosine, every decision, tokens, cost).
+  - Prompt `prompts/persist/v1.md`, with invented examples from outside the industry so no scored pair can echo it.
+  - `git_state()` watches `persist/`. `resolve.pipeline.in_order` is public and `resolve.estimate` takes any request with a system and user text, so persist reuses both.
+  - Tests first at the three seams: candidates, selection and the pipeline with fake embeddings and a scripted adjudicator; the adjudicator on AMD fixture text; the CLI with fakes behind the real caches. Five real replies on AMD 10-Q / 10-K fixture pairs are recorded (3 same, 2 distinct).
+- **Agent choices.** Exact-title matching keeps punctuation, as the spec's count of 319 assumed, so a title with and without a final period goes to the adjudicator. Up to 3 chunks per factor are sent, as in resolution. Each factor is embedded as "title: first span". `--max-cost` can lower the $2 cap, not raise it. Two earlier factors with one normalized title stop the run (none in the corpus).
+- **Code review** (`mattpocock-skills:code-review`). Fixed: a prompt example that echoed AMD's guarantees pair (the prompt was edited before any real run and the replies re-recorded, answers unchanged); exact-title collisions; candidates and cosines missing from the report for ticket 06's draw; quote evidence held as loose fields; an untyped failure reason. Left as they are: persist now leans on `resolve/` helpers (moving them to a shared module is a separate cleanup); the run command repeats resolve's shape; the capture script imports its pairs from `tests/`.
+- **Regressions.** None. One full-suite attempt stopped at the graph tests because `neo4j-test` held 21 unmarked nodes, likely another session's; it was left alone and the rerun passed.
+- **Evidence.** `uv run ruff check .` is clean. Full suite with the local databases: 2068 passed, 1 skipped.
+
+**Next session starts with**
+1. Merge this PR once CI is green.
+2. Ticket 06 (persistence scoring) is unblocked; tickets 01, 02 and 03 still have no blockers.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.
