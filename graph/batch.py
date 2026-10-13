@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import math
 import re
-from collections.abc import Iterator, Mapping
+from collections.abc import Hashable, Iterable, Iterator, Mapping
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import StrEnum
@@ -42,6 +42,9 @@ _NODE_EVIDENCE = {p.name: p for p in EDGE_TYPES_BY_NAME[EVIDENCED_BY].properties
 EVIDENCE_SPAN = _NODE_EVIDENCE["evidence_span"].name
 CONFIDENCE = _NODE_EVIDENCE["confidence"].name
 EXTRACT_PROMPT = _NODE_EVIDENCE["extract_prompt"].name
+# Edge properties that are part of an edge's identity, so one person's two roles
+# at a company stay two edges.
+IDENTITY_PROPERTIES = ("role",)
 
 
 class Rule(StrEnum):
@@ -63,6 +66,7 @@ class Rule(StrEnum):
     DUPLICATE_CHUNK = "duplicate_chunk"
     UNKNOWN_CHUNK = "unknown_chunk"
     BAD_KEY = "bad_key"
+    DUPLICATE_ITEM = "duplicate_item"
 
 
 # `{label}:{cik}:{name}`: a CIK is digits; the name part is whatever follows.
@@ -183,13 +187,60 @@ def check_batch(
     known_nodes = existing_nodes | {
         ref for ref in (node_ref(n) for n in batch.nodes) if ref is not None
     }
+    node_repeats = _repeats(node_ref(n) for n in batch.nodes)
+    edge_repeats = _repeats(edge_identity(e) for e in batch.edges)
     return (
-        *(v for i, n in enumerate(batch.nodes) for v in _node_violations(i, n, known_chunks)),
+        *(
+            v for i, n in enumerate(batch.nodes)
+            for v in _node_violations(i, n, known_chunks, node_repeats.get(i))
+        ),
         *(
             v for i, e in enumerate(batch.edges)
-            for v in _edge_violations(i, e, known_chunks, known_nodes)
+            for v in _edge_violations(i, e, known_chunks, known_nodes, edge_repeats.get(i))
         ),
     )
+
+
+def edge_identity(edge: EdgeRecord) -> tuple[object, ...] | None:
+    """What names *edge* in the graph: start, type, end and any identity property.
+
+    None when its type or an endpoint is invalid, or an identity property is not
+    text; check_batch reports those.
+    """
+    if edge.type not in EDGE_TYPES_BY_NAME or not (
+        is_well_formed(edge.start) and is_well_formed(edge.end)
+    ):
+        return None
+    identity = [edge.properties.get(name) for name in identity_properties(edge.type)]
+    if not all(isinstance(v, str) for v in identity):
+        return None
+    return (edge.start, edge.type, edge.end, *identity)
+
+
+def identity_properties(edge_type: str) -> tuple[str, ...]:
+    """The properties of an ontology *edge_type* that are part of an edge's identity."""
+    return tuple(p.name for p in EDGE_TYPES_BY_NAME[edge_type].properties
+                 if p.name in IDENTITY_PROPERTIES)
+
+
+def _repeats(identities: Iterable[Hashable | None]) -> dict[int, int]:
+    """Index of each repeated identity -> index of its first occurrence; None never repeats."""
+    first: dict[Hashable, int] = {}
+    repeats: dict[int, int] = {}
+    for index, identity in enumerate(identities):
+        if identity is None:
+            continue
+        if identity in first:
+            repeats[index] = first[identity]
+        else:
+            first[identity] = index
+    return repeats
+
+
+def _duplicate_violation(item: str, kind: str, first: int | None) -> Iterator[Violation]:
+    if first is not None:
+        yield Violation(item, Rule.DUPLICATE_ITEM,
+                        f"the same {kind} is already {kind} {first} of the batch")
 
 
 def node_ref(node: NodeRecord) -> NodeRef | None:
@@ -267,13 +318,14 @@ def _value_violations(item: str, prop: Prop, value: object) -> Iterator[Violatio
 
 
 def _node_violations(
-    index: int, node: NodeRecord, known_chunks: frozenset[object],
+    index: int, node: NodeRecord, known_chunks: frozenset[object], first: int | None,
 ) -> Iterator[Violation]:
     definition = LABELS_BY_NAME.get(node.label)
     item = f"node {index} {node_ref(node) or repr(node.label)}"
     if definition is None:
         yield Violation(item, Rule.UNKNOWN_LABEL, f"{node.label!r} is not an ontology label")
         return
+    yield from _duplicate_violation(item, "node", first)
     yield from _property_violations(item, definition.properties, node.properties)
     if (problem := key_problem(node.label, node.properties.get("key"))) is not None:
         yield Violation(item, Rule.BAD_KEY, problem)
@@ -330,7 +382,7 @@ def _endpoint_violations(
 
 def _edge_violations(
     index: int, edge: EdgeRecord, known_chunks: frozenset[object],
-    known_nodes: frozenset[NodeRef],
+    known_nodes: frozenset[NodeRef], first: int | None,
 ) -> Iterator[Violation]:
     item = f"edge {index} {edge.start}-[{edge.type}]->{edge.end}"
     definition = EDGE_TYPES_BY_NAME.get(edge.type)
@@ -341,6 +393,7 @@ def _edge_violations(
         yield Violation(item, Rule.UNEXPECTED_EVIDENCE,
                         "node evidence goes on the node record, not as an edge")
         return
+    yield from _duplicate_violation(item, "edge", first)
     yield from _endpoint_violations(item, "start", edge.start, definition.starts, known_nodes)
     yield from _endpoint_violations(item, "end", edge.end, definition.ends, known_nodes)
     yield from _property_violations(item, definition.properties, edge.properties)
