@@ -29,6 +29,8 @@ from ingest.provenance import REPO_ROOT
 from retrieve.question_filter import TICKERS, CorpusFiling
 
 PROMPTS_DIR = REPO_ROOT / "prompts" / "cypher"
+# v1 is used (user decision 2026-10-14): v2 was first-pass valid on 93 of 93 dev questions
+# against v1's 88, but retrieved worse (pooled recall@10 0.727 against 0.778).
 CURRENT_VERSION = "v1"
 PUBLISHED = MappingProxyType({
     "v1": "26c2658f2d1b89f63a931e246c26a98f30c413ee2c2775dd32c4272d1fabf9fb",
