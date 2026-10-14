@@ -42,11 +42,18 @@ from graph.load import OUTPUT_DIR as REPORT_DIR
 from graph.load_report import next_report_path
 from ingest.atomic_json import write_json_atomic
 from ingest.provenance import git_state
-from retrieve.answer_model import AnswerModel, AnswerModelError, AnthropicAnswerModel
+from retrieve.answer_model import (
+    AnswerModel,
+    AnswerModelError,
+    AnthropicAnswerModel,
+    ApiResponse,
+    ModelRequest,
+)
 from retrieve.arm import ArmConfig, ArmError, GraphRetrieval, Retrieval
 from retrieve.cypher_estimate import estimate_usd
 from retrieve.cypher_prompt import CURRENT_VERSION, PUBLISHED
 from retrieve.cypher_request import CYPHER_EFFORT, CYPHER_MODEL, CypherRequest
+from retrieve.cypher_search import CALL_STAGES
 from retrieve.graph_local import graph_connections
 from retrieve.graph_traversal import GraphTraversalArm
 from retrieve.pricing import PRICE_TABLE_DATE
@@ -65,7 +72,6 @@ DEFAULT_WORKERS = 4
 CLASS_ORDER: tuple[Class, ...] = ("lookup", "local", "multi_hop", "global", "decline",
                                   "unanswerable")
 RATES = ("first_pass_valid", "valid_after_repair", "non_empty", "fallback")
-_CYPHER_STAGES = ("cypher_generation", "cypher_repair")
 
 
 class Traverser(Protocol):
@@ -82,7 +88,7 @@ OpenArm = Callable[[AnswerModel, str], AbstractContextManager[Traverser]]  # mod
 class NoCalls:
     """The Cypher model for an estimate: every request must come from the cache."""
 
-    def complete(self, request):
+    def complete(self, request: ModelRequest) -> ApiResponse:
         raise AnswerModelError("a Cypher reply is not cached; rerun with --send")
 
 
@@ -115,7 +121,7 @@ def validity_rates(results: Sequence[tuple[EvalRecord, GraphRetrieval]]
 
 
 def _cost(graphs: Sequence[GraphRetrieval]) -> dict[str, object]:
-    stages = [g.stages[s] for g in graphs for s in _CYPHER_STAGES if s in g.stages]
+    stages = [g.stages[s] for g in graphs for s in CALL_STAGES if s in g.stages]
     return {"price_table": PRICE_TABLE_DATE, "calls": len(stages),
             "cached_calls": sum(s.from_cache for s in stages),
             "total_usd": sum(s.cost_usd for s in stages),
@@ -151,9 +157,9 @@ def main(argv: Sequence[str] | None = None, *, open_arm: OpenArm | None = None,
         description="Retrieval-only dev run of graph_traversal and its Cypher validity report.")
     parser.add_argument("--send", action="store_true",
                         help="make the Cypher calls the cache lacks (default: estimate only)")
-    parser.add_argument("--max-cost", type=float, default=DEFAULT_MAX_COST_USD,
+    parser.add_argument("--max-cost", type=_non_negative, default=DEFAULT_MAX_COST_USD,
                         help="refuse when the estimate exceeds this many USD")
-    parser.add_argument("--workers", type=int, default=DEFAULT_WORKERS)
+    parser.add_argument("--workers", type=_positive, default=DEFAULT_WORKERS)
     parser.add_argument("--prompt", default=CURRENT_VERSION, choices=sorted(PUBLISHED),
                         help="the Cypher prompt version")
     try:
@@ -179,8 +185,7 @@ def main(argv: Sequence[str] | None = None, *, open_arm: OpenArm | None = None,
                     print(f"refused: the estimate is over --max-cost ${args.max_cost:.2f}",
                           file=sys.stderr)
                     return EXIT_USAGE
-                with ThreadPoolExecutor(max_workers=args.workers) as pool:
-                    retrievals = list(pool.map(arm.retrieve, [r.question for r in records]))
+                retrievals = _retrieve_all(arm, records, args.workers)
                 config = arm.config
     except (ArmError, AnswerModelError) as exc:
         print(f"could not run: {exc}", file=sys.stderr)
@@ -188,6 +193,32 @@ def main(argv: Sequence[str] | None = None, *, open_arm: OpenArm | None = None,
     path = _write(records, retrievals, config, report_dir, commit)
     print(f"Wrote {path}")
     return EXIT_OK
+
+
+def _retrieve_all(arm: Traverser, records: Sequence[EvalRecord],
+                  workers: int) -> list[Retrieval]:
+    """Each record's retrieval, in order; the first failure cancels the calls not started."""
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        futures = [pool.submit(arm.retrieve, r.question) for r in records]
+        try:
+            return [f.result() for f in futures]
+        except BaseException:
+            pool.shutdown(cancel_futures=True)
+            raise
+
+
+def _positive(text: str) -> int:
+    value = int(text)
+    if value < 1:
+        raise argparse.ArgumentTypeError("must be at least 1")
+    return value
+
+
+def _non_negative(text: str) -> float:
+    value = float(text)
+    if value < 0:
+        raise argparse.ArgumentTypeError("must not be negative")
+    return value
 
 
 def _write(records: Sequence[EvalRecord], retrievals: Sequence[Retrieval], config: ArmConfig,

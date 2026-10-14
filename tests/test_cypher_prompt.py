@@ -128,3 +128,10 @@ def test_a_reply_cut_off_at_max_tokens_has_no_query():
     reply = parse_cypher_reply({**_body(json.dumps(REPLY)), "stop_reason": "max_tokens"})
     assert reply.cypher is None
     assert "max_tokens" in reply.error
+
+
+def test_v2_is_published_and_is_another_prompt():
+    v1, v2 = load_prompt("v1", filings=FILINGS), load_prompt("v2", filings=FILINGS)
+    assert v2.prompt_version.startswith("cypher/v2@")
+    assert v2.sha256 != v1.sha256
+    assert "CALL (f) {" in v2.system

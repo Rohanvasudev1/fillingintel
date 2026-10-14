@@ -32,6 +32,7 @@ PROMPTS_DIR = REPO_ROOT / "prompts" / "cypher"
 CURRENT_VERSION = "v1"
 PUBLISHED = MappingProxyType({
     "v1": "26c2658f2d1b89f63a931e246c26a98f30c413ee2c2775dd32c4272d1fabf9fb",
+    "v2": "203ceed9a62b643690bc28c17975a9f5ac3fbe8b32fc2ac6084af2aa6aa515d1",
 })
 _PARTS = re.compile(
     r"\A# System\n(?P<system>.*?)\n# User\n(?P<user>.*?)\n# Repair\n(?P<repair>.*)\Z", re.DOTALL)

@@ -150,6 +150,15 @@ def test_a_recorded_query_retrieves_its_evidence(corpus, graph, tmp_path, name):
     assert result.answer.status == "answered"
 
 
+def test_each_traversal_chunk_carries_its_best_evidence_confidence(corpus, graph, tmp_path):
+    # Chunk 13: the regulation's own evidence is implied, SUBJECT_TO's stated.
+    query = ("MATCH (r:Regulation) MATCH (r)-[:EVIDENCED_BY]->(c:Chunk) "
+             "RETURN collect(c.chunk_id) AS chunk_ids")
+    result = _arm(corpus, graph, tmp_path, ScriptedCypherModel(_reply(query))).run(
+        QUESTIONS["supplier"])
+    assert [(r.chunk_id, r.confidence) for r in result.retrieved] == [(EXPORT_CHUNK, "stated")]
+
+
 def test_the_question_filter_drops_another_filings_chunks(corpus, graph, tmp_path):
     # The persistence query returns both NVIDIA filings' chunks; a question naming only
     # the 10-K keeps the 10-K's.
@@ -181,7 +190,8 @@ def test_an_empty_result_is_repaired_then_falls_back_to_local_search(corpus, gra
     result = _arm(corpus, graph, tmp_path, model).run(QUESTIONS["supplier"])
     assert [a.outcome for a in result.graph.cypher_attempts] == ["empty", "empty"]
     assert result.graph.cypher_attempts[0].rows == 1
-    assert "no chunk ID" in model.requests[1].params()["messages"][2]["content"]
+    first = result.graph.cypher_attempts[0]
+    assert first.message in model.requests[1].params()["messages"][2]["content"]
     assert result.graph.fallback_reason == "empty"
     assert _ids(result)[:2] == LOCAL_TOP
     assert result.graph.anchors[0].key == "regulation:us-export-controls"

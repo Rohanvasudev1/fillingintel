@@ -189,7 +189,7 @@ An extracted node that `graph_local` links to a question, by its name's similari
 _Avoid_: seed, entry point, entity link
 
 **Fallback**:
-A `graph_traversal` question whose generated Cypher still fails the ontology check or errors after its one repair, and is answered by `graph_local` instead. Every fallback is logged and counted.
+A `graph_traversal` question whose generated Cypher still fails the guard, errors, times out or returns no chunk IDs after its one repair, and is answered by `graph_local` instead. The reason is recorded as `invalid`, `error`, `timeout` or `empty`. Every fallback is logged and counted.
 _Avoid_: retry, recovery
 
 **Cypher validity rate**:

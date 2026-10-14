@@ -55,6 +55,7 @@ from retrieve.arm_steps import (
     embed_question,
     load_answer_prompt,
 )
+from retrieve.chunk_confidence import with_confidence
 from retrieve.cypher_prompt import CypherPrompt, PromptError, load_prompt
 from retrieve.cypher_request import CYPHER_EFFORT, CYPHER_MODEL, CypherRequest
 from retrieve.cypher_search import CypherSearch
@@ -118,24 +119,27 @@ class GraphTraversalArm:
         database: str = DATABASE,
     ):
         self._embedder = embedder
+        self._driver = driver
+        self._database = database
         self._model = model
         self._clock = clock
         self._spans = spans if spans is not None else SpanRecorder.off()
         prompt = prompt if prompt is not None else load_answer_prompt()
         check_prices((model, ANSWER_MODEL, CYPHER_MODEL))
-        self._filings = corpus_filings(conn)
-        cypher_prompt = _load_cypher_prompt(cypher_prompt_version, self._filings)
         try:
+            self._filings = corpus_filings(conn)
+            chunker_version = corpus_chunker_version(conn)
+            known = chunk_ids(conn)
             provenance = graph_provenance(driver, database, load_reports)
             index = anchor_index(driver, database, node_embeddings, model)
-            known = chunk_ids(conn)
         except (*GRAPH_ERRORS, CacheError, OSError, ValueError, psycopg.Error) as exc:
             raise arm_error(self.name, exc) from exc
+        cypher_prompt = _load_cypher_prompt(cypher_prompt_version, self._filings)
         self.config = ArmConfig(
             models=MappingProxyType({"embedding": model, "cypher": CYPHER_MODEL,
                                      "answer": ANSWER_MODEL}),
             k=k,
-            chunker_version=corpus_chunker_version(conn),
+            chunker_version=chunker_version,
             efforts=MappingProxyType({"cypher": CYPHER_EFFORT, "answer": ANSWER_EFFORT}),
             answer_prompt=prompt,
             answer_max_tokens=ANSWER_MAX_TOKENS,
@@ -173,7 +177,7 @@ class GraphTraversalArm:
             embedded = self._clock()
             traversal = self.cypher_search.search(question, question_filter)
             graph = GraphRetrieval(stages=traversal.stages, cypher_attempts=traversal.attempts)
-            retrieved = traversal.retrieved
+            retrieved = with_confidence(self._driver, traversal.retrieved, self._database)
             reason = traversal.fallback_reason
             if reason is not None:
                 with self._spans.span(FALLBACK_SPAN, Kind.CHAIN, fallback_attributes(reason)):

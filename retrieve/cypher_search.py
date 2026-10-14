@@ -14,7 +14,7 @@ this search, as does a failed API call.
 from __future__ import annotations
 
 import time
-from collections.abc import Callable, Collection
+from collections.abc import Callable, Collection, Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
 
@@ -58,6 +58,8 @@ from retrieve.tracing import (
     question_input,
 )
 
+# The stages that are Cypher model calls, generation then repair.
+CALL_STAGES: tuple[GraphStage, ...] = ("cypher_generation", "cypher_repair")
 REPLY_RULE = "reply"  # the attempt's rule when the reply held no query
 _MS_PER_SECOND = 1000.0
 _NO_TEXT = "(no reply text)"  # the API refuses an empty assistant turn
@@ -108,14 +110,13 @@ class CypherSearch:
         API call and the driver's error on a lost connection."""
         request = self.first_request(question, question_filter)
         first = self._try(question, request, question_filter)
-        stages: dict[GraphStage, StageCost] = {"cypher_generation": first.generation}
         if first.attempt.outcome == "ok":
-            return _result(first.retrieved, (first,), stages)
+            return _result(first.retrieved, (first,), {"cypher_generation": first.generation})
         repair = repair_request(self._prompt, request, first.reply_text, first.attempt.query,
                                 first.attempt.message or "")
         second = self._try(question, repair, question_filter)
-        stages["cypher_repair"] = second.generation
-        return _result(second.retrieved, (first, second), stages)
+        return _result(second.retrieved, (first, second),
+                       {"cypher_generation": first.generation, "cypher_repair": second.generation})
 
     def first_request(self, question: str, question_filter: QuestionFilter) -> CypherRequest:
         """The generation request for *question*, as ``search`` sends it."""
@@ -183,6 +184,7 @@ def _failed(cypher: str, failure: GuardFailure) -> CypherAttempt:
 
 
 def _result(retrieved: tuple[RetrievedChunk, ...], tries: tuple[_Try, ...],
-            stages: dict[GraphStage, StageCost]) -> TraversalResult:
-    stages["cypher_execution"] = StageCost(ms=sum(t.execution_ms for t in tries))
-    return TraversalResult(retrieved, tuple(t.attempt for t in tries), MappingProxyType(stages))
+            calls: Mapping[GraphStage, StageCost]) -> TraversalResult:
+    execution = StageCost(ms=sum(t.execution_ms for t in tries))
+    return TraversalResult(retrieved, tuple(t.attempt for t in tries),
+                           MappingProxyType({**calls, "cypher_execution": execution}))
