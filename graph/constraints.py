@@ -6,8 +6,9 @@ EXISTS` silently keeps any constraint that already has the name or the schema,
 whatever its definition (docs/research/neo4j-driver-and-constraints.md, 2.3),
 so apply_constraints() reads SHOW CONSTRAINTS back and compares it with the
 code. The single :GraphMeta node records the ontology version and schema hash
-the graph was built under; a graph from another ontology is refused, never
-migrated here (Step 10 owns that).
+the graph was built under; a graph from another ontology is refused, except
+that a rebuild moves an older one to the code's version (prepare_upgrade() and
+upgrade_graph_meta(), Step 11).
 
 Labels, properties and constraint names reach Cypher only from the ontology,
 checked against a plain-identifier pattern and backtick-quoted; values are
@@ -168,6 +169,52 @@ def _merge_graph_meta(tx: ManagedTransaction) -> None:
     # overwritten. Nothing stops two concurrent first runs from each creating
     # one; the next call then refuses on the count.
     _check_graph_meta([r.data() for r in result])
+
+
+def older_version(rows: list[dict]) -> int | None:
+    """The version one :GraphMeta row records when it is an integer below the code's."""
+    if len(rows) != 1:
+        return None
+    version = rows[0].get("ontology_version")
+    if isinstance(version, int) and not isinstance(version, bool) and version < ONTOLOGY_VERSION:
+        return version
+    return None
+
+
+def prepare_upgrade(driver: Driver, database: str = DATABASE) -> int | None:
+    """Before a rebuild: the older version :GraphMeta records, or None when it is current.
+
+    For an older version the constraints are re-applied and checked; they are
+    derived from the labels alone, so for an ontology that adds no label this
+    changes nothing. :GraphMeta itself is moved by upgrade_graph_meta() inside
+    the rebuild transaction. A missing, newer, unparseable or otherwise
+    different :GraphMeta raises GraphMetaMismatch before anything changes.
+    """
+    rows = _graph_meta_rows(driver, database)
+    older = older_version(rows)
+    if older is None:
+        _check_graph_meta(rows, required=True)
+        return None
+    for c in EXPECTED_CONSTRAINTS:
+        driver.execute_query(_create_statement(c), database_=database)
+    mismatch = _compare(_found_constraints(driver, database))
+    if mismatch:
+        raise mismatch
+    return older
+
+
+def upgrade_graph_meta(tx: ManagedTransaction, older: int) -> None:
+    """Record the code's ontology on a :GraphMeta that still records *older*.
+
+    Run inside the rebuild transaction, so a failed rebuild keeps the old record.
+    """
+    record = tx.run(
+        f"MATCH (m:{quoted(GRAPH_META)}) WHERE m.ontology_version = $older "
+        "SET m.ontology_version = $version, m.schema_sha256 = $sha256 RETURN count(m) AS n",
+        older=older, version=ONTOLOGY_VERSION, sha256=SCHEMA_TEXT_SHA256,
+    ).single(strict=True)
+    if record["n"] != 1:
+        raise GraphMetaMismatch(f":{GRAPH_META} no longer records ontology {older}")
 
 
 def apply_constraints(driver: Driver, database: str = DATABASE) -> None:

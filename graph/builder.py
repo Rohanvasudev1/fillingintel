@@ -20,6 +20,11 @@ the write path writes exactly what it is given (ADR-0004, ADR-0006):
 - A MetricValue with no MEASURES edge in its own file is left out with every
   edge touching it, and listed. An edge a merge turns into a self-loop, or
   whose new endpoint its type does not allow, is dropped and listed.
+- Each RiskFactor also gets an entry for every chunk its body touches
+  (graph/bodies.py, Step 11), marked BODY_PROMPT and `stated`, combined by the
+  rule above; an extracted entry wins a tie with a body entry for its chunk.
+  A factor's heading is its most confident span. The prompt-mix check covers
+  the extract files only.
 - Each persistence link is one PERSISTS_AS edge with the link's own two
   evidence entries, earlier first. A link fails the build when it names a risk
   factor no extract file holds, cites a chunk that is not that factor's own
@@ -46,6 +51,7 @@ from graph.batch import (
     NodeRecord,
     NodeRef,
 )
+from graph.bodies import BODY_PROMPT, Bodies, Factor, body_evidence
 from graph.build_input import (
     EXTRACT_PROMPT_PREFIX,
     ExtractEdge,
@@ -64,6 +70,8 @@ COMPANY, FILING, PERIOD, CHUNK, METRIC = (
 FILED, COVERS_PERIOD, PART_OF, MEASURES = (
     EDGE_TYPES_BY_NAME[name].name for name in ("FILED", "COVERS_PERIOD", "PART_OF", "MEASURES"))
 ALIASES, STAKE = "aliases", "stake"
+RISK_FACTOR = LABELS_BY_NAME["RiskFactor"].name
+BODY_FILE_INDEX = -1  # body entries rank below every file's, so extracted ones win ties
 COMPANY_KEY_PREFIX = f"{COMPANY}:"  # how the alias map names a filer (ADR-0006)
 _NAME_PROPERTY = {"RiskFactor": "title", METRIC: "concept"}
 
@@ -95,6 +103,16 @@ class BuildReport:
     skipped_metric_values: tuple[str, ...]
     dropped_edges: tuple[DroppedEdge, ...]
     merged_into_company: tuple[str, ...]  # extracted keys the alias map sends to a filer
+    bodies: BodyReport
+
+
+@dataclass(frozen=True, slots=True)
+class BodyReport:
+    """What the risk factor body step added (Step 11)."""
+
+    body_entries: int  # BODY_PROMPT entries in the batch, after combining
+    unlocated: tuple[str, ...]  # risk factor keys whose heading is not in the section
+    long_bodies: tuple[tuple[str, int], ...]  # (key, chunks) for bodies over 5 chunks
 
 
 @dataclass(frozen=True, slots=True)
@@ -168,14 +186,17 @@ def build_graph(
     )
     ordered = sorted(files, key=lambda f: (_filing_date(filing_dates, f.accession_no),
                                            f.accession_no))
-    nodes, into_company = _nodes(ordered, context)
+    bodies = body_evidence(rows, _risk_factors(ordered, context))
+    nodes, into_company = _nodes(ordered, context, bodies)
     edges, conflicts, dropped = _edges(ordered, context, frozenset(nodes))
     persistence_edges = _persistence_edges(links, context, nodes)
+    body_entries = sum(e.extract_prompt == BODY_PROMPT for n in nodes.values() for e in n.evidence)
     return Built(
         Batch(nodes=(*structural_nodes(rows), *(nodes[r] for r in sorted(nodes, key=str))),
               edges=(*structural_edges(rows), *edges, *persistence_edges)),
         BuildReport(tuple(conflicts), tuple(sorted(context.skipped)), tuple(dropped),
-                    tuple(sorted(into_company))),
+                    tuple(sorted(into_company)),
+                    BodyReport(body_entries, bodies.unlocated, bodies.long_bodies)),
     )
 
 
@@ -203,11 +224,42 @@ def _metrics_without_subject(files: Sequence[ExtractFile]) -> frozenset[str]:
 
 # ── extracted nodes ───────────────────────────────────────────────────────────
 
+def _risk_factors(files: Sequence[ExtractFile], context: _Context) -> list[Factor]:
+    """Each canonical RiskFactor with its filing and its most confident extracted spans."""
+    spans: dict[tuple[str, str], dict[str, int]] = {}  # span -> its best confidence rank
+    for f in files:
+        for node in f.nodes:
+            if node.label == RISK_FACTOR:
+                key = str(context.canonical(NodeRef.of(RISK_FACTOR, key=node.key))
+                          .key_dict()["key"])
+                found = spans.setdefault((key, f.accession_no), {})
+                for e in node.evidence:
+                    found[e.span] = max(found.get(e.span, 0), CONFIDENCE_RANK[e.confidence])
+    return [Factor(key, accession_no,
+                   tuple(span for span, rank in found.items() if rank == max(found.values())))
+            for (key, accession_no), found in spans.items()]
+
+
+def _body_entries(
+    bodies: Bodies, file: ExtractFile, context: _Context,
+) -> dict[NodeRef, list[_Entry]]:
+    """The body entries of *file*'s risk factors, ranked below that filing's extracted ones."""
+    file_date = context.filing_dates[file.accession_no]
+    found: dict[NodeRef, list[_Entry]] = {}
+    for node in file.nodes:
+        ref = context.canonical(NodeRef.of(node.label, key=node.key))
+        key = str(ref.key_dict().get("key"))
+        if node.label == RISK_FACTOR and key in bodies.evidence and ref not in found:
+            found[ref] = context.entries(bodies.evidence[key], BODY_FILE_INDEX, 0, file_date)
+    return found
+
+
 def _nodes(
-    files: Sequence[ExtractFile], context: _Context,
+    files: Sequence[ExtractFile], context: _Context, bodies: Bodies,
 ) -> tuple[dict[NodeRef, NodeRecord], set[str]]:
     """One record per canonical node, and the keys merged into a filer's Company."""
     members: dict[NodeRef, list[tuple[ExtractNode, list[_Entry]]]] = {}
+    body: dict[NodeRef, list[_Entry]] = {}
     into_company: set[str] = set()
     for index, f in enumerate(files):
         file_date = context.filing_dates[f.accession_no]
@@ -220,11 +272,15 @@ def _nodes(
                 into_company.add(node.key)
             else:
                 members.setdefault(ref, []).append((node, entries))
-    return {ref: _node_record(ref, group, context) for ref, group in members.items()}, into_company
+        for ref, entries in _body_entries(bodies, f, context).items():
+            body.setdefault(ref, []).extend(entries)
+    return ({ref: _node_record(ref, group, context, body.get(ref, ()))
+             for ref, group in members.items()}, into_company)
 
 
 def _node_record(
     ref: NodeRef, group: Sequence[tuple[ExtractNode, list[_Entry]]], context: _Context,
+    body: Iterable[_Entry] = (),
 ) -> NodeRecord:
     key = str(ref.key_dict()["key"])
     canonical = [n for n, _ in group if n.key == key]
@@ -239,7 +295,8 @@ def _node_record(
         properties.pop(ALIASES, None)
         if names:
             properties[ALIASES] = sorted(names)
-    return NodeRecord(ref.label, properties, context.ordered(e for _, es in group for e in es))
+    return NodeRecord(ref.label, properties,
+                      context.ordered((*(e for _, es in group for e in es), *body)))
 
 
 # ── extracted edges ───────────────────────────────────────────────────────────

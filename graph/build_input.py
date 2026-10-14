@@ -1,6 +1,7 @@
 """What the graph builder reads (Step 10): structural rows and extract files.
 
-Structural rows come from Postgres (graph/structural.py). Extract files are
+Structural rows come from Postgres (graph/structural.py): filings, chunks with
+their offsets and, since Step 11, each filing's risk-factor section text. Extract files are
 the candidates files `extract.run` writes, `{accession_no}-run{N}.jsonl`, one
 JSON object per line: a `node`, an `edge` or a `flag`. Flags are review notes
 the builder does not use. Any other line, or a node or edge missing a field,
@@ -23,6 +24,8 @@ from graph.batch import EVIDENCE_LISTS, Evidence, NodeRef
 
 FILE_NAME = re.compile(r"(\d{10}-\d{2}-\d{6})-run(\d+)\.jsonl")
 NODE, EDGE, FLAG = "node", "edge", "flag"
+# Where each form lists its risk factors (Step 11 risk factor bodies).
+RISK_SECTION_BY_FORM = MappingProxyType({"10-K": "part_i_item_1a", "10-Q": "part_ii_item_1a"})
 EXTRACT_PROMPT_PREFIX = f"extract/{CURRENT_VERSION}@"
 
 
@@ -45,12 +48,28 @@ class ChunkRow:
     chunk_id: str
     accession_no: str
     section: str
+    char_start: int  # offsets into the filing's parsed text
+    char_end: int
+
+
+@dataclass(frozen=True, slots=True)
+class RiskSection:
+    """A filing's risk-factor section (RISK_SECTION_BY_FORM): its text and where it starts.
+
+    The section runs from its first chunk's start to its last chunk's end; every
+    filing in the corpus holds it as one span.
+    """
+
+    accession_no: str
+    char_start: int
+    text: str
 
 
 @dataclass(frozen=True, slots=True)
 class StructuralRows:
     filings: tuple[FilingRow, ...]
     chunks: tuple[ChunkRow, ...]
+    risk_sections: tuple[RiskSection, ...]
 
 
 @dataclass(frozen=True, slots=True)

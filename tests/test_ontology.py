@@ -27,6 +27,7 @@ PINNED_SCHEMA_SHA256 = {
     1: "9f2687c2aa33872bdf77b64c3b0d80b773cdeac7f7b67dc981892f9bcc57fb37",
     2: "f484740282253d5e48e9d350d06ba8a7b6950ded0dbdb3867740e96ff88083c4",
     3: "ab2c4e455dcc0407371c1ba87c0e3f50caa5df174846d1176326b85eabae8bd9",
+    4: "3f8d05a33c59e2580259aacabe24ac09cc90168592dc156b1d4ab1de7a4612bd",
 }
 
 STRUCTURAL_LABELS = ["Company", "Filing", "Period", "Chunk"]
@@ -315,8 +316,15 @@ def test_schema_text_carries_properties_endpoints_and_descriptions():
     assert "extract_prompt: STRING," in text
 
 
-def test_ontology_is_version_3():
-    assert ONTOLOGY_VERSION == 3
+def test_ontology_is_version_4():
+    assert ONTOLOGY_VERSION == 4
+
+
+def test_version_4_allows_company_as_a_concerns_end():
+    # Step 11 (ADR-0004 amendment): an agreement's Organization end can merge into a filer.
+    concerns = EDGE_TYPES_BY_NAME["CONCERNS"]
+    assert concerns.starts == ("Agreement",)
+    assert set(concerns.ends) == {"Company", "Organization", "Product", "Facility"}
 
 
 def test_schema_text_is_the_same_on_every_call():

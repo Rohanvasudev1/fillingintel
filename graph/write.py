@@ -59,7 +59,7 @@ from graph.batch import (
     key_values,
 )
 from graph.connection import DATABASE
-from graph.constraints import GRAPH_META, require_graph_meta
+from graph.constraints import GRAPH_META, require_graph_meta, upgrade_graph_meta
 from graph.cypher import quoted
 from graph.ontology import (
     EDGE_TYPES,
@@ -108,6 +108,7 @@ def write_batch(driver: Driver, batch: Batch, database: str = DATABASE) -> None:
 
 def rebuild_graph(
     driver: Driver, batch: Batch, *, replace: bool = True, database: str = DATABASE,
+    upgrade_from: int | None = None,
 ) -> None:
     """Make *batch* the whole graph, keeping only :GraphMeta, in one transaction.
 
@@ -115,17 +116,23 @@ def rebuild_graph(
     With it true, every node but :GraphMeta is deleted first, inside the same
     transaction, so the batch's checks see the emptied graph and any rejection
     or failure rolls the delete back: the previous graph stays. The delete is
-    one full scan, which is what a rebuild needs. Same errors as write_batch().
+    one full scan, which is what a rebuild needs. With *upgrade_from*, the
+    version prepare_upgrade() returned, :GraphMeta moves to the code's ontology
+    in the same transaction. Same errors as write_batch().
     """
     with driver.session(database=database) as session:
-        session.execute_write(_rebuild, batch, replace)
+        session.execute_write(_rebuild, batch, replace, upgrade_from)
 
 
 _OTHER_NODES = f"MATCH (n) WHERE NOT n:{quoted(GRAPH_META)}"
 
 
-def _rebuild(tx: ManagedTransaction, batch: Batch, replace: bool) -> None:
+def _rebuild(
+    tx: ManagedTransaction, batch: Batch, replace: bool, upgrade_from: int | None,
+) -> None:
     # _write checks :GraphMeta before writing; a mismatch rolls the delete back with it.
+    if upgrade_from is not None:
+        upgrade_graph_meta(tx, upgrade_from)
     if replace:
         tx.run(f"{_OTHER_NODES} DETACH DELETE n").consume()
     else:

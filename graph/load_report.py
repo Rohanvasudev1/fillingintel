@@ -2,9 +2,11 @@
 
 It records what was loaded and from what: the commit, the SHA-256 of the alias
 map, the link file and every extract file, PERSISTS_AS links by method, the
-ontology version, node counts per label and edge counts per type (EVIDENCED_BY
-counted from node evidence), what the build left out or found, the chunk gaps,
-write time and the validation result.
+ontology version (and the older one :GraphMeta was upgraded from, if any), the
+extract prompts and the ontology versions the evidence was extracted under,
+node counts per label and edge counts per type (EVIDENCED_BY counted from node
+evidence), what the build left out or found, risk factor body counts, the chunk
+gaps, write time and the validation result.
 """
 from __future__ import annotations
 
@@ -14,6 +16,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from graph.batch import EVIDENCED_BY, Batch
+from graph.bodies import BODY_PROMPT, LONG_BODY_CHUNKS
 from graph.ontology import ONTOLOGY_VERSION
 
 if TYPE_CHECKING:
@@ -41,6 +44,11 @@ def load_report(commit: str, inputs: LoadInputs, result: LoadResult) -> dict[str
     return {
         "commit": commit,
         "ontology_version": ONTOLOGY_VERSION,
+        "graph_meta_upgraded_from": result.upgraded_from,
+        "evidence_provenance": {
+            "extract_prompts": sorted({p for f in inputs.files for p in f.prompts}),
+            "extracted_under_ontology": list(inputs.extracted_under),
+        },
         "alias_map_sha256": inputs.alias_map_sha256,
         "extract_files": {f.name: f.sha256 for f in inputs.files},
         "persistence_links": {
@@ -53,6 +61,14 @@ def load_report(commit: str, inputs: LoadInputs, result: LoadResult) -> dict[str
         "dropped_edges": [{"reason": d.reason.value, "edge": d.edge, "file": d.file}
                           for d in build.dropped_edges],
         "merged_into_company": list(build.merged_into_company),
+        "risk_factor_bodies": {
+            "prompt": BODY_PROMPT,
+            "body_entries": build.bodies.body_entries,
+            "unlocated": len(build.bodies.unlocated),
+            "long_body_threshold_chunks": LONG_BODY_CHUNKS,
+            "long_bodies": [{"key": key, "chunks": n} for key, n in build.bodies.long_bodies],
+            "unlocated_keys": list(build.bodies.unlocated),
+        },
         "chunk_gaps": [c for _, chunks in sorted(inputs.gaps.items()) for c in chunks],
         "write_seconds": round(result.write_seconds, 1),
         "validation": _validation(result),
