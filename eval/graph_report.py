@@ -14,11 +14,6 @@ from dataclasses import asdict
 from retrieve.arm import GRAPH_STAGES, ArmResult, GraphProvenance, GraphRetrieval
 
 DEFINITIONS = {
-    "graph_stages": (
-        "anchor_linking, cypher_generation, cypher_repair and cypher_execution latency counts "
-        "the questions that ran the stage; their cost is a mean over every question, a stage "
-        "that did not run costing 0; search covers every stage after the query embedding"
-    ),
     "graph": (
         "graph arms only: no_anchor counts questions that linked no anchor, empty_retrieval "
         "those whose retrieval held no chunk, not_found those answered not_found"
@@ -67,12 +62,12 @@ def question_graph(graph: GraphRetrieval) -> dict[str, object]:
 
 def graph_cell(results: Sequence[ArmResult]) -> dict[str, int] | None:
     """Per-class counts for a graph arm's questions; None when no result has graph details."""
-    graphed = [r for r in results if r.graph is not None]
+    graphed = [(r, r.graph) for r in results if r.graph is not None]
     if not graphed:
         return None
     return {
         "n": len(graphed),
-        "no_anchor": sum(r.graph.no_anchor for r in graphed if r.graph is not None),
-        "empty_retrieval": sum(not r.retrieved for r in graphed),
-        "not_found": sum(r.answer.status == "not_found" for r in graphed),
+        "no_anchor": sum(graph.no_anchor for _, graph in graphed),
+        "empty_retrieval": sum(not r.retrieved for r, _ in graphed),
+        "not_found": sum(r.answer.status == "not_found" for r, _ in graphed),
     }

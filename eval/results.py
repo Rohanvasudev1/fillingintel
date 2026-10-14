@@ -229,8 +229,8 @@ def build_header(
                                | filter_report.DEFINITIONS | answer_report.DEFINITIONS
                                | operational.DEFINITIONS | bootstrap.DEFINITIONS
                                | judged_report.DEFINITIONS
-                               | (graph_report.DEFINITIONS if config.graph is not None
-                                  else {})),
+                               | (graph_report.DEFINITIONS | operational.GRAPH_DEFINITIONS
+                                  if config.graph is not None else {})),
     }
 
 

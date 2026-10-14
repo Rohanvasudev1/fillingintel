@@ -28,6 +28,13 @@ DEFINITIONS = {
         "list price, before any free allowance"
     ),
 }
+GRAPH_DEFINITIONS = {  # in a graph arm's header only
+    "graph_stages": (
+        "anchor_linking, cypher_generation, cypher_repair and cypher_execution latency counts "
+        "the questions that ran the stage; their cost is a mean over every question, a stage "
+        "that did not run costing 0; search covers every stage after the query embedding"
+    ),
+}
 
 
 def _stats(values: Sequence[float], stage: str, rng_for: RngFor) -> dict[str, object]:
@@ -55,18 +62,16 @@ def latency_cell(results: Sequence[ArmResult], rng_for: RngFor) -> dict[str, dic
     A graph arm's cell adds each graph stage, over the questions that ran it.
     """
     fresh = [r for r in results if not r.query_cached]
-    cell = {
+    graphs = [r.graph for r in results if r.graph is not None]
+    return {
         "retrieval": _stats([r.retrieval_ms for r in fresh], "retrieval", rng_for),
         "embed": _stats([r.embed_ms for r in fresh], "embed", rng_for),
         "search": _stats([r.search_ms for r in results], "search", rng_for),
         "generation": _stats([r.answer.generation_ms for r in results], "generation", rng_for),
+        **({stage: _stats([g.stages[stage].ms for g in graphs if stage in g.stages], stage,
+                          rng_for)
+            for stage in GRAPH_STAGES} if graphs else {}),
     }
-    if _graphed(results):
-        for stage in GRAPH_STAGES:
-            ran = [r.graph.stages[stage].ms for r in results
-                   if r.graph is not None and stage in r.graph.stages]
-            cell[stage] = _stats(ran, stage, rng_for)
-    return cell
 
 
 def question_cost(result: ArmResult) -> dict[str, float]:
@@ -95,11 +100,10 @@ def cost_cell(results: Sequence[ArmResult], rng_for: RngFor) -> dict[str, object
     costs = [question_cost(r) for r in results]
     per_query = _per_query(results)
     return {
-        **{name: fmean(c.get(stage, 0.0) for c in costs) for name, stage in per_query.items()},
+        **{name: fmean(c[stage] for c in costs) for name, stage in per_query.items()},
         "total": sum(c["total"] for c in costs),
         "intervals": {
-            name: mean_interval([c.get(stage, 0.0) for c in costs],
-                                rng_for(f"cost_usd.{name}"))
+            name: mean_interval([c[stage] for c in costs], rng_for(f"cost_usd.{name}"))
             for name, stage in per_query.items()
         },
     }

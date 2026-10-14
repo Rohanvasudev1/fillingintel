@@ -15,7 +15,9 @@ from typing import TYPE_CHECKING, Literal, Protocol, get_args
 
 from graph.ontology import Confidence
 from retrieve.answer import Answer
+from retrieve.answer_model import TokenUsage
 from retrieve.answer_prompt import AnswerPrompt, SourceChunk
+from retrieve.pricing import anthropic_cost
 from retrieve.question_filter import QuestionFilter
 
 if TYPE_CHECKING:
@@ -34,10 +36,12 @@ class RetrievedChunk:
 
 
 AnchorMatch = Literal["name", "embedding"]
-# How a generated query ended: ``ok`` returned chunks; the others are the fallback reasons.
-CypherOutcome = Literal["ok", "invalid", "error", "timeout", "empty"]
+# Why a traversal question fell back to graph_local, after its query and one repair.
 FallbackReason = Literal["invalid", "error", "timeout", "empty"]
-VALID_OUTCOMES: frozenset[str] = frozenset({"ok", "empty"})  # passed the guard and ran
+# How one generated query ended: ``ok`` returned chunks; ``empty`` passed the guard and ran
+# but returned none; the others failed the guard, raised an error or timed out.
+CypherOutcome = Literal["ok", FallbackReason]
+VALID_OUTCOMES: frozenset[CypherOutcome] = frozenset({"ok", "empty"})  # passed the guard, ran
 GraphStage = Literal["anchor_linking", "cypher_generation", "cypher_repair", "cypher_execution"]
 GRAPH_STAGES: tuple[GraphStage, ...] = get_args(GraphStage)
 
@@ -76,6 +80,22 @@ class StageCost:
     input_tokens: int = 0  # for Claude, uncached plus cache reads and writes
     output_tokens: int = 0
     from_cache: bool = False
+
+    @classmethod
+    def anthropic(cls, ms: float, model: str, usage: TokenUsage, *,
+                  from_cache: bool) -> StageCost:
+        """A Claude call's stage, priced from the results header's price table.
+
+        Raises ``ValueError`` for a model the table has no price for.
+        """
+        return cls(
+            ms=ms,
+            cost_usd=anthropic_cost(model, usage),
+            input_tokens=(usage.input_tokens + usage.cache_read_input_tokens
+                          + usage.cache_creation_input_tokens),
+            output_tokens=usage.output_tokens,
+            from_cache=from_cache,
+        )
 
 
 @dataclass(frozen=True)

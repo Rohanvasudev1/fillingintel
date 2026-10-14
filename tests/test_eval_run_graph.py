@@ -82,9 +82,8 @@ USAGE = TokenUsage(input_tokens=3000, output_tokens=400, cache_read_input_tokens
 CYPHER_COST = anthropic_cost(CYPHER_MODEL, USAGE)
 EMBED_COST = embedding_cost(EMBED_MODEL, 10)
 LINK = StageCost(ms=20.0)
-GENERATE = StageCost(ms=900.0, cost_usd=CYPHER_COST, input_tokens=4000, output_tokens=400)
-REPAIR = StageCost(ms=700.0, cost_usd=CYPHER_COST, input_tokens=4000, output_tokens=400,
-                   from_cache=True)
+GENERATE = StageCost.anthropic(900.0, CYPHER_MODEL, USAGE, from_cache=False)
+REPAIR = StageCost.anthropic(700.0, CYPHER_MODEL, USAGE, from_cache=True)
 EXECUTE = StageCost(ms=30.0)
 ANCHOR = Anchor(key="RiskFactor:0001045810-26-000021:export controls", label="RiskFactor",
                 similarity=0.81, matched_by="embedding")
@@ -315,6 +314,13 @@ def test_a_question_record_holds_latency_tokens_and_cost_per_graph_stage(eval_di
         "total": EMBED_COST + 2 * CYPHER_COST + generation,
     })
     assert record["search_ms"] == 1650.0
+
+
+def test_a_claude_stage_is_priced_from_the_header_price_table():
+    assert GENERATE == StageCost(ms=900.0, cost_usd=CYPHER_COST, input_tokens=4000,
+                                 output_tokens=400, from_cache=False)
+    with pytest.raises(ValueError, match="no price"):
+        StageCost.anthropic(1.0, "claude-unpriced-0", USAGE, from_cache=False)
 
 
 def test_cells_report_graph_stage_latency_and_cost(eval_dir, tmp_path):
