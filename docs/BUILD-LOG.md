@@ -2241,6 +2241,72 @@ The harness can now carry a graph arm's details without any graph arm existing. 
 
 ---
 
+## 2026-10-14 — Step 11 ticket 07: full dev runs and closing Step 11
+
+Both graph arms ran all 93 `dev` questions end to end, with answers and 3 judge passes, and were compared with the Step 5 vector baseline. Spec `.scratch/step-11/spec.md` (Runs and closure), ticket `.scratch/step-11/issues/07-full-dev-runs-and-closing-step-11.md`. No code changed.
+
+- **Runs** (commit `375efac`, load run 4, ontology 4, answer prompt `answer/v1`, `graph_local` at 1 hop, `graph_traversal` on `cypher/v1@44e50e3f`):
+  - `benchmarks/runs/2026-10-14-graph_local-dev-375efac.json`
+  - `benchmarks/runs/2026-10-14-graph_traversal-dev-375efac.json`
+
+  Both are committed beside the baseline, `benchmarks/runs/2026-10-05-vector-dev-96e8c69.json`. Every figure below is on **agent-drafted questions**, `dev`, with graph arms **tuned on `dev`** (hop count, one prompt revision). Judged numbers are **uncalibrated** (gpt-6-luna, 3 runs).
+- **Cypher.** The traversal run replayed all 98 Cypher calls (93 first, 5 repairs) from the response cache; none were sent. Validity matches `cypher-validity-run1.json`, the final report: 88 of 93 first-pass valid (0.946), 93 valid after repair, 93 non-empty, 0 fallbacks.
+- **No anchor, nothing retrieved.** Neither arm had a question with no anchor or an empty retrieval. Answers with status `not_found` on answerable questions: `graph_local` 3 (1 local, 2 multi-hop), `graph_traversal` 4 (1 lookup, 1 multi-hop, 2 global). Both declined all 6 decline questions and answered `not_found` on all 5 unanswerable ones (judged 1.000, directional).
+
+**Absolute retrieval, recall@10 (recall@5)**
+
+| class | n | `vector` | `graph_local` | `graph_traversal` |
+|---|---|---|---|---|
+| lookup | 27 | 1.000 (0.889) | 0.963 (0.630) | 0.963 (0.963) |
+| local | 22 | 0.977 (0.932) | 0.909 (0.727) | 0.818 (0.795) |
+| multi_hop | 23 | 0.717 (0.616) | 0.627 (0.486) | 0.703 (0.569) |
+| global | 10 | 0.800 (0.592) | 0.425 (0.283) | 0.367 (0.208) |
+| pooled | 82 | 0.890 (0.788) | 0.789 (0.573) | 0.778 (0.715) |
+
+**Paired against `vector`** (`uv run python -m eval.compare <vector run> <graph run>`, 10,000 resamples, seed 20261005; ✔ = the 95% interval excludes 0)
+
+| class, metric | `graph_local` − `vector` | `graph_traversal` − `vector` |
+|---|---|---|
+| lookup recall@5 | −0.259 [−0.482, −0.037] ✔ | +0.074 [−0.074, 0.222] |
+| lookup recall@10 | −0.037 [−0.111, 0] | −0.037 [−0.111, 0] |
+| local recall@5 | −0.205 [−0.386, −0.045] ✔ | −0.136 [−0.318, 0] |
+| local recall@10 | −0.068 [−0.182, 0] | −0.159 [−0.318, −0.023] ✔ |
+| multi_hop recall@10 | −0.091 [−0.283, 0.109] | −0.014 [−0.217, 0.181] |
+| multi_hop wrong evidence | 0 [−0.174, 0.174] | −0.087 [−0.217, 0] |
+| global recall@10 | −0.375 [−0.575, −0.183] ✔ | −0.433 [−0.625, −0.242] ✔ |
+| pooled recall@5 | −0.214 [−0.320, −0.107] ✔ | −0.072 [−0.165, 0.016] |
+| pooled recall@10 | −0.102 [−0.177, −0.030] ✔ | −0.112 [−0.195, −0.032] ✔ |
+| pooled wrong evidence | +0.049 [−0.012, 0.122] | −0.012 [−0.061, 0.037] |
+| multi_hop faithfulness (uncalibrated) | −0.100 [−0.184, −0.028] ✔ | −0.007 [−0.087, 0.059] |
+| global answer relevancy (uncalibrated) | −0.067 [−0.127, −0.011] ✔ | −0.221 [−0.371, −0.095] ✔ |
+| pooled answer relevancy (uncalibrated) | −0.025 [−0.041, −0.009] ✔ | −0.051 [−0.087, −0.021] ✔ |
+| pooled faithfulness (uncalibrated) | −0.029 [−0.061, −0.001] ✔ | −0.009 [−0.045, 0.024] |
+| pooled citation support (uncalibrated) | −0.009 [−0.039, 0.019] | −0.006 [−0.040, 0.024] |
+
+No question is unpaired in either comparison. The full tables, with precision and every class, come from the command above.
+
+- **What it says.**
+  - Graph loses on retrieval. Every difference that excludes 0 favours `vector`; none favours a graph arm.
+  - Multi-hop is mixed question by question. Against `vector` at recall@10, traversal wins 7 questions and loses 7 (wins: q0112, q0115, q0118, q0121, q0124, q0125, q0133), and `graph_local` wins 5 and loses 10. H2 predicts traversal ahead by at least 0.10. On `dev` it is −0.014, so H2 has no support here; its test is the `test` split in Step 13.
+  - H1 (lookup recall@5 within 0.05) holds against `graph_local`, which is 0.259 behind. Traversal is ahead of `vector` on lookup recall@5 (+0.074, interval spanning 0). That point estimate breaks H1's "within 0.05" from the graph side, but the interval does not exclude 0.
+  - Global is the largest loss for both arms (recall@10 −0.38 and −0.43; no question won). Expected: `graph_global` (Step 12) is the arm for global questions.
+  - Judged answer relevancy is lower for both arms pooled. The ticket 03 noise check (a run against its own repeat) moved one judged row by 0.024, so the global −0.221 for traversal is well above noise, and the pooled −0.025 for `graph_local` is near it.
+- **Cost per query** (operational, header price table 2026-10-05, cached Cypher replays priced at their recorded tokens): `vector` $0.0305, `graph_local` $0.0298, `graph_traversal` $0.0349, of which Cypher generation and repair are $0.0113. Latency is left out: the Cypher stages replayed from the cache, so the traversal timings are not live ones.
+- **Judging failure on the first `graph_local` attempt.** It stopped after answering, at judging, with `AttributeError: type object 'Response' has no attribute '__pydantic_core_schema__'` in `parse_openai_reply`, and wrote no results. It looks like openai's lazily built `Response` model being rebuilt by two judge threads at once. A standalone script with 32 threads did not reproduce it in 30 tries, and the rerun replayed the cached answers and judge replies and finished. Not fixed: the fix is in the harness (OPEN-DECISIONS, with a recommendation).
+- **Spend.** New spend about $6.22: `graph_local` $2.77 answers + $0.66 judges, `graph_traversal` $2.20 answers + $0.59 judges, no Cypher calls. The estimate shown before the runs was about $7.10. Step 11 total: about $8.47 of the $15 cap.
+- **Docs.** RUNBOOK Step 11 outcome; README section with both arms and the Cypher validity rate; CLAUDE.md Decisions gains the ticket 02–04 choices not yet recorded; OPEN-DECISIONS gains the ticket 05 header items, the judging race and the dev loss.
+
+**Step 11 stop condition:** met for `dev`. `--arm graph_local` and `--arm graph_traversal` both run the full dev set end to end, and the Cypher validity rate is reported. Graph loses to `vector` on these questions.
+
+**Decisions needed**
+- The judging race. Recommendation: call `Response.model_rebuild()` once at import in `eval/judging/openai_backend.py`, with a test, before Step 13's full matrix. Scores do not change.
+
+**Next session starts with**
+1. Merge this PR once CI is green.
+2. Step 12 (communities and global search): `/grill-with-docs`.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.
@@ -2258,3 +2324,4 @@ Short versions of the stories from this build so far, for interviews and write-u
 - **The graph linked the right risk factor and still missed the answer.** NVIDIA's demand risk factor was linked correctly from fiscal 2025 to fiscal 2026, but the graph tied each risk factor only to the chunk holding its heading. The bullet the question asked about sat in the next chunk, so the hand-written query could not reach it. Checking against gold chunks, not just "the query returned something", showed the gap before any retrieval arm was built on it.
 - **A fix written to the letter would have failed.** The Step 11 plan said a risk factor's body ends at the next risk factor's heading. Building the graph offline before loading it showed the question still failing: the extractor also records sentences from inside a body as risk factors, and one of them cut the real body short a chunk before the answer. Requiring a heading to start a line fixed it, and the multi-hop check went from 2 of 3 to 3 of 3.
 - **More valid queries retrieved less.** The first text-to-Cypher prompt banned `CALL` outright, and the model answered four questions with a stub query instead. A revision that allowed subqueries made every first query valid, but recall@10 fell from 0.778 to 0.727, probably because the subqueries cast a wider net. The validity rate and the retrieval score answer different questions, so both are reported, and the prompt chosen was the one that retrieved better.
+- **The graph arms lost, and that is the result.** Both graph retrievers, one linking questions to entities and one writing Cypher, found fewer of the right passages than plain vector search on the dev questions, pooled and in every class (recall@10). Even multi-hop questions, which traversal was built for, came out level. The comparison is paired question by question with bootstrap intervals, so the loss is measured, not guessed, and it is reported instead of tuned away.

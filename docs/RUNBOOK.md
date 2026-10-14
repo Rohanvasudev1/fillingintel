@@ -243,6 +243,8 @@ Track Cypher validity rate from day one.
 
 **Stop condition:** `--arm graph_local` and `--arm graph_traversal` both run the full eval set end to end. Cypher validity rate reported.
 
+As built (2026-10-14): the stop condition is met for `dev`. Both arms ran all 93 `dev` questions with answers and 3 judge passes at commit `375efac` (`benchmarks/runs/2026-10-14-graph_local-dev-375efac.json`, `…-graph_traversal-dev-375efac.json`). `test` waits for Step 13, as the spec set. Cypher validity (`cypher/v1@44e50e3f`, `benchmarks/graph/cypher-validity-run1.json`): 88 of 93 first queries valid (0.946), all 93 valid after one repair, every one returning chunks, no fallback. Graph loses to `vector` on retrieval. Pooled recall@10 over the 82 answerable questions is 0.789 (`graph_local`) and 0.778 (`graph_traversal`) against `vector`'s 0.890; both paired differences exclude 0. No difference in a graph arm's favour has an interval that excludes 0. The nearest is traversal's lookup recall@5, +0.074 [−0.074, 0.222]. Traversal's multi-hop recall@10 (0.703) is level with `vector`'s (0.717), not the 0.10 gain H2 predicts. Global questions are the largest loss for both, which was expected, since `graph_global` is Step 12's arm. All figures: agent-drafted questions, judged numbers uncalibrated, graph numbers tuned on `dev` (hop count, prompt revision). Details in BUILD-LOG.
+
 ### Step 12. Communities and global search
 
 Leiden clustering at two resolution levels over the entity graph, run in Python (`leidenalg` or `graspologic`). Summarize each community with Prompt 3. Embed the summaries.
