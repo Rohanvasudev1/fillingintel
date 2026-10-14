@@ -38,9 +38,14 @@ def test_the_multihop_queries_pass(qid):
     "MATCH (c:`Company`)-[:`FILED`]->(f) RETURN [] AS chunk_ids",
     "MATCH (c:Company)-[:FILED*1..2]-(x:Chunk) RETURN [] AS chunk_ids",
     "MATCH (m:MetricValue) RETURN toString(m.value) AS v, [] AS chunk_ids;",
+    "MATCH (f:Filing) RETURN date().year AS y, "
+    "duration.between(f.filing_date, date()).days AS d, [] AS chunk_ids",
+    "WITH {a: 1} AS m UNWIND [{id: 'x'}] AS n RETURN m.a AS a, n.id AS i, "
+    "[x IN [{b: 1}] | x.b] AS b, [] AS chunk_ids",
 ], ids=["plain", "scoped-subquery", "subquery", "undirected", "reversed-arrow-legal",
         "string-literal", "line-comment", "block-comment-and-map", "temporal-accessor",
-        "backticks", "variable-length", "trailing-semicolon"])
+        "backticks", "variable-length", "trailing-semicolon", "function-results",
+        "map-variables"])
 def test_valid_reads_pass(cypher):
     assert static_check(cypher) is None
 
@@ -62,9 +67,15 @@ def test_valid_reads_pass(cypher):
     ("call dbms.listConfig() YIELD name RETURN [name] AS chunk_ids", "CALL"),
     ("MATCH (c:Company) RETURN [] AS chunk_ids; MATCH (f:Filing) RETURN [] AS chunk_ids",
      "one statement"),
+    ("INSERT (c:Company {cik: '1'}) RETURN [] AS chunk_ids", "INSERT"),
+    ("WITH 1 AS x //c\rLOAD CSV FROM 'file:///x.csv' AS r RETURN [r[0]] AS chunk_ids",
+     "LOAD CSV"),
+    ("WITH 1 AS x //c\u2028CALL db.labels() YIELD label RETURN [label] AS chunk_ids", "CALL"),
+    ("MATCH (c:Company)\x00 RETURN [] AS chunk_ids", "control character"),
 ], ids=["load-csv", "terminate", "show", "use", "create", "merge", "set", "delete", "remove",
         "drop", "foreach", "write-in-subquery", "procedure-call", "lowercase-call",
-        "two-statements"])
+        "two-statements", "gql-insert", "comment-ended-by-cr",
+        "comment-ended-by-line-separator", "control-character"])
 def test_text_rules(cypher, word):
     _fails(cypher, Rule.TEXT, word)
 
@@ -92,3 +103,10 @@ def test_disallowed_endpoints(cypher):
 
 def test_an_unlabelled_end_is_not_checked():
     assert static_check("MATCH (f:Filing)-[:FILED]->(c) RETURN [] AS chunk_ids") is None
+
+
+@pytest.mark.parametrize("fragment", [
+    "(", "-[", "(:)", "MATCH ()<-[:X]-", "a.", "$", "{a:}", "MATCH (n:)-[:]->(:)", "-->", ")",
+])
+def test_fragments_never_raise(fragment):
+    static_check(fragment)

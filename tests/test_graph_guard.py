@@ -79,7 +79,7 @@ def test_a_final_semicolon_is_allowed(graph):
     ("SHOW TRANSACTIONS YIELD transactionId RETURN [transactionId] AS chunk_ids", Rule.TEXT),
     ("CREATE (n:Scratch) RETURN [] AS chunk_ids", Rule.TEXT),
     ("CALL db.labels() YIELD label RETURN [label] AS chunk_ids", Rule.TEXT),
-    (f"{EVIDENCE}; CREATE (n:Scratch)", Rule.TEXT),
+    (f"{EVIDENCE}; {EVIDENCE}", Rule.TEXT),
     ("MATCH (c:Compny) RETURN [] AS chunk_ids", Rule.ONTOLOGY),
     ("MATCH (c:Company)-[:FILLED]->(f:Filing) RETURN [] AS chunk_ids", Rule.ONTOLOGY),
     ("MATCH (c:Company) RETURN c.revenue AS r, [] AS chunk_ids", Rule.ONTOLOGY),
@@ -141,4 +141,13 @@ def test_a_slow_query_times_out(graph):
 def test_reading_stops_at_the_row_cap(graph):
     result = run_guarded(graph, f"UNWIND range(1, {MAX_ROWS + 500}) AS x RETURN [] AS chunk_ids")
     assert isinstance(result, GuardPass)
+    assert (len(result.rows), result.truncated) == (MAX_ROWS, True)
+
+
+def test_the_unread_rest_of_a_slow_result_is_not_waited_for(graph):
+    # The first rows come at once; the rest need a scan to a billion.
+    endless = ("UNWIND range(1, 1000000000) AS x WITH x WHERE x <= 2000 OR x % 7 = 123456 "
+               "RETURN [] AS chunk_ids")
+    result = execute_with_timeout(graph, endless, timeout=2.0)
+    assert isinstance(result, GuardPass), result
     assert (len(result.rows), result.truncated) == (MAX_ROWS, True)

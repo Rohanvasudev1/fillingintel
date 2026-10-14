@@ -2014,6 +2014,37 @@ Planned Step 11 (graph retrieval arms) with `/grill-with-docs` in four rounds (Q
 
 ---
 
+## 2026-10-14 — Step 11 ticket 04: Cypher guard and executor
+
+Built the guard that every generated Cypher query passes before it reaches Neo4j (ADR-0007). `graph.guard.run_guarded(driver, cypher)` returns the rows, or the first check that failed with a category (`invalid`, `error`, `timeout`) and a message for the repair prompt. Query failures never raise; a lost connection still does (decision below).
+
+- **Checks.**
+  1. Text rules (`graph/cypher_text.py`): one statement, with only a final `;` allowed. No `LOAD CSV`, `TERMINATE`, `SHOW`, `USE`, write clause (`INSERT` included) or procedure `CALL`.
+  2. Ontology check (`graph/cypher_ontology.py`): labels, edge types and properties on pattern variables, plus endpoint direction.
+  3. `EXPLAIN` in a READ transaction: query type `r`, and no 01N50–52 notification.
+  4. Execution in an explicit READ transaction: 10 s timeout, no driver retry, at most 1,000 rows, and a `chunk_ids` column holding string lists.
+- **Server limits.** `docker-compose.yml` sets `db.transaction.timeout=15s` and `db.memory.transaction.max=512m` on both Neo4j services through one YAML anchor. CI's service has the same values (user approved the CI change). `neo4j-test` was recreated with them; `neo4j` has not been yet.
+- **Loader timeout (user decision).** On `neo4j-test`, a timeout set by the driver overrode the server's 15 s: a 40 s driver timeout ran 43 s, and with no driver timeout the server stopped the query at 16 s. Load run 3's rebuild took 12 s, so `rebuild_graph()` now passes its own 300 s timeout (`REBUILD_TIMEOUT_S`). The 512 MB cap has not been tried against a full rebuild.
+- **Shared read helper.** `graph.connection.read_session()` is used by the guard and by `graph.multihop`.
+- **Review fixes** (`mattpocock-skills:code-review`):
+  - The Standards reviewer found a bypass. The tokenizer ended `//` comments only at `\n`, but Neo4j also ends them at `\r`, so `//c\rLOAD CSV ...` passed every check. Comments now end at any line break, Unicode ones included, and control characters are refused. Tests cover `\r`, U+2028 and NUL.
+  - Properties are now checked only on pattern variables. Reads such as `date().year` or a map variable's key are left to EXPLAIN's 01N52.
+  - `INSERT` was added to the deny list.
+  - The two-statement test now breaks only that one rule.
+- **A finding that corrects the Step 11 research.** The spec review warned that rolling back after 1,000 rows might wait for the server to finish the rest. Measured on `neo4j-test`: a query that scans a billion rows after its first 2,000 returns in 0.05 s once the cap is reached. Research A.4's "only the timeout stops the server" held for `consume()`, not for a rollback with rows unread. A test now pins this.
+- **Tests.** 56 offline tests (`tests/test_cypher_static_check.py`, all 3 committed multi-hop queries pass) and 22 on `neo4j-test` (`tests/test_graph_guard.py`). Each bad query breaks one rule, and a write is refused by READ mode with the text rules bypassed. `graph/ontology.py` was not changed (ticket 01 owns v4).
+- No API spend.
+
+**Decision needed**
+- A lost connection (`ServiceUnavailable`, `SessionExpired`) is raised, not returned as a guard result. Recommendation: keep it raised. A dead database is not a query failure, and falling back to `graph_local` would fail the same way. Ticket 06's arm should stop the run.
+
+**Next session starts with**
+1. Merge this PR once CI is green.
+2. Recreate `neo4j` with the limits when no session is loading the graph: `docker compose up -d neo4j` from the main checkout.
+3. Ticket 05 or 06, once 01 and 02 land.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.

@@ -1,26 +1,29 @@
 """The guard's ontology check (Step 11, ADR-0007 check 2).
 
 Reads a tokenized query against the code ontology:
-- every label in a node pattern, edge type in a relationship pattern and
-  property name must exist; a `n:X` predicate outside a pattern may name a
-  label or an edge type, since Cypher allows both there;
+- every label in a node pattern and edge type in a relationship pattern must
+  exist; a `n:X` predicate outside a pattern may name a label or an edge type,
+  since Cypher allows both there;
+- every property in a pattern's property map, and every `x.prop` read on a
+  variable a pattern binds, must be a property some label or edge type defines;
 - a pattern with labels on both ends must be an allowed endpoint pair in the
   direction written. An undirected pattern passes if either direction is
   allowed. Ends without labels, negated or wildcard labels and variable-length
   patterns are not checked.
 
 Labels are read only from the pattern itself, not from earlier bindings of the
-same variable. Property names are checked against every property any label or
-edge type defines. A temporal accessor (`f.filing_date.year`) and a namespaced
-function (`date.truncate(...)`) are not properties. Unbalanced brackets are
-left to EXPLAIN, which reports them as syntax errors.
+same variable. Property reads on anything else (a map, a function's result, a
+temporal value such as `f.filing_date.year`) are not checked here; EXPLAIN
+reports an unknown property key (01N52) wherever it appears. Unbalanced
+brackets are left to EXPLAIN, which reports them as syntax errors.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import StrEnum
 from itertools import product
 
-from graph.cypher_text import Kind, Token, is_map_key
+from graph.cypher_text import Kind, Token, is_map_key, punct_at
 from graph.ontology import EDGE_TYPES, EDGE_TYPES_BY_NAME, LABELS, LABELS_BY_NAME
 
 PROPERTIES: frozenset[str] = frozenset(
@@ -34,10 +37,26 @@ _KEYWORDS_BEFORE_PATTERNS = frozenset({
 })
 
 
+class FrameKind(StrEnum):
+    NODE = "node"    # ( ... ) of a node pattern
+    REL = "rel"      # [ ... ] of a relationship pattern
+    PROPS = "props"  # { ... } property map inside either
+    OTHER = "other"  # any other bracket
+
+
+class Direction(StrEnum):
+    FORWARD = "forward"
+    BACKWARD = "backward"
+    EITHER = "either"
+
+
 @dataclass
 class _Frame:
-    kind: str  # node, rel, props, or other
-    names: list[str] = field(default_factory=list)  # labels or types; empty if unchecked
+    """One bracket pair. Filled in during a single scan and never shared outside it."""
+
+    kind: FrameKind
+    variable: str | None = None  # the variable a node or relationship pattern binds
+    names: list[str] = field(default_factory=list)  # its labels or edge types
     checked: bool = True  # False when a negated or wildcard label makes the end unknown
     variable_length: bool = False
 
@@ -59,17 +78,16 @@ def _matching(tokens: list[Token]) -> dict[int, int] | None:
 
 
 class _Reader:
-    """One pass over the tokens, then the endpoint check over the patterns found."""
+    """One pass over the tokens; then property reads and endpoints over the patterns found."""
 
     def __init__(self, tokens: list[Token], pairs: dict[int, int]) -> None:
         self.tokens = tokens
         self.pairs = pairs
         self.frames: dict[int, _Frame] = {}  # opening index -> frame
+        self.reads: list[tuple[str, str]] = []  # (variable, property) for each x.prop
 
     def punct(self, i: int) -> str | None:
-        if 0 <= i < len(self.tokens) and self.tokens[i].kind is Kind.PUNCT:
-            return self.tokens[i].text
-        return None
+        return punct_at(self.tokens, i)
 
     def name(self, i: int) -> str | None:
         if 0 <= i < len(self.tokens) and self.tokens[i].is_name:
@@ -89,12 +107,13 @@ class _Reader:
     def _open(self, i: int, enclosing: _Frame | None) -> _Frame:
         text = self.tokens[i].text
         if text == "(" and self._is_node(i):
-            return _Frame("node")
+            return _Frame(FrameKind.NODE, variable=self.name(i + 1))
         if text == "[" and self.punct(i - 1) == "-":
-            return _Frame("rel")
-        if text == "{" and enclosing is not None and enclosing.kind in ("node", "rel"):
-            return _Frame("props")
-        return _Frame("other")
+            return _Frame(FrameKind.REL, variable=self.name(i + 1))
+        if text == "{" and enclosing is not None and enclosing.kind in (
+                FrameKind.NODE, FrameKind.REL):
+            return _Frame(FrameKind.PROPS)
+        return _Frame(FrameKind.OTHER)
 
     def _label_expression(self, i: int, frame: _Frame | None) -> tuple[list[str], int]:
         """Names after the `:` at *i*, and the index after them.
@@ -103,7 +122,7 @@ class _Reader:
         are read only inside a pattern, where `|` cannot end a list comprehension.
         """
         names: list[str] = []
-        chained = frame is not None and frame.kind in ("node", "rel")
+        chained = frame is not None and frame.kind in (FrameKind.NODE, FrameKind.REL)
         j = i + 1
         while True:
             while self.punct(j) in ("!", "%"):
@@ -118,7 +137,7 @@ class _Reader:
             j += 1 + (self.punct(j + 1) == ":")
 
     def scan(self) -> str | None:
-        """The first unknown name, as a message; records patterns for check_endpoints."""
+        """The first unknown label, edge type or pattern property, as a message."""
         stack: list[_Frame] = []
         closing: dict[int, int] = {}  # closing index -> opening index
         i = 0
@@ -132,67 +151,55 @@ class _Reader:
                 stack.append(new)
             elif i in closing:
                 stack.pop()
-            elif punct == "*" and frame is not None and frame.kind == "rel":
+            elif punct == "*" and frame is not None and frame.kind is FrameKind.REL:
                 frame.variable_length = True
             elif punct == ":" and not (self.name(i - 1) is not None and is_map_key(
                     self.tokens, i - 1)):
                 names, after = self._label_expression(i, frame)
-                if (message := self._check_names(names, frame)) is not None:
+                if (message := _check_names(names, frame)) is not None:
                     return message
                 i = after
                 continue
-            elif punct == "." and (message := self._check_property(i)) is not None:
-                return message
-            elif (token.is_name and frame is not None and frame.kind == "props"
+            elif punct == ".":
+                self._record_read(i)
+            elif (token.is_name and frame is not None and frame.kind is FrameKind.PROPS
                   and is_map_key(self.tokens, i) and token.text not in PROPERTIES):
-                return f"unknown property {token.text!r}; {_properties_hint()}"
+                return _unknown_property(token.text)
             i += 1
         return None
 
-    def _check_names(self, names: list[str], frame: _Frame | None) -> str | None:
-        kind = frame.kind if frame is not None else "other"
-        for name in names:
-            if kind == "node" and name not in LABELS_BY_NAME:
-                return f"unknown label {name!r}; labels: {', '.join(LABELS_BY_NAME)}"
-            if kind == "rel" and name not in EDGE_TYPES_BY_NAME:
-                return f"unknown edge type {name!r}; types: {', '.join(EDGE_TYPES_BY_NAME)}"
-            if name not in LABELS_BY_NAME and name not in EDGE_TYPES_BY_NAME:
-                return f"unknown label or edge type {name!r}"
-        if kind in ("node", "rel") and frame is not None:
-            frame.names.extend(names)
-        return None
+    def _record_read(self, i: int) -> None:
+        """Note `x.prop` at the `.` at *i*, unless it is a namespaced function call."""
+        owner, prop = self.name(i - 1), self.name(i + 1)
+        if owner is None or prop is None or self.punct(i - 2) == ".":
+            return
+        if self.punct(i + 2) in ("(", "."):
+            return  # date.truncate(...), db.index.x(...): a function's namespace
+        self.reads.append((owner, prop))
 
-    def _check_property(self, i: int) -> str | None:
-        """The property after the `.` at *i*, unless it is an accessor or a namespace."""
-        name = self.name(i + 1)
-        if name is None:
-            return None
-        if self.name(i - 1) is not None and self.punct(i - 2) == ".":
-            return None  # f.filing_date.year: an accessor of a property's value
-        j = i + 1
-        while self.punct(j + 1) == "." and self.name(j + 2) is not None:
-            j += 2
-        if self.punct(j + 1) == "(":
-            return None  # date.truncate(...): a namespaced function
-        if name not in PROPERTIES:
-            return f"unknown property {name!r}; {_properties_hint()}"
+    def check_reads(self) -> str | None:
+        """The first property read on a pattern variable that no type defines."""
+        bound = {f.variable for f in self.frames.values()
+                 if f.kind in (FrameKind.NODE, FrameKind.REL) and f.variable}
+        for owner, prop in self.reads:
+            if owner in bound and prop not in PROPERTIES:
+                return _unknown_property(prop)
         return None
 
     def check_endpoints(self) -> str | None:
         """The first pattern whose labelled ends its edge type does not allow."""
         for start, frame in self.frames.items():
-            if frame.kind != "node":
+            if frame.kind is not FrameKind.NODE:
                 continue
             found = self._connection(self.pairs[start] + 1)
             if found is None:
                 continue
             rel, direction, end = found
-            message = _endpoint_violation(frame, rel, direction, end)
-            if message is not None:
+            if (message := _endpoint_violation(frame, rel, direction, end)) is not None:
                 return message
         return None
 
-    def _connection(self, k: int) -> tuple[_Frame, str, _Frame] | None:
+    def _connection(self, k: int) -> tuple[_Frame, Direction, _Frame] | None:
         """The relationship and node a pattern continues with at *k*, if any."""
         left = self.punct(k) == "<"
         k += left
@@ -206,42 +213,57 @@ class _Reader:
                 return None
             k += 1
         elif self.punct(k) == "-":
-            rel = _Frame("rel")
+            rel = _Frame(FrameKind.REL)
             k += 1
         else:
             return None
         right = self.punct(k) == ">"
         k += right
         end = self.frames.get(k)
-        if end is None or end.kind != "node":
+        if end is None or end.kind is not FrameKind.NODE:
             return None
-        direction = "forward" if right and not left else "backward" if left and not right \
-            else "either"
-        return rel, direction, end
+        if right and not left:
+            return rel, Direction.FORWARD, end
+        return rel, Direction.BACKWARD if left and not right else Direction.EITHER, end
 
 
-def _endpoint_violation(start: _Frame, rel: _Frame, direction: str, end: _Frame) -> str | None:
+def _check_names(names: list[str], frame: _Frame | None) -> str | None:
+    kind = frame.kind if frame is not None else FrameKind.OTHER
+    for name in names:
+        if kind is FrameKind.NODE and name not in LABELS_BY_NAME:
+            return f"unknown label {name!r}; labels: {', '.join(LABELS_BY_NAME)}"
+        if kind is FrameKind.REL and name not in EDGE_TYPES_BY_NAME:
+            return f"unknown edge type {name!r}; types: {', '.join(EDGE_TYPES_BY_NAME)}"
+        if name not in LABELS_BY_NAME and name not in EDGE_TYPES_BY_NAME:
+            return f"unknown label or edge type {name!r}"
+    if frame is not None and kind in (FrameKind.NODE, FrameKind.REL):
+        frame.names.extend(names)
+    return None
+
+
+def _endpoint_violation(start: _Frame, rel: _Frame, direction: Direction,
+                        end: _Frame) -> str | None:
     if not (start.names and end.names and rel.names) or rel.variable_length:
         return None
     if not (start.checked and end.checked and rel.checked):
         return None
-    pairs = {"forward": [(start, end)], "backward": [(end, start)],
-             "either": [(start, end), (end, start)]}[direction]
+    pairs = {Direction.FORWARD: [(start, end)], Direction.BACKWARD: [(end, start)],
+             Direction.EITHER: [(start, end), (end, start)]}[direction]
     for type_name, (a, b) in product(rel.names, pairs):
         edge = EDGE_TYPES_BY_NAME[type_name]
         if any(s in edge.starts and e in edge.ends for s, e in product(a.names, b.names)):
             return None
     edge = EDGE_TYPES_BY_NAME[rel.names[0]]
-    left = "<-" if direction == "backward" else "-"
-    right = "->" if direction == "forward" else "-"
+    left = "<-" if direction is Direction.BACKWARD else "-"
+    right = "->" if direction is Direction.FORWARD else "-"
     written = (f"(:{'|'.join(start.names)}){left}[:{'|'.join(rel.names)}]{right}"
                f"(:{'|'.join(end.names)})")
     return (f"pattern {written} is not allowed: {edge.name} runs from "
             f"{'|'.join(edge.starts)} to {'|'.join(edge.ends)}")
 
 
-def _properties_hint() -> str:
-    return f"properties: {', '.join(sorted(PROPERTIES))}"
+def _unknown_property(name: str) -> str:
+    return f"unknown property {name!r}; properties: {', '.join(sorted(PROPERTIES))}"
 
 
 def ontology_violation(tokens: list[Token]) -> str | None:
@@ -250,4 +272,4 @@ def ontology_violation(tokens: list[Token]) -> str | None:
     if pairs is None:
         return None
     reader = _Reader(tokens, pairs)
-    return reader.scan() or reader.check_endpoints()
+    return reader.scan() or reader.check_reads() or reader.check_endpoints()

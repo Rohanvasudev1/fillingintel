@@ -120,8 +120,9 @@ def execute(driver: Driver, cypher: str, *, database: str = DATABASE,
     """Check 4: the rows of *cypher*, read in a READ transaction, at most *max_rows*.
 
     The transaction is explicit, so the driver does not retry a transient error,
-    and it is rolled back when read. Reading stops after *max_rows*; the server
-    stops at its own timeout.
+    and it is rolled back when read. Reading stops after *max_rows*; rolling back
+    then discards the unread rest without waiting for it (measured on 5.26.31,
+    tests/test_graph_guard.py).
     """
     try:
         with read_session(driver, database, fetch_size=max_rows + 1) as session, \
