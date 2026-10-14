@@ -1,0 +1,315 @@
+{
+  "commit": "397a2d7",
+  "label": "agent-drafted questions",
+  "query_dir": "multihop",
+  "questions": [
+    {
+      "id": "q0111",
+      "question": "How do NVIDIA (fiscal 2026 10-K), AMD (fiscal 2025 10-K) and Intel (fiscal 2025 10-K) each describe their reliance on TSMC?",
+      "query_file": "q0111.cypher",
+      "query_sha256": "79ab2bfb61c26bec8303b2cd77d0dcf49291ea780d4e2d5c7e7ef385ca413d93",
+      "rows": [
+        {
+          "company": "AMD",
+          "fiscal_period": "FY2025",
+          "supplier": "TSMC",
+          "chunk_ids": [
+            "0000002488-26-000018:0015",
+            "0000002488-26-000018:0029",
+            "0000002488-26-000018:0032"
+          ],
+          "evidence_spans": [
+            "We utilize Taiwan Semiconductor Manufacturing Company Limited \\(TSMC\\) for the production of wafers for our HPC, FPGA and adaptive SoC products",
+            "We rely on Taiwan Semiconductor Manufacturing Company Limited",
+            "Moreover, we rely on TSMC, UMC and our other foundries to produce wafers with competitive performance attributes for our IC products\\."
+          ]
+        },
+        {
+          "company": "INTC",
+          "fiscal_period": "FY2025",
+          "supplier": "TSMC",
+          "chunk_ids": [
+            "0000050863-26-000011:0008",
+            "0000050863-26-000011:0018",
+            "0000050863-26-000011:0063",
+            "0000050863-26-000011:0075",
+            "0000050863-26-000011:0076"
+          ],
+          "evidence_spans": [
+            "particularly TSMC",
+            "including at one of our key foundry competitors, TSMC, for various tiles or an entire product",
+            "To the extent there is any interruption in the supply of tiles manufactured by TSMC",
+            "exclusively manufactured by TSMC",
+            "Some of our most advanced current and future products are or will be either exclusively manufactured by TSMC"
+          ]
+        },
+        {
+          "company": "NVDA",
+          "fiscal_period": "FY2026",
+          "supplier": "TSMC",
+          "chunk_ids": [
+            "0001045810-26-000021:0012"
+          ],
+          "evidence_spans": [
+            "We utilize foundries, such as Taiwan Semiconductor Manufacturing Company Limited, or TSMC, and Samsung Electronics Co\\., Ltd\\., or Samsung, to produce our semiconductor wafers\\."
+          ]
+        }
+      ],
+      "returned_chunk_ids": [
+        "0000002488-26-000018:0015",
+        "0000002488-26-000018:0029",
+        "0000002488-26-000018:0032",
+        "0000050863-26-000011:0008",
+        "0000050863-26-000011:0018",
+        "0000050863-26-000011:0063",
+        "0000050863-26-000011:0075",
+        "0000050863-26-000011:0076",
+        "0001045810-26-000021:0012"
+      ],
+      "judged_by": "company",
+      "groups": [
+        {
+          "group": "AMD",
+          "gold": [
+            "0000002488-26-000018:0029"
+          ],
+          "hits": [
+            "0000002488-26-000018:0029"
+          ],
+          "passed": true
+        },
+        {
+          "group": "INTC",
+          "gold": [
+            "0000050863-26-000011:0063"
+          ],
+          "hits": [
+            "0000050863-26-000011:0063"
+          ],
+          "passed": true
+        },
+        {
+          "group": "NVDA",
+          "gold": [
+            "0001045810-26-000021:0012"
+          ],
+          "hits": [
+            "0001045810-26-000021:0012"
+          ],
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "q0120",
+      "question": "In their latest annual reports (NVIDIA fiscal 2026; AMD and Intel fiscal 2025), how does each company name the other two as competitors?",
+      "query_file": "q0120.cypher",
+      "query_sha256": "036d2adcbb8fe2fb7a328e9e8edf8cb74b3de9cbcea4ab8c2dc32d86ab1b2abd",
+      "rows": [
+        {
+          "company": "AMD",
+          "fiscal_period": "FY2025",
+          "names_as_competitor": "INTC",
+          "chunk_ids": [
+            "0000002488-26-000018:0014",
+            "0000002488-26-000018:0023"
+          ],
+          "evidence_spans": [
+            "In the Data Center segment, we compete primarily against Intel Corporation",
+            "Intel Corporation \\(Intel\\) uses its microprocessor market position to price its products aggressively and target our customers and channel partners with special incentives\\."
+          ]
+        },
+        {
+          "company": "AMD",
+          "fiscal_period": "FY2025",
+          "names_as_competitor": "NVDA",
+          "chunk_ids": [
+            "0000002488-26-000018:0014",
+            "0000002488-26-000018:0023"
+          ],
+          "evidence_spans": [
+            "Our principal competitor in the supply of discrete graphics is Nvidia, who is the discrete GPU market share leader",
+            "Nvidia Corporation \\(Nvidia\\) leverages its market position in data center GPU, financial resources, and proprietary software ecosystem to promote its systems and influences customers who do business with us\\."
+          ]
+        },
+        {
+          "company": "INTC",
+          "fiscal_period": "FY2025",
+          "names_as_competitor": "AMD",
+          "chunk_ids": [
+            "0000050863-26-000011:0010",
+            "0000050863-26-000011:0011",
+            "0000050863-26-000011:0059"
+          ],
+          "evidence_spans": [
+            "CCG's primary competitor is AMD",
+            "DCAI competitors include AMD, which utilizes the x86 architecture",
+            "such as AMD and Qualcomm"
+          ]
+        },
+        {
+          "company": "INTC",
+          "fiscal_period": "FY2025",
+          "names_as_competitor": "NVDA",
+          "chunk_ids": [
+            "0000050863-26-000011:0011",
+            "0000050863-26-000011:0059"
+          ],
+          "evidence_spans": [
+            "providers of GPU systems such as NVIDIA",
+            "including those offered by NVIDIA and AMD"
+          ]
+        },
+        {
+          "company": "NVDA",
+          "fiscal_period": "FY2026",
+          "names_as_competitor": "AMD",
+          "chunk_ids": [
+            "0001045810-26-000021:0012"
+          ],
+          "evidence_spans": [
+            "suppliers and licensors of hardware and software for discrete and integrated GPUs, custom chips and other accelerated computing solutions, including solutions offered for AI, such as Advanced Micro Devices, Inc\\., or AMD, Huawei Technologies Co\\. Ltd\\., or Huawei, and Intel Corporation, or Intel;"
+          ]
+        },
+        {
+          "company": "NVDA",
+          "fiscal_period": "FY2026",
+          "names_as_competitor": "INTC",
+          "chunk_ids": [
+            "0001045810-26-000021:0012"
+          ],
+          "evidence_spans": [
+            "suppliers and licensors of hardware and software for discrete and integrated GPUs, custom chips and other accelerated computing solutions, including solutions offered for AI, such as Advanced Micro Devices, Inc\\., or AMD, Huawei Technologies Co\\. Ltd\\., or Huawei, and Intel Corporation, or Intel;"
+          ]
+        }
+      ],
+      "returned_chunk_ids": [
+        "0000002488-26-000018:0014",
+        "0000002488-26-000018:0023",
+        "0000050863-26-000011:0010",
+        "0000050863-26-000011:0011",
+        "0000050863-26-000011:0059",
+        "0001045810-26-000021:0012"
+      ],
+      "judged_by": "company",
+      "groups": [
+        {
+          "group": "AMD",
+          "gold": [
+            "0000002488-26-000018:0014"
+          ],
+          "hits": [
+            "0000002488-26-000018:0014"
+          ],
+          "passed": true
+        },
+        {
+          "group": "INTC",
+          "gold": [
+            "0000050863-26-000011:0059"
+          ],
+          "hits": [
+            "0000050863-26-000011:0059"
+          ],
+          "passed": true
+        },
+        {
+          "group": "NVDA",
+          "gold": [
+            "0001045810-26-000021:0012"
+          ],
+          "hits": [
+            "0001045810-26-000021:0012"
+          ],
+          "passed": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "q0127",
+      "question": "In the risk factor listing what could cause NVIDIA to misestimate demand, how did the customer-investment factor change between the fiscal 2025 and fiscal 2026 10-Ks?",
+      "query_file": "q0127.cypher",
+      "query_sha256": "7a4c429eb1184e2e8f15ab29c7a10c99bf3e9fd1701c1fa9e1ac3d46d2d9406e",
+      "rows": [
+        {
+          "fy2025_title": "Long manufacturing lead times and uncertain supply and component availability, combined with a failure to estimate customer demand accurately has led and could lead to mismatches between supply and demand.",
+          "fy2026_title": "Long manufacturing lead times and uncertain supply and capacity availability, combined with a failure to estimate customer demand accurately has led and could lead to mismatches between supply and demand.",
+          "link_method": "persist/v1@5eaa7a2c",
+          "chunk_ids": [
+            "0001045810-25-000023:0020",
+            "0001045810-26-000021:0019",
+            "0001045810-25-000023:0020",
+            "0001045810-26-000021:0019"
+          ]
+        },
+        {
+          "fy2025_title": "Long manufacturing lead times and uncertain supply and component availability, combined with a failure to estimate customer demand accurately has led and could lead to mismatches between supply and demand.",
+          "fy2026_title": "Supply constraints",
+          "link_method": "persist/v1@5eaa7a2c",
+          "chunk_ids": [
+            "0001045810-25-000023:0020",
+            "0001045810-26-000021:0023",
+            "0001045810-25-000023:0020",
+            "0001045810-26-000021:0023"
+          ]
+        },
+        {
+          "fy2025_title": "Long manufacturing lead times and uncertain supply and component availability, combined with a failure to estimate customer demand accurately has led and could lead to mismatches between supply and demand.",
+          "fy2026_title": "We have previously experienced and may continue to experience extended lead times of more than 12 months",
+          "link_method": "persist/v1@5eaa7a2c",
+          "chunk_ids": [
+            "0001045810-25-000023:0020",
+            "0001045810-26-000021:0022",
+            "0001045810-25-000023:0020",
+            "0001045810-26-000021:0022"
+          ]
+        },
+        {
+          "fy2025_title": "Long manufacturing lead times and uncertain supply and component availability, combined with a failure to estimate customer demand accurately, has led and could lead to mismatches between supply and demand.",
+          "fy2026_title": "Long manufacturing lead times and uncertain supply and capacity availability, combined with a failure to estimate customer demand accurately, has led and could lead to mismatches between supply and demand",
+          "link_method": "persist/v1@5eaa7a2c",
+          "chunk_ids": [
+            "0001045810-25-000023:0022",
+            "0001045810-26-000021:0021",
+            "0001045810-25-000023:0022",
+            "0001045810-26-000021:0021"
+          ]
+        }
+      ],
+      "returned_chunk_ids": [
+        "0001045810-25-000023:0020",
+        "0001045810-25-000023:0022",
+        "0001045810-26-000021:0019",
+        "0001045810-26-000021:0021",
+        "0001045810-26-000021:0022",
+        "0001045810-26-000021:0023"
+      ],
+      "judged_by": "period",
+      "groups": [
+        {
+          "group": "FY2025",
+          "gold": [
+            "0001045810-25-000023:0023"
+          ],
+          "hits": [],
+          "passed": false
+        },
+        {
+          "group": "FY2026",
+          "gold": [
+            "0001045810-26-000021:0022"
+          ],
+          "hits": [
+            "0001045810-26-000021:0022"
+          ],
+          "passed": true
+        }
+      ],
+      "passed": false
+    }
+  ],
+  "passed": 2,
+  "total": 3
+}
