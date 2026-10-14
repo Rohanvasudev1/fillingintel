@@ -81,6 +81,10 @@ _Avoid_: fact, data point
 The kind of quantity a metric value measures: currency, percent, per share, shares, count or other. Two metric values in different unit classes are never the same figure; the same figure at two scales (millions, billions) is.
 _Avoid_: unit, when meaning the class rather than the printed unit
 
+**Risk factor body**:
+The text of a risk factor from the end of its heading to the next risk factor's heading or the end of the section. Every chunk it touches is evidence for that risk factor, not only the heading's chunk.
+_Avoid_: description, paragraph
+
 **Persistence link**:
 The edge from a risk factor in one filing to the same risk in the company's previous 10-K, possibly reworded or expanded. A risk factor has at most one predecessor; a factor the filer later splits may have several successors.
 _Avoid_: risk factor match, lineage
@@ -179,6 +183,18 @@ _Avoid_: pipeline, retriever, method
 **Control arm**:
 The `vector` arm, which every other arm is compared against. It is never weakened.
 _Avoid_: baseline, when meaning the arm rather than a result
+
+**Anchor**:
+An extracted node that `graph_local` links to a question, by its name's similarity to the question text, as the starting point for collecting evidence. The three filers are never anchors.
+_Avoid_: seed, entry point, entity link
+
+**Fallback**:
+A `graph_traversal` question whose generated Cypher still fails the ontology check or errors after its one repair, and is answered by `graph_local` instead. Every fallback is logged and counted.
+_Avoid_: retry, recovery
+
+**Cypher validity rate**:
+The share of questions whose first generated Cypher passes the ontology check and runs without error inside the timeout. It is reported next to the rate after one repair, the non-empty rate and the fallback rate.
+_Avoid_: accuracy, success rate
 
 **Question filter**:
 The company, period and form-type constraints an arm derives from the question text alone, never from an eval record's labels.

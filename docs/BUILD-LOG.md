@@ -1994,6 +1994,26 @@ ORDER BY fy2025_title, fy2026_title
 
 ---
 
+## 2026-10-14 — Step 11 planning: grilling, research, spec and tickets
+
+Planned Step 11 (graph retrieval arms) with `/grill-with-docs` in four rounds (Q1–Q30). Every round was answered "as recommended".
+
+- **Research.** `docs/research/text-to-cypher-and-local-search.md`, partly from a throwaway `neo4j:5.26.31-community` container:
+  - `EXPLAIN` reports `r` for `LOAD CSV` and `TERMINATE TRANSACTIONS`, and both run inside a READ transaction.
+  - Unknown names only warn (01N50–52), and a reversed edge gives no warning.
+  - No APOC in the image.
+  - Reading n rows does not stop the server; only the timeout does.
+  - GraphRAG local search takes 20 anchors and ranks chunks by anchor order, then by edge support.
+- **Decisions.** CLAUDE.md Decisions (Step 11), ADR-0007 (graph arms return ranked evidence chunks; generated Cypher guarded in code) and an ADR-0004 amendment (risk factor body evidence, ontology version 4). CONTEXT.md gains anchor, fallback, Cypher validity rate and risk factor body. OPEN-DECISIONS closes five items and adds Step 13 items and two ablations.
+- **Spec and tickets.** `.scratch/step-11/spec.md` and 7 tickets in four waves. Tickets 01–04 can run in parallel sessions; 05 needs 01 and 02, 06 needs 04 and 05, and 07 needs 03 and 06. Every ticket says that `neo4j-test` is shared: run the full pytest only one session at a time.
+- **No code changed.** No API spend.
+
+**Next session starts with**
+1. Merge the Step 11 plan PR.
+2. Start tickets 01–04, one session and worktree each, with `/implement`.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.
