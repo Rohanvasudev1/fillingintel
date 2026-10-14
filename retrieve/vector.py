@@ -17,71 +17,48 @@ import os
 import time
 from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
-from dataclasses import fields
 from pathlib import Path
 from types import MappingProxyType
 
 import psycopg
 
-from ingest.corpus import TICKER_BY_CIK
-from ingest.store import (
-    ChunkNotFound,
-    chunker_versions,
-    embedding_gaps,
-    get_chunk,
-    list_filings,
-    nearest_chunks,
-    resolve,
-)
+from ingest.store import embedding_gaps, nearest_chunks
 from ingest.voyage import (
     API_KEY_ENV,
     DEFAULT_MODEL,
-    Embedding,
     QueryEmbedder,
     VoyageClient,
     VoyageError,
 )
-from retrieve.answer import Answer, write_answer
 from retrieve.answer_model import (
     ANSWER_EFFORT,
     ANSWER_MAX_TOKENS,
     ANSWER_MODEL,
     AnswerModel,
-    AnswerModelError,
-    AnswerRequest,
     AnthropicAnswerModel,
-    ApiResponse,
-    ModelRequest,
 )
 from retrieve.answer_model import API_KEY_ENV as ANTHROPIC_KEY_ENV
-from retrieve.answer_prompt import (
-    AnswerPrompt,
-    PromptError,
-    SourceChunk,
-    load_prompt,
-)
+from retrieve.answer_prompt import AnswerPrompt
 from retrieve.arm import ArmConfig, ArmError, ArmResult, ArmSpec, Retrieval, RetrievedChunk
-from retrieve.pricing import PRICE_TABLE_DATE, PRICES, embedding_cost
-from retrieve.query_cache import CachedQueryEmbedder, CacheError
-from retrieve.question_filter import (
-    CorpusFiling,
-    check_filings,
-    companies_without_chunks,
-    parse_question_filter,
+from retrieve.arm_steps import (
+    ChunkAnswerer,
+    arm_error,
+    check_prices,
+    corpus_chunker_version,
+    corpus_filings,
+    embed_question,
+    load_answer_prompt,
 )
+from retrieve.pricing import embedding_cost
+from retrieve.query_cache import CachedQueryEmbedder, CacheError
+from retrieve.question_filter import companies_without_chunks, parse_question_filter
 from retrieve.response_cache import CachedAnswerModel
 from retrieve.tracing import (
-    EMBED_SPAN,
     FILTER_SPAN,
-    GENERATION_SPAN,
     SEARCH_SPAN,
     Kind,
     SpanRecorder,
-    embedding_attributes,
-    embedding_result_attributes,
     filter_attributes,
-    generation_attributes,
-    generation_request_attributes,
     question_input,
     retrieval_attributes,
 )
@@ -90,7 +67,6 @@ TOP_K = 10
 _MS_PER_SECOND = 1000.0
 # Raised as ArmError.  OSError: a cache file could not be written.
 _RETRIEVAL_ERRORS = (VoyageError, CacheError, psycopg.Error, OSError)
-_ANSWER_ERRORS = (CacheError, psycopg.Error, ChunkNotFound, AnswerModelError, OSError)
 
 
 class VectorArm:
@@ -116,13 +92,12 @@ class VectorArm:
     ):
         self._conn = conn
         self._embedder = embedder
-        self._answer_model = answer_model
         self._model = model
         self._k = k
         self._clock = clock
-        self._prompt = prompt if prompt is not None else _load_prompt()
+        self._prompt = prompt if prompt is not None else load_answer_prompt()
         self._spans = spans if spans is not None else SpanRecorder.off()
-        _check_prices((model, ANSWER_MODEL))
+        check_prices((model, ANSWER_MODEL))
         self.config = ArmConfig(
             models=MappingProxyType({"embedding": model, "answer": ANSWER_MODEL}),
             k=k,
@@ -131,21 +106,16 @@ class VectorArm:
             answer_prompt=self._prompt,
             answer_max_tokens=ANSWER_MAX_TOKENS,
         )
-        self._filings = _corpus_filings(conn)
-        self._tickers = MappingProxyType({f.accession_no: f.ticker for f in self._filings})
+        self._filings = corpus_filings(conn)
+        self._answerer = (None if answer_model is None else
+                          ChunkAnswerer(self.name, conn, answer_model, self._prompt,
+                                        self._filings, self._spans))
 
     def run(self, question: str) -> ArmResult:
         """Retrieve and answer for one question; any failure is raised as ``ArmError``."""
-        if self._answer_model is None:
+        if self._answerer is None:
             raise ArmError("the vector arm was opened with no answer model; use retrieve()")
-        retrieval = self.retrieve(question)
-        try:
-            chunks = self._source_chunks([r.chunk_id for r in retrieval.retrieved])
-            answer = self._write_answer(question, chunks, self._answer_model)
-        except _ANSWER_ERRORS as exc:
-            raise _arm_error(exc) from exc
-        retrieval_fields = {f.name: getattr(retrieval, f.name) for f in fields(Retrieval)}
-        return ArmResult(**retrieval_fields, answer=answer, sources=chunks)
+        return self._answerer.answer(question, self.retrieve(question))
 
     def retrieve(self, question: str) -> Retrieval:
         """Filter, embed and search for one question, with no answer model call.
@@ -157,12 +127,12 @@ class VectorArm:
             span.set_attributes(filter_attributes(question_filter))
         try:
             start = self._clock()
-            embedding = self._embed(question)
+            embedding = embed_question(self._embedder, self._model, question, self._spans)
             embedded = self._clock()
             retrieved = self._search(question, embedding.vector, question_filter.accession_nos)
             searched = self._clock()
         except _RETRIEVAL_ERRORS as exc:
-            raise _arm_error(exc) from exc
+            raise arm_error(self.name, exc) from exc
         return Retrieval(
             retrieved=retrieved,
             question_filter=question_filter,
@@ -176,14 +146,6 @@ class VectorArm:
             embed_cost_usd=embedding_cost(self._model, embedding.api_token_count),
         )
 
-    def _embed(self, question: str) -> Embedding:
-        attributes = embedding_attributes(self._model, question)
-        with self._spans.span(EMBED_SPAN, Kind.EMBEDDING, attributes) as span:
-            embedding = self._embedder.embed_query(question, self._model)
-            cost = embedding_cost(self._model, embedding.api_token_count)
-            span.set_attributes(embedding_result_attributes(embedding, cost))
-        return embedding
-
     def _search(self, question: str, vector: Sequence[float],
                 accession_nos: Sequence[str] | None) -> tuple[RetrievedChunk, ...]:
         with self._spans.span(SEARCH_SPAN, Kind.RETRIEVER, question_input(question)) as span:
@@ -191,62 +153,6 @@ class VectorArm:
             retrieved = tuple(RetrievedChunk(chunk_id, score) for chunk_id, score in rows)
             span.set_attributes(retrieval_attributes(retrieved))
         return retrieved
-
-    def _write_answer(self, question: str, chunks: Sequence[SourceChunk],
-                      answer_model: AnswerModel) -> Answer:
-        attributes = generation_request_attributes(ANSWER_MODEL, ANSWER_EFFORT, ANSWER_MAX_TOKENS,
-                                                   self._prompt.version)
-        with self._spans.span(GENERATION_SPAN, Kind.LLM, attributes) as span:
-            sent = _SentRequests(answer_model)
-            answer = write_answer(question, chunks, sent, self._prompt)
-            messages = ((sent.last.system, sent.last.user)
-                        if self._spans.capture_text and sent.last is not None else None)
-            span.set_attributes(generation_attributes(answer, messages))
-        return answer
-
-    def _source_chunks(self, chunk_ids: Sequence[str]) -> tuple[SourceChunk, ...]:
-        """Each chunk's resolved text and the source the answer model is told about."""
-        chunks = [get_chunk(self._conn, chunk_id) for chunk_id in chunk_ids]
-        unknown = sorted({c.accession_no for c in chunks} - set(self._tickers))
-        if unknown:
-            raise ArmError(f"retrieved chunks from filings outside the corpus: {unknown}")
-        return tuple(
-            SourceChunk(c.chunk_id, self._tickers[c.accession_no], c.form_type, c.fiscal_period,
-                        c.section, resolve(self._conn, c.chunk_id))
-            for c in chunks
-        )
-
-
-class _SentRequests:
-    """Passes requests to the answer model and keeps the last one, so a span shows the
-    prompt exactly as it was sent."""
-
-    def __init__(self, inner: AnswerModel):
-        self._inner = inner
-        self.last: AnswerRequest | None = None
-
-    def complete(self, request: ModelRequest) -> ApiResponse:
-        if isinstance(request, AnswerRequest):
-            self.last = request
-        return self._inner.complete(request)
-
-
-def _arm_error(exc: Exception) -> ArmError:
-    return ArmError(f"vector arm failed ({type(exc).__name__}): {exc}")
-
-
-def _check_prices(models: Sequence[str]) -> None:
-    """Refuse to start an arm whose cost could not be reported."""
-    unpriced = [m for m in models if m not in PRICES]
-    if unpriced:
-        raise ArmError(f"no price for {unpriced} in the {PRICE_TABLE_DATE} price table")
-
-
-def _load_prompt() -> AnswerPrompt:
-    try:
-        return load_prompt()
-    except PromptError as exc:
-        raise ArmError(str(exc)) from exc
 
 
 def _check_corpus(conn: psycopg.Connection, model: str) -> str:
@@ -258,28 +164,7 @@ def _check_corpus(conn: psycopg.Connection, model: str) -> str:
         raise ArmError(
             f"{gaps.stale} chunks have a stale {model} vector; run python -m ingest.embed"
         )
-    versions = chunker_versions(conn)
-    if len(versions) != 1:
-        raise ArmError(f"expected one chunker_version in the corpus, found {versions}")
-    return versions[0]
-
-
-def _corpus_filings(conn: psycopg.Connection) -> tuple[CorpusFiling, ...]:
-    """The stored filings the question filter resolves against; raises ``ArmError`` if unusable."""
-    rows = list_filings(conn)
-    unknown = sorted({r.cik for r in rows if r.cik not in TICKER_BY_CIK})
-    if unknown:
-        raise ArmError(f"the filings table has CIKs outside the corpus: {unknown}")
-    filings = tuple(
-        CorpusFiling(r.accession_no, TICKER_BY_CIK[r.cik], r.form_type, r.fiscal_period,
-                     r.report_date)
-        for r in rows
-    )
-    try:
-        check_filings(filings)
-    except ValueError as exc:
-        raise ArmError(f"cannot build the question filter: {exc}") from exc
-    return filings
+    return corpus_chunker_version(conn)
 
 
 @contextmanager

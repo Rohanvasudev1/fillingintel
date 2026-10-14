@@ -25,10 +25,19 @@ if TYPE_CHECKING:
 _REPORT = re.compile(r"load-run(\d+)\.json")
 
 
+def _used_runs(directory: Path) -> list[int]:
+    return [int(m[1]) for p in directory.glob("load-run*.json") if (m := _REPORT.fullmatch(p.name))]
+
+
 def next_report_path(directory: Path) -> Path:
     """`load-run{N}.json` in *directory*, N one past the highest used (from 1)."""
-    used = [int(m[1]) for p in directory.glob("load-run*.json") if (m := _REPORT.fullmatch(p.name))]
-    return directory / f"load-run{max(used, default=0) + 1}.json"
+    return directory / f"load-run{max(_used_runs(directory), default=0) + 1}.json"
+
+
+def latest_load_run(directory: Path) -> str | None:
+    """The newest report's run name in *directory*, such as "load-run4", or None."""
+    used = _used_runs(directory)
+    return f"load-run{max(used)}" if used else None
 
 
 def graph_counts(batch: Batch) -> dict[str, dict[str, int]]:
