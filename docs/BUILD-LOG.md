@@ -2012,6 +2012,34 @@ Planned Step 11 (graph retrieval arms) with `/grill-with-docs` in four rounds (Q
 1. Merge the Step 11 plan PR.
 2. Start tickets 01–04, one session and worktree each, with `/implement`.
 
+## 2026-10-14 — Step 11 ticket 03: paired comparisons in eval.compare
+
+`eval.compare` now also reports paired differences between two runs, as RESEARCH-PLAN's Statistics section asks. Spec `.scratch/step-11/spec.md` (Harness seams, `eval.compare`), ticket `.scratch/step-11/issues/03-paired-comparisons-in-eval-compare.md`.
+
+- **What it reports.** For questions both runs hold, matched by question set and ID, each question's `after - before` is computed for recall@5, recall@10, precision@5, precision@10, the wrong-evidence flag and each judged mean. Results are given per class and pooled. Each row shows the mean difference, a fixed-seed percentile bootstrap 95% interval (10,000 resamples, seeded by the before run's seed with the set, class and metric), n, and whether the interval excludes 0. Only a difference whose interval excludes 0 counts. Judged rows carry their records' label, "uncalibrated". Rows with n under 10 are marked "directional". Metric names are the cell paths, so the paired table lines up with the existing cell-by-cell table, which stays.
+- **Nothing dropped silently.** Questions present in only one run are counted and listed. A shared question that only one run scored on a metric is counted per row as `unpaired`, for example after a judge error.
+- **Pooled means the answerable classes.** Decline and unanswerable keep their own rows, following RESEARCH-PLAN. Classes come in schema order.
+- **Setup check unchanged.** Runs with a different answer prompt, split or question set are still refused. Two different arms are allowed.
+- **Review fixes** (`mattpocock-skills:code-review`, both axes):
+  - Errors in a question record name the record, not "cells".
+  - An `assert` became an explicit error.
+  - The header check is shared between the two reports.
+  - `POOLED` comes from the gate, and the uncalibrated label from the records, so the CLI doesn't import ragas.
+  - Per-metric `unpaired` counts were added.
+  - Decline and unanswerable were taken out of pooled.
+  - Metric names follow the cell paths.
+  - Classes are in schema order.
+  - A test ties the paired n to the real record shape's cells.
+- **Shown on the baseline against its uncached repeat** (`python -m eval.compare benchmarks/runs/2026-10-05-vector-dev-96e8c69.json benchmarks/runs/2026-10-05-vector-dev-96e8c69-2.json`, commit `953881c`, agent-drafted questions, dev; the repeat file is local only). Both runs hold all 93 dev questions (none unpaired).
+  - Retrieval: every retrieval and wrong-evidence difference is exactly 0 with interval [0, 0], none counted (pooled n = 82).
+  - Judged (uncalibrated): 1 of 14 judged rows counts. Local answer relevancy is +0.024 [0.007, 0.043] (n = 22), a difference between two runs of the same setup. The other judged differences are within ±0.031, and every interval spans 0. Pooled over the 82 answerable questions: faithfulness −0.001 [−0.015, 0.014], answer relevancy +0.002 [−0.010, 0.013], citation support −0.001 [−0.021, 0.021].
+  - What this means for Step 11: run-to-run noise alone can push a judged class difference of about 0.02 past 0. With 14 judged rows at 95%, about one false positive is expected by chance. A judged arm difference near that size needs more than a single counting row before it is reported as real. Retrieval differences have no such noise, because retrieval is deterministic.
+- **Tests:** 33 in `tests/test_eval_compare.py` pass. Ruff is clean. OPEN-DECISIONS is unchanged. No API spend.
+
+**Next session starts with**
+1. Open the PR for this ticket. The user merges.
+2. Ticket 07 uses `eval.compare` to run each graph arm against the baseline vector run.
+
 ---
 
 ## Findings worth telling
