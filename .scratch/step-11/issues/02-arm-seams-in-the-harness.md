@@ -15,4 +15,4 @@
 - [x] Span names for anchor linking, graph expansion, Cypher generation, the guard, execution and fallback are defined. A Cypher text attribute is always set; prompt text only under `FILINGINTEL_TRACE_TEXT`.
 - [x] Run files record no-anchor and not-found counts per class.
 - [x] Tests (prior art: the eval.run and tracing-run tests) drive a stub arm end to end and check the new fields. The existing vector, gate and compare tests pass unchanged.
-- [ ] `mattpocock-skills:code-review`; ruff and pytest green; BUILD-LOG entry. (Review, ruff and BUILD-LOG done; full pytest pending.)
+- [x] `mattpocock-skills:code-review`; ruff and pytest green; BUILD-LOG entry.

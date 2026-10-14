@@ -2026,10 +2026,10 @@ The harness can now carry a graph arm's details without any graph arm existing. 
 - **Spans.** `anchor_linking`, `graph_expand`, `cypher_generation`, `cypher_guard`, `cypher_execute` and `fallback`, with helpers in `retrieve/tracing.py`. `filingintel.cypher` is always set; Cypher prompt text goes on a span only when the caller passes messages, which it does only under `FILINGINTEL_TRACE_TEXT`.
 - **Vector unchanged.** Graph fields are written only when an arm provides them. A test checks that a vector-shaped run file has no new key in its header, records or cells. `eval.gate` and `eval.compare` are untouched.
 - **Review (`mattpocock-skills:code-review`).** Fixed: a `.get(stage, 0.0)` that could hide a mixed cell, duplicated outcome literals, a redundant type guard, the stage definition sitting in the wrong module, an in-place dict build, a misleading comment, and stage pricing left to each arm (now `StageCost.anthropic`). Tickets 05 and 06 gained a line on registering the arm with its required env and using these seams. Not changed: the new test imports helpers from `tests/test_eval_run.py` rather than moving them, so that file stays exactly as it was; the presence checks for graph fields sit in five places, which is the cost of leaving vector files unchanged.
-- **Evidence.** `uv run ruff check .` clean. Without databases: `tests/test_eval_run_graph.py` (12), `test_eval_run`, `test_eval_operational`, `test_eval_compare`, `test_tracing` pass (98). With Postgres and `NEO4J_TEST_URI` empty: `test_vector_arm`, `test_tracing_run`, `test_tracing` and the graph harness tests pass (77). The full `uv run --env-file .env pytest` waits for the user's go-ahead, since other sessions share `neo4j-test`. No API spend.
+- **Evidence.** `uv run ruff check .` clean. Without databases: `tests/test_eval_run_graph.py` (12), `test_eval_run`, `test_eval_operational`, `test_eval_compare`, `test_tracing` pass (98). With Postgres and `NEO4J_TEST_URI` empty: `test_vector_arm`, `test_tracing_run`, `test_tracing` and the graph harness tests pass (77). Full `uv run --env-file .env pytest` at `78c15be`, with Postgres and `neo4j-test`: 2,236 passed, 1 skipped, in 598 s. No API spend.
 
 **Next session starts with**
-1. The full pytest run once no other session is using `neo4j-test`, then a PR for this branch.
+1. A PR for this branch.
 2. Ticket 05 (`graph_local`) once tickets 01 and 02 have merged.
 
 ---
