@@ -133,6 +133,7 @@ _LIST_FILINGS: LiteralString = (
     "SELECT accession_no, cik, form_type, fiscal_period, report_date FROM filings"
     " ORDER BY accession_no"
 )
+_CHUNK_IDS: LiteralString = "SELECT chunk_id FROM chunks"
 _EMBEDDING_GAPS = cast(
     LiteralString,
     "SELECT count(*) FILTER (WHERE e.chunk_id IS NULL),"
@@ -438,6 +439,11 @@ def nearest_chunks(
 def list_filings(conn: psycopg.Connection) -> list[FilingRow]:
     """Each stored filing's metadata, by accession number."""
     return [FilingRow(*row) for row in conn.execute(_LIST_FILINGS)]
+
+
+def chunk_ids(conn: psycopg.Connection) -> frozenset[str]:
+    """Every stored chunk ID."""
+    return frozenset(row[0] for row in conn.execute(_CHUNK_IDS))
 
 
 # ── Snapshot rows (Step 6) ────────────────────────────────────────────────────
