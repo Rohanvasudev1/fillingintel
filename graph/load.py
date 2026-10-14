@@ -139,8 +139,10 @@ def load_graph(
     """Build the graph, write it in one transaction and validate it.
 
     Raises GraphNotEmpty (without *rebuild*), BuildError, BatchRejected,
-    GraphMetaMismatch or ConstraintMismatch, each before the graph changes. With
-    *rebuild*, an older :GraphMeta is upgraded in the rebuild transaction.
+    GraphMetaMismatch or ConstraintMismatch, each before any node changes. With
+    *rebuild*, an older :GraphMeta is upgraded in the rebuild transaction; the
+    constraints are re-applied just before it (IF NOT EXISTS, so only a missing
+    one is created, and it stays if the rebuild then fails).
     Once the write has committed nothing is raised: violations, or an error
     that stopped validation, come back in the result.
     """

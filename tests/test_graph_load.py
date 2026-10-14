@@ -13,7 +13,7 @@ import pytest
 
 from extract.pipeline import ExtractionRun
 from extract.report import candidate_lines, write_candidates
-from graph.batch import Batch, NodeRecord
+from graph.batch import Batch, EdgeRecord, NodeRecord, NodeRef
 from graph.build_input import ChunkRow, FilingRow, InputError, StructuralRows
 from graph.connection import DATABASE
 from graph.constraints import GRAPH_META, GraphMetaMismatch, apply_constraints
@@ -21,6 +21,7 @@ from graph.load import load_graph, read_inputs
 from graph.load_report import load_report
 from graph.ontology import LABELS_BY_NAME, ONTOLOGY_VERSION, Kind
 from graph.schema_text import SCHEMA_TEXT_SHA256
+from graph.validate import validate_graph
 from graph.write import BatchRejected, GraphNotEmpty, rebuild_graph
 from persist.decisions import LinkEvidence
 from persist.links import EXACT_TITLE, PersistLink
@@ -266,3 +267,22 @@ def test_the_load_report_records_where_the_evidence_came_from_and_the_bodies(
     assert bodies["prompt"] == "body/v1"
     assert bodies["unlocated"] == 2  # rows hold no risk section in this fixture
     assert bodies["body_entries"] == 0 and bodies["long_bodies"] == []
+
+
+def test_an_agreement_concerning_a_filer_is_written_and_valid_under_version_4(
+    unmarked, rows, inputs,
+):
+    built = load_graph(unmarked, rows, inputs, rebuild=False).built.batch
+    deal = NodeRef.of("Agreement", key="Agreement:wafer supply agreement")
+    quote = evidence(SUPPLY_CHUNK, prompt=PROMPT)
+    concerns = EdgeRecord("CONCERNS", deal, NodeRef.of("Company", cik="1045810"), {
+        "chunk_ids": [SUPPLY_CHUNK], "evidence_spans": [quote.span],
+        "confidences": [quote.confidence], "extract_prompts": [PROMPT]})
+    rebuild_graph(unmarked, Batch(
+        nodes=(*built.nodes, NodeRecord("Agreement", {"key": deal.key_dict()["key"],
+                                                      "name": "wafer supply agreement"},
+                                        (quote,))),
+        edges=(*built.edges, concerns)))
+    assert _run(unmarked, "MATCH (:Agreement)-[:CONCERNS]->(c:Company) RETURN c.cik AS cik") \
+        == [{"cik": "1045810"}]
+    assert validate_graph(unmarked).ok

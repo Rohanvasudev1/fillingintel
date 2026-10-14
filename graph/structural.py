@@ -24,8 +24,8 @@ _RISK_SECTIONS = """
     FROM filings f
     JOIN (SELECT c.accession_no, min(c.char_start) AS char_start, max(c.char_end) AS char_end
           FROM chunks c
-          WHERE (c.form_type = '10-K' AND c.section = %(ten_k)s)
-             OR (c.form_type = '10-Q' AND c.section = %(ten_q)s)
+          JOIN unnest(%(forms)s::text[], %(sections)s::text[]) AS r(form_type, section)
+            ON c.form_type = r.form_type AND c.section = r.section
           GROUP BY c.accession_no) s USING (accession_no)
     ORDER BY f.accession_no
 """
@@ -44,7 +44,7 @@ def read_structural(conn: psycopg.Connection) -> StructuralRows:
         ).fetchall()
         sections = cur.execute(
             _RISK_SECTIONS,
-            {"ten_k": RISK_SECTION_BY_FORM["10-K"], "ten_q": RISK_SECTION_BY_FORM["10-Q"]},
+            {"forms": list(RISK_SECTION_BY_FORM), "sections": list(RISK_SECTION_BY_FORM.values())},
         ).fetchall()
     return StructuralRows(tuple(FilingRow(**row) for row in filings),
                           tuple(ChunkRow(**row) for row in chunks),

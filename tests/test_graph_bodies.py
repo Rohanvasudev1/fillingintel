@@ -7,6 +7,7 @@ the chunker's offsets, so a chunker change fails these tests.
 import pytest
 
 from graph.batch import Evidence, check_batch
+from graph.bodies import BODY_PROMPT
 from graph.build_input import (
     ChunkRow,
     ExtractFile,
@@ -15,7 +16,7 @@ from graph.build_input import (
     RiskSection,
     StructuralRows,
 )
-from graph.builder import BODY_PROMPT, build_graph
+from graph.builder import BuildError, build_graph
 from ingest.chunker import chunk_filing
 
 PROMPT = "extract/v2@34a82e2b"
@@ -232,3 +233,15 @@ def test_a_body_of_exactly_five_chunks_is_not_listed(ten_k):
                    _factor(TEN_K, DEFECTS, (_chunk(26), DEFECTS)))
     assert _key(TEN_K, SUPPLY) not in dict(built.report.bodies.long_bodies)
     assert built.report.bodies.unlocated == ()
+
+
+def test_a_risk_section_in_two_spans_is_refused(ten_k):
+    # The section is taken as its first to last chunk; another section's chunk
+    # inside it would make the text between the spans count as body.
+    rows, _ = ten_k
+    section = rows.risk_sections[0]
+    inside = ChunkRow(f"{TEN_K}:9999", TEN_K, "part_i_item_7",
+                      section.char_start + 1000, section.char_start + 2000)
+    split = StructuralRows(rows.filings, (*rows.chunks, inside), rows.risk_sections)
+    with pytest.raises(BuildError, match="part_i_item_7"):
+        _build(split, _factor(TEN_K, FAILURE, (_chunk(20), FAILURE)))

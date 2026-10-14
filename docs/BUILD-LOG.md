@@ -2043,6 +2043,26 @@ Built the guard that every generated Cypher query passes before it reaches Neo4j
 2. Recreate `neo4j` with the limits when no session is loading the graph: `docker compose up -d neo4j` from the main checkout.
 3. Ticket 05 or 06, once 01 and 02 land.
 
+## 2026-10-14 — Step 11 ticket 01: risk factor body evidence and ontology version 4
+
+**What changed**
+- **Body evidence.** `graph/bodies.py`, a pure builder step, gives each risk factor an `EVIDENCED_BY` entry for every chunk its body touches. Each entry is `body/v1`, `stated`, and quotes up to 200 characters of verbatim chunk text. The body starts after the heading's last appearance in Item 1A (10-K) or Part II Item 1A (10-Q) and ends at the next heading or the section end. `read_structural()` now returns chunk offsets and each filing's risk-factor section. The builder refuses a section split into two spans.
+- **The heading rule moved (user decision).** An offline build under the rule as first written showed q0127 still failing: neither year's factor reached its gold chunk. The extractor also makes risk factors from sentences inside a body. One of them, "We have previously experienced … extended lead times", starts chunk 0022 of NVIDIA's FY2026 10-K mid-paragraph. Taken as a heading, it ended the supply factor's body at chunk 0021. Now a heading must start a line; a factor found only mid-line gets no body, ends none, and is listed as "not a heading". Recorded in ADR-0004, the spec, CONTEXT.md and CLAUDE.md.
+- **Ontology 4.** Company is allowed as a `CONCERNS` end. Step 10's 5 dropped `CONCERNS` edges are 4 distinct edges (one appeared twice), so `CONCERNS` went from 51 to 55.
+- **Upgrade on rebuild.** `graph.load --rebuild` re-applies the constraints, then moves an older `:GraphMeta` to version 4 inside the rebuild transaction. Neo4j cannot mix schema and data writes in one transaction, so the constraints are applied just before it. A newer or unparseable version is refused with nothing changed (exit 3).
+- **Provenance.** The load report records `extract/v2@34a82e2b` and `extracted_under_ontology: [3]`, read from the extraction run reports. Nothing was re-extracted. Ontology 4 moved the extract prompt's computed version to `extract/v2@9fd48233` with the file unchanged; two tests were re-pinned to it.
+
+**Results (commit `28c70ca`, local graph)**
+- Load run 4 (`benchmarks/graph/load-run4.json`): `:GraphMeta` upgraded from 3. 948 body entries. Of 1,405 risk factors, 257 have no span in the section and 371 are body sentences (not headings). 2 bodies run 6 chunks, none longer. `EVIDENCED_BY` went from 10,736 to 11,631. `graph.validate`: zero violations, Postgres check included.
+- The write took 62.6 s against run 3's 12.0 s, under ticket 04's 300 s rebuild timeout and the 512 MB transaction cap (`neo4j` recreated with the limits first). Not explained: about 900 more edges should not cost 50 s. The server had just been recreated with a cold cache. Measure on the next rebuild.
+- Multi-hop run 2 (`benchmarks/graph/multihop-run2.json`, agent-drafted questions, queries and pass rule unchanged): 3 of 3 pass. q0127 now reaches gold chunk 0023 (FY2025) and 0022 (FY2026).
+- Tests: TESTCOUNTS. Code review (`mattpocock-skills:code-review`): no hard violations; fixes applied for the hard-coded form names in the section query, two inconsistent key reads, the section guard, a test of `CONCERNS` to a Company on `neo4j-test`, and the spec notes.
+- No API spend.
+
+**Next session starts with**
+1. Merge this PR once CI is green.
+2. Tickets 05 and 06 (`graph_local`, `graph_traversal`) can build on load run 4.
+
 ---
 
 ## Findings worth telling
@@ -2060,3 +2080,4 @@ Short versions of the stories from this build so far, for interviews and write-u
 - **A group cut doubled entity-resolution recall at no model cost.** Recall went from 0.387 to 0.783 on agent-labelled pairs from two different draws, with no wrong merge in the sample and no new model call. The resolver now cuts each blocked group by removing the fewest "same" answers that keep every disputed pair apart. It finds that cut exactly, because merging in a fixed order gave a different answer in 11 of 12 groups.
 - **Agent-labelled persistence links: right when made, but few.** 23 of 24 sampled risk-factor links were right, yet recall was 0.43. Almost half the misses were "same" answers dropped by a deliberate rule, that each later risk factor gets at most one predecessor. Filers merge and split risk factors, so a one-to-one link model undercounts by design.
 - **The graph linked the right risk factor and still missed the answer.** NVIDIA's demand risk factor was linked correctly from fiscal 2025 to fiscal 2026, but the graph tied each risk factor only to the chunk holding its heading. The bullet the question asked about sat in the next chunk, so the hand-written query could not reach it. Checking against gold chunks, not just "the query returned something", showed the gap before any retrieval arm was built on it.
+- **A fix written to the letter would have failed.** The Step 11 plan said a risk factor's body ends at the next risk factor's heading. Building the graph offline before loading it showed the question still failing: the extractor also records sentences from inside a body as risk factors, and one of them cut the real body short a chunk before the answer. Requiring a heading to start a line fixed it, and the multi-hop check went from 2 of 3 to 3 of 3.

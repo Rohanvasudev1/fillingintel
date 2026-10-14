@@ -70,11 +70,14 @@ def body_evidence(rows: StructuralRows, factors: Iterable[Factor]) -> Bodies:
     not_headings: list[str] = []
     for accession_no, found in by_filing.items():
         section = sections.get(accession_no)
-        located = _located(section, found) if section else {}
+        if section is None:
+            unlocated.extend(f.key for f in found)
+            continue
+        located = _located(section, found)
         headings = {k: v for k, v in located.items() if _starts_line(section.text, v[0])}
         unlocated.extend(f.key for f in found if f.key not in located)
         not_headings.extend(k for k in located if k not in headings)
-        if section and headings:
+        if headings:
             name = RISK_SECTION_BY_FORM.get(forms.get(accession_no, ""))
             chunks = sorted((c for c in rows.chunks
                              if c.accession_no == accession_no and c.section == name),

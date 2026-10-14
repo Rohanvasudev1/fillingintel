@@ -54,6 +54,7 @@ from graph.batch import (
 from graph.bodies import BODY_PROMPT, Bodies, Factor, body_evidence
 from graph.build_input import (
     EXTRACT_PROMPT_PREFIX,
+    RISK_SECTION_BY_FORM,
     ExtractEdge,
     ExtractFile,
     ExtractNode,
@@ -71,7 +72,9 @@ FILED, COVERS_PERIOD, PART_OF, MEASURES = (
     EDGE_TYPES_BY_NAME[name].name for name in ("FILED", "COVERS_PERIOD", "PART_OF", "MEASURES"))
 ALIASES, STAKE = "aliases", "stake"
 RISK_FACTOR = LABELS_BY_NAME["RiskFactor"].name
+RISK_SECTIONS = frozenset(RISK_SECTION_BY_FORM.values())
 BODY_FILE_INDEX = -1  # body entries rank below every file's, so extracted ones win ties
+BODY_LINE = 0  # the line rank part, unused once BODY_FILE_INDEX settles the tie
 COMPANY_KEY_PREFIX = f"{COMPANY}:"  # how the alias map names a filer (ADR-0006)
 _NAME_PROPERTY = {"RiskFactor": "title", METRIC: "concept"}
 
@@ -113,7 +116,7 @@ class BodyReport:
     body_entries: int  # BODY_PROMPT entries in the batch, after combining
     unlocated: tuple[str, ...]  # risk factor keys whose span is not in the section
     not_headings: tuple[str, ...]  # keys whose span is in the section only mid-line
-    long_bodies: tuple[tuple[str, int], ...]  # (key, chunks) for bodies over 5 chunks
+    long_bodies: tuple[tuple[str, int], ...]  # (key, chunks) over LONG_BODY_CHUNKS
 
 
 @dataclass(frozen=True, slots=True)
@@ -178,6 +181,7 @@ def build_graph(
 ) -> Built:
     """The batch that is the whole graph, and what the build left out or found."""
     _check_prompts(files)
+    _check_risk_sections(rows)
     filing_dates = {f.accession_no: f.filing_date for f in rows.filings}
     context = _Context(
         filing_dates=filing_dates,
@@ -215,6 +219,17 @@ def _check_prompts(files: Sequence[ExtractFile]) -> None:
                         f"extract files, found {', '.join(sorted(prompts))}")
 
 
+def _check_risk_sections(rows: StructuralRows) -> None:
+    """Refuse a risk-factor section with another section's chunk inside its extent."""
+    extents = {s.accession_no: (s.char_start, s.char_start + len(s.text))
+               for s in rows.risk_sections}
+    for c in rows.chunks:
+        start, end = extents.get(c.accession_no, (0, 0))
+        if start < c.char_start and c.char_end < end and c.section not in RISK_SECTIONS:
+            raise BuildError(f"the risk-factor section of {c.accession_no} holds chunk "
+                             f"{c.chunk_id} of {c.section}; it is not one span")
+
+
 def _metrics_without_subject(files: Sequence[ExtractFile]) -> frozenset[str]:
     """Keys of MetricValues whose own file has no MEASURES edge from them."""
     skipped: set[str] = set()
@@ -232,14 +247,21 @@ def _risk_factors(files: Sequence[ExtractFile], context: _Context) -> list[Facto
     for f in files:
         for node in f.nodes:
             if node.label == RISK_FACTOR:
-                key = str(context.canonical(NodeRef.of(RISK_FACTOR, key=node.key))
-                          .key_dict()["key"])
+                key = _key(context.canonical(NodeRef.of(RISK_FACTOR, key=node.key)))
                 found = spans.setdefault((key, f.accession_no), {})
                 for e in node.evidence:
                     found[e.span] = max(found.get(e.span, 0), CONFIDENCE_RANK[e.confidence])
-    return [Factor(key, accession_no,
-                   tuple(span for span, rank in found.items() if rank == max(found.values())))
+    return [Factor(key, accession_no, _most_confident(found))
             for (key, accession_no), found in spans.items()]
+
+
+def _most_confident(ranks: Mapping[str, int]) -> tuple[str, ...]:
+    best = max(ranks.values())
+    return tuple(span for span, rank in ranks.items() if rank == best)
+
+
+def _key(ref: NodeRef) -> str:
+    return str(ref.key_dict()["key"])
 
 
 def _body_entries(
@@ -249,10 +271,12 @@ def _body_entries(
     file_date = context.filing_dates[file.accession_no]
     found: dict[NodeRef, list[_Entry]] = {}
     for node in file.nodes:
-        ref = context.canonical(NodeRef.of(node.label, key=node.key))
-        key = str(ref.key_dict().get("key"))
-        if node.label == RISK_FACTOR and key in bodies.evidence and ref not in found:
-            found[ref] = context.entries(bodies.evidence[key], BODY_FILE_INDEX, 0, file_date)
+        if node.label != RISK_FACTOR:
+            continue
+        ref = context.canonical(NodeRef.of(RISK_FACTOR, key=node.key))
+        if _key(ref) in bodies.evidence and ref not in found:
+            found[ref] = context.entries(bodies.evidence[_key(ref)], BODY_FILE_INDEX, BODY_LINE,
+                                         file_date)
     return found
 
 

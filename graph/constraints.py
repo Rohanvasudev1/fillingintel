@@ -171,7 +171,7 @@ def _merge_graph_meta(tx: ManagedTransaction) -> None:
     _check_graph_meta([r.data() for r in result])
 
 
-def older_version(rows: list[dict]) -> int | None:
+def older_graph_meta_version(rows: list[dict]) -> int | None:
     """The version one :GraphMeta row records when it is an integer below the code's."""
     if len(rows) != 1:
         return None
@@ -191,7 +191,7 @@ def prepare_upgrade(driver: Driver, database: str = DATABASE) -> int | None:
     different :GraphMeta raises GraphMetaMismatch before anything changes.
     """
     rows = _graph_meta_rows(driver, database)
-    older = older_version(rows)
+    older = older_graph_meta_version(rows)
     if older is None:
         _check_graph_meta(rows, required=True)
         return None
