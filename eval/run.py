@@ -55,6 +55,7 @@ from eval.results import (
 from ingest.provenance import REPO_ROOT, git_state
 from retrieve.arm import Arm, ArmConfig, ArmError, ArmSpec
 from retrieve.arms import ARMS
+from retrieve.pricing import price_table
 from retrieve.response_cache import DEFAULT_CACHE_DIR as DEFAULT_RESPONSE_CACHE
 from retrieve.tracing import (
     QUESTION_SPAN,
@@ -163,10 +164,19 @@ def _score(
 ) -> tuple[list[Outcome], ArmConfig, JudgeConfig]:
     """Every *split* question answered by the arm, then judged; raises ArmError or JudgeRunError."""
     with spec.open(cache_dir, spans) as arm:
+        _check_priced(arm.config)
         outcomes, parents = _run_arm(arm, sets, split, spans)
         config = arm.config
     with judges.open(cache_dir, spans) as judge:
         return _judge(judge, outcomes, parents), config, judge.config
+
+
+def _check_priced(config: ArmConfig) -> None:
+    """Refuse an arm whose cost could not be reported, before it answers anything."""
+    try:
+        price_table(config.models.values())
+    except ValueError as exc:
+        raise ArmError(str(exc)) from exc
 
 
 def _document(run: RunInfo, config: ArmConfig, sets: Sequence[QuestionSet],

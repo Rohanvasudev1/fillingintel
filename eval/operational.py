@@ -13,7 +13,7 @@ from functools import partial
 from statistics import fmean
 
 from eval.bootstrap import RngFor, bootstrap_interval, mean_interval, percentile
-from retrieve.arm import ArmResult
+from retrieve.arm import GRAPH_STAGES, ArmResult
 
 PERCENTILES = (("p50", 0.50), ("p95", 0.95))
 DEFINITIONS = {
@@ -26,6 +26,13 @@ DEFINITIONS = {
     "cost_usd": (
         "from the token counts each API reported and the header's dated price table; Voyage at "
         "list price, before any free allowance"
+    ),
+}
+GRAPH_DEFINITIONS = {  # in a graph arm's header only
+    "graph_stages": (
+        "anchor_linking, cypher_generation, cypher_repair and cypher_execution latency counts "
+        "the questions that ran the stage; their cost is a mean over every question, a stage "
+        "that did not run costing 0; search covers every stage after the query embedding"
     ),
 }
 
@@ -45,38 +52,58 @@ def _stats(values: Sequence[float], stage: str, rng_for: RngFor) -> dict[str, ob
     )
 
 
+def _graphed(results: Sequence[ArmResult]) -> bool:
+    return any(r.graph is not None for r in results)
+
+
 def latency_cell(results: Sequence[ArmResult], rng_for: RngFor) -> dict[str, dict[str, object]]:
-    """p50 and p95 latency per stage over *results*, each with a bootstrap interval."""
+    """p50 and p95 latency per stage over *results*, each with a bootstrap interval.
+
+    A graph arm's cell adds each graph stage, over the questions that ran it.
+    """
     fresh = [r for r in results if not r.query_cached]
+    graphs = [r.graph for r in results if r.graph is not None]
     return {
         "retrieval": _stats([r.retrieval_ms for r in fresh], "retrieval", rng_for),
         "embed": _stats([r.embed_ms for r in fresh], "embed", rng_for),
         "search": _stats([r.search_ms for r in results], "search", rng_for),
         "generation": _stats([r.answer.generation_ms for r in results], "generation", rng_for),
+        **({stage: _stats([g.stages[stage].ms for g in graphs if stage in g.stages], stage,
+                          rng_for)
+            for stage in GRAPH_STAGES} if graphs else {}),
     }
 
 
 def question_cost(result: ArmResult) -> dict[str, float]:
-    """USD for one question, per stage and in total."""
+    """USD for one question, per stage and in total; a graph stage that did not run costs 0."""
+    stages = {}
+    if result.graph is not None:
+        stages = {stage: (result.graph.stages[stage].cost_usd
+                          if stage in result.graph.stages else 0.0)
+                  for stage in GRAPH_STAGES}
     return {
         "embedding": result.embed_cost_usd,
+        **stages,
         "generation": result.answer.cost_usd,
-        "total": result.embed_cost_usd + result.answer.cost_usd,
+        "total": result.embed_cost_usd + sum(stages.values()) + result.answer.cost_usd,
     }
 
 
-_PER_QUERY = {"per_query_embedding": "embedding", "per_query_generation": "generation",
-              "per_query_total": "total"}
+def _per_query(results: Sequence[ArmResult]) -> dict[str, str]:
+    """Each cost cell field and the question-cost stage it averages."""
+    stages = ("embedding", *(GRAPH_STAGES if _graphed(results) else ()), "generation", "total")
+    return {f"per_query_{stage}": stage for stage in stages}
 
 
 def cost_cell(results: Sequence[ArmResult], rng_for: RngFor) -> dict[str, object]:
     """Mean USD per question per stage with bootstrap intervals, and the cell's total."""
     costs = [question_cost(r) for r in results]
+    per_query = _per_query(results)
     return {
-        **{name: fmean(c[stage] for c in costs) for name, stage in _PER_QUERY.items()},
+        **{name: fmean(c[stage] for c in costs) for name, stage in per_query.items()},
         "total": sum(c["total"] for c in costs),
         "intervals": {
             name: mean_interval([c[stage] for c in costs], rng_for(f"cost_usd.{name}"))
-            for name, stage in _PER_QUERY.items()
+            for name, stage in per_query.items()
         },
     }

@@ -40,7 +40,7 @@ from opentelemetry.util.types import AttributeValue
 from ingest.voyage import QUERY_INPUT, Embedding
 from retrieve.answer import Answer
 from retrieve.answer_model import TokenUsage
-from retrieve.arm import RetrievedChunk
+from retrieve.arm import Anchor, CypherAttempt, FallbackReason, RetrievedChunk
 from retrieve.question_filter import QuestionFilter
 
 if TYPE_CHECKING:
@@ -57,11 +57,24 @@ FILTER_SPAN = "question_filter"
 EMBED_SPAN = "query_embedding"
 SEARCH_SPAN = "vector_search"
 GENERATION_SPAN = "answer_generation"
+# Graph arms (Step 11).  The generated Cypher is always on its spans; prompt text only
+# under FILINGINTEL_TRACE_TEXT.
+ANCHOR_SPAN = "anchor_linking"
+EXPAND_SPAN = "graph_expand"
+CYPHER_GENERATION_SPAN = "cypher_generation"
+CYPHER_GUARD_SPAN = "cypher_guard"
+CYPHER_EXECUTE_SPAN = "cypher_execute"
+FALLBACK_SPAN = "fallback"
 
 COST_ATTR = "filingintel.cost_usd"  # Phoenix ignores llm.cost.*, and has no Voyage price
 CACHE_HIT_ATTR = "filingintel.cache_hit"
 EMBED_TOKENS_ATTR = "filingintel.embedding.token_count"  # as Voyage reported it
 ANSWER_STATUS_ATTR = "filingintel.answer.status"
+CYPHER_ATTR = "filingintel.cypher"
+CYPHER_OUTCOME_ATTR = "filingintel.cypher.outcome"
+CYPHER_RULE_ATTR = "filingintel.cypher.rule"
+CYPHER_ROWS_ATTR = "filingintel.cypher.rows"
+FALLBACK_REASON_ATTR = "filingintel.fallback.reason"
 
 Kind = OpenInferenceSpanKindValues
 Attributes = Mapping[str, AttributeValue]
@@ -283,3 +296,49 @@ def message_attributes(system: str, user: str, assistant: str) -> dict[str, Attr
             attributes[f"{key}.{i}.{MessageAttributes.MESSAGE_ROLE}"] = role
             attributes[f"{key}.{i}.{MessageAttributes.MESSAGE_CONTENT}"] = content
     return attributes
+
+
+def anchor_attributes(anchors: Sequence[Anchor]) -> dict[str, AttributeValue]:
+    """The anchors a question was linked to, best first: key, label, similarity, match."""
+    return {
+        SpanAttributes.OUTPUT_VALUE: json.dumps(
+            [{"key": a.key, "label": a.label, "similarity": a.similarity,
+              "matched_by": a.matched_by} for a in anchors]),
+        SpanAttributes.OUTPUT_MIME_TYPE: _JSON,
+    }
+
+
+def cypher_attributes(attempt: CypherAttempt) -> dict[str, AttributeValue]:
+    """A generated query and how the guard or executor treated it."""
+    attributes: dict[str, AttributeValue] = {
+        CYPHER_ATTR: attempt.query,
+        CYPHER_OUTCOME_ATTR: attempt.outcome,
+        CYPHER_ROWS_ATTR: attempt.rows,
+    }
+    if attempt.rule is not None:
+        attributes[CYPHER_RULE_ATTR] = attempt.rule
+    return attributes
+
+
+def cypher_reply_attributes(query: str, *, cost_usd: float, from_cache: bool, usage: TokenUsage,
+                            messages: tuple[str, str, str] | None) -> dict[str, AttributeValue]:
+    """A Cypher generation or repair call's outcome; the query is always recorded.
+
+    *messages* is (system, user, assistant reply) when text capture is on.  A cache
+    replay gets no token counts, as for the answer call.
+    """
+    attributes: dict[str, AttributeValue] = {
+        CYPHER_ATTR: query,
+        CACHE_HIT_ATTR: from_cache,
+        COST_ATTR: cost_usd,
+    }
+    if not from_cache:
+        attributes.update(token_count_attributes(usage))
+    if messages is not None:
+        attributes.update(message_attributes(*messages))
+    return attributes
+
+
+def fallback_attributes(reason: FallbackReason) -> dict[str, AttributeValue]:
+    """Why a traversal question fell back to local search."""
+    return {FALLBACK_REASON_ATTR: reason}
