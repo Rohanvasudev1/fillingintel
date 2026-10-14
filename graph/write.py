@@ -35,7 +35,7 @@ from __future__ import annotations
 from collections.abc import Callable, Hashable, Iterable, Mapping
 from typing import TypeVar
 
-from neo4j import Driver, ManagedTransaction
+from neo4j import Driver, ManagedTransaction, unit_of_work
 
 from graph.batch import (
     CHUNK,
@@ -58,7 +58,7 @@ from graph.batch import (
     is_well_formed,
     key_values,
 )
-from graph.connection import DATABASE
+from graph.connection import DATABASE, WHOLE_GRAPH_TIMEOUT_S
 from graph.constraints import GRAPH_META, require_graph_meta, upgrade_graph_meta
 from graph.cypher import quoted
 from graph.ontology import (
@@ -121,7 +121,8 @@ def rebuild_graph(
     in the same transaction. Same errors as write_batch().
     """
     with driver.session(database=database) as session:
-        session.execute_write(_rebuild, batch, replace, upgrade_from)
+        session.execute_write(unit_of_work(timeout=WHOLE_GRAPH_TIMEOUT_S)(_rebuild),
+                              batch, replace, upgrade_from)
 
 
 _OTHER_NODES = f"MATCH (n) WHERE NOT n:{quoted(GRAPH_META)}"
