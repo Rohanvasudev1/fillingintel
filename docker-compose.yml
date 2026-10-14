@@ -15,10 +15,14 @@ services:
       timeout: 5s
       retries: 5
 
+  # Server-wide limits on every transaction, the last of the Cypher guards (ADR-0007),
+  # set on both services. The loader's one rebuild transaction runs under them too.
   neo4j:
     image: neo4j:5.26.31-community
     environment:
       NEO4J_AUTH: ${NEO4J_USER}/${NEO4J_PASSWORD}
+      NEO4J_db_transaction_timeout: 15s
+      NEO4J_db_memory_transaction_max: 512m
     ports:
       - "127.0.0.1:7474:7474"
       - "127.0.0.1:7687:7687"
@@ -32,6 +36,8 @@ services:
     image: neo4j:5.26.31-community
     environment:
       NEO4J_AUTH: ${NEO4J_TEST_USER}/${NEO4J_TEST_PASSWORD}
+      NEO4J_db_transaction_timeout: 15s
+      NEO4J_db_memory_transaction_max: 512m
     ports:
       - "127.0.0.1:7688:7687"
     volumes:

@@ -35,7 +35,7 @@ from __future__ import annotations
 from collections.abc import Callable, Hashable, Iterable, Mapping
 from typing import TypeVar
 
-from neo4j import Driver, ManagedTransaction
+from neo4j import Driver, ManagedTransaction, unit_of_work
 
 from graph.batch import (
     CHUNK,
@@ -96,6 +96,12 @@ class BatchRejected(ValueError):
         super().__init__("\n".join([*lines, *(f"  {v}" for v in violations)]))
 
 
+# The rebuild's own transaction timeout. It overrides the servers' 15 s
+# db.transaction.timeout (docker-compose.yml), which bounds generated queries; the
+# whole-graph rebuild took 12 s at load run 3 and grows with the graph.
+REBUILD_TIMEOUT_S = 300.0
+
+
 def write_batch(driver: Driver, batch: Batch, database: str = DATABASE) -> None:
     """Check *batch* and write it in one transaction, or raise and write nothing.
 
@@ -118,7 +124,7 @@ def rebuild_graph(
     one full scan, which is what a rebuild needs. Same errors as write_batch().
     """
     with driver.session(database=database) as session:
-        session.execute_write(_rebuild, batch, replace)
+        session.execute_write(unit_of_work(timeout=REBUILD_TIMEOUT_S)(_rebuild), batch, replace)
 
 
 _OTHER_NODES = f"MATCH (n) WHERE NOT n:{quoted(GRAPH_META)}"
