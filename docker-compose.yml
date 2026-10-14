@@ -1,7 +1,7 @@
 # Server-wide limits on every transaction, the last of the Cypher guards (ADR-0007),
 # shared by both Neo4j services and copied into the CI service (.github/workflows/ci.yml).
-# A transaction that sets its own timeout overrides the 15 s; the graph rebuild does
-# (graph/write.py, REBUILD_TIMEOUT_S). The memory cap applies to every transaction.
+# A transaction that sets its own timeout overrides the 15 s; the graph rebuild and validation do
+# (graph/connection.py, WHOLE_GRAPH_TIMEOUT_S). The memory cap applies to every transaction.
 x-neo4j-limits: &neo4j-limits
   NEO4J_db_transaction_timeout: 15s
   NEO4J_db_memory_transaction_max: 512m

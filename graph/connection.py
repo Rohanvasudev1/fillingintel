@@ -11,6 +11,11 @@ import os
 from neo4j import READ_ACCESS, Driver, GraphDatabase, Session
 
 DATABASE = "neo4j"
+# Both Neo4j services end any transaction after 15 s unless it sets its own timeout
+# (docker-compose.yml, ADR-0007), which bounds generated queries. Whole-graph work
+# this code trusts, the rebuild and validate_graph(), sets this one instead; a timeout
+# the driver sends overrides the server's (measured on 5.26.31, 2026-10-14).
+WHOLE_GRAPH_TIMEOUT_S = 300.0
 
 
 class GraphSettingsMissing(RuntimeError):
