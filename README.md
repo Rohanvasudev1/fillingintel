@@ -2,7 +2,7 @@
 
 Citation-grounded question answering over SEC filings. Ask what NVDA, AMD or INTC disclose in their 10-K and 10-Q filings, and every claim in the answer links to the exact passage it came from.
 
-The project compares four retrieval strategies (vector search, graph neighbourhood search, Cypher traversal and community summaries) on one hand-written set of ~120 questions, and publishes where each one wins and loses.
+The project compares four retrieval strategies (vector search, graph neighbourhood search, Cypher traversal and community summaries) on one set of agent-drafted questions (140, used without human review), and publishes where each one wins and loses.
 
 **Status:** in progress. Ingest, chunking and `resolve(chunk_id)` are built and verified on 24 filings (RUNBOOK Steps 2–3). Step 4 is closed with 140 agent-drafted eval questions, used without human review and labelled as such wherever results appear. Measured so far: entity resolution (Steps 9 and 9b) and the two graph retrieval arms against vector search on the `dev` split (Step 11), below. The full benchmark on the held-out `test` split comes in Step 13.
 
@@ -122,7 +122,7 @@ Two graph arms hand at most 10 ranked chunks to the same answer prompt as `vecto
 
 Paired against `vector` (fixed-seed bootstrap, 95% intervals), pooled recall@10 is −0.102 [−0.177, −0.030] for `graph_local` and −0.112 [−0.195, −0.032] for `graph_traversal`. Graph loses here, and no class difference in a graph arm's favour has an interval that excludes 0. `graph_traversal` on multi-hop questions, the case it was built for, is level with `vector` (−0.014 [−0.217, 0.181]), not ahead. Global questions are the largest loss for both arms; community summaries (Step 12) are meant for them. Judged answer relevancy (uncalibrated, gpt-6-luna) is lower for both graph arms, pooled: −0.025 [−0.041, −0.009] (`graph_local`) and −0.051 [−0.087, −0.021] (`graph_traversal`).
 
-**Cypher validity rate** (`cypher/v1@44e50e3f`, 93 `dev` questions, `benchmarks/graph/cypher-validity-run1.json`):
+**Cypher validity rate** (`cypher/v1@44e50e3f`, 93 `dev` questions, commit `5a1681d`, `benchmarks/graph/cypher-validity-run1.json`; the full traversal run at `375efac` replayed the same queries with the same counts):
 
 | First-pass valid | Valid after one repair | Non-empty | Fallback to `graph_local` |
 |---|---|---|---|
