@@ -1,4 +1,4 @@
-"""The graph ontology as frozen data (Step 7; version 2 in Step 8, version 3 since Step 9).
+"""The graph ontology as frozen data (Step 7; v2 Step 8, v3 Step 9, v4 since Step 11).
 
 Every node label and edge type the graph may hold is defined here, with its
 kind, keys, properties, allowed endpoints and a one-line description written
@@ -21,6 +21,10 @@ that is not a reportable segment, with HAS_MARKET_PLATFORM from Company.
 Segment and MarketPlatform keys hold the filer's CIK (FILER_SCOPED_LABELS),
 and extracted labels one node spans filings for gain an optional `aliases`
 list, the names entity resolution merged into the node.
+
+Version 4 (Step 11, ADR-0004 amendment of 2026-10-14) allows Company as a
+CONCERNS end, since an agreement's Organization end can merge into a filer.
+Evidence stays as extracted under version 3's `extract/v2@34a82e2b` prompt.
 """
 from __future__ import annotations
 
@@ -28,7 +32,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from types import MappingProxyType
 
-ONTOLOGY_VERSION = 3
+ONTOLOGY_VERSION = 4
 
 
 class Kind(StrEnum):
@@ -293,8 +297,8 @@ EDGE_TYPES: tuple[EdgeDef, ...] = (
         "PARTY_TO", _FIRMS, ("Agreement",), "The firm is a party to the agreement.",
     ),
     _extracted_edge(
-        "CONCERNS", ("Agreement",), ("Organization", "Product", "Facility"),
-        "The organization, product or facility the agreement is about.",
+        "CONCERNS", ("Agreement",), ("Company", "Organization", "Product", "Facility"),
+        "The firm, product or facility the agreement is about.",
     ),
     _extracted_edge(
         "SUBJECT_TO", ("Company", "Product"), ("Regulation",),

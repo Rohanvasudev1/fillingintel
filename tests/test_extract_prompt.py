@@ -37,13 +37,17 @@ def test_v2_is_the_current_prompt_and_v1_is_kept():
     assert load_prompt("v1").prompt_version != current.prompt_version
 
 
-def test_the_unit_class_key_left_the_prompt_and_ontology_unchanged():
-    # Step 10 put the unit class in metric-value keys in code only, so replaying
-    # the 24 extractions from the response cache costs nothing.
+def test_ontology_4_moved_the_computed_hash_but_not_the_prompt_file():
+    # Step 11: ontology 4 (Company as a CONCERNS end) changed the schema text the
+    # prompt embeds, so its computed hash moved from 34a82e2b, the hash under
+    # ontology 3 that every piece of loaded corpus evidence carries. The file is
+    # unchanged and nothing was re-extracted; the graph loader matches the
+    # `extract/v2@` prefix.
     current = load_prompt()
-    assert current.prompt_version == "extract/v2@34a82e2b"
-    assert current.sha256 == "34a82e2b107b550f9d2689fa43d20afb246bab0d4baeb15cf32170ce36c67d77"
-    assert ONTOLOGY_VERSION == 3
+    assert current.file_sha256 == PUBLISHED["v2"]
+    assert current.prompt_version == "extract/v2@9fd48233"
+    assert current.sha256 == "9fd4823349555bec1a7677c6090a09868e339d8f391f710f671362a875c94e5f"
+    assert ONTOLOGY_VERSION == 4
 
 
 def test_v2_explains_reportable_segments_and_market_platforms_with_nvidias_split():

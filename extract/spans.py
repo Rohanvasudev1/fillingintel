@@ -66,6 +66,25 @@ def normalize(text: str) -> str:
     return _normalized(text)[0]
 
 
+def last_span_offsets(span: str, normalized: tuple[str, list[int]]) -> tuple[int, int] | None:
+    """Where *span* last appears in the text *normalized* came from, as [start, end).
+
+    *normalized* is `normalized_text(text)`, computed once for a text searched often.
+    None when *span* is blank or absent.
+    """
+    needle = normalize(span)
+    haystack, origin = normalized
+    start = haystack.rfind(needle) if needle else -1
+    if start < 0:
+        return None
+    return origin[start], origin[start + len(needle) - 1] + 1
+
+
+def normalized_text(text: str) -> tuple[str, list[int]]:
+    """*text* as the span check compares it, with each character's index in *text*."""
+    return _normalized(text)
+
+
 def find_span(span: str, text: str) -> str | None:
     """The part of *text* that *span* quotes, or None when *span* is blank or not in it."""
     needle = normalize(span)

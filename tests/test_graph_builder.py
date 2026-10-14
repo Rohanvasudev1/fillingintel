@@ -56,7 +56,8 @@ def _rows() -> StructuralRows:
             FilingRow(AMD_10K, "2488", "ADVANCED MICRO DEVICES INC", "10-K", "FY2025",
                       date(2026, 2, 25)),
         ),
-        chunks=tuple(ChunkRow(c, c.split(":")[0], "part_i_item_1") for c in chunk_ids),
+        chunks=tuple(ChunkRow(c, c.split(":")[0], "part_i_item_1", 0, 1) for c in chunk_ids),
+        risk_sections=(),  # body evidence is tested in test_graph_bodies.py
     )
 
 
@@ -271,14 +272,10 @@ def test_a_metric_value_without_a_measures_edge_is_left_out_and_listed():
 
 
 def test_edges_a_merge_makes_impossible_are_dropped_and_listed():
-    deal = "Agreement:wafer supply agreement"
-    agreement = ExtractNode("Agreement", {"key": deal, "name": "wafer supply agreement"},
-                            (_ev(SUPPLY_CHUNK),))
-    files = [_file(NVDA_10K, [agreement, _org(TSMC, "TSMC", _ev(SUPPLY_CHUNK)),
+    files = [_file(NVDA_10K, [_org(TSMC, "TSMC", _ev(SUPPLY_CHUNK)),
                               _org("Organization:nvidia", "NVIDIA", _ev(SUPPLY_CHUNK))], [
-        # CONCERNS may not end at a Company
-        _edge_in("CONCERNS", NodeRef.of("Agreement", key=deal), _org_ref("Organization:nvidia"),
-                 _ev(SUPPLY_CHUNK)),
+        # OWNS may not end at a Company
+        _edge_in("OWNS", _org_ref(TSMC), _org_ref("Organization:nvidia"), _ev(SUPPLY_CHUNK)),
         # TSMC and its alias become one node
         _edge_in("COMPETES_WITH", _org_ref(TSMC), _org_ref("Organization:tsmc ltd"),
                  _ev(SUPPLY_CHUNK)),
@@ -287,9 +284,27 @@ def test_edges_a_merge_makes_impossible_are_dropped_and_listed():
                                         _org("Organization:tsmc ltd", "TSMC", _ev(SUPPLY_CHUNK))))
     built = _build(files, {"Organization:nvidia": "Company:1045810",
                            "Organization:tsmc ltd": TSMC})
-    assert not _edges(built, "CONCERNS") and not _edges(built, "COMPETES_WITH")
+    assert not _edges(built, "OWNS") and not _edges(built, "COMPETES_WITH")
     assert sorted(d.reason for d in built.report.dropped_edges) == [
         DropReason.DISALLOWED_ENDPOINT, DropReason.SELF_LOOP]
+    assert check_batch(built.batch) == ()
+
+
+def test_an_agreement_concerning_an_organization_merged_into_a_filer_is_kept():
+    # Ontology 4 (Step 11): Company is a CONCERNS end, so Step 10's five dropped
+    # agreement edges load.
+    deal = "Agreement:wafer supply agreement"
+    agreement = ExtractNode("Agreement", {"key": deal, "name": "wafer supply agreement"},
+                            (_ev(SUPPLY_CHUNK),))
+    files = [_file(NVDA_10K, [agreement,
+                              _org("Organization:nvidia", "NVIDIA", _ev(SUPPLY_CHUNK))], [
+        _edge_in("CONCERNS", NodeRef.of("Agreement", key=deal), _org_ref("Organization:nvidia"),
+                 _ev(SUPPLY_CHUNK)),
+    ])]
+    built = _build(files, {"Organization:nvidia": "Company:1045810"})
+    [edge] = _edges(built, "CONCERNS")
+    assert edge.end == NVIDIA
+    assert built.report.dropped_edges == ()
     assert check_batch(built.batch) == ()
 
 

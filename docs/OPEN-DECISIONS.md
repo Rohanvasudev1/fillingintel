@@ -34,6 +34,8 @@ Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstra
 
 ## Step 11 — graph retrieval arms
 - Haiku 5.5 as the Cypher generator, as an ablation against Sonnet 5.5.
+- Risk factors without a body (ticket 01, load run 4): 257 of 1,405 have no span in their filing's risk-factor section (most were extracted from Item 1 or MD&A), and 371 are sentences from inside a body, so they get no body of their own. Whether body-sentence factors should merge into the factor whose body holds them, or be dropped at extraction, is open. Decide if `graph_local` anchors on them poorly.
+- Extraction spend caps count committed spend per ontology version (`extract/spend.py`). Under ontology 4 they see none of the ontology 3 runs, so a new extraction run would start from $0 against the caps. Nothing is extracted in Step 11; fix before the next extraction.
 - A filter on `uncertain` evidence, as an ablation, if wrong-evidence rates point at it. The reviews found no error at any confidence level, but only 3 counted `uncertain` samples.
 
 ## Step 13b — agentic arms

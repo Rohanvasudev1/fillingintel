@@ -78,9 +78,12 @@ def _metric_subjects(run):
     return {e.end for e in run.edges if e.type == "MEASURES"}
 
 
-def test_recorded_with_the_current_prompt():
+def test_recorded_with_the_current_prompt_file_under_ontology_3():
+    # Recorded under ontology 3 (extract/v2@34a82e2b), as was the corpus evidence;
+    # ontology 4 moved the computed hash, not the prompt file (Step 11).
     for name in (TEN_K_NOTE, TEN_Q_NOTE):
-        assert _recorded(name)["prompt_version"] == load_prompt().prompt_version
+        assert _recorded(name)["prompt_version"] == "extract/v2@34a82e2b"
+    assert load_prompt().version == "v2"
 
 
 def test_the_10q_reply_is_for_a_10q_chunk(ten_q_filing):

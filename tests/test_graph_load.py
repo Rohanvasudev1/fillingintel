@@ -13,13 +13,15 @@ import pytest
 
 from extract.pipeline import ExtractionRun
 from extract.report import candidate_lines, write_candidates
-from graph.batch import Batch, NodeRecord
+from graph.batch import Batch, EdgeRecord, NodeRecord, NodeRef
 from graph.build_input import ChunkRow, FilingRow, InputError, StructuralRows
 from graph.connection import DATABASE
-from graph.constraints import GRAPH_META, apply_constraints
+from graph.constraints import GRAPH_META, GraphMetaMismatch, apply_constraints
 from graph.load import load_graph, read_inputs
 from graph.load_report import load_report
 from graph.ontology import LABELS_BY_NAME, ONTOLOGY_VERSION, Kind
+from graph.schema_text import SCHEMA_TEXT_SHA256
+from graph.validate import validate_graph
 from graph.write import BatchRejected, GraphNotEmpty, rebuild_graph
 from persist.decisions import LinkEvidence
 from persist.links import EXACT_TITLE, PersistLink
@@ -55,8 +57,9 @@ def rows(nvda_10k_meta, amd_10k_meta, test_graph_chunks):
         filings=tuple(FilingRow(m.accession_no, m.cik, m.company_name, m.form_type,
                                 m.fiscal_period, m.filing_date)
                       for m in (nvda_10k_meta, amd_10k_meta)),
-        chunks=tuple(ChunkRow(c, c.split(":")[0], section)
+        chunks=tuple(ChunkRow(c, c.split(":")[0], section, 0, 1)
                      for c, (section, _) in sorted(test_graph_chunks.items())),
+        risk_sections=(),  # body evidence is tested in test_graph_bodies.py
     )
 
 
@@ -78,7 +81,8 @@ def inputs(tmp_path, graph_test_batch):
         run = ExtractionRun(accession_no, PROMPT, nodes, edges, (), (), (), (), (), ())
         write_candidates(extract_dir / f"{accession_no}-run2.jsonl", candidate_lines(run))
         (reports_dir / f"{accession_no}-run2.json").write_text(
-            '{"failed_chunks": [{"chunk_id": "' + accession_no + ':0001", "reason": "x"}]}')
+            '{"ontology_version": 3, '
+            '"failed_chunks": [{"chunk_id": "' + accession_no + ':0001", "reason": "x"}]}')
     alias_map = tmp_path / "alias_map.json"
     alias_map.write_text('{"org:tsmc": "org:tsmc"}')
     links = tmp_path / "links.jsonl"
@@ -184,3 +188,101 @@ def test_the_load_report_records_the_link_files_hash_and_links_by_method(
     digest = hashlib.sha256((tmp_path / "links.jsonl").read_bytes()).hexdigest()
     assert report["persistence_links"] == {"sha256": digest, "by_method": {EXACT_TITLE: 1}}
     assert report["counts"]["edges"]["PERSISTS_AS"] == 1
+
+
+# ── ontology upgrades (Step 11) ───────────────────────────────────────────────
+
+def _graph_meta(driver):
+    return _run(driver, f"MATCH (m:`{GRAPH_META}`) "
+                        "RETURN m.ontology_version AS version, m.schema_sha256 AS sha256")
+
+
+@pytest.fixture
+def recorded_as(unmarked):
+    """Set :GraphMeta to another version; put the code's back afterwards."""
+    def record(version, sha256="0" * 64):
+        unmarked.execute_query(f"MATCH (m:`{GRAPH_META}`) SET m.ontology_version = $v, "
+                               "m.schema_sha256 = $h", v=version, h=sha256, database_=DATABASE)
+    yield record
+    record(ONTOLOGY_VERSION, SCHEMA_TEXT_SHA256)
+
+
+def test_a_rebuild_upgrades_an_older_graph_meta_and_reports_it(
+    unmarked, rows, inputs, recorded_as,
+):
+    load_graph(unmarked, rows, inputs, rebuild=False)
+    recorded_as(ONTOLOGY_VERSION - 1)
+    result = load_graph(unmarked, rows, inputs, rebuild=True)
+    assert result.upgraded_from == ONTOLOGY_VERSION - 1
+    assert result.validation.ok
+    assert _graph_meta(unmarked) == [{"version": ONTOLOGY_VERSION, "sha256": SCHEMA_TEXT_SHA256}]
+    assert load_report("abc123", inputs, result)["graph_meta_upgraded_from"] == ONTOLOGY_VERSION - 1
+
+
+def test_a_rebuild_at_the_codes_version_upgrades_nothing(unmarked, rows, inputs):
+    result = load_graph(unmarked, rows, inputs, rebuild=True)
+    assert result.upgraded_from is None
+    assert load_report("abc123", inputs, result)["graph_meta_upgraded_from"] is None
+
+
+@pytest.mark.parametrize("version", [ONTOLOGY_VERSION + 1, "3", None, 2.5, True])
+def test_a_newer_or_unparseable_version_is_refused_with_nothing_changed(
+    unmarked, rows, inputs, recorded_as, version,
+):
+    load_graph(unmarked, rows, inputs, rebuild=False)
+    before = _counts(unmarked)
+    recorded_as(version)
+    with pytest.raises(GraphMetaMismatch):
+        load_graph(unmarked, rows, inputs, rebuild=True)
+    assert _counts(unmarked) == before
+    assert _graph_meta(unmarked) == [{"version": version, "sha256": "0" * 64}]
+
+
+def test_an_older_version_is_not_upgraded_without_rebuild(unmarked, rows, inputs, recorded_as):
+    recorded_as(ONTOLOGY_VERSION - 1)
+    with pytest.raises(GraphMetaMismatch):
+        load_graph(unmarked, rows, inputs, rebuild=False)
+    assert _graph_meta(unmarked)[0]["version"] == ONTOLOGY_VERSION - 1
+    assert not _counts(unmarked)
+
+
+def test_a_rejected_upgrade_keeps_the_older_graph_meta(unmarked, rows, inputs, recorded_as):
+    result = load_graph(unmarked, rows, inputs, rebuild=False)
+    recorded_as(ONTOLOGY_VERSION - 1)
+    bad = Batch(nodes=(*result.built.batch.nodes, NodeRecord("Organization", {"key": "x"})),
+                edges=result.built.batch.edges)
+    with pytest.raises(BatchRejected):
+        rebuild_graph(unmarked, bad, upgrade_from=ONTOLOGY_VERSION - 1)
+    assert _graph_meta(unmarked)[0]["version"] == ONTOLOGY_VERSION - 1
+
+
+def test_the_load_report_records_where_the_evidence_came_from_and_the_bodies(
+    unmarked, rows, inputs,
+):
+    report = load_report("abc123", inputs, load_graph(unmarked, rows, inputs, rebuild=False))
+    assert report["ontology_version"] == ONTOLOGY_VERSION
+    assert report["evidence_provenance"] == {"extract_prompts": [PROMPT],
+                                             "extracted_under_ontology": [3]}
+    bodies = report["risk_factor_bodies"]
+    assert bodies["prompt"] == "body/v1"
+    assert bodies["unlocated"] == 2  # rows hold no risk section in this fixture
+    assert bodies["body_entries"] == 0 and bodies["long_bodies"] == []
+
+
+def test_an_agreement_concerning_a_filer_is_written_and_valid_under_version_4(
+    unmarked, rows, inputs,
+):
+    built = load_graph(unmarked, rows, inputs, rebuild=False).built.batch
+    deal = NodeRef.of("Agreement", key="Agreement:wafer supply agreement")
+    quote = evidence(SUPPLY_CHUNK, prompt=PROMPT)
+    concerns = EdgeRecord("CONCERNS", deal, NodeRef.of("Company", cik="1045810"), {
+        "chunk_ids": [SUPPLY_CHUNK], "evidence_spans": [quote.span],
+        "confidences": [quote.confidence], "extract_prompts": [PROMPT]})
+    rebuild_graph(unmarked, Batch(
+        nodes=(*built.nodes, NodeRecord("Agreement", {"key": deal.key_dict()["key"],
+                                                      "name": "wafer supply agreement"},
+                                        (quote,))),
+        edges=(*built.edges, concerns)))
+    assert _run(unmarked, "MATCH (:Agreement)-[:CONCERNS]->(c:Company) RETURN c.cik AS cik") \
+        == [{"cik": "1045810"}]
+    assert validate_graph(unmarked).ok

@@ -82,7 +82,7 @@ The kind of quantity a metric value measures: currency, percent, per share, shar
 _Avoid_: unit, when meaning the class rather than the printed unit
 
 **Risk factor body**:
-The text of a risk factor from the end of its heading to the next risk factor's heading or the end of the section. Every chunk it touches is evidence for that risk factor, not only the heading's chunk.
+The text of a risk factor from the end of its heading to the next risk factor's heading or the end of the section. Every chunk it touches is evidence for that risk factor, not only the heading's chunk. A heading starts a line; a risk factor quoted from a sentence inside a body has no body of its own and does not end one.
 _Avoid_: description, paragraph
 
 **Persistence link**:

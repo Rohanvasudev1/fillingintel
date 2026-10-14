@@ -11,8 +11,10 @@ and a report goes to `benchmarks/graph/load-run{N}.json`.
 
 Usage: python -m graph.load [--rebuild]
 Reads NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD and DATABASE_URL. Constraints and
-:GraphMeta must exist (apply_constraints()). Exit codes as graph.validate:
-0 loaded and valid; 2 bad arguments, or a graph holding data without
+:GraphMeta must exist (apply_constraints()). With --rebuild, a :GraphMeta
+recording an older ontology is moved to the code's in the rebuild transaction,
+and the report says so; a newer or unparseable one is refused (exit 3).
+Exit codes as graph.validate: 0 loaded and valid; 2 bad arguments, or a graph holding data without
 --rebuild (nothing changed); 3 could not run (nothing changed), or the graph was
 replaced but validation could not run (the report says so); 4 loaded, with
 violations. The report is written whenever the graph was replaced.
@@ -41,7 +43,7 @@ from graph.build_input import (
 )
 from graph.builder import BuildError, Built, build_graph
 from graph.connection import GraphSettingsMissing, driver_from_env
-from graph.constraints import GraphMetaMismatch
+from graph.constraints import ConstraintMismatch, GraphMetaMismatch, prepare_upgrade
 from graph.load_report import load_report, next_report_path
 from graph.structural import read_structural
 from graph.validate import (
@@ -74,6 +76,7 @@ class LoadInputs:
     gaps: Mapping[str, tuple[str, ...]]  # accession_no -> chunks extraction failed on
     links: tuple[PersistLink, ...]
     links_sha256: str
+    extracted_under: tuple[int, ...]  # ontology versions the extraction run reports name
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,6 +87,7 @@ class LoadResult:
     write_seconds: float
     validation: ValidationReport | None
     validation_error: str | None = None
+    upgraded_from: int | None = None  # the older ontology :GraphMeta recorded
 
 
 def read_inputs(
@@ -99,27 +103,33 @@ def read_inputs(
         aliases = parse_alias_map(raw, alias_map.name)
     except (OSError, ValueError) as exc:
         raise InputError(f"cannot read the alias map {alias_map.name}: {exc}") from exc
-    gaps = {f.accession_no: _failed_chunks(reports_dir / f"{f.accession_no}-run{f.run}.json")
-            for f in files}
+    reports = {f.accession_no: _run_report(reports_dir / f"{f.accession_no}-run{f.run}.json")
+               for f in files}
     try:
         raw_links = links.read_bytes()
         persist_links = parse_links(raw_links, links.name)
     except (OSError, ValueError) as exc:
         raise InputError(f"cannot read the link file {links.name}: {exc}") from exc
-    return LoadInputs(files, aliases, hashlib.sha256(raw).hexdigest(), gaps,
-                      persist_links, hashlib.sha256(raw_links).hexdigest())
+    return LoadInputs(files, aliases, hashlib.sha256(raw).hexdigest(),
+                      {a: failed for a, (failed, _) in reports.items()},
+                      persist_links, hashlib.sha256(raw_links).hexdigest(),
+                      tuple(sorted({version for _, version in reports.values()})))
 
 
-def _failed_chunks(report: Path) -> tuple[str, ...]:
-    """The chunk IDs an extraction run report lists as failed."""
+def _run_report(report: Path) -> tuple[tuple[str, ...], int]:
+    """The chunk IDs an extraction run report lists as failed, and its ontology version."""
     try:
-        failed = json.loads(report.read_text(encoding="utf-8"))["failed_chunks"]
-        chunk_ids = [entry["chunk_id"] for entry in failed]
+        found = json.loads(report.read_text(encoding="utf-8"))
+        chunk_ids = [entry["chunk_id"] for entry in found["failed_chunks"]]
+        version = found["ontology_version"]
     except (OSError, ValueError, KeyError, TypeError) as exc:
-        raise InputError(f"cannot read failed_chunks from {report.name}: {exc!r}") from exc
+        raise InputError(f"cannot read failed_chunks and ontology_version from "
+                         f"{report.name}: {exc!r}") from exc
     if not all(isinstance(c, str) for c in chunk_ids):
         raise InputError(f"{report.name}: a failed chunk ID is not a string")
-    return tuple(sorted(chunk_ids))
+    if not isinstance(version, int) or isinstance(version, bool):
+        raise InputError(f"{report.name}: ontology_version is not an integer")
+    return tuple(sorted(chunk_ids)), version
 
 
 def load_graph(
@@ -128,20 +138,26 @@ def load_graph(
 ) -> LoadResult:
     """Build the graph, write it in one transaction and validate it.
 
-    Raises GraphNotEmpty (without *rebuild*), BuildError or BatchRejected, each
-    before anything changes. Once the write has committed nothing is raised:
-    violations, or an error that stopped validation, come back in the result.
+    Raises GraphNotEmpty (without *rebuild*), BuildError, BatchRejected,
+    GraphMetaMismatch or ConstraintMismatch, each before any node changes. With
+    *rebuild*, an older :GraphMeta is upgraded in the rebuild transaction; the
+    constraints are re-applied just before it (IF NOT EXISTS, so only a missing
+    one is created, and it stays if the rebuild then fails).
+    Once the write has committed nothing is raised: violations, or an error
+    that stopped validation, come back in the result.
     """
     built = build_graph(rows, inputs.files, inputs.alias_map, inputs.links)
+    upgraded_from = prepare_upgrade(driver) if rebuild else None
     started = time.monotonic()
-    rebuild_graph(driver, built.batch, replace=rebuild)
+    rebuild_graph(driver, built.batch, replace=rebuild, upgrade_from=upgraded_from)
     seconds = time.monotonic() - started
     try:
-        return LoadResult(built, seconds, validate_graph(driver, postgres))
+        return LoadResult(built, seconds, validate_graph(driver, postgres),
+                          upgraded_from=upgraded_from)
     except GraphValidationError as exc:
-        return LoadResult(built, seconds, exc.report)
+        return LoadResult(built, seconds, exc.report, upgraded_from=upgraded_from)
     except (Neo4jError, DriverError, psycopg.Error) as exc:
-        return LoadResult(built, seconds, None, f"{type(exc).__name__}: {exc}")
+        return LoadResult(built, seconds, None, f"{type(exc).__name__}: {exc}", upgraded_from)
 
 
 # ── command ────────────────────────────────────────────────────────────────────
@@ -168,8 +184,8 @@ def _run(rebuild: bool) -> tuple[LoadInputs, LoadResult]:
             driver.verify_connectivity()
             return inputs, load_graph(driver, read_structural(conn), inputs,
                                       rebuild=rebuild, postgres=conn)
-    except (BuildError, BatchRejected, GraphMetaMismatch, Neo4jError, DriverError,
-            psycopg.Error) as exc:
+    except (BuildError, BatchRejected, GraphMetaMismatch, ConstraintMismatch, Neo4jError,
+            DriverError, psycopg.Error) as exc:
         raise _CouldNotRun(f"{type(exc).__name__}: {exc}") from exc
 
 
