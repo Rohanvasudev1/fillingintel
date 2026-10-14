@@ -19,7 +19,14 @@ from pathlib import Path
 from statistics import fmean
 from typing import get_args
 
-from eval import answer_report, bootstrap, filter_report, operational, wrong_evidence
+from eval import (
+    answer_report,
+    bootstrap,
+    filter_report,
+    graph_report,
+    operational,
+    wrong_evidence,
+)
 from eval.bootstrap import RngFor, interval_rng, is_directional, mean_interval
 from eval.judging import report as judged_report
 from eval.judging.runner import JudgedQuestion
@@ -27,7 +34,7 @@ from eval.judging.scoring import JudgeConfig
 from eval.metrics import DEFINITIONS, METRIC_KS, precision_at_k, recall_at_k
 from eval.question_sets import QuestionSet
 from eval.schema import Class, EvalRecord
-from retrieve.arm import ArmConfig, ArmResult
+from retrieve.arm import ArmConfig, ArmResult, RetrievedChunk
 from retrieve.pricing import price_table
 
 CLASS_ORDER = get_args(Class)
@@ -83,6 +90,7 @@ def _retrieval_metrics(
 def _cell(outcomes: Sequence[Outcome], judge_runs: int, rng_for: RngFor) -> dict[str, object]:
     results = [o.result for o in outcomes]
     judged = [o.judged for o in outcomes if o.judged is not None]
+    graph = graph_report.graph_cell(results)
     return {
         "n": len(outcomes),
         "directional": is_directional(len(outcomes)),
@@ -93,6 +101,7 @@ def _cell(outcomes: Sequence[Outcome], judge_runs: int, rng_for: RngFor) -> dict
         "latency_ms": operational.latency_cell(results, rng_for),
         "cost_usd": operational.cost_cell(results, rng_for),
         "judged": judged_report.judged_cell(judged, judge_runs, rng_for),
+        **({"graph": graph} if graph is not None else {}),
     }
 
 
@@ -131,7 +140,7 @@ def question_record(outcome: Outcome) -> dict[str, object]:
         "filter": result.question_filter.as_dict(),
         "filter_matches_labels": filter_report.exact_match(result.question_filter, record),
         "filter_excluded_gold": filter_report.excluded_gold(result.question_filter, record),
-        "retrieved": [{"chunk_id": r.chunk_id, "score": r.score} for r in result.retrieved],
+        "retrieved": [_retrieved_record(r) for r in result.retrieved],
         "companies_without_chunks": list(result.companies_without_chunks),
         "retrieval_ms": result.retrieval_ms,
         "embed_ms": result.embed_ms,
@@ -148,7 +157,17 @@ def question_record(outcome: Outcome) -> dict[str, object]:
         "answer": answer_report.answer_record(result.answer),
         "judged": (judged_report.question_judged(outcome.judged, len(outcome.judged.runs))
                    if outcome.judged is not None else None),
+        **({"graph": graph_report.question_graph(result.graph)}
+           if result.graph is not None else {}),
     }
+
+
+def _retrieved_record(chunk: RetrievedChunk) -> dict[str, object]:
+    """A retrieved chunk's ID and score, and its best evidence confidence when the arm gave one."""
+    record: dict[str, object] = {"chunk_id": chunk.chunk_id, "score": chunk.score}
+    if chunk.confidence is not None:
+        record["confidence"] = chunk.confidence.value
+    return record
 
 
 @dataclass(frozen=True)
@@ -194,6 +213,8 @@ def build_header(
         "k": config.k,
         "metric_ks": list(METRIC_KS),
         "chunker_version": config.chunker_version,
+        **({"graph": graph_report.header_graph(config.graph)} if config.graph is not None
+           else {}),
         "question_sets": [
             {
                 "name": s.name,
@@ -207,7 +228,9 @@ def build_header(
         "metric_definitions": (DEFINITIONS | wrong_evidence.DEFINITIONS
                                | filter_report.DEFINITIONS | answer_report.DEFINITIONS
                                | operational.DEFINITIONS | bootstrap.DEFINITIONS
-                               | judged_report.DEFINITIONS),
+                               | judged_report.DEFINITIONS
+                               | (graph_report.DEFINITIONS | operational.GRAPH_DEFINITIONS
+                                  if config.graph is not None else {})),
     }
 
 

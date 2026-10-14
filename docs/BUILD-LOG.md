@@ -2045,6 +2045,26 @@ Built the guard that every generated Cypher query passes before it reaches Neo4j
 
 ---
 
+## 2026-10-14 — Step 11 ticket 02: arm seams in the harness
+
+The harness can now carry a graph arm's details without any graph arm existing. A stub arm in `tests/test_eval_run_graph.py` drives `eval.run` end to end.
+
+- **Retrieval.** `Retrieval.graph` (`GraphRetrieval`, in `retrieve/arm.py`) holds anchors (key, label, similarity, `name` or `embedding`), the hop count, a no-anchor flag, the Cypher attempts (query, outcome, rows, rule, message), the fallback reason and per-stage costs. The validity flags (first-pass valid, valid after repair, non-empty) are derived from the attempts, so they cannot disagree with them. `RetrievedChunk.confidence` holds a chunk's best evidence confidence.
+- **Stages.** `anchor_linking`, `cypher_generation`, `cypher_repair` and `cypher_execution`, each with latency, tokens, cost and a cache flag. `StageCost.anthropic` prices a Claude call from the header's price table (2026-10-05). For a graph arm, `search_ms` covers every stage after the query embedding, so `retrieval_ms` stays comparable with `vector`. Cells add p50/p95 per stage over the questions that ran it, and a mean cost per stage over every question.
+- **Header.** `ArmConfig.graph` (`GraphProvenance`) records the ontology version, schema hash, load run, and the Cypher prompt version and hash.
+- **Counts.** Each graph cell has `graph: {n, no_anchor, empty_retrieval, not_found}`. Reading "not-found" both ways (no chunk retrieved, answer status `not_found`) costs one field and removes the ambiguity in user story 16.
+- **Price check.** `eval.run` now refuses an arm with an unpriced model right after opening it, before any question. Before this, the error came only when the header was built, after the money was spent.
+- **Spans.** `anchor_linking`, `graph_expand`, `cypher_generation`, `cypher_guard`, `cypher_execute` and `fallback`, with helpers in `retrieve/tracing.py`. `filingintel.cypher` is always set; Cypher prompt text goes on a span only when the caller passes messages, which it does only under `FILINGINTEL_TRACE_TEXT`.
+- **Vector unchanged.** Graph fields are written only when an arm provides them. A test checks that a vector-shaped run file has no new key in its header, records or cells. `eval.gate` and `eval.compare` are untouched.
+- **Review (`mattpocock-skills:code-review`).** Fixed: a `.get(stage, 0.0)` that could hide a mixed cell, duplicated outcome literals, a redundant type guard, the stage definition sitting in the wrong module, an in-place dict build, a misleading comment, and stage pricing left to each arm (now `StageCost.anthropic`). Tickets 05 and 06 gained a line on registering the arm with its required env and using these seams. Not changed: the new test imports helpers from `tests/test_eval_run.py` rather than moving them, so that file stays exactly as it was; the presence checks for graph fields sit in five places, which is the cost of leaving vector files unchanged.
+- **Evidence.** `uv run ruff check .` clean. Without databases: `tests/test_eval_run_graph.py` (12), `test_eval_run`, `test_eval_operational`, `test_eval_compare`, `test_tracing` pass (98). With Postgres and `NEO4J_TEST_URI` empty: `test_vector_arm`, `test_tracing_run`, `test_tracing` and the graph harness tests pass (77). Full `uv run --env-file .env pytest` at `78c15be`, with Postgres and `neo4j-test`: 2,236 passed, 1 skipped, in 598 s. No API spend.
+
+**Next session starts with**
+1. Merge PR #43 once CI is green.
+2. Ticket 05 (`graph_local`) once tickets 01 and 02 have merged.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.
