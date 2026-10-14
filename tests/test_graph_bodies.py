@@ -34,6 +34,7 @@ DELAWARE = ("Delaware law and our certificate of incorporation, bylaws and agree
 FAILURE = ("Failure to meet the evolving needs of our industry and markets may adversely "
            "impact our financial results.")
 FOUNDRIES = "We utilize foundries, such as Taiwan Semiconductor Manufacturing Company"
+EXTENDED = "We have previously experienced and may continue to experience extended lead times"
 COMMITMENTS = ("Commitments, guarantees, and other commercial arrangements expose us to "
                "financial, counterparty and execution risks")
 COMPLEX_LAWS = "We are subject to complex laws, rules, regulations, and political and other actions"
@@ -131,6 +132,19 @@ def test_the_summary_list_is_not_a_body(ten_k):
                    _factor(TEN_K, SUPPLY, (SUMMARY_CHUNK, SUPPLY), (_chunk(21), SUPPLY)))
     assert set(_evidence(built, COMPETITION)) == {SUMMARY_CHUNK, _chunk(21)}
     assert _by_prompt(built, COMPETITION, BODY_PROMPT) == set()
+
+
+def test_a_factor_quoted_from_a_body_sentence_neither_gets_a_body_nor_ends_one(ten_k):
+    # q0127 (Step 11): the sentence starts chunk 22 mid-paragraph. Taken as a
+    # heading, it would end the supply factor's body at chunk 21.
+    rows, _ = ten_k
+    built = _build(rows, _factor(TEN_K, SUPPLY, (_chunk(21), SUPPLY)),
+                   _factor(TEN_K, EXTENDED, (_chunk(22), EXTENDED)),
+                   _factor(TEN_K, DEPENDENCY, (_chunk(25), DEPENDENCY)))
+    assert _by_prompt(built, SUPPLY, BODY_PROMPT) == _chunks(TEN_K, 22, 23, 24, 25)
+    assert set(_evidence(built, EXTENDED)) == {_chunk(22)}
+    assert built.report.bodies.not_headings == (_key(TEN_K, EXTENDED),)
+    assert built.report.bodies.unlocated == ()
 
 
 def test_a_10q_body_is_read_from_part_ii_item_1a(ten_q):

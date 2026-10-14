@@ -111,7 +111,8 @@ class BodyReport:
     """What the risk factor body step added (Step 11)."""
 
     body_entries: int  # BODY_PROMPT entries in the batch, after combining
-    unlocated: tuple[str, ...]  # risk factor keys whose heading is not in the section
+    unlocated: tuple[str, ...]  # risk factor keys whose span is not in the section
+    not_headings: tuple[str, ...]  # keys whose span is in the section only mid-line
     long_bodies: tuple[tuple[str, int], ...]  # (key, chunks) for bodies over 5 chunks
 
 
@@ -196,7 +197,8 @@ def build_graph(
               edges=(*structural_edges(rows), *edges, *persistence_edges)),
         BuildReport(tuple(conflicts), tuple(sorted(context.skipped)), tuple(dropped),
                     tuple(sorted(into_company)),
-                    BodyReport(body_entries, bodies.unlocated, bodies.long_bodies)),
+                    BodyReport(body_entries, bodies.unlocated, bodies.not_headings,
+                               bodies.long_bodies)),
     )
 
 

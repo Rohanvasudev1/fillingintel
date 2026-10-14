@@ -8,7 +8,10 @@ factor's content reaches the chunk that holds it, not only the heading's.
 - The heading is where the factor's extracted evidence span appears last in
   the section, matched with the Step 8 span normalization. A factor with
   several spans uses its most confident ones (the builder's choice) and, of
-  those, the one appearing latest. Taking the
+  those, the one appearing latest. That appearance is a heading only when it
+  starts a line, after nothing but whitespace and a markdown bold or heading
+  marker (Step 11 decision, q0127): the extractor also makes risk factors from
+  sentences inside a body, and those neither get a body nor end one. Taking the
   last appearance skips the "Risk Factors Summary" list, which repeats the
   headings before the bodies.
 - The next heading is the nearest other factor's heading, found the same way,
@@ -16,11 +19,13 @@ factor's content reaches the chunk that holds it, not only the heading's.
 - Each body entry quotes the first SPAN_CHARS characters of the body inside its
   chunk, verbatim, after leading whitespace and markdown bold markers, with
   confidence `stated` and extract prompt BODY_PROMPT.
-- A factor whose heading is not in the section gets no body and is listed as
-  unlocated. A body over LONG_BODY_CHUNKS chunks is listed, never cut.
+- A factor whose span is not in the section gets no body and is listed as
+  unlocated; one found only mid-line is listed as not a heading. A body over
+  LONG_BODY_CHUNKS chunks is listed, never cut.
 """
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
@@ -33,6 +38,7 @@ BODY_PROMPT = "body/v1"
 SPAN_CHARS = 200
 LONG_BODY_CHUNKS = 5
 _LEADING = " \t\r\n*"  # whitespace and the bold markers that close a heading
+_BEFORE_HEADING = re.compile(r"[ \t]*(?:\*{1,3}|#{1,6} )?[ \t]*")  # line start to heading
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,6 +54,7 @@ class Factor:
 class Bodies:
     evidence: Mapping[str, tuple[Evidence, ...]]  # factor key -> body entries, in chunk order
     unlocated: tuple[str, ...]  # factor keys, sorted
+    not_headings: tuple[str, ...]  # factor keys found only mid-line, sorted
     long_bodies: tuple[tuple[str, int], ...]  # (factor key, chunks), sorted by key
 
 
@@ -60,10 +67,13 @@ def body_evidence(rows: StructuralRows, factors: Iterable[Factor]) -> Bodies:
         by_filing.setdefault(factor.accession_no, []).append(factor)
     evidence: dict[str, tuple[Evidence, ...]] = {}
     unlocated: list[str] = []
+    not_headings: list[str] = []
     for accession_no, found in by_filing.items():
         section = sections.get(accession_no)
-        headings = _headings(section, found) if section else {}
-        unlocated.extend(f.key for f in found if f.key not in headings)
+        located = _located(section, found) if section else {}
+        headings = {k: v for k, v in located.items() if _starts_line(section.text, v[0])}
+        unlocated.extend(f.key for f in found if f.key not in located)
+        not_headings.extend(k for k in located if k not in headings)
         if section and headings:
             name = RISK_SECTION_BY_FORM.get(forms.get(accession_no, ""))
             chunks = sorted((c for c in rows.chunks
@@ -72,11 +82,11 @@ def body_evidence(rows: StructuralRows, factors: Iterable[Factor]) -> Bodies:
             evidence.update(_bodies(section, headings, chunks))
     long_bodies = tuple(sorted((key, len(entries)) for key, entries in evidence.items()
                                if len(entries) > LONG_BODY_CHUNKS))
-    return Bodies(evidence, tuple(sorted(unlocated)), long_bodies)
+    return Bodies(evidence, tuple(sorted(unlocated)), tuple(sorted(not_headings)), long_bodies)
 
 
-def _headings(section: RiskSection, factors: Sequence[Factor]) -> dict[str, tuple[int, int]]:
-    """Factor key -> its heading's [start, end) in the section text, for those found."""
+def _located(section: RiskSection, factors: Sequence[Factor]) -> dict[str, tuple[int, int]]:
+    """Factor key -> its span's last [start, end) in the section text, for those found."""
     normalized = normalized_text(section.text)
     found: dict[str, tuple[int, int]] = {}
     for factor in factors:
@@ -84,6 +94,10 @@ def _headings(section: RiskSection, factors: Sequence[Factor]) -> dict[str, tupl
         if matches:
             found[factor.key] = max(matches)
     return found
+
+
+def _starts_line(text: str, start: int) -> bool:
+    return _BEFORE_HEADING.fullmatch(text, text.rfind("\n", 0, start) + 1, start) is not None
 
 
 def _bodies(
