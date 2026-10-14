@@ -23,6 +23,7 @@ import psycopg
 from neo4j import Driver
 
 from graph.connection import DATABASE
+from graph.guard import TIMEOUT_S
 from graph.load import OUTPUT_DIR as LOAD_REPORT_DIR
 from ingest.store import chunk_ids
 from ingest.voyage import API_KEY_ENV, DEFAULT_MODEL, QueryEmbedder, VoyageClient
@@ -111,6 +112,7 @@ class GraphTraversalArm:
         clock: Callable[[], float] = time.perf_counter,
         prompt: AnswerPrompt | None = None,
         cypher_prompt_version: str | None = None,
+        cypher_timeout: float = TIMEOUT_S,
         spans: SpanRecorder | None = None,
         load_reports: Path = LOAD_REPORT_DIR,
         database: str = DATABASE,
@@ -141,7 +143,7 @@ class GraphTraversalArm:
                           cypher_prompt_sha256=cypher_prompt.sha256),
         )
         self.cypher_search = CypherSearch(driver, cypher_model, cypher_prompt, known, k, clock,
-                                          self._spans, database)
+                                          self._spans, database, cypher_timeout)
         self.local_search = LocalSearch(driver, index, HOPS, k, clock, self._spans, database)
         self._answerer = (None if answer_model is None else
                           ChunkAnswerer(self.name, conn, answer_model, prompt, self._filings,

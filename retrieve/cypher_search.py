@@ -21,7 +21,14 @@ from types import MappingProxyType
 from neo4j import Driver
 
 from graph.connection import DATABASE
-from graph.guard import GuardFailure, GuardPass, execute, explain_check, static_check
+from graph.guard import (
+    TIMEOUT_S,
+    GuardFailure,
+    GuardPass,
+    execute,
+    explain_check,
+    static_check,
+)
 from retrieve.answer_model import AnswerModel
 from retrieve.arm import (
     CypherAttempt,
@@ -84,7 +91,8 @@ class CypherSearch:
     def __init__(self, driver: Driver, model: AnswerModel, prompt: CypherPrompt,
                  known_chunks: Collection[str], k: int,
                  clock: Callable[[], float] = time.perf_counter,
-                 spans: SpanRecorder | None = None, database: str = DATABASE):
+                 spans: SpanRecorder | None = None, database: str = DATABASE,
+                 timeout: float = TIMEOUT_S):
         self._driver = driver
         self._model = model
         self._prompt = prompt
@@ -93,6 +101,7 @@ class CypherSearch:
         self._clock = clock
         self._spans = spans if spans is not None else SpanRecorder.off()
         self._database = database
+        self._timeout = timeout
 
     def search(self, question: str, question_filter: QuestionFilter) -> TraversalResult:
         """The ranked chunks and every attempt; raises ``AnswerModelError`` on a failed
@@ -141,14 +150,15 @@ class CypherSearch:
     def _run(self, cypher: str, question_filter: QuestionFilter
              ) -> tuple[CypherAttempt, tuple[RetrievedChunk, ...]]:
         with self._spans.span(CYPHER_GUARD_SPAN, Kind.CHAIN, {}) as span:
-            failure = static_check(cypher) or explain_check(self._driver, cypher,
-                                                            database=self._database)
+            failure = static_check(cypher) or explain_check(
+                self._driver, cypher, database=self._database, timeout=self._timeout)
             if failure is not None:
                 attempt = _failed(cypher, failure)
                 span.set_attributes(cypher_attributes(attempt))
                 return attempt, ()
         with self._spans.span(CYPHER_EXECUTE_SPAN, Kind.RETRIEVER, {}) as span:
-            result = execute(self._driver, cypher, database=self._database)
+            result = execute(self._driver, cypher, database=self._database,
+                             timeout=self._timeout)
             if isinstance(result, GuardFailure):
                 attempt, retrieved = _failed(cypher, result), ()
             else:
