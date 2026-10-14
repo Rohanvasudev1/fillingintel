@@ -8,9 +8,14 @@ from __future__ import annotations
 
 import os
 
-from neo4j import Driver, GraphDatabase
+from neo4j import READ_ACCESS, Driver, GraphDatabase, Session
 
 DATABASE = "neo4j"
+# Both Neo4j services end any transaction after 15 s unless it sets its own timeout
+# (docker-compose.yml, ADR-0007), which bounds generated queries. Whole-graph work
+# this code trusts, the rebuild and validate_graph(), sets this one instead; a timeout
+# the driver sends overrides the server's (measured on 5.26.31, 2026-10-14).
+WHOLE_GRAPH_TIMEOUT_S = 300.0
 
 
 class GraphSettingsMissing(RuntimeError):
@@ -28,3 +33,13 @@ def driver_from_env(prefix: str = "NEO4J") -> Driver:
         raise GraphSettingsMissing(f"Neo4j settings not set: {', '.join(missing)}")
     uri, user, password = (os.environ[name] for name in names)
     return GraphDatabase.driver(uri, auth=(user, password), telemetry_disabled=True)
+
+
+def read_session(driver: Driver, database: str = DATABASE, **config: object) -> Session:
+    """A session in READ access mode, which makes the server refuse writes.
+
+    Community has no read-only users, and READ mode does not stop LOAD CSV,
+    TERMINATE TRANSACTIONS or dbms procedures (ADR-0007), so generated queries
+    also pass the guard's text rules first. *config* goes to driver.session().
+    """
+    return driver.session(database=database, default_access_mode=READ_ACCESS, **config)

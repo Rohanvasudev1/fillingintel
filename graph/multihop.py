@@ -27,11 +27,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, NamedTuple, TypeAlias
 
-from neo4j import READ_ACCESS, Driver
+from neo4j import Driver
 from neo4j.exceptions import DriverError, Neo4jError
 
 from eval.schema import EvalRecord, load_records
-from graph.connection import DATABASE, GraphSettingsMissing, driver_from_env
+from graph.connection import DATABASE, GraphSettingsMissing, driver_from_env, read_session
 from graph.validate import EXIT_OK, EXIT_RUN_ERROR, EXIT_VIOLATIONS
 from ingest.atomic_json import write_json_atomic
 from ingest.provenance import REPO_ROOT, git_state
@@ -119,7 +119,7 @@ def query_files(directory: Path) -> dict[str, Path]:
 def _read(driver: Driver, database: str, cypher: str,
           **params: object) -> list[dict[str, object]]:
     """The rows of *cypher*, run in a read transaction."""
-    with driver.session(database=database, default_access_mode=READ_ACCESS) as session:
+    with read_session(driver, database) as session:
         return session.execute_read(lambda tx: [r.data() for r in tx.run(cypher, params)])
 
 

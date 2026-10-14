@@ -31,6 +31,9 @@ jobs:
         image: neo4j:5.26.31-community
         env:
           NEO4J_AUTH: neo4j/filingintel-ci
+          # The server-wide limits from docker-compose.yml (x-neo4j-limits); keep them equal.
+          NEO4J_db_transaction_timeout: 15s
+          NEO4J_db_memory_transaction_max: 512m
         options: >-
           --health-cmd "cypher-shell -u neo4j -p filingintel-ci 'RETURN 1'"
           --health-interval 5s

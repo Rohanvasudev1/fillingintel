@@ -33,6 +33,7 @@ from neo4j import (
     ManagedTransaction,
     NotificationDisabledClassification,
     Record,
+    unit_of_work,
 )
 from neo4j.exceptions import DriverError, Neo4jError
 from neo4j.time import Date
@@ -48,7 +49,12 @@ from graph.batch import (
     EXTRACT_PROMPTS,
     key_problem,
 )
-from graph.connection import DATABASE, GraphSettingsMissing, driver_from_env
+from graph.connection import (
+    DATABASE,
+    WHOLE_GRAPH_TIMEOUT_S,
+    GraphSettingsMissing,
+    driver_from_env,
+)
 from graph.constraints import GRAPH_META, GRAPH_META_QUERY, graph_meta_problem
 from graph.cypher import quoted
 from graph.ontology import (
@@ -118,7 +124,8 @@ def validate_graph(
         database=database, default_access_mode=READ_ACCESS,
         notifications_disabled_classifications=[NotificationDisabledClassification.UNRECOGNIZED],
     ) as session:
-        findings, chunks = session.execute_read(_graph_findings)
+        findings, chunks = session.execute_read(
+            unit_of_work(timeout=WHOLE_GRAPH_TIMEOUT_S)(_graph_findings))
     checks: tuple[Check, ...] = _GRAPH_CHECKS
     if postgres is not None:
         findings = [*findings, *_postgres_findings(postgres, chunks)]
