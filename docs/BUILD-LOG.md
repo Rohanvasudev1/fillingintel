@@ -2298,6 +2298,9 @@ No question is unpaired in either comparison. The full tables, with precision an
 - **Spend.** New spend about $6.22: `graph_local` $2.77 answers + $0.66 judges, `graph_traversal` $2.20 answers + $0.59 judges, no Cypher calls. The estimate shown before the runs was about $7.10. Step 11 total: about $8.47 of the $15 cap.
 - **Docs.** RUNBOOK Step 11 outcome; README section with both arms and the Cypher validity rate; CLAUDE.md Decisions gains the ticket 02–06 choices not yet recorded, plus where the ticket 07 runs live, and Commands gains the three Step 11 CLIs; OPEN-DECISIONS gains the ticket 05 header items, the judging race and the dev loss.
 
+- **Evidence.** `uv run ruff check .` clean. Full `uv run --env-file .env pytest` at `87de4c3` (docs only after it), alone on `neo4j-test`: 2,443 passed, 1 skipped, in 569 s.
+- **Code review** (`mattpocock-skills:code-review`): both reviewers checked every number against the run files and `eval.compare`, and all matched. Fixed: the Cypher validity figures named no commit; the findings line had no agent-drafted label and claimed every class lost where only pooled, global and traversal's local exclude 0; H1, H3 and H5 lacked plain verdicts; ticket 05–06 choices (the two retrieval-only CLIs, the estimate's margin, traversal's start-up refusals) and the Step 11 commands were missing from CLAUDE.md; the README intro still said hand-written questions.
+
 **Step 11 stop condition:** met for `dev`. `--arm graph_local` and `--arm graph_traversal` both run the full dev set end to end, and the Cypher validity rate is reported. Graph loses to `vector` on these questions.
 
 **Decisions needed**
