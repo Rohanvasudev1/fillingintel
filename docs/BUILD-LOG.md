@@ -2113,6 +2113,74 @@ The harness can now carry a graph arm's details without any graph arm existing. 
 
 ---
 
+## 2026-10-14 — Step 11 ticket 05: graph_local arm
+
+`eval.run --arm graph_local` now runs. The arm links a question to anchors, collects their evidence and their edges' evidence from Neo4j, and sends at most 10 ranked chunks to the unchanged answer prompt (ADR-0007). Spec `.scratch/step-11/spec.md` (`graph_local`), ticket `.scratch/step-11/issues/05-graph-local-arm.md`.
+
+- **Anchors** (`retrieve/anchors.py`). A node is embedded as "Label: name", "RiskFactor: title" or "MetricValue: concept, period" (Voyage `document`, entity-embedding cache). Nodes whose name or an alias matches a phrase of the question come first, by match score, as similarity 1.0. The rest follow by exact cosine against the cached query embedding. The list stops at 20 anchors. Company nodes are never candidates. A node needs an `EVIDENCED_BY` chunk in the filtered filings.
+- **Name matching (decisions made here).**
+  - Only nodes with a `name` match by name. Risk factors and metric values have titles and concepts, not names, so they anchor only through cosine.
+  - A match is `fuzz.ratio` between the processed name (RapidFuzz `default_process`) and every run of question words with one word more or fewer than the name.
+  - Cutoff 90, chosen by reading the matches on the 93 dev questions, not by recall. At 85 there were 221 name anchors: "Intel's" matched the process nodes Intel 3, 4 and 7 on 14 Intel questions, and "GPU" matched "GPUs". At 90 there were 139, almost all right; one is loose ("customers" matching "Customer A"). At 95 there were 126, losing correct matches such as "European Commission competition matter".
+- **Expansion and scoring** (`retrieve/graph_expand.py`). One READ transaction reads, for each anchor:
+  - at 1 hop, its `EVIDENCED_BY` chunks and the `chunk_ids` of every edge touching it, `PERSISTS_AS` included;
+  - at 2 hops, also the `EVIDENCED_BY` chunks of the nodes at the other end of those edges.
+
+  A chunk scores the sum over anchors of similarity × (1 + the anchor's edges citing it). Scores are compared rounded to 9 places, ties go to the smaller chunk ID, and chunks outside the filter are dropped. Each chunk carries its best evidence confidence.
+- **Guards.** The arm refuses to start when `:GraphMeta` records another ontology, when there is no load report, or when any node text lacks a cached embedding. So it never embeds a node itself. The header's `load_run` is the newest `benchmarks/graph/load-run*.json`.
+- **Node embeddings.** `python -m retrieve.node_embed` prints an estimate and sends nothing without `--embed`. It refuses above `--max-cost` (default $0.50). Run once, after the user approved the estimate: 5,960 nodes, 4,166 distinct texts, 3,418 not cached (748 were already cached from Step 9). Estimate $0.0086; Voyage reported 56,885 tokens, **$0.0068**.
+- **Hop choice.** `python -m eval.local_hops` runs retrieval only, reading query and node embeddings from cache only (no API call, $0). It scores the 82 answerable dev questions as the gate does: recall@10 has no meaning for decline and unanswerable questions. Its report is `benchmarks/graph/local-hops-run1.json`. Run at commit `96d50d2`, k = 10, 20 anchors, cutoff 90. Agent-drafted questions, dev, **tuned on**. No question lacked an anchor at either hop count.
+
+  | class | n | recall@10, 1 hop | recall@10, 2 hops | recall@5, 1 hop | recall@5, 2 hops | wrong evidence, both |
+  |---|---|---|---|---|---|---|
+  | lookup | 27 | 0.963 | 0.926 | 0.630 | 0.630 | 0.074 |
+  | local | 22 | 0.909 | 0.864 | 0.727 | 0.682 | 0.000 |
+  | multi_hop | 23 | 0.627 | 0.612 | 0.486 | 0.442 | 0.130 |
+  | global | 10 | 0.425 | 0.400 | 0.283 | 0.283 | 0.300 |
+  | pooled | 82 | **0.789** | 0.757 | 0.573 | 0.549 | 0.098 |
+
+  **1 hop is frozen** (`retrieve.graph_local.HOPS`). The second hop helps no class. Against the vector baseline's dev recall@10 (lookup 1.000, local 0.977, multi_hop 0.717, global 0.800), graph_local is lower in every class, multi-hop included. These are retrieval-only numbers; ticket 07 runs the paired comparison.
+- **Refactor.** The answer step, price check, corpus filing list, chunker-version check and query embedding moved from `retrieve/vector.py` to `retrieve/arm_steps.py`, shared by both arms. Vector behaviour is unchanged; its tests pass.
+- **Tests.** `tests/test_graph_local_arm.py` (18, on `neo4j-test` and Postgres) tests through `Arm.run` on a hand-built graph around real fixture chunks of NVIDIA's FY2026 10-K and FY2027-Q2 10-Q, with fake embedders. Cases:
+  - ranking, with a tie at 1.5 broken by chunk ID;
+  - the cut to k;
+  - 2 hops;
+  - a persistence link;
+  - a name match beating a closer embedding, and an alias match;
+  - filers never anchored;
+  - the filter dropping the 10-Q's anchors and chunks;
+  - no anchor giving an empty retrieval and a `not_found` answer;
+  - best confidence;
+  - stage timing;
+  - provenance;
+  - the three refusals;
+  - spans;
+  - a retrieval failure raised as `ArmError`.
+
+  Also `tests/test_node_embed.py` (4) and `tests/test_local_hops.py` (5), both offline. The arm was written before its tests, against the TDD rule, so each test was checked by mutation instead: dropping edge support failed 4 tests, a reversed tie-break 2, and dropping the anchor filter 2. The two CLIs were written test-first and shown failing.
+- **`neo4j-test` stopped once with exit 137** (out of memory) during the mutation runs. It was restarted with `docker compose up -d neo4j-test`. Docker has 3.8 GB here, with both Neo4j services and the Supabase stack running.
+- **Whole-graph read timeout.** Reading every node took longer than the server's 15 s limit on this loaded machine; single labels took up to 1.5 s, and so did a plain `count`. `read_anchor_nodes` now sets `WHOLE_GRAPH_TIMEOUT_S`, as `validate_graph()` does. Expansion keeps the 15 s limit.
+- **Code review** (`mattpocock-skills:code-review`).
+  - Standards: fixed.
+    - `retrieve()` let a `ValueError` escape instead of raising `ArmError`; a test now covers it.
+    - The connection opener was duplicated in `eval.local_hops`; there is now one `graph_connections()`.
+    - The run-number logic was duplicated; `next_report_path` takes a prefix.
+    - The twin "never call Voyage" stubs became one `CacheOnly`.
+    - `arm.search.search` was renamed `local_search`, and `hops` became read-only.
+  - Not changed: `AnchorId` stays a `(label, key)` tuple, used as a dict key.
+  - Spec: no defects. Its notes are recorded here: the cutoff and matching method, name matching limited to named labels, and hop choice on answerable questions only.
+- **Evidence.** `uv run ruff check .` clean. Full `uv run --env-file .env pytest` (run alone on `neo4j-test`): 2,390 passed, 1 skipped, in 583 s.
+
+**Decisions needed**
+- Hops in the run header. `ArmConfig` has no hop field, so the frozen hop count appears only per question (`graph.hops`). Recommendation: leave the header as it is. Every question record carries the count, and adding a field changes the header schema, which is a harness change.
+- Load-run check. The header names the newest load report on disk, not one tied to the live graph. Recommendation: in Step 13, have `graph.load` write the run name onto `:GraphMeta`, and have the arm read it from there.
+
+**Next session starts with**
+1. Merge this PR once CI is green.
+2. Ticket 06 (`graph_traversal`) can fall back to `retrieve.graph_local.LocalSearch`.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.

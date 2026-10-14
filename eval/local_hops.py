@@ -17,8 +17,6 @@ Exit codes: 0 done, 2 bad arguments, 3 could not run.
 from __future__ import annotations
 
 import argparse
-import os
-import re
 import sys
 from collections import Counter
 from collections.abc import Callable, Iterator, Mapping, Sequence
@@ -26,32 +24,30 @@ from contextlib import AbstractContextManager, contextmanager
 from pathlib import Path
 from typing import Protocol
 
-import psycopg
-
 from eval.gate_scores import GATED_CLASSES, POOLED, ClassScores, score_questions
 from eval.question_sets import EVAL_DIR, agent_drafted_set, load_question_sets
 from eval.schema import EvalRecord
 from eval.snapshot import gated_records
-from graph.connection import GraphSettingsMissing, driver_from_env
 from graph.load import OUTPUT_DIR as REPORT_DIR
+from graph.load_report import next_report_path
 from ingest.atomic_json import write_json_atomic
 from ingest.provenance import git_state
-from ingest.voyage import DEFAULT_MODEL, Embedding, VoyageError
+from ingest.voyage import DEFAULT_MODEL
 from retrieve.anchors import ANCHOR_LIMIT, NAME_MATCH_CUTOFF
-from retrieve.arm import ArmError
+from retrieve.arm import ArmError, Retrieval
 from retrieve.graph_expand import HOP_CHOICES
-from retrieve.graph_local import TOP_K, GraphLocalArm
-from retrieve.query_cache import CachedBatchEmbedder, CachedQueryEmbedder
+from retrieve.graph_local import TOP_K, GraphLocalArm, graph_connections
+from retrieve.query_cache import CachedBatchEmbedder, CachedQueryEmbedder, CacheOnly
 
 EXIT_OK = 0
 EXIT_USAGE = 2
 EXIT_COULD_NOT_RUN = 3
 QUESTIONS_LABEL = "agent-drafted questions, dev, answerable only"
-_REPORT = re.compile(r"local-hops-run(\d+)\.json")
+REPORT_PREFIX = "local-hops-run"
 
 
 class Retriever(Protocol):
-    def retrieve(self, question: str): ...
+    def retrieve(self, question: str) -> Retrieval: ...
 
 
 OpenArm = Callable[[int], AbstractContextManager[Retriever]]
@@ -74,12 +70,6 @@ def _score(arm: Retriever, records: Sequence[EvalRecord]
     counts = {cls: no_anchor[cls] for cls in (*GATED_CLASSES, POOLED)
               if cls == POOLED or any(r.class_ == cls for r in records)}
     return score_questions(scored), counts
-
-
-def _report_path(directory: Path) -> Path:
-    used = [int(m[1]) for p in directory.glob("local-hops-run*.json")
-            if (m := _REPORT.fullmatch(p.name))]
-    return directory / f"local-hops-run{max(used, default=0) + 1}.json"
 
 
 def _print(scores: Mapping[int, Mapping[str, ClassScores]], chosen: int) -> None:
@@ -115,7 +105,7 @@ def main(argv: Sequence[str] | None = None, *, open_arm: OpenArm | None = None,
         return EXIT_COULD_NOT_RUN
     chosen = choose_hops(scores)
     _print(scores, chosen)
-    path = _report_path(report_dir)
+    path = next_report_path(report_dir, REPORT_PREFIX)
     write_json_atomic(path, {
         "commit": commit if commit is not None else git_state(),
         "questions": QUESTIONS_LABEL,
@@ -132,31 +122,13 @@ def main(argv: Sequence[str] | None = None, *, open_arm: OpenArm | None = None,
     return EXIT_OK
 
 
-class _NotCached:
-    """Stands in for Voyage: every query must already be in the cache."""
-
-    def embed_query(self, text: str, model: str) -> Embedding:
-        raise VoyageError("a question has no cached query embedding; this run is cache-only")
-
-    def embed_batch(self, texts, model, input_type):
-        raise VoyageError("a node text has no cached embedding; run python -m retrieve.node_embed")
-
-
 @contextmanager
 def open_cached_arm(hops: int) -> Iterator[GraphLocalArm]:
     """graph_local on ``DATABASE_URL`` and ``NEO4J_*``, reading embeddings from cache only."""
-    try:
-        conn = psycopg.connect(os.environ["DATABASE_URL"])
-    except (KeyError, psycopg.Error) as exc:
-        raise ArmError(f"could not connect to the database: {type(exc).__name__}") from exc
-    try:
-        driver = driver_from_env()
-    except GraphSettingsMissing as exc:
-        conn.close()
-        raise ArmError(str(exc)) from exc
-    with conn, driver:
-        yield GraphLocalArm(conn, driver, CachedQueryEmbedder(_NotCached()),
-                            CachedBatchEmbedder(_NotCached()), None, hops=hops)
+    hint = "this run is cache-only (python -m retrieve.node_embed embeds nodes)"
+    with graph_connections() as (conn, driver):
+        yield GraphLocalArm(conn, driver, CachedQueryEmbedder(CacheOnly(hint)),
+                            CachedBatchEmbedder(CacheOnly(hint)), None, hops=hops)
 
 
 if __name__ == "__main__":

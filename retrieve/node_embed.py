@@ -29,7 +29,7 @@ from ingest.voyage import DEFAULT_MODEL, BatchEmbedder, VoyageClient, VoyageErro
 from retrieve.anchors import AnchorNode
 from retrieve.graph_nodes import NODE_INPUT_TYPE, distinct_texts, read_anchor_nodes
 from retrieve.pricing import embedding_cost
-from retrieve.query_cache import BATCH_CACHE_DIR, CachedBatchEmbedder, CacheError
+from retrieve.query_cache import BATCH_CACHE_DIR, CachedBatchEmbedder, CacheError, CacheOnly
 
 EXIT_OK = 0
 EXIT_USAGE = 2
@@ -76,7 +76,7 @@ def main(argv: Sequence[str] | None = None, *, read_nodes: ReadNodes = _read_gra
         print(f"could not read the graph's nodes ({type(exc).__name__}): {exc}", file=sys.stderr)
         return EXIT_COULD_NOT_RUN
     texts = distinct_texts(nodes)
-    lister = CachedBatchEmbedder(_NoCalls(), cache_dir=cache_dir)
+    lister = CachedBatchEmbedder(CacheOnly("listing never embeds"), cache_dir=cache_dir)
     missing = lister.uncached(texts, DEFAULT_MODEL, NODE_INPUT_TYPE)
     tokens, usd = estimate_usd(missing)
     print(f"{len(nodes)} nodes, {len(texts)} distinct texts, {len(missing)} not cached.")
@@ -104,13 +104,6 @@ def _embed(texts: Sequence[str], open_voyage: OpenVoyage, cache_dir: Path) -> in
     print(f"Embedded {len(texts)} texts in {cache.calls} requests; Voyage reported "
           f"{cache.tokens:,} tokens, ${embedding_cost(DEFAULT_MODEL, cache.tokens):.4f}.")
     return EXIT_OK
-
-
-class _NoCalls:
-    """Lists what the cache lacks without being able to embed anything."""
-
-    def embed_batch(self, texts, model, input_type):
-        raise AssertionError("listing the cache never embeds")
 
 
 if __name__ == "__main__":

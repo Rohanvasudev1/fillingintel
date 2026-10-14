@@ -88,7 +88,8 @@ NEO4J_ENV = ("NEO4J_URI", "NEO4J_USER", "NEO4J_PASSWORD")
 _MS_PER_SECOND = 1000.0
 # Raised as ArmError.  OSError: a cache file could not be written.
 _GRAPH_ERRORS = (Neo4jError, DriverError)
-_RETRIEVAL_ERRORS = (VoyageError, CacheError, OSError, *_GRAPH_ERRORS)
+# ValueError: a zero vector, or a confidence or label the ontology does not know.
+_RETRIEVAL_ERRORS = (VoyageError, CacheError, OSError, ValueError, *_GRAPH_ERRORS)
 
 
 @dataclass(frozen=True)
@@ -110,11 +111,15 @@ class LocalSearch:
                  spans: SpanRecorder | None = None, database: str = DATABASE):
         self._driver = driver
         self._index = index
-        self.hops = hops
+        self._hops = hops
         self._k = k
         self._clock = clock
         self._spans = spans if spans is not None else SpanRecorder.off()
         self._database = database
+
+    @property
+    def hops(self) -> int:
+        return self._hops
 
     def search(self, question: str, question_filter: QuestionFilter,
                query_vector: Sequence[float]) -> LocalResult:
@@ -126,10 +131,10 @@ class LocalSearch:
             linked = self._clock()
             span.set_attributes(anchor_attributes(anchors))
         with self._spans.span(EXPAND_SPAN, Kind.RETRIEVER, question_input(question)) as span:
-            reach = expand(self._driver, anchors, self.hops, self._database) if anchors else {}
+            reach = expand(self._driver, anchors, self._hops, self._database) if anchors else {}
             retrieved = rank_chunks(anchors, reach, accession_nos, self._k)
             span.set_attributes(retrieval_attributes(retrieved))
-        return LocalResult(retrieved, anchors, self.hops, (linked - start) * _MS_PER_SECOND)
+        return LocalResult(retrieved, anchors, self._hops, (linked - start) * _MS_PER_SECOND)
 
 
 class GraphLocalArm:
@@ -179,7 +184,7 @@ class GraphLocalArm:
             answer_max_tokens=ANSWER_MAX_TOKENS,
             graph=provenance,
         )
-        self.search = LocalSearch(driver, index, hops, k, clock, self._spans, database)
+        self.local_search = LocalSearch(driver, index, hops, k, clock, self._spans, database)
         self._filings = corpus_filings(conn)
         self._answerer = (None if answer_model is None else
                           ChunkAnswerer(self.name, conn, answer_model, prompt, self._filings,
@@ -200,7 +205,7 @@ class GraphLocalArm:
             start = self._clock()
             embedding = embed_question(self._embedder, self._model, question, self._spans)
             embedded = self._clock()
-            found = self.search.search(question, question_filter, embedding.vector)
+            found = self.local_search.search(question, question_filter, embedding.vector)
             searched = self._clock()
         except _RETRIEVAL_ERRORS as exc:
             raise arm_error(self.name, exc) from exc
@@ -252,19 +257,26 @@ def _anchor_index(driver: Driver, database: str, node_embeddings: CachedBatchEmb
 
 
 @contextmanager
-def open_graph_local_arm(response_cache: Path,
-                         spans: SpanRecorder | None = None) -> Iterator[GraphLocalArm]:
-    """The arm on ``DATABASE_URL`` and ``NEO4J_*``, with Voyage, Claude and their caches."""
+def graph_connections() -> Iterator[tuple[psycopg.Connection, Driver]]:
+    """Postgres on ``DATABASE_URL`` and Neo4j on ``NEO4J_*``, closed on exit."""
     try:
         conn = psycopg.connect(os.environ["DATABASE_URL"])
-    except psycopg.Error as exc:  # the message can quote the URL, so only the type is shown
+    except (KeyError, psycopg.Error) as exc:  # the message can quote the URL: type only
         raise ArmError(f"could not connect to the database: {type(exc).__name__}") from exc
     try:
         driver = driver_from_env()
     except GraphSettingsMissing as exc:
         conn.close()
         raise ArmError(str(exc)) from exc
-    with (conn, driver, VoyageClient.from_env() as voyage,
+    with conn, driver:
+        yield conn, driver
+
+
+@contextmanager
+def open_graph_local_arm(response_cache: Path,
+                         spans: SpanRecorder | None = None) -> Iterator[GraphLocalArm]:
+    """The arm on ``DATABASE_URL`` and ``NEO4J_*``, with Voyage, Claude and their caches."""
+    with (graph_connections() as (conn, driver), VoyageClient.from_env() as voyage,
           AnthropicAnswerModel.from_env() as claude):
         yield GraphLocalArm(conn, driver, CachedQueryEmbedder(voyage),
                             CachedBatchEmbedder(voyage), CachedAnswerModel(claude, response_cache),

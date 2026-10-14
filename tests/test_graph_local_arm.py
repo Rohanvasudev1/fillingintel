@@ -261,3 +261,11 @@ def test_the_arm_is_registered_with_the_settings_it_needs():
     spec = ARMS["graph_local"]
     assert set(spec.required_env) == {"NEO4J_URI", "NEO4J_USER", "NEO4J_PASSWORD",
                                       "DATABASE_URL", "VOYAGE_API_KEY", "ANTHROPIC_API_KEY"}
+
+
+def test_a_retrieval_failure_is_an_arm_error(corpus, graph, tmp_path):
+    arm = GraphLocalArm(corpus, graph, FakeQueryEmbedder((0.0,) * len(QUERY_VECTOR)),
+                        _node_cache(tmp_path, SIMILARITIES), ScriptedAnswerModel(),
+                        load_reports=_reports(tmp_path, "load-run4"))
+    with pytest.raises(ArmError, match="graph_local arm failed.*zero vector"):
+        arm.retrieve(UNFILTERED)
