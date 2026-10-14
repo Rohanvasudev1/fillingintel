@@ -134,6 +134,7 @@ The Cypher validity rate is tracked from the first run as four rates per class. 
 - The arm checks `:GraphMeta` against the code at start.
 - `benchmarks/graph/cypher-validity-run{N}.json` holds, per traversal run: commit, prompt version, model and effort, per-class counts and the four rates, and per question the attempts (query, rule or error, rows) and the fallback reason.
 - A `cypher/v2` revision is allowed once, written from failure categories. Both versions' validity files are kept.
+- Implementation notes (ticket 06, 2026-10-14): a reply with no usable query is an `invalid` attempt with rule `reply` and gets the repair; strings that are not corpus chunk IDs are dropped with the filtered ones; each traversal chunk's best confidence is read from its `EVIDENCED_BY` entries and the evidence on edges touching the nodes it evidences; the prompt file has a `# Repair` template inside the pinned hash. v1 runs 1 and v2 run 2 are in `benchmarks/graph/cypher-validity-run{1,2}.json`; v1 is used (user decision), since v2 retrieved worse on dev.
 
 **Runs and closure (ticket 6)**
 - Retrieval-only iteration first. Then one full dev run per arm with answers and 3 judge passes, the estimate shown first and the $15 total cap checked against committed spend. Both run files are committed, along with the validity report.

@@ -87,9 +87,9 @@ HOPS = 1
 NEO4J_ENV = ("NEO4J_URI", "NEO4J_USER", "NEO4J_PASSWORD")
 _MS_PER_SECOND = 1000.0
 # Raised as ArmError.  OSError: a cache file could not be written.
-_GRAPH_ERRORS = (Neo4jError, DriverError)
+GRAPH_ERRORS = (Neo4jError, DriverError)
 # ValueError: a zero vector, or a confidence or label the ontology does not know.
-_RETRIEVAL_ERRORS = (VoyageError, CacheError, OSError, ValueError, *_GRAPH_ERRORS)
+RETRIEVAL_ERRORS = (VoyageError, CacheError, OSError, ValueError, *GRAPH_ERRORS)
 
 
 @dataclass(frozen=True)
@@ -171,9 +171,9 @@ class GraphLocalArm:
         prompt = prompt if prompt is not None else load_answer_prompt()
         check_prices((model, ANSWER_MODEL))
         try:
-            provenance = _provenance(driver, database, load_reports)
-            index = _anchor_index(driver, database, node_embeddings, model)
-        except (*_GRAPH_ERRORS, CacheError, OSError, ValueError) as exc:
+            provenance = graph_provenance(driver, database, load_reports)
+            index = anchor_index(driver, database, node_embeddings, model)
+        except (*GRAPH_ERRORS, CacheError, OSError, ValueError) as exc:
             raise arm_error(self.name, exc) from exc
         self.config = ArmConfig(
             models=MappingProxyType({"embedding": model, "answer": ANSWER_MODEL}),
@@ -207,7 +207,7 @@ class GraphLocalArm:
             embedded = self._clock()
             found = self.local_search.search(question, question_filter, embedding.vector)
             searched = self._clock()
-        except _RETRIEVAL_ERRORS as exc:
+        except RETRIEVAL_ERRORS as exc:
             raise arm_error(self.name, exc) from exc
         return Retrieval(
             retrieved=found.retrieved,
@@ -229,7 +229,7 @@ class GraphLocalArm:
         )
 
 
-def _provenance(driver: Driver, database: str, load_reports: Path) -> GraphProvenance:
+def graph_provenance(driver: Driver, database: str, load_reports: Path) -> GraphProvenance:
     """What the header records about the graph; raises ``ArmError`` for another ontology."""
     with read_session(driver, database) as session:
         rows = session.execute_read(lambda tx: [r.data() for r in tx.run(GRAPH_META_QUERY)])
@@ -243,7 +243,7 @@ def _provenance(driver: Driver, database: str, load_reports: Path) -> GraphProve
                            load_run=load_run)
 
 
-def _anchor_index(driver: Driver, database: str, node_embeddings: CachedBatchEmbedder,
+def anchor_index(driver: Driver, database: str, node_embeddings: CachedBatchEmbedder,
                   model: str) -> AnchorIndex:
     """Every anchor candidate with its cached vector; raises ``ArmError`` if one is missing."""
     nodes = read_anchor_nodes(driver, database)

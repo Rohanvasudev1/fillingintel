@@ -1,0 +1,40 @@
+{
+  "recorded": "real API response, recorded by scripts/capture_cypher_responses.py",
+  "prompt_version": "cypher/v1@5669b1ca",
+  "question": "Which foundry does NVIDIA's fiscal 2026 10-K say manufactures its products?",
+  "api_ms": 5729.107916005887,
+  "response": {
+    "id": "msg_011Cg2JMnyMVdVDiQLP1Z14Z",
+    "container": null,
+    "content": [
+      {
+        "citations": null,
+        "text": "{\"reasoning\":\"Start from NVIDIA's FY2026 10-K Filing. Foundries are Organization nodes linked to NVDA by SUPPLIES (org supplies NVDA) or CUSTOMER_OF (NVDA buys from org). Match organizations whose name or aliases mention foundry names like TSMC, Taiwan Semiconductor, Samsung, or the word foundry. Keep edge chunk_ids from the FY2026 filing plus the organization's EVIDENCED_BY chunks in that filing. Order by number of chunks.\",\"cypher\":\"MATCH (co:Company {ticker: 'NVDA'})-[:FILED]->(f:Filing {form_type: '10-K', fiscal_period: 'FY2026'})\\nMATCH (o:Organization)-[r:SUPPLIES]->(co)\\nWHERE any(x IN [o.name] + coalesce(o.aliases, []) WHERE toLower(x) CONTAINS 'tsmc' OR toLower(x) CONTAINS 'taiwan semiconductor' OR toLower(x) CONTAINS 'samsung' OR toLower(x) CONTAINS 'foundry' OR toLower(x) CONTAINS 'globalfoundries' OR toLower(x) CONTAINS 'intel')\\nOPTIONAL MATCH (o)-[:EVIDENCED_BY]->(c:Chunk)-[:PART_OF]->(f)\\nWITH o, [cid IN r.chunk_ids WHERE cid STARTS WITH f.accession_no + ':'] AS edge_ids, collect(c.chunk_id) AS node_ids\\nWITH o, edge_ids + node_ids AS ids\\nWHERE size(ids) > 0\\nRETURN o.name AS foundry, ids AS chunk_ids\\nORDER BY size(ids) DESC\"}",
+        "type": "text"
+      }
+    ],
+    "diagnostics": null,
+    "model": "claude-sonnet-5-5",
+    "role": "assistant",
+    "stop_details": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 7488
+      },
+      "cache_creation_input_tokens": 7488,
+      "cache_read_input_tokens": 0,
+      "inference_geo": "global",
+      "input_tokens": 85,
+      "output_tokens": 645,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": null,
+      "service_tier": "standard"
+    }
+  }
+}

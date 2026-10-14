@@ -1,0 +1,40 @@
+{
+  "recorded": "real API response, recorded by scripts/capture_cypher_responses.py",
+  "prompt_version": "cypher/v1@5669b1ca",
+  "question": "How did NVIDIA's export-control risk factor change between its fiscal 2026 10-K and its 10-Q for the second quarter of fiscal 2027?",
+  "api_ms": 4795.580500009237,
+  "response": {
+    "id": "msg_011Cg2JNW6PT2jyak92MwnNo",
+    "container": null,
+    "content": [
+      {
+        "citations": null,
+        "text": "{\"reasoning\":\"Both NVIDIA filings (10-K FY2026 and 10-Q FY2027-Q2) disclose RiskFactor nodes via DISCLOSES. I match export-control risk factors by title in each filing, pair the earlier with the later through PERSISTS_AS when present, and collect chunks from the DISCLOSES edge chunk_ids, EVIDENCED_BY chunks restricted to each filing, and the PERSISTS_AS chunk_ids. Rows with a persisting link come first.\",\"cypher\":\"MATCH (:Company {ticker: 'NVDA'})-[:FILED]->(f:Filing)-[d:DISCLOSES]->(rf:RiskFactor)\\nWHERE f.accession_no IN ['0001045810-26-000021', '0001045810-26-000075'] AND (toLower(rf.title) CONTAINS 'export' OR toLower(rf.title) CONTAINS 'license requirement' OR toLower(rf.title) CONTAINS 'trade restriction')\\nOPTIONAL MATCH (rf)-[:EVIDENCED_BY]->(c:Chunk)-[:PART_OF]->(f)\\nWITH f, rf, [cid IN d.chunk_ids WHERE cid STARTS WITH f.accession_no + ':'] AS edge_ids, collect(DISTINCT c.chunk_id) AS node_ids\\nOPTIONAL MATCH (rf)-[p:PERSISTS_AS]-(other:RiskFactor)\\nWITH f, rf, edge_ids, node_ids, collect(DISTINCT coalesce(p.chunk_ids, [])) AS pl\\nWITH f, rf, edge_ids + node_ids AS own_ids, reduce(acc = [], x IN pl | acc + x) AS link_ids\\nWHERE size(own_ids) > 0\\nRETURN f.fiscal_period AS filing_period, rf.title AS risk_title, own_ids + link_ids AS chunk_ids\\nORDER BY size(link_ids) DESC, size(own_ids) DESC\"}",
+        "type": "text"
+      }
+    ],
+    "diagnostics": null,
+    "model": "claude-sonnet-5-5",
+    "role": "assistant",
+    "stop_details": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 7488,
+      "inference_geo": "global",
+      "input_tokens": 131,
+      "output_tokens": 725,
+      "output_tokens_details": {
+        "thinking_tokens": 0
+      },
+      "server_tool_use": null,
+      "service_tier": "standard"
+    }
+  }
+}
