@@ -28,6 +28,7 @@ from ingest.voyage import (
     Embedding,
     InputType,
     QueryEmbedder,
+    VoyageError,
 )
 
 _CACHE_ROOT = Path(__file__).resolve().parents[1] / "data" / "cache"
@@ -154,3 +155,17 @@ class CachedBatchEmbedder:
                 model, input_type, sha):
             raise CacheError(f"cache file {path.name} is for another model, input type or text")
         return _checked_vector(path, stored["vector"], model)
+
+
+class CacheOnly:
+    """Stands in for Voyage behind a cache whose every text must already be cached."""
+
+    def __init__(self, hint: str):
+        self._hint = hint
+
+    def embed_query(self, text: str, model: str) -> Embedding:
+        raise VoyageError(f"a question has no cached embedding; {self._hint}")
+
+    def embed_batch(self, texts: Sequence[str], model: str,
+                    input_type: InputType) -> BatchEmbedding:
+        raise VoyageError(f"{len(texts)} texts have no cached embedding; {self._hint}")

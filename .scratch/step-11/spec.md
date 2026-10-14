@@ -113,6 +113,7 @@ The Cypher validity rate is tracked from the first run as four rates per class. 
 - A chunk's score is the sum over anchors of similarity × (1 + the number of that anchor's edges citing the chunk). Name-matched anchors use similarity 1.0. Chunks outside the filter are dropped, ties break by chunk ID, and the list is cut to 10.
 - Hop count is a config value. Both are scored retrieval-only on dev, the higher pooled recall@10 is frozen (ties go to 1 hop), and the choice and both scores go to BUILD-LOG.
 - No anchor, or no chunk left after the filter, means an empty retrieval, and the answer model then answers `not_found`.
+- Implementation notes (ticket 05, 2026-10-14): only nodes with a `name` match by name (risk factors and metric values anchor by cosine only); a match is `fuzz.ratio` of the processed name against question word runs one word shorter to one longer, cutoff 90, read from the dev matches; 1 hop frozen on dev retrieval-only scores (pooled recall@10 0.789 against 0.757 at 2 hops, `benchmarks/graph/local-hops-run1.json`); node reads use `WHOLE_GRAPH_TIMEOUT_S`.
 
 **Cypher guard and executor (ticket 4)**
 - A new module in the graph package takes a query string and returns a guard result: a pass, or the first failed rule with a message. The checks run in order:
