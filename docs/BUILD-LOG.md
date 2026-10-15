@@ -2310,6 +2310,24 @@ No question is unpaired in either comparison. The full tables, with precision an
 1. Merge this PR once CI is green.
 2. Step 12 (communities and global search): `/grill-with-docs`.
 
+## 2026-10-15 — Step 12 ticket 02: communities from the community graph
+
+**Files changed:** `graph/community_graph.py`, `graph/community.py` and `graph/communities.py` (new); `graph/load.py` (`read_repo_inputs()`, shared with the new command); `tests/test_graph_communities.py` (new); `pyproject.toml` and `uv.lock` (`graspologic-native==1.3.1`, approved 2026-10-15); `benchmarks/communities/communities-run1.json`; CLAUDE.md (Commands, ticket 02 choices).
+
+- **Community graph.** A pure function reads the builder's batch, the same one `graph.load` writes. It keeps extracted nodes other than MetricValue, weights extracted edges between them by evidence chunk count and co-occurrence edges by shared evidence chunks, and sums both into one undirected weight per pair. An edge with a Company end does not count, self-loops are dropped, and nodes with no edge are returned apart. Its `input_sha256` covers every kept node's evidence chunks and every kept edge's chunk IDs. A chunk swapped for another changes the hash even when no weight changes, so ticket 04 can tell a stale communities file.
+- **Communities.** Leiden from graspologic-native (modularity, resolution 1.0, randomness 0.001, one iteration, one trial, seed `0xDEADBEEF`) runs over the whole graph for the top level. It runs again on the edges inside each top community over 25 members for the lower level, and a smaller top community is its own lower one. Edges go in sorted, so input order cannot change the result. Each community has `member_hash` (SHA-256 over the sorted keys), `community_id` (level plus 12 hash characters) and its parent. Communities under 3 members are kept and marked not reportable. The settings are one frozen object whose hash is in the run file.
+- **Run 1** (`3821e3a`, the inputs of load run 4): 2,181 non-metric extracted nodes, of which 18 have no edge, with 1,224 extracted-edge pairs and 17,459 co-occurrence pairs. This is the community graph the grilling measured. Communities: 35 top (median 43 members, largest 215) and 122 lower (median 13.5, largest 63). 13 communities are not reportable, which leaves 115 reportable lower communities. The TSMC top community has 106 members, with risk factors from all three filers. A second run gave an identical file apart from the commit.
+- **Against the grilling's 34 top and 111 lower.** The graph is the same, so the difference comes from Leiden's seed and edge order. The grilling script used neither this seed nor this edge order. On this graph, seeds 0, 1, 42 and 1234 give 34–35 top and 112–120 lower communities, largest top community 212–237. The seed was not chosen by these numbers, and no eval question was used.
+
+- **Evidence.** `uv run ruff check .` clean. `tests/test_graph_communities.py`: 17 tests. They cover the exclusions, both weights, self-loops, the duplicate-key refusal, the input hash, determinism under input order, member hashes, the 25-member rule, reportability, the valid test graph, `build_graph()` output with an alias into a filer, the import with the network blocked, and the command's file, exit 3 and exit 2. The full `uv run --env-file .env pytest` at `dbbed8c`'s code, alone on `neo4j-test`: 2,460 passed, 1 skipped.
+- **Code review** (`mattpocock-skills:code-review`). Fixed: the run file's graph hash covered only weights, so a swapped evidence chunk went unseen. It is now `input_sha256`, as above. The "full builder output" test had used the hand-built test graph, so a `build_graph()` test was added. Other fixes: a named `DuplicateKey` error replaces a broad `ValueError` catch; the input reading is shared with `graph.load`; `lower_over` is renamed `split_over`; the CLI print reads counts without a type ignore.
+
+**Decisions needed:** none.
+
+**Next session starts with**
+1. Open the PR for this branch and merge it once CI is green.
+2. Ticket 03 (community reports) builds on this run file. It is a paid run, so its estimate comes first.
+
 ---
 
 ## Findings worth telling
