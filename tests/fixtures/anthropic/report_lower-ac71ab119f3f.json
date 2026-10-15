@@ -1,0 +1,174 @@
+{
+  "recorded": "real API response, recorded by scripts/capture_report_responses.py",
+  "prompt_version": "report/v2@3062cfff",
+  "community": {
+    "community_id": "lower-ac71ab119f3f",
+    "level": "lower",
+    "members": [
+      "Facility:arizona facility",
+      "Facility:china",
+      "Facility:ireland",
+      "Facility:israel",
+      "Facility:malaysia",
+      "Facility:new mexico",
+      "Facility:oregon",
+      "Facility:vietnam",
+      "Product:emib",
+      "Product:emib‐t",
+      "Product:foveros",
+      "Product:foveros direct",
+      "Product:intel 18a‐pt"
+    ],
+    "member_hash": "ac71ab119f3fd387f820c4dcc1f22f44e43a0058baa7b220227880514af78ac9",
+    "parent": "top-36ff66bed99f",
+    "reportable": true
+  },
+  "request_sha256": "e6791e2e5f9a8570e9df2ab423d6b12258d4fb237abb1ee2c424a779d0a99631",
+  "evidence": [
+    "0000050863-25-000009:0014",
+    "0000050863-25-000009:0015",
+    "0000050863-26-000011:0022",
+    "0000050863-26-000011:0068"
+  ],
+  "inputs": [
+    "0000050863-26-000011:0022",
+    "0000050863-25-000009:0014",
+    "0000050863-25-000009:0015",
+    "0000050863-26-000011:0068"
+  ],
+  "api_ms": 11076.271291007288,
+  "response": {
+    "id": "msg_011Cg4BVD3r73ipsF899goSk",
+    "container": null,
+    "content": [
+      {
+        "signature": "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",
+        "thinking": "",
+        "type": "thinking"
+      },
+      {
+        "citations": null,
+        "text": "{\"title\":\"Intel advanced packaging and manufacturing sites\",\"summary\":\"This community covers Intel's advanced packaging technologies (EMIB, EMIB-T, Foveros and Foveros Direct) and the fabs and assembly and test facilities that produce and package its chips [0000050863-26-000011:0022]. The named sites are production fabs in Oregon, Arizona, Ireland and Israel, and assembly and test facilities in China, New Mexico, Vietnam and Malaysia [0000050863-26-000011:0022]. Every member concerns Intel, and the excerpts state no explicit relationships among the members, so the link is shared membership in Intel's manufacturing and packaging footprint [0000050863-26-000011:0022].\",\"findings\":[{\"text\":\"EMIB entered high-volume manufacturing in 2017 and supports high-density 2.5D integration, and EMIB-T was introduced in 2025 with adoption expected to scale beginning in 2026 [0000050863-26-000011:0022].\"},{\"text\":\"Foveros, first introduced in 2019, has expanded to Foveros-B and Foveros-R, both targeted for high-volume manufacturing in 2027 [0000050863-26-000011:0022].\"},{\"text\":\"Foveros Direct, announced in 2025, is planned to support hybrid bonding on the Intel 18A-PT process in 2028 [0000050863-26-000011:0022].\"},{\"text\":\"In 2025 Intel's key production fabs were in Oregon (ramping Intel 18A), Arizona, Ireland and Israel, and its key assembly and test facilities were in China, New Mexico, Vietnam and Malaysia [0000050863-26-000011:0022].\"},{\"text\":\"New Mexico is the key advanced packaging facility, and a new advanced packaging facility is being built in Malaysia [0000050863-26-000011:0022].\"},{\"text\":\"Intel is expanding its Ireland facility for Intel 4 and Intel 3 and its Arizona facility for Intel 18A, while the Ohio facility has been slowed and the Germany plans are on hold [0000050863-25-000009:0014].\"},{\"text\":\"Intel recognized a $755 million charge in the fourth quarter of 2024 for penalties it expects to pay for Ireland SCIP construction delays [0000050863-26-000011:0068].\"}]}",
+        "type": "text"
+      }
+    ],
+    "diagnostics": null,
+    "model": "claude-haiku-5-5",
+    "role": "assistant",
+    "stop_details": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 1077,
+      "inference_geo": "global",
+      "input_tokens": 5212,
+      "output_tokens": 2789,
+      "output_tokens_details": {
+        "thinking_tokens": 1992
+      },
+      "server_tool_use": null,
+      "service_tier": "standard"
+    }
+  },
+  "lower_input": {
+    "community_id": "lower-ac71ab119f3f",
+    "members": [
+      {
+        "key": "Facility:arizona facility",
+        "label": "Facility",
+        "name": "Arizona facility"
+      },
+      {
+        "key": "Facility:china",
+        "label": "Facility",
+        "name": "China"
+      },
+      {
+        "key": "Facility:ireland",
+        "label": "Facility",
+        "name": "Ireland"
+      },
+      {
+        "key": "Facility:israel",
+        "label": "Facility",
+        "name": "Israel"
+      },
+      {
+        "key": "Facility:malaysia",
+        "label": "Facility",
+        "name": "Malaysia"
+      },
+      {
+        "key": "Facility:new mexico",
+        "label": "Facility",
+        "name": "New Mexico"
+      },
+      {
+        "key": "Facility:oregon",
+        "label": "Facility",
+        "name": "Oregon"
+      },
+      {
+        "key": "Facility:vietnam",
+        "label": "Facility",
+        "name": "Vietnam"
+      },
+      {
+        "key": "Product:emib",
+        "label": "Product",
+        "name": "EMIB"
+      },
+      {
+        "key": "Product:emib‐t",
+        "label": "Product",
+        "name": "EMIB‑T"
+      },
+      {
+        "key": "Product:foveros",
+        "label": "Product",
+        "name": "Foveros"
+      },
+      {
+        "key": "Product:foveros direct",
+        "label": "Product",
+        "name": "Foveros Direct"
+      },
+      {
+        "key": "Product:intel 18a‐pt",
+        "label": "Product",
+        "name": "Intel 18A‑PT"
+      }
+    ],
+    "edges": [],
+    "passages": [
+      {
+        "chunk_id": "0000050863-26-000011:0022",
+        "text": "We continue to evaluate Intel 14A for use in future Intel products and our plan includes an initial product designed to utilize Intel 14A, though we are maintaining the option to utilize an external foundry for future Intel products requiring nodes with performance beyond Intel 18A and Intel 18A\\-P\\.\n\nPackaging Technology\n\nOur semiconductor packaging technologies represent another key to our strategy\\. Many of our internal products, as well as the most advanced products of potential external Intel Foundry customers, utilize disaggregated architectures that integrate multiple die, or tiles, into a single product through leading‑edge packaging\\. EMIB, which entered high‑volume manufacturing in 2017, supports high‑density 2\\.5D integration, and we introduced EMIB‑T in 2025, with adoption expected to scale beginning in 2026\\. EMIB‑T enhances the original EMIB technology by providing improved power delivery and bandwidth scalability to support larger package formats and next‑generation memory\\. We continued to invest in Foveros, our three‑dimensional die‑stacking technology first introduced in 2019, which has expanded to include Foveros‑B and Foveros‑R, both targeted for high‑volume manufacturing in 2027, as well as Foveros‑S for high‑speed I/O disaggregation\\. These Foveros variants aim to increase interconnect flexibility, cost efficiency, and integration density compared with earlier implementations\\. We also continued development of Foveros Direct, announced in 2025, with hybrid‑bonding support planned on our Intel 18A‑PT process in 2028, aimed at enabling higher interconnect density and lower energy usage\\.\n\nManufacturing\n\nWe operate a number of fabs and assembly and test facilities that support high\\-volume production of advanced logic chips\\. Once a new process technology is developed and achieves high\\-volume production at our Oregon R&D facilities and fabs, we generally add high\\-volume manufacturing at one or more of our other production fabs\\. Over time, we reallocate space and equipment in Oregon to our next generation process technologies\\. We are committed to initiating improvements in the utilization of our asset base\\. Recently, in addition to our Oregon location performing R&D on our latest and next generation process nodes, we are utilizing our Oregon fab assets to perform high volume manufacturing\\. Relatedly, fab locations that historically performed high\\-volume manufacturing exclusively are now also focused on an annual cadence of R&D\\-driven performance and cost improvements as we strive to meaningfully increase the useful life of existing nodes in production\\. In 2025, our key production fabs were in Oregon \\(ramping Intel 18A\\), Arizona \\(Intel 7 and ramping Intel 18A\\), Ireland \\(Intel 4 and Intel 3\\) and Israel \\(Intel 7\\)\\. Finished wafers from our production fabs are then sent to our assembly and test facilities where the individual die are packaged and the finished semiconductor is tested\\. In 2025, our key assembly and test facilities were in China, New Mexico, Vietnam and Malaysia, with New Mexico being our key advanced packaging facility and a new advanced packaging facility being built in Malaysia\\. Maintaining reliable production capacity across these facilities is critical to meeting customer demand\\.\n\n| Our Business | 12 |\n\n**Table of Contents**"
+      },
+      {
+        "chunk_id": "0000050863-25-000009:0014",
+        "text": "| Manufacturing Capital |\n\nWe are one of only a few companies in the world with the process technology and manufacturing facilities to produce leading\\-edge semiconductor logic chips\\.\n\nProcess Technology\n\nOur technology development group, with its R&D and semiconductor fabrication facilities in Oregon, designs and develops each new process technology node before high\\-volume production is shifted to one of our high\\-volume manufacturing sites\\. With each new node, we seek improvements in performance, power efficiency, cost, and size to meet the needs of our products and of external foundry customers\\. The continued development of leading\\-edge nodes that are competitive with the offerings of other foundries requires significant ongoing capital investment as we pursue incremental improvements and refinements of existing transistor and layout designs and manufacturing technologies, such as EUV lithography, while also pursuing new transistor and layout designs, such as gate\\-all\\-around and backside power in our upcoming Intel 18A process node, and new manufacturing technologies, such as high\\-NA EUV lithography for use in our upcoming Intel 14A process node\\.\n\nAs of the end of 2024, a significant majority of our products were manufactured using our Intel 7 process node in Arizona and Israel, we successfully ramped our Intel 4 and Intel 3 process nodes as our first EUV lithography nodes and shifted high\\-volume production of those nodes to Ireland, and we canceled the productization of our Intel 20A process node to focus efforts on the improved version of the node, Intel 18A, that we expect to put into high\\-volume production in 2025 with our new client family of products code\\-named Panther Lake\\.\n\n| Our Capital | 8 |\n\nManufacturing Facilities\n\nOur geographically distributed network of semiconductor manufacturing facilities and assembly and test facilities allows us to produce advanced semiconductor logic chips in high volume\\. After a process technology node is developed by our technology development group, we seek to shift production to one or more high\\-volume manufacturing facilities\\. Maintaining reliable production capacity is of critical importance\\. Wafer and packaging manufacturing facilities take a number of years to build, making it prudent to build space ahead of demand\\. We refer to this strategy as \"shell ahead\\.” As a result of the supply shocks driven by the Covid\\-19 pandemic and the projected growth of our products businesses, we set out to expand our capacity network beyond our existing wafer production facilities in Oregon \\(mostly utilized for technology development and early production on new nodes\\), Arizona, Ireland, and Israel to meet this demand and get to “shell ahead” status\\. We are in the later stages of an expansion of our wafer fabrication facilities in Ireland for our Intel 4 and Intel 3 process nodes and undertaking a significant expansion of our Arizona facility for our upcoming Intel 18A process node\\. We are building a new wafer production facility in Ohio and have plans for an additional new wafer production facility in Germany, but have slowed the completion of the Ohio facility and put the plans for the facility in Germany on hold as we have reassessed demand and our \"shell ahead\" status and sought to limit our capital expenditures given recent financial results\\. We have assembly and test facilities in Costa Rica, China, Malaysia, New Mexico, and Vietnam\\. We are expanding our facilities in New Mexico and Malaysia, though we recently reduced the extent of the expansion plans for Malaysia\\. We have plans for an additional assembly and test facility in Poland, but have put those plans on hold in conjunction with the delay of the facility in Germany\\.\n\nSemiconductor manufacturing requires extremely sophisticated equipment, and we work closely with the tool vendors to align their roadmaps to our needs\\. In 2024, we made the transition from non\\-EUV lithography to EUV lithography with the Intel 4 and Intel 3 process nodes\\. EUV lithography equipment drives a higher capital investment than the preceding lithography technology\\."
+      },
+      {
+        "chunk_id": "0000050863-25-000009:0015",
+        "text": "Semiconductor manufacturing requires extremely sophisticated equipment, and we work closely with the tool vendors to align their roadmaps to our needs\\. In 2024, we made the transition from non\\-EUV lithography to EUV lithography with the Intel 4 and Intel 3 process nodes\\. EUV lithography equipment drives a higher capital investment than the preceding lithography technology\\.\n\nSemiconductor manufacturing is a capital\\-intensive industry\\. Over the past four years, we have made outsized investments across three categories—technology development, manufacturing facility shells, and advanced production tools—as we aim to catch up with our leading third\\-party manufacturing competitor on process technology, get to \"shell ahead\" for our and potential future foundry customer needs, and adopt EUV lithography for our leading process nodes\\. In 2024, our manufacturing capital expenditures, inclusive of technology development, were distributed 55% in manufacturing facility space and 45% in equipment\\.\n\nTo moderate the impact to our balance sheet and cash flows, we’ve implemented what we call Smart Capital\\. Smart Capital includes maintaining a \"shell ahead\" on the longer lead time space and delaying tool purchases as long as possible ahead of high confidence demand signals while leveraging capital offsets from governments, financial partners, and customers\\.\n\nWe work closely with governments in the regions where we operate to obtain government incentives to support leading\\-edge semiconductor R&D and manufacturing in those regions\\. Such incentives are often needed to offset the higher costs of operations in such regions, and support a more geographically balanced and risk\\-tolerant semiconductor supply chain\\. We worked closely with the US federal government on the implementation of the CHIPS Act in support of the semiconductor industry and American technological leadership and innovation\\. In 2024, we signed an agreement with the US Federal Department of Commerce for the award of up to $7\\.9 billion in direct funding under the commercial CHIPS Act program, which is designed to support leading\\-edge semiconductor manufacturing in the US, as well as an agreement under which we may receive up to $3 billion in direct funding under the CHIPS Act's Secure Enclave program, which is designed to expand the trusted manufacturing of leading\\-edge semiconductors for the US government\\. We also expect and have begun to benefit significantly from the Advanced Manufacturing Investment Credit, given that the significant portion of our R&D and manufacturing investments are made in the United States\\.\n\nIn 2024, as part of our SCIP program, we entered into an arrangement with Apollo in which we received a one\\-time capital infusion in exchange for an interest in the rights to operate Fab 34 in Leixlip, Ireland\\. This follows our first SCIP agreement, with Brookfield, completed in 2022 and relating to our Arizona facility expansion\\. In total, we expect greater than $25 billion of capital offsets through these partnerships\\.\n\nFinally, as we build out our external foundry services, we expect to receive customer pre\\-payments to secure capacity and other benefits\\. Customer pre\\-payments are a standard practice for semiconductor manufacturers\\.\n\nSupply Chain\n\nOur supply chain is a cornerstone of our success and a critical enabler of our mission to deliver cutting\\-edge technology solutions to our customers\\. Our global supply chain supports internal partners across architecture, product design, technology development, manufacturing and operations, and sales and marketing\\. It encompasses thousands of suppliers worldwide, forming a robust supply ecosystem designed to enable product and process competitiveness, deliver industry\\-leading total cost of ownership, and enable on\\-time, uninterrupted supply in a responsible and sustainable manner\\.\n\nOur global supply chain strategy is focused on driving a resilient, diverse, and responsible supply chain that meets the needs of our customers while upholding the highest standards of safety, quality, technology, availability, and sustainability\\. We work tirelessly across our supply chain to minimize disruptions, improve productivity, and optimize capacity utilization and output to meet customer expectations\\.\n\n| Our Capital | 9 |\n\n| Human Capital |"
+      },
+      {
+        "chunk_id": "0000050863-26-000011:0068",
+        "text": "Our alternative financing arrangements and pursuit of government grants involve risks and may not be successful\\.\n\nTo support our capital investments, we have pursued alternative financing arrangements, such as our 2022 joint investment with Brookfield in the manufacturing expansion of our Arizona campus, and our 2024 joint investment with Apollo related to Fab 34 in Ireland, and may enter into similar arrangements in the future\\. These transactions may fail to advance our business strategy, may include unfavorable pricing or other terms such as penalties should key metrics not be attained as prescribed by our agreements, and may fail to achieve their anticipated benefits\\. Both arrangements include commitments we may not be able to satisfy, including commitments relating to construction and/or wafer demand or purchase, in which case we may be required to make additional payments to our partners\\. For example, in the fourth quarter of 2024, we recognized a $755 million charge related to penalties we expect to pay in connection with Ireland SCIP for construction delays we decided to make as we reduced our near\\-term capacity requirements\\. Further, both arrangements are expected to significantly and increasingly impact our  *net income \\(loss\\) attributable to Intel*  and  *earnings \\(loss\\) per share attributable to Intel*  in future periods as wafer production volumes increase at our expanded Arizona campus and at Fab 34 in Ireland\\. Our partners may also fail to satisfy financial or other obligations on which we rely and we may fail to resolve any potential disputes\\. Any of these risks, including our ability to effectuate any additional transactions at all, could have a material adverse effect on our business, results of operations, financial condition or cash flows, which may limit our ability to raise sufficient capital for our required investments\\.\n\nIn addition, we have applied for, received and expect to receive additional grants and incentives from domestic and foreign local, regional and national governments\\. Legislation in the U\\.S\\. and EU has been adopted to provide government funding for semiconductor manufacturing expansions in those regions\\. However, any amounts we may receive under any agreements enabled by such legislation may not be sufficient in amount or timeliness to support our capital investment plans and offset the higher costs of operations in many of the locations of our facilities as compared to those of many of our competitors, we may be unable to comply with the requirements and limitations of any such grants and incentives, or such agreements may contain restrictions that limit our flexibility to pursue changes in business strategy or transactions that may enhance stockholder value\\. To the extent funding is below our expectations, we elect not to accept any grants or incentives due to burdensome compliance requirements, we are required to return any amounts received from any grants or incentives due to an inability to comply with any requirements or limitations contained therein, we are subject to restrictions as a result of any awards we have accepted, or the U\\.S\\. government delays or does not provide any awards that have been agreed upon, our anticipated cash requirements may increase, our strategy, business and financial results may be adversely affected, and we may be constrained in our ability to engage in transactions that are in the best interests of our stockholders\\.\n\nThere are a number of risks and uncertainties associated with the U\\.S\\. government’s acquisition of significant equity interests in us\\.\n\nOur transactions with the U\\.S\\. government during the third quarter of 2025, including the equity issuances and the amendment to our commercial CHIPS Act agreement, are complex and subject to a number of risks and uncertainties:"
+      }
+    ],
+    "evidence": [
+      "0000050863-25-000009:0014",
+      "0000050863-25-000009:0015",
+      "0000050863-26-000011:0022",
+      "0000050863-26-000011:0068"
+    ]
+  }
+}
