@@ -46,7 +46,7 @@ Ask before: adding a dependency, changing a schema, changing the eval harness or
 - Eval set (Step 4): uv run python -m eval.search <words> [--ticker] [--period] [--section] or --show <chunk_id>; eval.validate <file> [--kind] [--db]; eval.coverage <file>; eval.review --reviewer "<name>" (the user only); eval.merge_drafts
 - Quality gate (offline, needs only DATABASE_URL; loads the snapshot into a throwaway schema): uv run --env-file .env python -m eval.gate. Exit 0 pass, 2 bad input, 3 could not run, 4 scores dropped. `--update-baseline` rewrites benchmarks/gate_baseline.json; never lower it without the user's yes.
 - Graph validation (reads NEO4J_URI/USER/PASSWORD; adds the Postgres chunk check when DATABASE_URL is set): uv run --env-file .env python -m graph.validate. Exit 0 valid, 2 bad arguments, 3 could not run, 4 violations found.
-- Graph arm tools (offline unless noted): `python -m retrieve.node_embed` (estimate; `--embed` sends to Voyage), `python -m eval.local_hops`, `python -m eval.cypher_validity [--prompt v1|v2]` (estimate; `--send` calls Claude). Full runs: `env -u ANTHROPIC_BASE_URL uv run --env-file .env python -m eval.run --arm graph_local|graph_traversal`.
+- Graph arm tools (offline unless noted): `python -m retrieve.node_embed` (estimate; `--embed` sends to Voyage), `python -m eval.local_hops`, `python -m eval.cypher_validity [--prompt v1|v2]` (estimate; `--send` calls Claude). Full runs: `env -u ANTHROPIC_BASE_URL uv run --env-file .env python -m eval.run --arm graph_local|graph_traversal`. `eval.run --classes global,decline,unanswerable` runs only those classes; the header records the selection.
 - (add when they exist: eval-fast, eval-full)
 
 ## Agent skills
@@ -269,3 +269,4 @@ Files changed; evidence (tests, eval results with commit); regressions; decision
   - `eval.run --classes` (user decision, 2026-10-15) selects the classes a run covers; the header records the selection.
   - Ticket 01 fixes the judging race (`Response.model_rebuild()` at import, with a test), approved as a harness change.
   - Approved dependency: `graspologic-native==1.3.1`, pinned exactly.
+- Step 12 ticket 01 (2026-10-15): `openai_backend` calls `Response.model_rebuild()` at import, so judge threads never build the model at once. `eval.run --classes` takes class names in any order and records them in schema order without repeats; a run without the option has no `classes` header field, so full-run headers are unchanged. `eval.compare` prints each run's selection.

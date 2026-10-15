@@ -818,3 +818,35 @@ def test_two_uncached_runs_never_share_a_cache(eval_dir, tmp_path, env):
     assert run("--uncached") == 0
     assert run("--uncached") == 0
     assert len(set(opened)) == 2
+
+
+def test_classes_limit_the_run_to_the_chosen_classes(eval_dir, tmp_path, env):
+    arm, _, runs, run = _setup(eval_dir, tmp_path)
+    assert run("--classes", "unanswerable,global,decline") == 0
+    result = _result(runs)
+    assert [q["id"] for q in result["questions"]] == ["q0028", "q0004", "q0011"]
+    assert arm.questions == [_ALL[i].question for i in ("q0028", "q0004", "q0011")]
+    assert [c[0] for c in run.judge.calls[::3]] == ["q0028", "q0004", "q0011"]
+    assert list(result["cells"]["agent_drafted"]["fake"]) == ["global", "decline", "unanswerable"]
+
+
+def test_the_header_records_the_class_selection_in_schema_order(eval_dir, tmp_path, env):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run("--classes", "unanswerable, global,global")
+    assert _result(runs)["header"]["classes"] == ["global", "unanswerable"]
+
+
+def test_a_run_without_classes_has_no_selection_in_its_header(eval_dir, tmp_path, env):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    run()
+    assert "classes" not in _result(runs)["header"]
+
+
+@pytest.mark.parametrize("value", ["", " , ", "global,lokup", "Global"])
+def test_an_empty_or_unknown_class_selection_is_refused_before_the_arm_opens(
+    eval_dir, tmp_path, env, capsys, value
+):
+    _, opened, runs, run = _setup(eval_dir, tmp_path)
+    assert run("--classes", value) == EXIT_USAGE
+    assert "--classes" in capsys.readouterr().err
+    assert opened == [] and not runs.exists()
