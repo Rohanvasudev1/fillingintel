@@ -2401,6 +2401,38 @@ Both are harness changes the user approved on 2026-10-15 (Step 12 grilling). Bra
 
 ---
 
+## 2026-10-15 — Step 12 ticket 05: choosing communities and N
+
+**Files changed:** `retrieve/community_select.py`, `retrieve/global_retrieval.py` and `eval/global_n.py` (new); `retrieve/node_embed.py` (report texts); `graph/report_file.py` (`ReportEntry.summary`); `ingest/store.py` (`chunk_cosines`); `retrieve/anchors.py` (`unit_vector` and `dot` made public); `tests/test_community_select.py`, `tests/test_global_retrieval.py` and `tests/test_global_n.py` (new) and three test files; `benchmarks/graph/global-n-run1.json`; CLAUDE.md (Commands, ticket 05 choices).
+
+- **Selection.** graph_global's retrieval embeds each report as "title: summary" and ranks the lower communities that have a report by exact cosine with the question's cached query embedding. It keeps the top N with evidence in the question filter, ties by `community_id`. For each, it shows the 6 filtered evidence chunks closest to the question, by cosine against `chunk_embeddings`, ties by chunk ID. The ranked list is the shown chunks by community rank, then cosine, each once. A top community's evidence comes through its children's members.
+- **Report texts.** The `:Community` node stores the joined report but not the summary alone, so the texts come from the reports file the latest load report names. Retrieval refuses to start when that file's SHA-256, a community's member hash or its report text differs from the graph, or when a report text has no cached embedding. Storing the summary on the node would have been a schema change.
+- **Embeddings.** `retrieve.node_embed` printed its estimate ($0.0031 for 141 report texts), then embedded them: Voyage reported 26,383 tokens, $0.0032.
+- **N run 1** (`ba3db13`, retrieval only, $0; agent-drafted questions, dev, answerable only; tuned on dev, n = 10):
+
+  | level | N | global recall@10 | pooled recall@10 | global recall over shown | chunks shown (global) |
+  |---|---|---|---|---|---|
+  | lower | 4 | 0.458 | 0.602 | 0.550 | 16.1 |
+  | lower | 6 | 0.458 | 0.602 | 0.608 | 22.6 |
+  | lower | 8 | 0.458 | 0.602 | 0.642 | 29.9 |
+  | lower | 12 | 0.458 | 0.602 | 0.675 | 44.2 |
+  | top (ablation) | 4 | 0.383 | 0.638 | 0.475 | 19.6 |
+  | top (ablation) | 12 | 0.383 | 0.644 | 0.825 | 54.0 |
+
+  Global recall@5 is 0.333 at every lower N, and wrong evidence on globals is 0.200. No question selected zero communities. For comparison, `vector`'s dev global recall@10 is 0.800 (baseline run).
+- **The tuning rule could not tune.** Each community shows up to 6 chunks, so the first 10 ranked chunks come from the first two communities whatever N is, and recall@10 is identical at every N. The tie-break chose N = 4. The user kept the approved rule (2026-10-15) rather than choosing by recall over all shown chunks, which would have favoured N = 12 at about three times the map-call cost. The file records `recall_at_10_ties_at_every_n: true` and a note saying the choice is uninformative on recall@10; the shown-chunk columns are diagnostics only. N is frozen at 4 in `retrieve.global_retrieval.COMMUNITIES_N`.
+- **Evidence.** `uv run ruff check .` clean. Tests first, seen failing: 11 pure selection tests (ranking, ties, filter, refusals, ranked list); 14 tests on `neo4j-test` and Postgres (the filter drops other companies' communities and other periods' chunks, ranking and ties, the top level through children, refusals for an uncached report text, another member hash, another report text, a missing report and a chunk with no vector, and the loaded reports file checks); 9 CLI tests for `eval.global_n`; and node_embed and reports-reader tests. Full `uv run --env-file .env pytest` at `a14bbc1`'s tree: 2,593 passed, 1 skipped. Two earlier full runs failed with dropped Postgres connections because Postgres crashed and restarted mid-run (Docker's VM has 3.8 GB, shared with another project's Supabase stack); with the dev Neo4j stopped, the third run passed.
+- **Code review** (`mattpocock-skills:code-review`). Fixed: `EVIDENCED_BY` and `Chunk` in the community query go through `quoted()`; docstrings name `CHUNKS_PER_COMMUNITY` rather than 6; `report_texts` moved next to `report_text`; clearer helper names in `eval.global_n`; a check that the graph's report text equals the file's (a report rewritten after the load would otherwise pass on member hash alone); the shown columns labelled as diagnostics. Not changed: `community_index` raises `ArmError` directly, as `graph_local`'s `anchor_index` does; the embedded summary keeps its `[chunk_id]` markers, as the spec's "title: summary" reads.
+- **Spend.** $0.0032 (report embeddings). `graph/step12_spend.py` sums only the reports run files, so this is not in its total; Step 12 is at about $0.55 of $6.
+
+**Decisions needed:** none.
+
+**Next session starts with**
+1. Merge this branch's PR once CI is green.
+2. Ticket 06 (the graph_global arm: map and reduce), at N = 4. Start the dev Neo4j first (`docker compose start neo4j`); it was stopped to free memory.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.
@@ -2419,3 +2451,4 @@ Short versions of the stories from this build so far, for interviews and write-u
 - **A fix written to the letter would have failed.** The Step 11 plan said a risk factor's body ends at the next risk factor's heading. Building the graph offline before loading it showed the question still failing: the extractor also records sentences from inside a body as risk factors, and one of them cut the real body short a chunk before the answer. Requiring a heading to start a line fixed it, and the multi-hop check went from 2 of 3 to 3 of 3.
 - **More valid queries retrieved less.** The first text-to-Cypher prompt banned `CALL` outright, and the model answered four questions with a stub query instead. A revision that allowed subqueries made every first query valid, but recall@10 fell from 0.778 to 0.727, probably because the subqueries cast a wider net. The validity rate and the retrieval score answer different questions, so both are reported, and the prompt chosen was the one that retrieved better.
 - **The graph arms lost to vector search.** On the agent-drafted dev questions, both graph retrievers, one linking questions to entities and one writing Cypher, found fewer of the right passages than plain vector search: pooled recall@10 fell by 0.10 and 0.11, with paired bootstrap intervals that exclude 0. On multi-hop questions, which traversal was built for, it was level with vector (−0.014, interval spanning 0). The loss is reported as measured, and the arms were not tuned further to close it.
+- **A tuning rule that could not tune.** The plan chose how many communities global search reads by recall@10. Each community contributes up to six passages, so the first ten always came from the first two communities, and every setting scored the same. The run says so in its output rather than presenting the tie-break as a tuned choice.

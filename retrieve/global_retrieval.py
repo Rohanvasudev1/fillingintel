@@ -58,8 +58,9 @@ from retrieve.question_filter import companies_without_chunks, parse_question_fi
 from retrieve.tracing import SpanRecorder
 
 ARM_NAME = "graph_global"
-# The choices eval.global_n scores, and the one chosen on dev retrieval-only recall@10
-# (Step 12 ticket 05, benchmarks/graph/global-n-run1.json).
+# The choices eval.global_n scores, and the one frozen from them (Step 12 ticket 05,
+# benchmarks/graph/global-n-run1.json at ba3db13): global recall@10 tied at every N, so
+# the tie rule chose the smallest (user decision, 2026-10-15).
 N_CHOICES = (4, 6, 8, 12)
 COMMUNITIES_N = 4
 _MS_PER_SECOND = 1000.0
