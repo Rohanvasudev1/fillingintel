@@ -80,7 +80,7 @@ class AnchorIndex:
         if missing:
             raise ValueError(f"{len(missing)} node texts have no vector, e.g. {missing[0]!r}")
         self._nodes = tuple(nodes)
-        self._units = {text: _unit(vectors[text]) for text in {n.text for n in nodes}}
+        self._units = {text: unit_vector(vectors[text]) for text in {n.text for n in nodes}}
         self._names = {n.key: _processed_names(n.names) for n in nodes if n.names}
 
     def __len__(self) -> int:
@@ -92,8 +92,8 @@ class AnchorIndex:
         """The question's anchors, best first; empty when no node qualifies."""
         allowed = None if accession_nos is None else frozenset(accession_nos)
         nodes = [n for n in self._nodes if allowed is None or n.filings & allowed]
-        query = _unit(query_vector)
-        cosine = {text: _dot(query, unit) for text, unit in self._units.items()}
+        query = unit_vector(query_vector)
+        cosine = {text: dot(query, unit) for text, unit in self._units.items()}
         phrases = _phrases(question)
         named = {n.key: score for n in nodes
                  if (score := self._name_score(n.key, phrases)) >= cutoff}
@@ -127,12 +127,14 @@ def _phrases(question: str) -> dict[int, tuple[str, ...]]:
             for size in range(1, len(words) + 1)}
 
 
-def _unit(vector: Sequence[float]) -> tuple[float, ...]:
-    norm = math.sqrt(_dot(vector, vector))
+def unit_vector(vector: Sequence[float]) -> tuple[float, ...]:
+    """*vector* scaled to length 1; raises ``ValueError`` for a zero vector."""
+    norm = math.sqrt(dot(vector, vector))
     if norm == 0.0:
         raise ValueError("cannot compare a zero vector")
     return tuple(x / norm for x in vector)
 
 
-def _dot(a: Sequence[float], b: Sequence[float]) -> float:
+def dot(a: Sequence[float], b: Sequence[float]) -> float:
+    """The dot product; for unit vectors, their cosine."""
     return sum(map(operator.mul, a, b))

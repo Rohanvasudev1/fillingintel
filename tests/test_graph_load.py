@@ -319,7 +319,8 @@ def communities(rows, inputs):
     entries = {c.community_id: ReportEntry(
         c.community_id, c.member_hash, c.level, f"Community {c.community_id}",
         f"It is cited [{evidence_of[c.members[0]]}].", (evidence_of[c.members[0]],),
-        TEST_REPORT_PROMPT) for c in found if c.reportable}
+        TEST_REPORT_PROMPT, f"It is cited [{evidence_of[c.members[0]]}].")
+        for c in found if c.reportable}
     return CommunityInputs(
         CommunitiesFile("communities-run1.json", "c" * 64, graph.input_sha256, found),
         ReportsFile("reports-run1.jsonl", "r" * 64, "communities-run1.json", "c" * 64,

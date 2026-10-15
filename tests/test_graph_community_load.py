@@ -63,7 +63,8 @@ def _entries():
         if "report" in props:
             entries[props["community_id"]] = ReportEntry(
                 props["community_id"], props["member_hash"], props["level"], props["title"],
-                props["report"], tuple(props["report_chunk_ids"]), TEST_REPORT_PROMPT)
+                props["report"], tuple(props["report_chunk_ids"]), TEST_REPORT_PROMPT,
+                props["report"].split("\n")[0])
     return entries
 
 
@@ -182,7 +183,7 @@ HEADER = {"kind": "header", "complete": True,
           "communities": {"file": "communities-run1.json", "sha256": "c" * 64,
                           "community_graph_input_sha256": "a" * 64}}
 REPORT = {"kind": "report", "community_id": "lower-x", "member_hash": "b" * 64,
-          "level": "lower", "title": "T", "report": "R [c:0001].",
+          "level": "lower", "title": "T", "summary": "R [c:0001].", "report": "R [c:0001].",
           "report_chunk_ids": ["c:0001"], "prompt_version": TEST_REPORT_PROMPT}
 
 
@@ -190,6 +191,7 @@ def test_a_reports_file_reads_its_header_and_reports(tmp_path):
     found = read_reports_file(_write(tmp_path / "reports-run1.jsonl", [HEADER, REPORT]))
 
     assert found.entries["lower-x"].report_chunk_ids == ("c:0001",)
+    assert found.entries["lower-x"].summary == "R [c:0001]."
     assert found.community_graph_input_sha256 == "a" * 64
 
 
@@ -199,7 +201,9 @@ def test_a_reports_file_reads_its_header_and_reports(tmp_path):
     [HEADER, {**REPORT, "report_chunk_ids": "c:0001"}],
     [HEADER, REPORT, REPORT],
     [{**HEADER, "complete": "yes"}, REPORT],
-], ids=["no header", "bad level", "chunk ids not a list", "two reports", "complete not bool"])
+    [HEADER, {k: v for k, v in REPORT.items() if k != "summary"}],
+], ids=["no header", "bad level", "chunk ids not a list", "two reports", "complete not bool",
+        "no summary"])
 def test_a_malformed_reports_file_is_refused(tmp_path, lines):
     with pytest.raises(ReportsFileError):
         read_reports_file(_write(tmp_path / "reports-run1.jsonl", lines))
