@@ -6,7 +6,7 @@ and later rollbacks on the same connection cannot undo it.
 """
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from datetime import date
 from pathlib import Path
 from types import MappingProxyType
@@ -128,6 +128,13 @@ FROM chunk_embeddings e JOIN chunks c ON c.chunk_id = e.chunk_id, q
 WHERE e.model = %s AND c.accession_no = ANY(%s::text[])
 ORDER BY e.embedding <=> q.v, e.chunk_id
 LIMIT %s
+"""
+# The cosine of each named chunk's vector with the query, for graph_global (Step 12).
+_COSINES_OF: LiteralString = """
+WITH q AS (SELECT %s::vector AS v)
+SELECT e.chunk_id, 1 - (e.embedding <=> q.v) AS score
+FROM chunk_embeddings e, q
+WHERE e.model = %s AND e.chunk_id = ANY(%s::text[])
 """
 _LIST_FILINGS: LiteralString = (
     "SELECT accession_no, cik, form_type, fiscal_period, report_date FROM filings"
@@ -434,6 +441,22 @@ def nearest_chunks(
         raise ValueError("accession_nos is empty; pass None to search every chunk")
     params = (_vector_literal(vector), model, list(accession_nos), k)
     return conn.execute(_NEAREST_IN_FILINGS, params).fetchall()
+
+
+def chunk_cosines(
+    conn: psycopg.Connection,
+    model: str,
+    vector: tuple[float, ...],
+    chunk_ids: Collection[str],
+) -> dict[str, float]:
+    """The cosine similarity of each of *chunk_ids*' *model* vectors with *vector*.
+
+    A chunk with no *model* vector is absent from the result.
+    """
+    if not chunk_ids:
+        return {}
+    params = (_vector_literal(vector), model, sorted(chunk_ids))
+    return dict(conn.execute(_COSINES_OF, params).fetchall())
 
 
 def list_filings(conn: psycopg.Connection) -> list[FilingRow]:

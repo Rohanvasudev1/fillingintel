@@ -1,7 +1,10 @@
-"""Embed the graph's node texts for graph_local: ``python -m retrieve.node_embed``.
+"""Embed the graph's node texts for graph_local, and its community report texts for
+graph_global: ``python -m retrieve.node_embed``.
 
 Reads every extracted node from ``NEO4J_*``, builds its text ("Label: name",
-"RiskFactor: title", "MetricValue: concept, period"), and prints how many texts
+"RiskFactor: title", "MetricValue: concept, period"), adds the "title: summary"
+text of every community report the latest graph load wrote (both levels; Step
+12), and prints how many texts
 the entity-embedding cache lacks and what embedding them would cost.  Nothing
 is sent unless ``--embed`` is given, and then only when the estimate is within
 ``--max-cost``.  Texts go to Voyage with input type ``document``, in batches,
@@ -27,6 +30,9 @@ from graph.connection import GraphSettingsMissing, driver_from_env
 from ingest.chunker import count_tokens
 from ingest.voyage import DEFAULT_MODEL, BatchEmbedder, VoyageClient, VoyageError
 from retrieve.anchors import AnchorNode
+from retrieve.arm import ArmError
+from retrieve.community_select import report_texts
+from retrieve.global_retrieval import loaded_reports_file
 from retrieve.graph_nodes import NODE_INPUT_TYPE, distinct_texts, read_anchor_nodes
 from retrieve.pricing import embedding_cost
 from retrieve.query_cache import BATCH_CACHE_DIR, CachedBatchEmbedder, CacheError, CacheOnly
@@ -38,6 +44,7 @@ VOYAGE_TOKEN_FACTOR = 1.3  # cl100k_base tokens to an upper guess at Voyage's
 DEFAULT_MAX_COST_USD = 0.50
 
 ReadNodes = Callable[[], Sequence[AnchorNode]]
+ReadReports = Callable[[], Sequence[str]]
 OpenVoyage = Callable[[], AbstractContextManager[BatchEmbedder]]
 
 
@@ -46,9 +53,13 @@ def _read_graph_nodes() -> Sequence[AnchorNode]:
         return read_anchor_nodes(driver)
 
 
+def _read_loaded_reports() -> Sequence[str]:
+    return report_texts(loaded_reports_file())
+
+
 def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Embed graph node texts for graph_local; prints the estimate first.")
+        description="Embed graph node and community report texts; prints the estimate first.")
     parser.add_argument("--embed", action="store_true",
                         help="send the texts not yet cached to Voyage")
     parser.add_argument("--max-cost", type=float, default=DEFAULT_MAX_COST_USD,
@@ -64,6 +75,7 @@ def estimate_usd(texts: Sequence[str], model: str = DEFAULT_MODEL) -> tuple[int,
 
 
 def main(argv: Sequence[str] | None = None, *, read_nodes: ReadNodes = _read_graph_nodes,
+         read_reports: ReadReports = _read_loaded_reports,
          open_voyage: OpenVoyage = VoyageClient.from_env,
          cache_dir: Path = BATCH_CACHE_DIR) -> int:
     try:
@@ -75,11 +87,17 @@ def main(argv: Sequence[str] | None = None, *, read_nodes: ReadNodes = _read_gra
     except (GraphSettingsMissing, Neo4jError, DriverError, ValueError) as exc:
         print(f"could not read the graph's nodes ({type(exc).__name__}): {exc}", file=sys.stderr)
         return EXIT_COULD_NOT_RUN
-    texts = distinct_texts(nodes)
+    try:
+        reports = read_reports()
+    except ArmError as exc:
+        print(f"could not read the community reports: {exc}", file=sys.stderr)
+        return EXIT_COULD_NOT_RUN
+    texts = list(dict.fromkeys((*distinct_texts(nodes), *reports)))
     lister = CachedBatchEmbedder(CacheOnly("listing never embeds"), cache_dir=cache_dir)
     missing = lister.uncached(texts, DEFAULT_MODEL, NODE_INPUT_TYPE)
     tokens, usd = estimate_usd(missing)
-    print(f"{len(nodes)} nodes, {len(texts)} distinct texts, {len(missing)} not cached.")
+    print(f"{len(nodes)} nodes and {len(reports)} community reports, {len(texts)} distinct "
+          f"texts, {len(missing)} not cached.")
     print(f"Embedding them: estimate about {tokens:,} tokens, ${usd:.4f} with {DEFAULT_MODEL}.")
     if not args.embed:
         print("Nothing sent. Run again with --embed to embed them.")

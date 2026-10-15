@@ -149,6 +149,7 @@ class ReportEntry:
     report: str
     report_chunk_ids: tuple[str, ...]
     prompt_version: str
+    summary: str  # its kept summary sentences; graph_global embeds "title: summary"
 
 
 @dataclass(frozen=True, slots=True)
@@ -215,6 +216,8 @@ def _entry(line: dict[str, object], number: int) -> ReportEntry:
     if not isinstance(chunk_ids, list) or not all(isinstance(c, str) for c in chunk_ids):
         raise ValueError(f"line {number}: report_chunk_ids is not a list of chunk IDs")
     texts = {name: _text(line[name], f"line {number}: {name}")
-             for name in ("community_id", "member_hash", "title", "report", "prompt_version")}
+             for name in ("community_id", "member_hash", "title", "summary", "report",
+                          "prompt_version")}
     return ReportEntry(texts["community_id"], texts["member_hash"], level, texts["title"],
-                       texts["report"], tuple(chunk_ids), texts["prompt_version"])
+                       texts["report"], tuple(chunk_ids), texts["prompt_version"],
+                       texts["summary"])
