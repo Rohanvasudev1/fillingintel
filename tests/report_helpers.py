@@ -1,7 +1,7 @@
 """Recorded community report replies, for the report tests (Step 12).
 
 Four replies recorded once by scripts/capture_report_responses.py with prompt
-report/v1: three lower communities of Intel's top community
+report/v2: three lower communities of Intel's top community
 top-36ff66bed99f, then that top community's report from theirs.
 """
 from __future__ import annotations
@@ -13,7 +13,7 @@ from graph.report_input import LowerInput, Member, MemberEdge, Passage
 from retrieve.answer_model import AnswerModelError, ApiResponse
 from tests.anthropic_fixtures import FIXTURES
 
-RECORDED_UNDER = "report/v1@d296f30d"
+RECORDED_UNDER = "report/v2@3062cfff"
 TOP_ID = "top-36ff66bed99f"
 LOWER_IDS = ("lower-5a541eb7341f", "lower-ac71ab119f3f", "lower-cb23d1979aad")
 

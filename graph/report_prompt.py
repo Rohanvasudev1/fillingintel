@@ -24,9 +24,10 @@ from types import MappingProxyType
 from ingest.provenance import REPO_ROOT
 
 PROMPTS_DIR = REPO_ROOT / "prompts" / "report"
-CURRENT_VERSION = "v1"
+CURRENT_VERSION = "v2"
 PUBLISHED = MappingProxyType({
     "v1": "3782ae8a738b4dd14286defd83fb8b378085cf0e9d5533a938374dc3464b4a75",
+    "v2": "e5e248e2639d57a044f26ddec13c877d9cc2077e7e1ccb43070a4bc04a646edc",
 })
 _PARTS = re.compile(r"\A# System\n(?P<system>.*?)\n# Lower\n(?P<lower>.*?)\n# Top\n(?P<top>.*)\Z",
                     re.DOTALL)

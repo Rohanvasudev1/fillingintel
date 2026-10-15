@@ -51,7 +51,7 @@ def _write_lower(prompt, model):
 
 def test_the_replies_were_recorded_with_the_current_pinned_prompt(prompt):
     assert prompt.prompt_version == RECORDED_UNDER
-    assert prompt.file_sha256 == PUBLISHED["v1"]
+    assert prompt.file_sha256 == PUBLISHED["v2"]
     for cid in (*LOWER_IDS, TOP_ID):
         assert load_report(cid)["prompt_version"] == RECORDED_UNDER
 
