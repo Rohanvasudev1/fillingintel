@@ -2,9 +2,9 @@
 
 Citation-grounded question answering over SEC filings. Ask what NVDA, AMD or INTC disclose in their 10-K and 10-Q filings, and every claim in the answer links to the exact passage it came from.
 
-The project compares four retrieval strategies (vector search, graph neighbourhood search, Cypher traversal and community summaries) on one hand-written set of ~120 questions, and publishes where each one wins and loses.
+The project compares four retrieval strategies (vector search, graph neighbourhood search, Cypher traversal and community summaries) on one set of agent-drafted questions (140, used without human review), and publishes where each one wins and loses.
 
-**Status:** in progress. Ingest, chunking and `resolve(chunk_id)` are built and verified on 24 filings (RUNBOOK Steps 2–3). Step 4 is closed with 140 agent-drafted eval questions, used without human review and labelled as such wherever results appear. The first measured result is entity resolution (Steps 9 and 9b, below). Retrieval benchmark results will appear here once they come from real runs.
+**Status:** in progress. Ingest, chunking and `resolve(chunk_id)` are built and verified on 24 filings (RUNBOOK Steps 2–3). Step 4 is closed with 140 agent-drafted eval questions, used without human review and labelled as such wherever results appear. Measured so far: entity resolution (Steps 9 and 9b) and the two graph retrieval arms against vector search on the `dev` split (Step 11), below. The full benchmark on the held-out `test` split comes in Step 13.
 
 ## Docs
 
@@ -107,6 +107,28 @@ PERSISTS_AS holds 319 exact-title links and 302 adjudicated ones (`persist/v1@5e
 | Chunk gap | 1 | `0000050863-24-000076:0017`, which extraction failed on |
 
 Provenance: `benchmarks/graph/load-run3.json` holds the SHA-256 of the alias map, the link file and every extract file.
+
+## Graph retrieval arms (Step 11)
+
+Two graph arms hand at most 10 ranked chunks to the same answer prompt as `vector`, so they differ only in which chunks they pick (ADR-0007). `graph_local` links the question to up to 20 anchor nodes, by name match or embedding similarity, and ranks their evidence chunks by edge support (1 hop). `graph_traversal` has claude-sonnet-5-5 write one Cypher query from the generated schema. The query passes a guard in code before it runs read-only, gets one repair on failure, and falls back to `graph_local` after a second failure.
+
+**Agent-drafted questions, `dev` split, graph arms tuned on `dev`** (hop count and one prompt revision). Context recall@10 per class (gold chunks in the top 10 / gold chunks). Graph runs at commit `375efac` on load run 4 (ontology 4); `vector` is the Step 5 baseline at `96e8c69`. All three use answer prompt `answer/v1`.
+
+| Arm | lookup (27) | local (22) | multi_hop (23) | global (10) | pooled (82) |
+|---|---|---|---|---|---|
+| `vector` | **1.000** | **0.977** | **0.717** | **0.800** | **0.890** |
+| `graph_local` | 0.963 | 0.909 | 0.627 | 0.425 | 0.789 |
+| `graph_traversal` | 0.963 | 0.818 | 0.703 | 0.367 | 0.778 |
+
+Paired against `vector` (fixed-seed bootstrap, 95% intervals), pooled recall@10 is −0.102 [−0.177, −0.030] for `graph_local` and −0.112 [−0.195, −0.032] for `graph_traversal`. Graph loses here, and no class difference in a graph arm's favour has an interval that excludes 0. `graph_traversal` on multi-hop questions, the case it was built for, is level with `vector` (−0.014 [−0.217, 0.181]), not ahead. Global questions are the largest loss for both arms; community summaries (Step 12) are meant for them. Judged answer relevancy (uncalibrated, gpt-6-luna) is lower for both graph arms, pooled: −0.025 [−0.041, −0.009] (`graph_local`) and −0.051 [−0.087, −0.021] (`graph_traversal`).
+
+**Cypher validity rate** (`cypher/v1@44e50e3f`, 93 `dev` questions, commit `5a1681d`, `benchmarks/graph/cypher-validity-run1.json`; the full traversal run at `375efac` replayed the same queries with the same counts):
+
+| First-pass valid | Valid after one repair | Non-empty | Fallback to `graph_local` |
+|---|---|---|---|
+| 0.946 (88 of 93) | 1.000 | 1.000 | 0 |
+
+A query counts as valid when it passes the ontology check and runs without error inside the timeout. A revised prompt, `cypher/v2`, was valid first time on all 93 questions but retrieved worse (pooled recall@10 0.727), so `v1` is used. These are `dev` figures; `test` is scored once, in Step 13.
 
 ## Running it
 
