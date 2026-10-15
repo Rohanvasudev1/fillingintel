@@ -1,0 +1,172 @@
+{
+  "recorded": "real API response, recorded by scripts/capture_global_responses.py",
+  "question": "How does dependence on external foundries, and on TSMC in particular, differ across NVIDIA, AMD and Intel according to their latest 10-K risk factors?",
+  "map_prompt": "global_map/v1@dd20df63",
+  "reduce_prompt": "global_reduce/v1@a5415ee1",
+  "map_calls": [
+    {
+      "community_id": "lower-blackwell",
+      "request_sha256": "89d21ca37dc16e94ec690aa2c49d3a6b243ea590efbc89cc827f456f352bb307",
+      "api_ms": 2864.6946669905446,
+      "response": {
+        "id": "msg_011Cg4rRmSvmDGs7LsVFjXe1",
+        "container": null,
+        "content": [
+          {
+            "citations": null,
+            "text": "{\"points\":[]}",
+            "type": "text"
+          }
+        ],
+        "diagnostics": null,
+        "model": "claude-sonnet-5-5",
+        "role": "assistant",
+        "stop_details": null,
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "type": "message",
+        "usage": {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 945
+          },
+          "cache_creation_input_tokens": 945,
+          "cache_read_input_tokens": 0,
+          "inference_geo": "global",
+          "input_tokens": 1414,
+          "output_tokens": 9,
+          "output_tokens_details": {
+            "thinking_tokens": 0
+          },
+          "server_tool_use": null,
+          "service_tier": "standard",
+          "speed": "standard"
+        }
+      }
+    },
+    {
+      "community_id": "lower-export",
+      "request_sha256": "d932d763017cc32f15ca2de585b7cb9c7a8b5a95df3ed855c4baf9808a7351f0",
+      "api_ms": 2134.619582997402,
+      "response": {
+        "id": "msg_011Cg4rRxNG7ujKjp4HWPvdF",
+        "container": null,
+        "content": [
+          {
+            "signature": "CAQS6AYKEAgSGAI4AUIIdGhpbmtpbmcSDFJSl5Jtiv90hJB73xoMrc77zLNP0U/JArqzIjDdm26VQ4rQfrzH4jjDdns6SaEVCf6UyZvpuvOdDZGvJXCKj6FeYIxCqp1VQKwcN6sqhQZdcwzXx+usXAaRHbqfntoJjn4TPNmyIM6AAyIVHozvdCf7AhFGeeAvBo7ygA4GOhXIPpWBYtbyTosPVMuFEC7wx+8DULJLuz5dgsF+xDRZNVQCMkAUgVsB3pVuYI/DNw3wc4z5+OaP57zPYYVAKbJKLVp01O3xfZAfbpoYhk8UyqAUde3jS81fvs/1Ykotd+57Y1pGy21yRmYpSHt/1ZXfUpSNuquydA4hY5BwKyHp85qJ0auso/yfIFsJ6+1JqFP3TVw1PGxQWlhN12o6tnxpqkVJrL5gNYxfIRJqCqZPNQUzflu5+UTjmc5QH1EKCjAk53+WFHKnL9MFnLf4l5lxznmm6OS9/4u6N4Hr72kSQOUwv93wqH3LD+8icuRJgHj9jLwYbikWkvjt5f9uCgfcBZcc1iEi7asHp2TLzVryCrQN4WGg7Uq2JHAlWIk6tjZwFO6Qu7bSSDHCz3SYHgTCk1SpdtNLMI7f+bpHQc1qD+4A4ZfJD43PqhJU0Dc5NN0agikWXKkSmeviZxtLyBxyQhx5kz9Z3AwbmhH9FspoHvMzhlLpEmAqYZsrs0glFeWt2ua9wFypqpiwQGzlTr7ZlW2ueLTux5Sr9mmToZQ3ZAN6yquUIoyxRRmhXiGUGejocnxm87wJyYZejdc6e2jUTF8tM2b5STKaXOi8l2sEjAFwlcBAb9xDRlmVlGtjCcv/JXk91vi6RVE0OTg8AujVFOQX1HVXTGnKYUBib1/9wf4kks+Vsil3+zohfuG8b0BNxvWpdQzRGP7eqKxVYr2EYodJpx2RLlm64ophNtJdXkB1aQwsF5dGlyq8wPhGEE8b2fH6EjM20itYHcJ4FcBJ7UYNILs+5WMIyLj0TeDVhmt2PBD45WBvu8qWz9ssrjO3RSrYHu6+CXGy7mW3h/U/b24yY1lOxsZXVblCucLr9wuDrT2iLBmVw4ofRJ08366LeRmRezLmrI7nzdp6ySP0mj/pY9s3vOpSqfviJYP8boQj8iWsJs/wo9X3A5Za0L5u+tsDaRgB",
+            "thinking": "",
+            "type": "thinking"
+          },
+          {
+            "citations": null,
+            "text": "{\"points\":[]}",
+            "type": "text"
+          }
+        ],
+        "diagnostics": null,
+        "model": "claude-sonnet-5-5",
+        "role": "assistant",
+        "stop_details": null,
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "type": "message",
+        "usage": {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 945,
+          "inference_geo": "global",
+          "input_tokens": 2783,
+          "output_tokens": 116,
+          "output_tokens_details": {
+            "thinking_tokens": 107
+          },
+          "server_tool_use": null,
+          "service_tier": "standard",
+          "speed": "standard"
+        }
+      }
+    },
+    {
+      "community_id": "lower-supply",
+      "request_sha256": "b16a90f4ca67499dbeb4de3e74587b46aeafa35aac42bf87ab15a22125b97af0",
+      "api_ms": 5231.607499998063,
+      "response": {
+        "id": "msg_011Cg4rS7VSDnp7huDGZVj51",
+        "container": null,
+        "content": [
+          {
+            "citations": null,
+            "text": "{\"points\":[{\"text\":\"NVIDIA (FY2026 10-K) says it uses foundries, such as TSMC and Samsung, to produce its semiconductor wafers, so it names TSMC alongside a second foundry rather than as its sole source [0001045810-26-000021:0012].\",\"score\":70},{\"text\":\"NVIDIA (FY2026) uses CoWoS technology for semiconductor packaging. It relies on subcontractors and contract manufacturers such as Hon Hai, Wistron and Fabrinet for assembly, testing and packaging of final products, and buys memory from SK Hynix, Micron and Samsung [0001045810-26-000021:0012].\",\"score\":45},{\"text\":\"NVIDIA (FY2026) says it has expanded supplier relationships to build redundancy and resilience. Its supply chain is mainly concentrated in Asia, and it is expanding into the U.S. and Latin America. It may place non-cancellable inventory orders ahead of historical lead times, pay premiums, or provide deposits to secure supply and capacity [0001045810-26-000021:0012].\",\"score\":55},{\"text\":\"NVIDIA's Compute & Networking segment includes its Data Center accelerated computing and networking platforms, AI solutions and Automotive platforms. This is the product area that the TSMC wafer dependence report focuses on [0001045810-26-000021:0006].\",\"score\":25},{\"text\":\"NVIDIA's FY2026 10-K excerpts name AMD and Intel as competitors in GPUs, accelerated computing and SoC products. The excerpts give no information on AMD's or Intel's own foundry dependence, so no comparison with them can be drawn from this material [0001045810-26-000021:0012].\",\"score\":30}]}",
+            "type": "text"
+          }
+        ],
+        "diagnostics": null,
+        "model": "claude-sonnet-5-5",
+        "role": "assistant",
+        "stop_details": null,
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "type": "message",
+        "usage": {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 945,
+          "inference_geo": "global",
+          "input_tokens": 2959,
+          "output_tokens": 584,
+          "output_tokens_details": {
+            "thinking_tokens": 0
+          },
+          "server_tool_use": null,
+          "service_tier": "standard",
+          "speed": "standard"
+        }
+      }
+    }
+  ],
+  "reduce": {
+    "request_sha256": "48008817c29dea3fae8546d7f1312e1be93bbeb8b329f476d11baefe1a3db4a6",
+    "api_ms": 3154.737083998043,
+    "response": {
+      "id": "msg_011Cg4rSVrqkmV1BDeuPBrfh",
+      "container": null,
+      "content": [
+        {
+          "citations": null,
+          "text": "STATUS: answered\n\nThe points cover only NVIDIA, so no cross-company comparison is possible.\n\nNVIDIA's FY2026 10-K says it uses foundries such as TSMC and Samsung to produce its semiconductor wafers, so it names TSMC alongside a second foundry rather than as a sole source [0001045810-26-000021:0012]. It uses CoWoS technology for semiconductor packaging. It relies on subcontractors and contract manufacturers such as Hon Hai, Wistron and Fabrinet for assembly, testing and packaging, and buys memory from SK Hynix, Micron and Samsung [0001045810-26-000021:0012].\n\nNVIDIA says it has expanded supplier relationships to build redundancy and resilience. Its supply chain is mainly concentrated in Asia, and it is expanding into the U.S. and Latin America [0001045810-26-000021:0012]. It may place non-cancellable inventory orders ahead of historical lead times, pay premiums, or provide deposits to secure supply and capacity [0001045810-26-000021:0012].\n\nThe excerpts name AMD and Intel as NVIDIA's competitors but give no information on AMD's or Intel's own foundry dependence or reliance on TSMC [0001045810-26-000021:0012].",
+          "type": "text"
+        }
+      ],
+      "diagnostics": null,
+      "model": "claude-sonnet-5-5",
+      "role": "assistant",
+      "stop_details": null,
+      "stop_reason": "end_turn",
+      "stop_sequence": null,
+      "type": "message",
+      "usage": {
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 0,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "inference_geo": "global",
+        "input_tokens": 1250,
+        "output_tokens": 433,
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "server_tool_use": null,
+        "service_tier": "standard",
+        "speed": "standard"
+      }
+    }
+  }
+}

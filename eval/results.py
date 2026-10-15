@@ -231,9 +231,19 @@ def build_header(
                                | filter_report.DEFINITIONS | answer_report.DEFINITIONS
                                | operational.DEFINITIONS | bootstrap.DEFINITIONS
                                | judged_report.DEFINITIONS
-                               | (graph_report.DEFINITIONS | operational.GRAPH_DEFINITIONS
-                                  if config.graph is not None else {})),
+                               | _graph_definitions(config)),
     }
+
+
+def _graph_definitions(config: ArmConfig) -> dict[str, str]:
+    """A graph arm's definitions; graph_global's stages and map-reduce replace the entity
+    arms' stage text."""
+    if config.graph is None:
+        return {}
+    if config.graph.global_search is not None:
+        return (graph_report.DEFINITIONS | graph_report.GLOBAL_DEFINITIONS
+                | operational.GLOBAL_DEFINITIONS)
+    return graph_report.DEFINITIONS | operational.GRAPH_DEFINITIONS
 
 
 def results_path(runs_dir: Path, day: date, arm: str, split: str, commit: str) -> Path:

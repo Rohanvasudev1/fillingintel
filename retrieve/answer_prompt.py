@@ -92,7 +92,12 @@ def _excerpt(chunk: SourceChunk) -> str:
     )
 
 
+def render_excerpts(chunks: Sequence[SourceChunk]) -> str:
+    """Every chunk as an ``<excerpt>`` block with its source, in the order given."""
+    return "\n\n".join(_excerpt(c) for c in chunks)
+
+
 def render_user(prompt: AnswerPrompt, question: str, chunks: Sequence[SourceChunk]) -> str:
     """The user message: every chunk, in retrieval order, then the question."""
-    excerpts = "\n\n".join(_excerpt(c) for c in chunks)
-    return Template(prompt.user_template).substitute(excerpts=excerpts, question=question)
+    return Template(prompt.user_template).substitute(excerpts=render_excerpts(chunks),
+                                                     question=question)
