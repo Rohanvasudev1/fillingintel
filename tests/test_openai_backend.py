@@ -194,3 +194,54 @@ print("ok")
                             capture_output=True, text=True, timeout=60)
     assert result.returncode == 0, result.stderr[-3000:]
     assert result.stdout.strip() == "ok"
+
+
+# A fresh interpreter, so openai's Response model starts unbuilt.  The switch interval
+# is shortened only after the import, so a model left for the threads to build is built
+# under constant thread switching, which raised the run's AttributeError in 3 of 6 tries.
+_PARSE_RACE_SCRIPT = """
+import socket
+import sys
+import threading
+
+def _blocked(*args, **kwargs):
+    raise RuntimeError("network access attempted")
+
+socket.socket.connect = _blocked
+socket.create_connection = _blocked
+socket.getaddrinfo = _blocked
+
+from openai.types.responses import Response
+
+from eval.judging.openai_backend import parse_openai_reply
+from tests.openai_fixtures import RECORDED
+
+assert Response.__pydantic_complete__, "Response is left for the judge threads to build"
+THREADS = 32
+start, errors = threading.Barrier(THREADS), []
+
+def parse():
+    start.wait()
+    try:
+        parse_openai_reply(RECORDED)
+    except Exception as exc:
+        errors.append(repr(exc))
+
+sys.setswitchinterval(1e-6)
+threads = [threading.Thread(target=parse) for _ in range(THREADS)]
+for t in threads:
+    t.start()
+for t in threads:
+    t.join()
+assert not errors, errors[:3]
+print("ok")
+"""
+
+
+def test_judge_threads_parse_a_recorded_reply_at_once_without_building_the_model():
+    result = subprocess.run(
+        [sys.executable, "-c", _PARSE_RACE_SCRIPT],
+        cwd=REPO_ROOT, capture_output=True, text=True, timeout=120,
+    )
+    assert result.returncode == 0, result.stderr[-3000:]
+    assert result.stdout.strip() == "ok"

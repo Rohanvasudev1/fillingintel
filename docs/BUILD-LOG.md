@@ -2310,6 +2310,31 @@ No question is unpaired in either comparison. The full tables, with precision an
 1. Merge this PR once CI is green.
 2. Step 12 (communities and global search): `/grill-with-docs`.
 
+---
+
+## 2026-10-15 — Step 12 ticket 01: judging race and `eval.run --classes`
+
+Both are harness changes the user approved on 2026-10-15 (Step 12 grilling). Branch `claude/judging-race-run-classes-deb9ff`, on top of the Step 12 planning commit.
+
+- **The race, reproduced.** openai 3.3.0 leaves `Response` unbuilt at import (`__pydantic_complete__` is False), so the first `model_validate` builds it. A scratch script started 32 threads parsing a recorded luna reply in a fresh interpreter. At the default switch interval it passed 8 of 8 times, which matches ticket 07's 30 clean tries. With `sys.setswitchinterval(1e-6)` it raised the run's exact `AttributeError: type object 'Response' has no attribute '__pydantic_core_schema__'` in 3 of 6 interpreters.
+- **Fix.** `eval/judging/openai_backend.py` calls `Response.model_rebuild()` at import. The new test in `tests/test_openai_backend.py` runs in a fresh interpreter with the network blocked: it imports the backend, checks that `Response` is built, then parses the recorded reply from 32 threads at a 1 µs switch interval. Before the fix it failed on the built check. That check stays because the ticket's requirement is a build at import, and it fails every time, while the threaded part fails only some of the time.
+- **No score change.** Two cache-only replays of the vector dev run used dummy API keys, so a cache miss would have failed rather than spent: one at `dc11db8` without the fix, one with it. Their 93 question records have identical judged scores and retrieval metrics; only the timings differ. Against the committed baseline (`2026-10-05-vector-dev-96e8c69.json`), both replays differ in one value: q0105's third answer-relevancy run is 0.94588 against 0.94512. Its judge replies are the same (same tokens, all 18 replayed). This value is computed from Voyage embeddings of the judge's generated questions, so the likely cause is the embedding cache: two threads embedded the same text during the live run, and the later write replaced the vector the baseline had used. The difference predates this ticket and is not fixed here. Retrieval metrics match the baseline exactly.
+- **`--classes`.** `eval.run --classes global,decline,unanswerable` runs only those classes. An empty list or an unknown name (the match is case-sensitive) exits 2 before the arm opens. The header gets `classes` in schema order without repeats, and only when the option is given, so a full run's header is unchanged. `eval.compare` needed no pairing change: it already pairs on shared questions and lists the rest as only in one run. It now prints each run's selection (`classes all` or the list). Tests came first for the selection, the bad inputs, the header field, a compare against a full run and the printed selection.
+- **Docs.** The judging-race entry is removed from OPEN-DECISIONS. CLAUDE.md Commands mention `--classes`, and Decisions gain this ticket's choices.
+- **Evidence.** `uv run ruff check .` is clean. Full `uv run --env-file .env pytest` with `NEO4J_TEST_URI` unset, because ticket 02's session was using `neo4j-test`: 2,281 passed, 173 skipped (the Neo4j tests; nothing here touches Neo4j). No spend.
+- **Code review** (`mattpocock-skills:code-review`).
+  - Standards: no hard violations. Fixed: the class selection is typed `tuple[Class, ...]`, not `tuple[str, ...]`, and two docstrings keep a one-line summary. Not changed: `split` and `classes` passing together through three functions is small enough to leave as it is, and the import-time rebuild is the approved fix.
+  - Spec: everything required is present. The selection normalisation, the absent header field and the compare print line are recorded in CLAUDE.md Decisions. `parse_openai_reply` validates only `Response`, and nested models are built with it, so no other openai model needs a rebuild.
+
+**Decisions needed**
+- The q0105 relevancy drift points at concurrent writes to the query-embedding cache. Recommendation: leave it for this step, since one run moved by 0.0008 and committed runs are unaffected. Record it in OPEN-DECISIONS for Step 13, where a fix would make the second write keep the first vector.
+
+**Next session starts with**
+1. Open the PR for this ticket and merge it once CI is green.
+2. Ticket 02 (communities from the community graph), if its session has not finished it.
+
+---
+
 ## 2026-10-15 — Step 12 ticket 02: communities from the community graph
 
 **Files changed:** `graph/community_graph.py`, `graph/community.py` and `graph/communities.py` (new); `graph/load.py` (`read_repo_inputs()`, shared with the new command); `tests/test_graph_communities.py` (new); `pyproject.toml` and `uv.lock` (`graspologic-native==1.3.1`, approved 2026-10-15); `benchmarks/communities/communities-run1.json`; CLAUDE.md (Commands, ticket 02 choices).

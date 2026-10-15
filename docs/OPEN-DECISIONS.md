@@ -38,7 +38,6 @@ Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstra
 - Extraction spend caps count committed spend per ontology version (`extract/spend.py`). Under ontology 4 they see none of the ontology 3 runs, so a new extraction run would start from $0 against the caps. Nothing is extracted in Step 11; fix before the next extraction.
 - Hops in the run header (ticket 05): `ArmConfig` has no hop field, so `graph_local`'s frozen hop count appears only per question. Recommendation: leave it; adding a field changes the header schema.
 - Load-run check (ticket 05): the run header names the newest `load-run*.json` on disk, not one tied to the live graph. Recommendation: in Step 13, `graph.load` writes the run name onto `:GraphMeta` and the arms read it there.
-- Judging race (ticket 07): the first full `graph_local` run stopped at judging with `AttributeError: type object 'Response' has no attribute '__pydantic_core_schema__'`, raised in `parse_openai_reply` while judge threads were running. It looks like openai's lazily built `Response` model being rebuilt from two threads at once. The rerun passed, and 30 tries at 32 threads did not reproduce it. Recommendation: build the model once at import in `eval/judging/openai_backend.py` (`Response.model_rebuild()`) before Step 13's full matrix; it is a harness change, so it needs a yes.
 - Graph arms lost to `vector` on `dev` (ticket 07): pooled recall@10 −0.10 and −0.11, and traversal level with `vector` on multi-hop. `test` is scored once, in Step 13. Any change to the arms before then (more anchors, path context, a different ranking) is a new tuning round on `dev` and has to be labelled as one.
 - H5 latency (ticket 07): the full traversal run replayed its Cypher calls from the cache, so no live latency exists for `graph_traversal`. Step 13's runs need live Cypher timings, or an uncached repeat, before H5's latency half is judged.
 - A filter on `uncertain` evidence, as an ablation, if wrong-evidence rates point at it. The reviews found no error at any confidence level, but only 3 counted `uncertain` samples.
@@ -46,6 +45,7 @@ Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstra
 ## Step 12 — communities and global search
 - Ablations not run in Step 12: `graph_global` handing its top 10 chunks to `answer/v1` (ADR-0007 style, the research note's recommendation); Haiku 5.5 for map calls; a cheap model rating reports (GraphRAG's dynamic community selection) instead of embedding rank.
 - Full `graph_global` runs on lookup, local and multi-hop questions wait for Step 13's matrix and its budget.
+- Query-embedding cache writes (ticket 01): a cache-only replay of the vector baseline moved q0105's third answer-relevancy run from 0.94512 to 0.94588 with identical judge replies, most likely because two judge threads embedded the same text in the live run and the later write replaced the vector used. Recommendation: in Step 13, make a second write keep the existing vector.
 
 ## Step 13b — agentic arms
 - Set the tool-call cap before the benchmark run.

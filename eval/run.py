@@ -19,6 +19,9 @@ one tree of spans (``retrieve.tracing``): its answer, then its judge calls,
 which start under the question's root span after that span has ended.  Unset,
 nothing is traced.
 
+``--classes global,decline,unanswerable`` limits the run to those classes; the
+header records the selection.  Without it every class runs.
+
 ``dev`` is the default split.  ``test`` is scored only with ``--final``, once,
 for the final benchmark.  Results go to ``benchmarks/runs/``, which git ignores.
 """
@@ -33,7 +36,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import replace
 from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, get_args
 
 from opentelemetry import trace
 from opentelemetry.context import Context
@@ -52,6 +55,7 @@ from eval.results import (
     results_path,
     write_results,
 )
+from eval.schema import Class
 from ingest.provenance import REPO_ROOT, git_state
 from retrieve.arm import Arm, ArmConfig, ArmError, ArmSpec
 from retrieve.arms import ARMS
@@ -91,7 +95,26 @@ def _parse_args(argv: list[str] | None, arm_names: Sequence[str]) -> argparse.Na
                         help="required to score the test split, for the final benchmark only")
     parser.add_argument("--uncached", action="store_true",
                         help="make every answer and judge call afresh, through a new empty cache")
+    parser.add_argument("--classes",
+                        help="run only these classes, comma-separated (e.g. global,decline)")
     return parser.parse_args(argv)
+
+
+class ClassSelectionError(ValueError):
+    """``--classes`` names no class, or one the schema does not define."""
+
+
+def parse_classes(text: str) -> tuple[Class, ...]:
+    """The classes *text* names, comma-separated, in schema order and without repeats."""
+    names = {name.strip() for name in text.split(",")} - {""}
+    known = get_args(Class)
+    unknown = sorted(names - set(known))
+    if unknown:
+        raise ClassSelectionError(
+            f"--classes: unknown class {', '.join(unknown)}; choose from {', '.join(known)}")
+    if not names:
+        raise ClassSelectionError(f"--classes names no class; choose from {', '.join(known)}")
+    return tuple(c for c in known if c in names)
 
 
 def _usage_problem(args: argparse.Namespace, required_env: Sequence[str],
@@ -117,15 +140,18 @@ def env_problem(required_env: Sequence[str], forbidden_env: Sequence[str],
     return None
 
 
-def _run_arm(arm: Arm, sets: Sequence[QuestionSet], split: str,
+def _run_arm(arm: Arm, sets: Sequence[QuestionSet], split: str, classes: tuple[Class, ...] | None,
              spans: SpanRecorder) -> tuple[list[Outcome], list[Context]]:
-    """Run *arm* on every *split* record of every set; the arm sees only the question text.
+    """Run *arm* on the *split* records of every set; the arm sees only the question text.
+
+    With *classes*, only records of those classes run.
 
     Each question is one trace, rooted in a span that holds the question and its record.
     Returns the outcomes and, for each, a context holding its root span, which the
     judges' spans take as their parent.
     """
-    todo = [(s.name, r) for s in sets for r in s.records if r.split == split]
+    todo = [(s.name, r) for s in sets for r in s.records
+            if r.split == split and (classes is None or r.class_ in classes)]
     outcomes, parents = [], []
     for done, (set_name, record) in enumerate(todo, start=1):
         metadata = {"question_id": record.id, "set": set_name, "arm": arm.name,
@@ -159,13 +185,16 @@ def _fresh_cache(root: Path, day: date) -> Path:
 
 
 def _score(
-    spec: ArmSpec, judges: JudgeSpec, sets: Sequence[QuestionSet], split: str, cache_dir: Path,
-    spans: SpanRecorder,
+    spec: ArmSpec, judges: JudgeSpec, sets: Sequence[QuestionSet], split: str,
+    classes: tuple[Class, ...] | None, cache_dir: Path, spans: SpanRecorder,
 ) -> tuple[list[Outcome], ArmConfig, JudgeConfig]:
-    """Every *split* question answered by the arm, then judged; raises ArmError or JudgeRunError."""
+    """The selected questions answered by the arm, then judged; raises ArmError or JudgeRunError.
+
+    The selection is every *split* question, or only those in *classes* when given.
+    """
     with spec.open(cache_dir, spans) as arm:
         _check_priced(arm.config)
-        outcomes, parents = _run_arm(arm, sets, split, spans)
+        outcomes, parents = _run_arm(arm, sets, split, classes, spans)
         config = arm.config
     with judges.open(cache_dir, spans) as judge:
         return _judge(judge, outcomes, parents), config, judge.config
@@ -215,16 +244,17 @@ def main(
         print(problem, file=sys.stderr)
         return EXIT_USAGE
     try:
+        classes = parse_classes(args.classes) if args.classes is not None else None
         sets = load_question_sets(eval_dir)
         capture = text_capture(os.environ)
         provider = tracing(os.environ)
-    except (QuestionSetError, TracingConfigError) as exc:
+    except (ClassSelectionError, QuestionSetError, TracingConfigError) as exc:
         print(str(exc), file=sys.stderr)
         return EXIT_USAGE
     spans = (SpanRecorder(provider.get_tracer(TRACER_NAME), capture) if provider is not None
              else SpanRecorder.off())
     try:
-        return _execute(args, spec, judges, sets, spans, runs_dir=runs_dir, today=today,
+        return _execute(args, spec, judges, sets, classes, spans, runs_dir=runs_dir, today=today,
                         response_cache=response_cache, uncached_root=uncached_root)
     finally:
         if provider is not None:
@@ -232,7 +262,8 @@ def main(
 
 
 def _execute(args: argparse.Namespace, spec: ArmSpec, judges: JudgeSpec,
-             sets: Sequence[QuestionSet], spans: SpanRecorder, *, runs_dir: Path,
+             sets: Sequence[QuestionSet], classes: tuple[Class, ...] | None,
+             spans: SpanRecorder, *, runs_dir: Path,
              today: date | None, response_cache: Path, uncached_root: Path) -> int:
     """Answer, judge and write the results file; returns the exit code."""
     commit = git_state()
@@ -244,13 +275,14 @@ def _execute(args: argparse.Namespace, spec: ArmSpec, judges: JudgeSpec,
         print(f"could not create a new response cache in {uncached_root}: {exc}", file=sys.stderr)
         return EXIT_RUN_ERROR
     try:
-        outcomes, config, judge_config = _score(spec, judges, sets, args.split, cache_dir, spans)
+        outcomes, config, judge_config = _score(spec, judges, sets, args.split, classes,
+                                                cache_dir, spans)
     except (ArmError, JudgeRunError) as exc:
         print(f"run stopped, no results written: {exc}", file=sys.stderr)
         return EXIT_RUN_ERROR
 
     run = RunInfo(now.isoformat(timespec="seconds"), commit, args.arm, args.split,
-                  args.final, SEED, args.uncached, cache_dir.name)
+                  args.final, SEED, args.uncached, cache_dir.name, classes)
     document = _document(run, config, sets, judge_config, outcomes)
     try:
         path = results_path(runs_dir, day, args.arm, args.split, commit)
