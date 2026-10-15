@@ -15,7 +15,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
-from eval.graph_report import header_graph, question_graph
+from eval.graph_report import graph_cell, header_graph, question_graph
 from graph.constraints import apply_constraints
 from graph.write import write_batch
 from ingest.chunker import chunk_filing
@@ -300,6 +300,7 @@ def test_an_unusable_map_reply_gives_its_community_no_points(corpus, graph, tmp_
     calls = {c.community_id: (c.outcome, len(c.points)) for c in result.graph.global_search.calls}
     assert calls == {"lower-blackwell": ("invalid_reply", 0), "lower-export": ("refused", 0),
                      "lower-supply": ("ok", 1)}
+    assert graph_cell([result])["map_calls_unusable"] == 2
 
 
 def test_stage_costs_sum_the_map_calls(corpus, graph, tmp_path):
@@ -332,6 +333,15 @@ def test_a_failed_map_call_is_an_arm_error(corpus, graph, tmp_path):
     model = ScriptedGlobalModel(_supply_points, error=AnswerModelError("HTTP 529"))
     with pytest.raises(ArmError, match="graph_global arm failed.*529"):
         _arm(corpus, graph, tmp_path, model).run(QUESTION)
+
+
+def test_a_graph_at_ontology_version_4_stops_the_arm(corpus, graph, tmp_path):
+    graph.execute_query("MATCH (m:GraphMeta) SET m.ontology_version = 4")
+    try:
+        with pytest.raises(ArmError, match="ontology"):
+            _arm(corpus, graph, tmp_path, ScriptedGlobalModel(_supply_points))
+    finally:
+        graph.execute_query("MATCH (m:GraphMeta) SET m.ontology_version = 5")
 
 
 def test_a_graph_with_another_schema_hash_stops_the_arm(corpus, graph, tmp_path):

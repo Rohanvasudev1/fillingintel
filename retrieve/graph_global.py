@@ -28,7 +28,7 @@ import time
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
-from dataclasses import fields, replace
+from dataclasses import replace
 from pathlib import Path
 from types import MappingProxyType
 
@@ -53,13 +53,12 @@ from retrieve.arm import (
     GlobalSearchConfig,
     GraphRetrieval,
     MapCall,
-    MapPoint,
-    Retrieval,
     StageCost,
 )
 from retrieve.arm_steps import (
     ANSWER_ERRORS,
     arm_error,
+    arm_result,
     check_prices,
     corpus_chunker_version,
     filing_tickers,
@@ -81,6 +80,7 @@ from retrieve.global_reduce import (
     REDUCE_MODEL,
     ReduceInput,
     build_reduce_request,
+    mark_reduced,
     select_points,
 )
 from retrieve.global_retrieval import (
@@ -159,17 +159,24 @@ class GraphGlobalArm:
             efforts=MappingProxyType({"map": MAP_EFFORT, "reduce": REDUCE_EFFORT}),
             answer_prompt=_as_answer_prompt(self._reduce_prompt),
             answer_max_tokens=REDUCE_MAX_TOKENS,
-            graph=replace(self.selection.provenance, global_search=GlobalSearchConfig(
-                n=n, level=LOWER, chunks_per_community=per_community,
-                reduce_budget_tokens=reduce_budget, map_workers=workers,
-                map_prompt_version=self._map_prompt.prompt_version,
-                map_prompt_sha256=self._map_prompt.sha256,
-                reduce_prompt_version=self._reduce_prompt.prompt_version,
-                reduce_prompt_sha256=self._reduce_prompt.sha256,
-                report_prompt_versions=tuple(sorted({e.prompt_version
-                                                     for e in reports.entries.values()})),
-                communities_file=reports.communities_file, reports_file=reports.name)),
+            graph=replace(self.selection.provenance, global_search=self._settings(
+                n, per_community, reduce_budget, workers)),
         )
+
+    def _settings(self, n: int, per_community: int, reduce_budget: int,
+                  workers: int) -> GlobalSearchConfig:
+        """The frozen settings and the files read, for the results header."""
+        reports = self._reports
+        return GlobalSearchConfig(
+            n=n, level=LOWER, chunks_per_community=per_community,
+            reduce_budget_tokens=reduce_budget, map_workers=workers,
+            map_prompt_version=self._map_prompt.prompt_version,
+            map_prompt_sha256=self._map_prompt.sha256,
+            reduce_prompt_version=self._reduce_prompt.prompt_version,
+            reduce_prompt_sha256=self._reduce_prompt.sha256,
+            report_prompt_versions=tuple(sorted({e.prompt_version
+                                                 for e in reports.entries.values()})),
+            communities_file=reports.communities_file, reports_file=reports.name)
 
     def run(self, question: str) -> ArmResult:
         """Select, map and reduce for one question; any failure is raised as ``ArmError``."""
@@ -190,12 +197,10 @@ class GraphGlobalArm:
         graph = GraphRetrieval(
             stages=_stages(retrieval.search_ms, map_ms, calls),
             global_search=GlobalSearch(
-                calls=_mark_reduced(calls, selected.points),
-                reduce_called=bool(selected.points), reduce_points=len(selected.points),
+                calls=mark_reduced(calls, selected), reduce_points=len(selected.points),
                 reduce_input_tokens=selected.tokens, cut_by_budget=selected.cut_by_budget))
-        retrieval = replace(retrieval, search_ms=retrieval.search_ms + map_ms, graph=graph)
-        retrieval_fields = {f.name: getattr(retrieval, f.name) for f in fields(Retrieval)}
-        return ArmResult(**retrieval_fields, answer=answer, sources=sources)
+        return arm_result(replace(retrieval, search_ms=retrieval.search_ms + map_ms, graph=graph),
+                          answer, sources)
 
     def _map_all(self, question: str, communities: Sequence[ShownCommunity],
                  chunks: Mapping[str, SourceChunk]) -> tuple[MapCall, ...]:
@@ -261,14 +266,6 @@ def _stages(select_ms: float, map_ms: float,
             output_tokens=sum(c.cost.output_tokens for c in calls),
             from_cache=all(c.cost.from_cache for c in calls))
     return MappingProxyType(stages)
-
-
-def _mark_reduced(calls: Sequence[MapCall], reduced: Sequence[MapPoint]) -> tuple[MapCall, ...]:
-    """*calls* with each point the reduce call read marked ``in_reduce``."""
-    chosen = {id(p) for p in reduced}
-    return tuple(replace(c, points=tuple(replace(p, in_reduce=True) if id(p) in chosen else p
-                                         for p in c.points))
-                 for c in calls)
 
 
 def _load_prompts() -> tuple[GlobalPrompt, GlobalPrompt]:

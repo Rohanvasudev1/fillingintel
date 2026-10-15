@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import html
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from string import Template
 
 from ingest.chunker import count_tokens
@@ -30,6 +30,7 @@ class ReduceInput:
     points: tuple[MapPoint, ...]  # in the order the reduce call reads them
     over_zero: int  # kept points that scored above 0
     tokens: int  # the selected points' cl100k_base count
+    positions: frozenset[tuple[int, int]]  # (call index, point index) of each point
 
     @property
     def cut_by_budget(self) -> int:
@@ -44,18 +45,27 @@ def point_line(point: MapPoint) -> str:
 def select_points(calls: Sequence[MapCall], budget: int = REDUCE_BUDGET_TOKENS) -> ReduceInput:
     """The kept points above 0, best first, within *budget* tokens."""
     ranked = sorted(
-        ((p, call.rank, i) for call in calls for i, p in enumerate(call.points)
+        ((p, call.rank, c, i) for c, call in enumerate(calls) for i, p in enumerate(call.points)
          if p.kept and p.score),
-        key=lambda item: (-(item[0].score or 0), item[1], item[2]))
-    chosen: list[MapPoint] = []
+        key=lambda item: (-(item[0].score or 0), item[1], item[3]))
+    chosen: list[tuple[MapPoint, int, int]] = []
     tokens = 0
-    for point, _, _ in ranked:
+    for point, _, c, i in ranked:
         size = count_tokens(point_line(point))
         if chosen and tokens + size > budget:
             break
-        chosen.append(point)
+        chosen.append((point, c, i))
         tokens += size
-    return ReduceInput(tuple(chosen), len(ranked), tokens)
+    return ReduceInput(tuple(p for p, _, _ in chosen), len(ranked), tokens,
+                       frozenset((c, i) for _, c, i in chosen))
+
+
+def mark_reduced(calls: Sequence[MapCall], selected: ReduceInput) -> tuple[MapCall, ...]:
+    """*calls* with each point the reduce call reads marked ``in_reduce``."""
+    return tuple(replace(call, points=tuple(replace(p, in_reduce=True)
+                                            if (c, i) in selected.positions else p
+                                            for i, p in enumerate(call.points)))
+                 for c, call in enumerate(calls))
 
 
 def build_reduce_request(prompt: GlobalPrompt, question: str,

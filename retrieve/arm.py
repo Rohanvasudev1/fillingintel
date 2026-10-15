@@ -49,8 +49,9 @@ GraphStage = Literal["anchor_linking", "cypher_generation", "cypher_repair", "cy
 GRAPH_STAGES: tuple[GraphStage, ...] = get_args(GraphStage)
 # Each arm family reports its own stages, so adding graph_global left the files of the
 # entity arms (graph_local, graph_traversal) unchanged.
-ENTITY_STAGES: tuple[GraphStage, ...] = GRAPH_STAGES[:4]
-GLOBAL_STAGES: tuple[GraphStage, ...] = GRAPH_STAGES[4:]
+ENTITY_STAGES: tuple[GraphStage, ...] = ("anchor_linking", "cypher_generation", "cypher_repair",
+                                         "cypher_execution")
+GLOBAL_STAGES: tuple[GraphStage, ...] = ("community_select", "global_map")
 
 
 @dataclass(frozen=True)
@@ -144,14 +145,17 @@ class GlobalSearch:
     """What graph_global's map and reduce steps did for one question."""
 
     calls: tuple[MapCall, ...]  # by community rank
-    reduce_called: bool  # False when no point scored above 0
-    reduce_points: int  # points sent to the reduce call
+    reduce_points: int  # points sent to the reduce call; 0 when none scored above 0
     reduce_input_tokens: int  # their cl100k_base count, as the budget measures it
     cut_by_budget: int  # points above 0 left out by the reduce budget
 
     @property
     def points(self) -> tuple[MapPoint, ...]:
         return tuple(p for c in self.calls for p in c.points)
+
+    @property
+    def reduce_called(self) -> bool:
+        return self.reduce_points > 0
 
 
 @dataclass(frozen=True)

@@ -32,8 +32,10 @@ GLOBAL_DEFINITIONS = {  # in graph_global's header only
         "call was not shown, or have no score from 0 to 100; the reduce call reads the kept "
         "points above 0 by score, then community rank, within reduce_budget_tokens "
         "(cl100k_base); with none, the answer is not_found and no reduce call is made, "
-        "counted as no_reduce; no_community counts questions with no community selected; the "
-        "reduce call writes the answer, so its cost and latency are generation's"
+        "counted as no_reduce; map_calls_unusable counts map replies cut off, refused or off "
+        "the schema, which give their community no points; no_community counts questions with "
+        "no community selected; the reduce call writes the answer, so its cost and latency "
+        "are generation's"
     ),
 }
 
@@ -104,6 +106,7 @@ def graph_cell(results: Sequence[ArmResult]) -> dict[str, int] | None:
         "not_found": sum(r.answer.status == "not_found" for r, _ in graphed),
         **({"no_community": sum(not s.calls for s in searches),
             "no_reduce": sum(not s.reduce_called for s in searches),
+            "map_calls_unusable": sum(c.outcome != "ok" for s in searches for c in s.calls),
             "map_points": sum(len(s.points) for s in searches),
             "map_points_dropped": sum(not p.kept for s in searches for p in s.points)}
            if searches else {}),

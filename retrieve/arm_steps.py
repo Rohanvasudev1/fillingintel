@@ -69,8 +69,7 @@ class ChunkAnswerer:
             answer = self._write_answer(question, chunks)
         except ANSWER_ERRORS as exc:
             raise arm_error(self._arm_name, exc) from exc
-        retrieval_fields = {f.name: getattr(retrieval, f.name) for f in fields(Retrieval)}
-        return ArmResult(**retrieval_fields, answer=answer, sources=chunks)
+        return arm_result(retrieval, answer, chunks)
 
     def _write_answer(self, question: str, chunks: Sequence[SourceChunk]) -> Answer:
         attributes = generation_request_attributes(ANSWER_MODEL, ANSWER_EFFORT, ANSWER_MAX_TOKENS,
@@ -82,6 +81,13 @@ class ChunkAnswerer:
                         if self._spans.capture_text and sent.last is not None else None)
             span.set_attributes(generation_attributes(answer, messages))
         return answer
+
+
+def arm_result(retrieval: Retrieval, answer: Answer,
+               sources: Sequence[SourceChunk]) -> ArmResult:
+    """*retrieval* with the answer written from it and the chunks the model saw."""
+    retrieval_fields = {f.name: getattr(retrieval, f.name) for f in fields(Retrieval)}
+    return ArmResult(**retrieval_fields, answer=answer, sources=tuple(sources))
 
 
 def source_chunks(conn: psycopg.Connection, tickers: Mapping[str, str],

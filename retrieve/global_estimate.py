@@ -11,10 +11,9 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 from ingest.chunker import count_tokens
-from retrieve.answer_model import ANSWER_MODEL
-from retrieve.global_map import MapRequest
+from retrieve.global_map import MAP_MODEL, MapRequest
 from retrieve.global_prompts import GlobalPrompt
-from retrieve.global_reduce import REDUCE_BUDGET_TOKENS
+from retrieve.global_reduce import REDUCE_BUDGET_TOKENS, REDUCE_MODEL
 from retrieve.pricing import PRICES
 
 TOKEN_MARGIN = 2.0
@@ -25,13 +24,13 @@ _TOKENS_PER_MTOK = 1_000_000
 def estimate_usd(map_requests: Iterable[MapRequest], reduce_prompt: GlobalPrompt,
                  reduce_calls: int, reduce_budget: int = REDUCE_BUDGET_TOKENS) -> float:
     """The estimated cost of *map_requests* and *reduce_calls* reduce calls."""
-    price = PRICES[ANSWER_MODEL]
-
-    def call(system: str, user_tokens: float) -> float:
+    def call(model: str, system: str, user_tokens: float) -> float:
+        price = PRICES[model]
         return (count_tokens(system) * TOKEN_MARGIN * price.cache_write_per_mtok
                 + user_tokens * price.input_per_mtok
                 + ASSUMED_OUTPUT_TOKENS * price.output_per_mtok) / _TOKENS_PER_MTOK
 
-    maps = sum(call(r.system, count_tokens(r.user) * TOKEN_MARGIN) for r in map_requests)
+    maps = sum(call(MAP_MODEL, r.system, count_tokens(r.user) * TOKEN_MARGIN)
+               for r in map_requests)
     reduce_user = (count_tokens(reduce_prompt.user_template) + reduce_budget) * TOKEN_MARGIN
-    return maps + reduce_calls * call(reduce_prompt.system, reduce_user)
+    return maps + reduce_calls * call(REDUCE_MODEL, reduce_prompt.system, reduce_user)

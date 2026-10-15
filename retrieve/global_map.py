@@ -20,15 +20,22 @@ from dataclasses import dataclass
 from string import Template
 from typing import Any
 
-from retrieve.answer_model import ANSWER_MODEL, Effort, TokenUsage, parse_reply
+from retrieve.answer_model import (
+    ANSWER_EFFORT,
+    ANSWER_MAX_TOKENS,
+    ANSWER_MODEL,
+    Effort,
+    TokenUsage,
+    parse_reply,
+)
 from retrieve.answer_prompt import SourceChunk, render_excerpts
 from retrieve.arm import MapDropReason, MapOutcome, MapPoint
 from retrieve.citations import cited_ids, strip_citations
 from retrieve.global_prompts import SCORE_RANGE, GlobalPrompt, map_output_schema
 
 MAP_MODEL = ANSWER_MODEL
-MAP_EFFORT: Effort = "high"
-MAP_MAX_TOKENS = 16_000  # thinking plus the reply, as for the answer model
+MAP_EFFORT: Effort = ANSWER_EFFORT
+MAP_MAX_TOKENS = ANSWER_MAX_TOKENS  # thinking plus the reply
 _STOPPED: Mapping[str, MapOutcome] = {"max_tokens": "max_tokens", "refusal": "refused"}
 
 
