@@ -24,7 +24,7 @@ ingest/      raw HTML → parsed text with section labels (Items 1A, 7, 8) ─�
                      │
                      ├─► extraction → entity resolution → guarded write ──► Neo4j
                      │                                                      (EVIDENCED_BY on every node/edge)
-                     └─► Leiden communities (Python) → community summaries ──► pgvector
+                     └─► Leiden communities (Python) → community reports ──► Neo4j
                      
 retrieve/    LangGraph router ─► vector | graph_local | graph_traversal | graph_global
                      │
@@ -49,7 +49,7 @@ Enumerate filings from the EDGAR submissions API, download raw HTML once into `d
 - **`resolve(chunk_id)`** returns the exact source text: `substr` of the filing's full parsed text, stored once in the `filings` table with its SHA-256. Chunk text is not stored separately. Citations, evals and the UI all depend on it; `python -m ingest.load --verify` checks it on the whole corpus.
 - **Embeddings** live in pgvector alongside the chunk table.
 - **Graph** (v2) lives in Neo4j. Ontology, extraction, entity resolution and the provenance rule are specified in `docs/GRAPH-LAYER.md`.
-- **Communities** (v2) are computed with Leiden in Python, independent of the database. Their summaries are embedded for global search.
+- **Communities** (v2) are computed with Leiden (`graspologic-native`) in Python, at two levels, over extracted nodes other than metric values. Each gets a report, stored on its `:Community` node in Neo4j with the membership; report embeddings sit in the disk cache and are searched exactly (ADR-0004 amendment of 2026-10-15).
 
 ### Retrieve
 Four arms, each runnable on its own from the CLI (`--arm <name>`) so the benchmark can call them uniformly:
@@ -59,7 +59,7 @@ Four arms, each runnable on its own from the CLI (`--arm <name>`) so the benchma
 | `vector` | single-fact lookup | top-k over chunk embeddings, filtered by company and period |
 | `graph_local` | one entity plus context | anchor entities → 1–2 hop neighbourhood → evidencing chunks |
 | `graph_traversal` | multi-hop joins | hardened text-to-Cypher, falling back to `graph_local` |
-| `graph_global` | corpus-wide themes | map-reduce over community summaries |
+| `graph_global` | corpus-wide themes | map-reduce over community reports, with map points that cite chunks (ADR-0008) |
 
 The **router** is a LangGraph node that classifies each question as `lookup`, `local`, `multi_hop` or `global` and dispatches it to the matching arm. It declines investment-advice questions. Every routing decision is logged as a span, and router accuracy is measured against the eval set's gold classes.
 
