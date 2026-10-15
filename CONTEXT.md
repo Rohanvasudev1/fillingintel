@@ -174,6 +174,32 @@ _Avoid_: annotator, judge
 A pair of same-label nodes judged same or different by the labeller, an agent on a different model from the resolver. The 100 labelled pairs score the resolver and are never used to tune it; every score on them carries the label "agent-labelled".
 _Avoid_: gold pair, ground truth
 
+## Communities
+
+**Community graph**:
+The graph communities are found on: extracted nodes other than metric values, joined by extracted edges and co-occurrence edges. Companies, filings, periods and chunks are left out.
+_Avoid_: entity graph, knowledge graph (the whole Neo4j graph)
+
+**Co-occurrence edge**:
+A link in the community graph between two extracted nodes evidenced by the same chunk. It exists only for finding communities and is never stored as an edge in the graph.
+_Avoid_: implicit edge, relationship
+
+**Community**:
+A group of extracted nodes that Leiden puts together at one level. A community at the higher level contains whole communities from the lower level.
+_Avoid_: cluster, topic
+
+**Derived node**:
+A graph node computed from other nodes rather than from EDGAR metadata or a chunk. Communities are the only derived nodes; they carry no evidence of their own, and their reports cite their members' evidence chunks.
+_Avoid_: computed node, virtual node
+
+**Community report**:
+A written summary of one community, made by a model from its members and their evidence. It ranks communities for a question; it is never itself cited.
+_Avoid_: community summary, cluster description
+
+**Map point**:
+A statement written from one community's report and evidence chunks during global search. It cites chunks and carries a relevance score. The reduce step builds the final answer from the map points.
+_Avoid_: partial answer, intermediate answer
+
 ## Retrieval
 
 **Arm**:
