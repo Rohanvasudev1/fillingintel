@@ -2355,6 +2355,29 @@ Both are harness changes the user approved on 2026-10-15 (Step 12 grilling). Bra
 
 ---
 
+## 2026-10-15 — Step 12 ticket 03: community reports
+
+**Files changed:** `graph/report_input.py`, `graph/report_check.py`, `graph/report_prompt.py`, `graph/report_request.py`, `graph/report_writer.py`, `graph/report_estimate.py`, `graph/report_file.py`, `graph/reports.py`, `graph/community_file.py`, `graph/step12_spend.py` and `graph/repo_build.py` (new); `graph/communities.py` (`read_built()` moved out); `ingest/atomic_json.py` (`write_text_atomic`); `prompts/report/v1.md`; `scripts/capture_report_responses.py`; four recorded replies in `tests/fixtures/anthropic/report_*.json`; `tests/report_helpers.py` and four test files; `benchmarks/communities/reports-run1.jsonl`; CLAUDE.md (Commands, ticket 03 choices, notes for ticket 04).
+
+- **What a report reads.** A lower community's report reads its members (label and name), the extracted edges between members with up to 2 evidence spans each, and passages. The passages are the members' evidence chunks, ranked by how many members and member edges cite them, added until the input reaches 6,000 cl100k tokens. A top community's report reads its lower reports' kept text.
+- **Citation check.** The summary and each finding are split by the answer filter's sentence rules. A sentence is kept only when it cites a chunk and every chunk it cites is in the community's evidence. For a lower report that is the members' evidence chunks; for a top report, the chunks its lower reports kept. Dropped sentences are counted by reason, and `report_chunk_ids` is what the kept sentences cite.
+- **Command.** `python -m graph.reports` checks the communities file against a fresh builder run (`input_sha256`) and prints the estimate. It sends nothing without `--send`, and refuses above `--max-cost` or Step 12's $6 cap. Calls go 4 at a time through the response cache on claude-haiku-5-5 at effort `high`, priced from the 2026-10-10 table.
+- **Run 1** (`54126be`, communities run 1, prompt `report/v1@d296f30d`): 144 reports (115 lower, 29 top), no failures. 1,417 sentences kept and 117 dropped: 115 cited nothing, and 2 cited a chunk outside the community. Cost $0.2686 against an estimate of $0.29, from 978k input tokens and 338k output tokens.
+- **Four empty lower reports.** All four are communities whose passages come from one filing: `lower-6e077160dd0d`, `lower-d22da339bbd8`, `lower-ea87fcd03519` and `lower-061ee08417a5`. Haiku cited short ordinals such as `[0056]` instead of full chunk IDs, so every sentence was dropped. The check did its job, but those four communities have no text to rank by. No other reply used short ordinals.
+- **Spend.** Step 12 so far: $0.2686 (run 1) plus $0.0078 for the four recorded test replies, which the spend total does not count. That is $0.28 of $6.
+- **Evidence.** `uv run ruff check .` clean. 42 report tests: the input rules, the citation check, the recorded replies (request shape and pinned hash, uncited and out-of-community sentences dropped and counted, top reports limited to kept lower citations, a failed lower failing its top, cut-off and refused replies), and the command (estimate-only default, the run file, cache replay at $0, both cap refusals, an incomplete file on a failed call, a stale or missing communities file, `ANTHROPIC_BASE_URL`, the key, bad arguments). Full `uv run --env-file .env pytest` at `54126be`'s code, alone on `neo4j-test`: 2,512 passed, 1 skipped.
+- **Code review** (`mattpocock-skills:code-review`). Fixed: `graph.reports` imported from the `graph.communities` command, so `read_built()` moved to `graph/repo_build.py`; the reader was renamed `read_batch_and_texts`; records carry their request's model and effort; a no-input record holds an empty report rather than None; report titles are escaped in top prompts; `write_json_atomic` reuses the new text writer; the capture script refuses `ANTHROPIC_BASE_URL`. Not changed: the two-line `_UNUSABLE_STOPS` set repeats `persist/adjudicate.py`'s, as persist repeats resolve's. Spec notes for ticket 04 are in CLAUDE.md: match reports by `community_id` (a top community that is its own lower one shares its child's `member_hash`), and refuse an incomplete reports file.
+
+**Decisions needed:**
+1. The four empty reports. Recommendation: publish `report/v2`, which tells the model to copy full chunk IDs, and write run 2 (all 144 requests change, about $0.27, Step 12 total about $0.55). The other option is to keep run 1, leaving those four communities unselectable.
+2. Top communities that are their own lower community (10 reportable) get a second call that re-summarises one report. Recommendation: keep it as the spec reads; it cost about $0.015 in run 1.
+
+**Next session starts with**
+1. The two decisions above, then open the PR for this branch.
+2. Ticket 04 (ontology version 5, Community nodes in the graph), using the ticket 04 notes in CLAUDE.md.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.
