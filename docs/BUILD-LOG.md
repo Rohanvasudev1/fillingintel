@@ -2368,12 +2368,13 @@ Both are harness changes the user approved on 2026-10-15 (Step 12 grilling). Bra
 - **Evidence.** `uv run ruff check .` clean. 42 report tests: the input rules, the citation check, the recorded replies (request shape and pinned hash, uncited and out-of-community sentences dropped and counted, top reports limited to kept lower citations, a failed lower failing its top, cut-off and refused replies), and the command (estimate-only default, the run file, cache replay at $0, both cap refusals, an incomplete file on a failed call, a stale or missing communities file, `ANTHROPIC_BASE_URL`, the key, bad arguments). Full `uv run --env-file .env pytest` at `54126be`'s code, alone on `neo4j-test`: 2,512 passed, 1 skipped.
 - **Code review** (`mattpocock-skills:code-review`). Fixed: `graph.reports` imported from the `graph.communities` command, so `read_built()` moved to `graph/repo_build.py`; the reader was renamed `read_batch_and_texts`; records carry their request's model and effort; a no-input record holds an empty report rather than None; report titles are escaped in top prompts; `write_json_atomic` reuses the new text writer; the capture script refuses `ANTHROPIC_BASE_URL`. Not changed: the two-line `_UNUSABLE_STOPS` set repeats `persist/adjudicate.py`'s, as persist repeats resolve's. Spec notes for ticket 04 are in CLAUDE.md: match reports by `community_id` (a top community that is its own lower one shares its child's `member_hash`), and refuse an incomplete reports file.
 
-**Decisions needed:**
-1. The four empty reports. Recommendation: publish `report/v2`, which tells the model to copy full chunk IDs, and write run 2 (all 144 requests change, about $0.27, Step 12 total about $0.55). The other option is to keep run 1, leaving those four communities unselectable.
-2. Top communities that are their own lower community (10 reportable) get a second call that re-summarises one report. Recommendation: keep it as the spec reads; it cost about $0.015 in run 1.
+- **Report prompt v2 and run 2** (user decision, 2026-10-15). `report/v2@3062cfff` adds one instruction: copy each chunk ID in full, never shortened to its last digits. The four test replies were recorded again under v2 ($0.0072). Run 2 (`3a7d16b`) wrote 144 reports with no failures and no empty report. The four communities that were empty now keep 11–12 sentences each, none dropped. Kept sentences went from 1,417 to 1,477; dropped went from 117 to 57 (56 cited nothing, 1 cited outside the community). Median kept sentences per report is 10 in both runs, and 41 reports dropped something against 43. Run 2 cost $0.2691 (estimate $0.29). Both run files stay committed, and run 2 is the latest, so ticket 04 loads it. Step 12 spend: $0.5377 in run files plus $0.0150 in test recordings, $0.55 of $6.
+- **Top communities that are their own lower community** (10 reportable) still get a second report written from their one lower report, as the spec reads (user decision, 2026-10-15).
+
+**Decisions needed:** none.
 
 **Next session starts with**
-1. The two decisions above, then open the PR for this branch.
+1. Merge this branch's PR once CI is green.
 2. Ticket 04 (ontology version 5, Community nodes in the graph), using the ticket 04 notes in CLAUDE.md.
 
 ---
