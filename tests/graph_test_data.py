@@ -11,6 +11,11 @@ chunk's text, so a bad quote or a chunker change fails the fixture. Every
 piece of evidence carries a confidence level and the prompt version
 TEST_PROMPT; the Regulation node's name is only implied by its quote. TSMC
 carries an aliases list, as entity resolution will give it.
+
+with_communities() adds ontology version 5's derived records: a lower
+community of TSMC, the Compute & Networking segment and the Data Center market
+platform whose report cites two of their evidence chunks, a one-member lower
+community of Jen-Hsun Huang with no report, and the top community holding both.
 """
 from __future__ import annotations
 
@@ -20,6 +25,7 @@ from datetime import date
 import pytest
 
 from graph.batch import Batch, EdgeRecord, Evidence, NodeRecord, NodeRef
+from graph.community import member_hash
 
 NVDA_CIK = "1045810"
 NVDA_10K = "0001045810-26-000021"
@@ -208,3 +214,58 @@ def graph_test_batch(test_graph_chunks):
     sections = {chunk_id: section for chunk_id, (section, _) in test_graph_chunks.items()}
     texts = {chunk_id: text for chunk_id, (_, text) in test_graph_chunks.items()}
     return valid_test_batch(texts, sections)
+
+
+# ── communities (ontology version 5) ──────────────────────────────────────────
+
+TEST_REPORT_PROMPT = "report/v2@3062cfff"
+SUPPLY_MEMBERS = (TSMC, COMPUTE, DATA_CENTER)
+LONE_MEMBERS = (HUANG,)
+SUPPLY_COMMUNITY = NodeRef.of("Community", community_id="lower-supply")
+LONE_COMMUNITY = NodeRef.of("Community", community_id="lower-lone")
+TOP_COMMUNITY = NodeRef.of("Community", community_id="top-all")
+
+
+def member_keys(members: tuple[NodeRef, ...]) -> list[str]:
+    return [str(m.key_dict()["key"]) for m in members]
+
+
+def _community(ref: NodeRef, level: str, members: tuple[NodeRef, ...],
+               report: tuple[str, str, list[str]] | None) -> NodeRecord:
+    props: dict[str, object] = {
+        "community_id": ref.key_dict()["community_id"], "level": level,
+        "member_hash": member_hash(member_keys(members)), "report_chunk_ids": [],
+    }
+    if report is not None:
+        title, text, chunk_ids = report
+        props |= {"title": title, "report": text, "report_chunk_ids": chunk_ids,
+                  "report_prompt": TEST_REPORT_PROMPT}
+    return NodeRecord("Community", props)
+
+
+def community_records() -> tuple[tuple[NodeRecord, ...], tuple[EdgeRecord, ...]]:
+    """The test communities' nodes and edges."""
+    supply_report = ("NVIDIA's foundry and data center segment",
+                     f"TSMC makes NVIDIA's chips [{SUPPLY_CHUNK}]. Compute & Networking "
+                     f"holds Data Center [{SEGMENTS_CHUNK}].",
+                     [SUPPLY_CHUNK, SEGMENTS_CHUNK])
+    top_report = ("NVIDIA's supply chain", f"TSMC makes NVIDIA's chips [{SUPPLY_CHUNK}].",
+                  [SUPPLY_CHUNK])
+    nodes = (
+        _community(SUPPLY_COMMUNITY, "lower", SUPPLY_MEMBERS, supply_report),
+        _community(LONE_COMMUNITY, "lower", LONE_MEMBERS, None),
+        _community(TOP_COMMUNITY, "top", (*SUPPLY_MEMBERS, *LONE_MEMBERS), top_report),
+    )
+    edges = (
+        *(EdgeRecord("IN_COMMUNITY", m, SUPPLY_COMMUNITY) for m in SUPPLY_MEMBERS),
+        *(EdgeRecord("IN_COMMUNITY", m, LONE_COMMUNITY) for m in LONE_MEMBERS),
+        EdgeRecord("PARENT_OF", TOP_COMMUNITY, SUPPLY_COMMUNITY),
+        EdgeRecord("PARENT_OF", TOP_COMMUNITY, LONE_COMMUNITY),
+    )
+    return nodes, edges
+
+
+def with_communities(batch: Batch) -> Batch:
+    """*batch* plus the test communities."""
+    nodes, edges = community_records()
+    return Batch(nodes=(*batch.nodes, *nodes), edges=(*batch.edges, *edges))

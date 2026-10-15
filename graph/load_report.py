@@ -5,8 +5,9 @@ map, the link file and every extract file, PERSISTS_AS links by method, the
 ontology version (and the older one :GraphMeta was upgraded from, if any), the
 extract prompts and the ontology versions the evidence was extracted under,
 node counts per label and edge counts per type (EVIDENCED_BY counted from node
-evidence), what the build left out or found, risk factor body counts, the chunk
-gaps, write time and the validation result.
+evidence), what the build left out or found, risk factor body counts, the
+communities and reports files with community counts (Step 12), the chunk gaps,
+write time and the validation result.
 """
 from __future__ import annotations
 
@@ -66,7 +67,7 @@ def load_report(commit: str, inputs: LoadInputs, result: LoadResult) -> dict[str
             "sha256": inputs.links_sha256,
             "by_method": dict(sorted(Counter(link.method for link in inputs.links).items())),
         },
-        "counts": graph_counts(result.built.batch),
+        "counts": graph_counts(result.batch),
         "conflicts": [c.to_dict() for c in build.conflicts],
         "skipped_metric_values": list(build.skipped_metric_values),
         "dropped_edges": [{"reason": d.reason.value, "edge": d.edge, "file": d.file}
@@ -82,10 +83,16 @@ def load_report(commit: str, inputs: LoadInputs, result: LoadResult) -> dict[str
             "unlocated_keys": list(build.bodies.unlocated),
             "not_heading_keys": list(build.bodies.not_headings),
         },
+        "communities": _communities(result),
         "chunk_gaps": [c for _, chunks in sorted(inputs.gaps.items()) for c in chunks],
         "write_seconds": round(result.write_seconds, 1),
         "validation": _validation(result),
     }
+
+
+def _communities(result: LoadResult) -> dict[str, object] | None:
+    records = result.communities
+    return None if records is None else {**records.sources, "counts": dict(records.counts)}
 
 
 def _validation(result: LoadResult) -> dict[str, object]:

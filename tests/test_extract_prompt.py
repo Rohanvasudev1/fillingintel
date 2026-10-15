@@ -37,17 +37,18 @@ def test_v2_is_the_current_prompt_and_v1_is_kept():
     assert load_prompt("v1").prompt_version != current.prompt_version
 
 
-def test_ontology_4_moved_the_computed_hash_but_not_the_prompt_file():
+def test_later_ontologies_moved_the_computed_hash_but_not_the_prompt_file():
     # Step 11: ontology 4 (Company as a CONCERNS end) changed the schema text the
     # prompt embeds, so its computed hash moved from 34a82e2b, the hash under
-    # ontology 3 that every piece of loaded corpus evidence carries. The file is
-    # unchanged and nothing was re-extracted; the graph loader matches the
+    # ontology 3 that every piece of loaded corpus evidence carries (9fd48233
+    # under ontology 4). Step 12's ontology 5 (Community) moved it again. The file
+    # is unchanged and nothing was re-extracted; the graph loader matches the
     # `extract/v2@` prefix.
     current = load_prompt()
     assert current.file_sha256 == PUBLISHED["v2"]
-    assert current.prompt_version == "extract/v2@9fd48233"
-    assert current.sha256 == "9fd4823349555bec1a7677c6090a09868e339d8f391f710f671362a875c94e5f"
-    assert ONTOLOGY_VERSION == 4
+    assert current.prompt_version == "extract/v2@1fdc5772"
+    assert current.sha256 == "1fdc5772f7ea84c78474d6e89b2623441945af8239dafb3f759c1ccaf4b09d3b"
+    assert ONTOLOGY_VERSION == 5
 
 
 def test_v2_explains_reportable_segments_and_market_platforms_with_nvidias_split():

@@ -25,6 +25,7 @@ class Check(StrEnum):
     NODE_EVIDENCE = "node_evidence"
     EDGE_EVIDENCE = "edge_evidence"
     STRUCTURE = "structure"
+    COMMUNITIES = "communities"
     POSTGRES = "postgres_chunks"
 
 
@@ -38,6 +39,8 @@ DESCRIPTIONS = {
     Check.NODE_EVIDENCE: "every extracted node has an EVIDENCED_BY edge to a Chunk",
     Check.EDGE_EVIDENCE: "every extracted edge cites existing chunks, one span each",
     Check.STRUCTURE: "one FILED and one COVERS_PERIOD per Filing, one PART_OF per Chunk",
+    Check.COMMUNITIES: "members join one lower community; one parent per lower, a child per "
+                       "top; member hashes and report citations match the members",
     Check.POSTGRES: "every Chunk node's chunk_id is in Postgres under the same filing",
 }
 

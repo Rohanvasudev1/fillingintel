@@ -3,19 +3,24 @@
 Offline. Postgres gives the structural rows; `data/extract/` the extract files
 (the latest run per filing); `benchmarks/resolution/alias_map.json` the merges;
 `benchmarks/extraction/` the chunks extraction failed on (gaps);
-`benchmarks/persistence/links.jsonl` the PERSISTS_AS links. The builder
-combines everything in Python, then one transaction replaces the graph through
-the guarded write path, so a failed or rejected write leaves the previous
-graph. validate_graph() then checks the result against Neo4j and Postgres,
-and a report goes to `benchmarks/graph/load-run{N}.json`.
+`benchmarks/persistence/links.jsonl` the PERSISTS_AS links;
+`benchmarks/communities/` the latest communities and reports files. The builder
+combines everything in Python and graph.community_load adds the communities,
+then one transaction replaces the graph through the guarded write path, so a
+failed or rejected write leaves the previous graph. validate_graph() then
+checks the result against Neo4j and Postgres, and a report goes to
+`benchmarks/graph/load-run{N}.json`.
 
 Usage: python -m graph.load [--rebuild]
 Reads NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD and DATABASE_URL. Constraints and
 :GraphMeta must exist (apply_constraints()). With --rebuild, a :GraphMeta
 recording an older ontology is moved to the code's in the rebuild transaction,
 and the report says so; a newer or unparseable one is refused (exit 3).
-Exit codes as graph.validate: 0 loaded and valid; 2 bad arguments, or a graph holding data without
---rebuild (nothing changed); 3 could not run (nothing changed), or the graph was
+Exit codes as graph.validate: 0 loaded and valid; 2 bad arguments, a graph holding
+data without --rebuild, or communities and reports that do not fit the graph being
+built (graph.community_load: a stale file, an incomplete reports file or a missing
+report; nothing changed); 3 could not run, including a missing or malformed
+communities or reports file (nothing changed), or the graph was
 replaced but validation could not run (the report says so); 4 loaded, with
 violations. The report is written whenever the graph was replaced.
 """
@@ -35,6 +40,7 @@ import psycopg
 from neo4j import Driver
 from neo4j.exceptions import DriverError, Neo4jError
 
+from graph.batch import Batch
 from graph.build_input import (
     ExtractFile,
     InputError,
@@ -42,9 +48,18 @@ from graph.build_input import (
     current_extract_files,
 )
 from graph.builder import BuildError, Built, build_graph
+from graph.community_file import CommunitiesFileError
+from graph.community_load import (
+    CommunityInputs,
+    CommunityMismatch,
+    CommunityRecords,
+    community_records,
+    read_community_inputs,
+)
 from graph.connection import GraphSettingsMissing, driver_from_env
 from graph.constraints import ConstraintMismatch, GraphMetaMismatch, prepare_upgrade
 from graph.load_report import load_report, next_report_path
+from graph.report_file import ReportsFileError
 from graph.structural import read_structural
 from graph.validate import (
     EXIT_OK,
@@ -66,6 +81,7 @@ __all__ = ["LoadInputs", "LoadResult", "load_graph", "main", "read_inputs", "rea
 
 EXTRACTION_REPORTS = REPO_ROOT / "benchmarks" / "extraction"
 OUTPUT_DIR = REPO_ROOT / "benchmarks" / "graph"
+COMMUNITIES_DIR = REPO_ROOT / "benchmarks" / "communities"
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,6 +100,8 @@ class LoadResult:
     """A written graph and its validation, or why validation could not run after the write."""
 
     built: Built
+    batch: Batch  # what was written: the builder's batch plus any communities
+    communities: CommunityRecords | None
     write_seconds: float
     validation: ValidationReport | None
     validation_error: str | None = None
@@ -139,30 +157,35 @@ def _run_report(report: Path) -> tuple[tuple[str, ...], int]:
 
 def load_graph(
     driver: Driver, rows: StructuralRows, inputs: LoadInputs, *, rebuild: bool,
-    postgres: psycopg.Connection | None = None,
+    communities: CommunityInputs | None, postgres: psycopg.Connection | None = None,
 ) -> LoadResult:
-    """Build the graph, write it in one transaction and validate it.
+    """Build the graph with its *communities* (None: none), write it in one transaction
+    and validate it.
 
-    Raises GraphNotEmpty (without *rebuild*), BuildError, BatchRejected,
-    GraphMetaMismatch or ConstraintMismatch, each before any node changes. With
-    *rebuild*, an older :GraphMeta is upgraded in the rebuild transaction; the
-    constraints are re-applied just before it (IF NOT EXISTS, so only a missing
-    one is created, and it stays if the rebuild then fails).
+    Raises GraphNotEmpty (without *rebuild*), BuildError, CommunityMismatch,
+    BatchRejected, GraphMetaMismatch or ConstraintMismatch, each before any node
+    changes. With *rebuild*, an older :GraphMeta is upgraded in the rebuild
+    transaction; the constraints are re-applied just before it (IF NOT EXISTS, so
+    only a missing one is created, and it stays if the rebuild then fails).
     Once the write has committed nothing is raised: violations, or an error
     that stopped validation, come back in the result.
     """
     built = build_graph(rows, inputs.files, inputs.alias_map, inputs.links)
+    records = community_records(built.batch, communities) if communities else None
+    batch = built.batch if records is None else Batch(
+        nodes=(*built.batch.nodes, *records.nodes), edges=(*built.batch.edges, *records.edges))
     upgraded_from = prepare_upgrade(driver) if rebuild else None
     started = time.monotonic()
-    rebuild_graph(driver, built.batch, replace=rebuild, upgrade_from=upgraded_from)
-    seconds = time.monotonic() - started
+    rebuild_graph(driver, batch, replace=rebuild, upgrade_from=upgraded_from)
+    written = {"built": built, "batch": batch, "communities": records,
+               "write_seconds": time.monotonic() - started, "upgraded_from": upgraded_from}
     try:
-        return LoadResult(built, seconds, validate_graph(driver, postgres),
-                          upgraded_from=upgraded_from)
+        return LoadResult(**written, validation=validate_graph(driver, postgres))
     except GraphValidationError as exc:
-        return LoadResult(built, seconds, exc.report, upgraded_from=upgraded_from)
+        return LoadResult(**written, validation=exc.report)
     except (Neo4jError, DriverError, psycopg.Error) as exc:
-        return LoadResult(built, seconds, None, f"{type(exc).__name__}: {exc}", upgraded_from)
+        return LoadResult(**written, validation=None,
+                          validation_error=f"{type(exc).__name__}: {exc}")
 
 
 # ── command ────────────────────────────────────────────────────────────────────
@@ -177,7 +200,8 @@ def _run(rebuild: bool) -> tuple[LoadInputs, LoadResult]:
         raise _CouldNotRun("DATABASE_URL is not set")
     try:
         inputs = read_repo_inputs()
-    except InputError as exc:
+        communities = read_community_inputs(COMMUNITIES_DIR)
+    except (InputError, CommunitiesFileError, ReportsFileError) as exc:
         raise _CouldNotRun(str(exc)) from exc
     try:
         driver = driver_from_env()
@@ -187,8 +211,8 @@ def _run(rebuild: bool) -> tuple[LoadInputs, LoadResult]:
         with driver, psycopg.connect(url) as conn:
             conn.read_only = True
             driver.verify_connectivity()
-            return inputs, load_graph(driver, read_structural(conn), inputs,
-                                      rebuild=rebuild, postgres=conn)
+            return inputs, load_graph(driver, read_structural(conn), inputs, rebuild=rebuild,
+                                      communities=communities, postgres=conn)
     except (BuildError, BatchRejected, GraphMetaMismatch, ConstraintMismatch, Neo4jError,
             DriverError, psycopg.Error) as exc:
         raise _CouldNotRun(f"{type(exc).__name__}: {exc}") from exc
@@ -206,6 +230,9 @@ def main(argv: Sequence[str] | None = None, *, out_dir: Path = OUTPUT_DIR) -> in
         inputs, result = _run(args.rebuild)
     except GraphNotEmpty as exc:
         print(f"{exc}; nothing was written. Pass --rebuild to replace it.", file=sys.stderr)
+        return EXIT_USAGE
+    except CommunityMismatch as exc:
+        print(f"graph load refused; nothing was written: {exc}", file=sys.stderr)
         return EXIT_USAGE
     except _CouldNotRun as exc:
         print(f"graph load could not run; nothing was written: {exc}", file=sys.stderr)
