@@ -21,7 +21,7 @@ from retrieve.answer_model import AnswerModelError, ApiResponse
 from retrieve.arm import ArmError
 from retrieve.arm_steps import corpus_filings
 from retrieve.arms import ARMS
-from retrieve.cypher_prompt import load_prompt
+from retrieve.cypher_prompt import PUBLISHED, load_prompt
 from retrieve.graph_traversal import GraphTraversalArm
 from retrieve.query_cache import CachedBatchEmbedder
 from retrieve.tracing import CYPHER_ATTR, SpanRecorder
@@ -125,10 +125,19 @@ def _ids(result) -> list[str]:
     return [r.chunk_id for r in result.retrieved]
 
 
+# The replies were recorded under ontology 4. Ontology 5 (Step 12) added Community to
+# the schema text the prompt embeds, which moved its computed hash; the prompt file and
+# the labels the recorded queries use are unchanged.
+RECORDED_UNDER = "cypher/v1@5669b1ca"
+
+
 def test_the_test_setting_matches_the_recorded_prompt(corpus):
     assert set(corpus_filings(corpus)) == set(FILINGS)
+    current = load_prompt(filings=FILINGS)
+    assert current.file_sha256 == PUBLISHED[current.version]
+    assert RECORDED_UNDER.startswith(f"cypher/{current.version}@")
     for name in QUESTIONS:
-        assert recorded(name)["prompt_version"] == load_prompt(filings=FILINGS).prompt_version
+        assert recorded(name)["prompt_version"] == RECORDED_UNDER
 
 
 @pytest.mark.parametrize("name", sorted(EXPECTED))

@@ -1,8 +1,9 @@
-"""validate_graph() and `python -m graph.validate` (Step 7; ontology version 3 since Step 9).
+"""validate_graph() and `python -m graph.validate` (Step 7; ontology version 5 since Step 12).
 
 The write path checks each batch before it lands; validate_graph() reads the
 whole graph back and checks the same ontology and evidence rules (ADR-0004)
-however the data got there. It collects every violation before failing and
+however the data got there, plus the community rules of ontology version 5
+(graph/validate_communities.py). It collects every violation before failing and
 raises GraphValidationError with a count per check and up to EXAMPLE_LIMIT
 examples each.
 
@@ -67,6 +68,7 @@ from graph.ontology import (
     Prop,
     PropType,
 )
+from graph.validate_communities import community_findings
 from graph.validation_report import (
     EXAMPLE_LIMIT,
     Check,
@@ -157,6 +159,7 @@ def _graph_findings(tx: ManagedTransaction) -> tuple[list[Finding], ChunkFilings
         *_edge_findings(tx, frozenset(chunks)),
         *_node_evidence_findings(tx),
         *_structure_findings(tx),
+        *community_findings(tx),
     ]
     return findings, chunks
 

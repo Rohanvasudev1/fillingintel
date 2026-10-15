@@ -166,9 +166,11 @@ def _label(raw: Mapping[str, object]) -> str:
     label = fields.lookup(given, LABELS_BY_NAME)
     if label is None:
         raise Rejected(Reason.UNKNOWN_LABEL, f"{given!r} is not an ontology label")
-    if LABELS_BY_NAME[label].kind is Kind.STRUCTURAL:
+    if LABELS_BY_NAME[label].kind is not Kind.EXTRACTED:
+        # Derived labels (ontology 5) count under the same reason, so the committed
+        # run reports' rejection counts keep their key.
         raise Rejected(Reason.STRUCTURAL_LABEL,
-                       f"{label} nodes come from EDGAR metadata, not from the model")
+                       f"{label} nodes are {LABELS_BY_NAME[label].kind}, not read by the model")
     return label
 
 
@@ -313,9 +315,9 @@ def _edge_type(raw: Mapping[str, object]) -> EdgeDef:
         raise Rejected(Reason.UNKNOWN_EDGE_TYPE,
                        f"{name} links filings and is built in Step 10, not read from one chunk")
     definition = EDGE_TYPES_BY_NAME[name]
-    if definition.kind is Kind.STRUCTURAL:
+    if definition.kind is not Kind.EXTRACTED:
         raise Rejected(Reason.STRUCTURAL_LABEL,
-                       f"{name} edges come from EDGAR metadata, not from the model")
+                       f"{name} edges are {definition.kind}, not read by the model")
     return definition
 
 

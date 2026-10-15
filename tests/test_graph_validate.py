@@ -15,6 +15,7 @@ from contextlib import nullcontext
 import psycopg
 import pytest
 
+from graph.community import member_hash
 from graph.connection import DATABASE
 from graph.constraints import apply_constraints
 from graph.ontology import ONTOLOGY_VERSION
@@ -35,10 +36,16 @@ from ingest.store import load_filing
 from tests.graph_test_data import (
     AMD_10K,
     EXPORT_CHUNK,
+    HUANG,
     NVDA_10K,
     NVDA_CIK,
     SEGMENTS_CHUNK,
+    SUPPLY_CHUNK,
+    SUPPLY_MEMBERS,
     TEST_PROMPT,
+    TOP_CUSTOMER_SHARE,
+    member_keys,
+    with_communities,
 )
 from tests.neo4j_fixtures import MARKER_LABEL, TEST_ENV_PREFIX
 
@@ -287,6 +294,91 @@ def test_a_chunk_under_another_filing_fails_the_postgres_check(valid_graph, post
 
     assert _failures(valid_graph) == {}
     assert _failures(valid_graph, postgres) == {Check.POSTGRES: 1}
+
+
+# ── communities (ontology version 5) ───────────────────────────────────────────
+
+@pytest.fixture
+def community_graph(empty_graph, graph_test_batch):
+    """The valid test graph with its test communities."""
+    write_batch(empty_graph, with_communities(graph_test_batch))
+    return empty_graph
+
+
+def test_the_test_communities_pass(community_graph):
+    report = validate_graph(community_graph)
+
+    assert report.ok
+    assert Check.COMMUNITIES in [r.check for r in report.results]
+
+
+HUANG_KEY = HUANG.key_dict()["key"]
+METRIC_KEY = TOP_CUSTOMER_SHARE.key_dict()["key"]
+_NEW_TOP = ("CREATE (t:Community {community_id: 'top-new', level: 'top', member_hash: $hash, "
+            "report_chunk_ids: [], ontology_version: $version}) ")
+
+COMMUNITY_BROKEN = {
+    "a metric value as a member": (
+        "MATCH (m:MetricValue), (c:Community {community_id: 'lower-lone'}), "
+        "(t:Community {community_id: 'top-all'}) "
+        "CREATE (m)-[:IN_COMMUNITY {ontology_version: $version}]->(c) "
+        "SET c.member_hash = $lone_with_metric, t.member_hash = $all_with_metric",
+        Check.ENDPOINTS,
+    ),
+    "a member of a top community": (
+        "MATCH (p:Regulation), (c:Community {community_id: 'top-all'}) "
+        "CREATE (p)-[:IN_COMMUNITY {ontology_version: $version}]->(c)", Check.COMMUNITIES,
+    ),
+    "a member of two lower communities": (
+        "MATCH (p:Person), (c:Community {community_id: 'lower-supply'}) "
+        "CREATE (p)-[:IN_COMMUNITY {ontology_version: $version}]->(c) "
+        "WITH c SET c.member_hash = $grown_hash", Check.COMMUNITIES,
+    ),
+    "a lower community with two parents": (
+        f"MATCH (c:Community {{community_id: 'lower-supply'}}) {_NEW_TOP}"
+        "CREATE (t)-[:PARENT_OF {ontology_version: $version}]->(c)", Check.COMMUNITIES,
+    ),
+    "a parent that is not a top community": (
+        "MATCH (a:Community {community_id: 'lower-lone'}), "
+        "(b:Community {community_id: 'top-all'}) "
+        "CREATE (a)-[:PARENT_OF {ontology_version: $version}]->(b)", Check.COMMUNITIES,
+    ),
+    "a top community with no child": (
+        _NEW_TOP.replace("$hash", "$empty_hash"), Check.COMMUNITIES,
+    ),
+    "a lower report citing a chunk outside its members' evidence": (
+        "MATCH (c:Community {community_id: 'lower-lone'}) "
+        "SET c.report_chunk_ids = [$supply]", Check.COMMUNITIES,
+    ),
+    "a top report citing a chunk outside its children's members' evidence": (
+        "MATCH (c:Community {community_id: 'top-all'}) "
+        "SET c.report_chunk_ids = [$supply, $export]", Check.COMMUNITIES,
+    ),
+    "a member hash that does not match the members": (
+        "MATCH (c:Community {community_id: 'lower-lone'}) SET c.member_hash = $hash",
+        Check.COMMUNITIES,
+    ),
+}
+
+
+@pytest.mark.parametrize("query, check", COMMUNITY_BROKEN.values(), ids=COMMUNITY_BROKEN.keys())
+def test_each_broken_community_case_fails_exactly_its_check(community_graph, query, check):
+    supply = member_keys(SUPPLY_MEMBERS)
+    _run(community_graph, query, version=ONTOLOGY_VERSION, supply=SUPPLY_CHUNK,
+         export=EXPORT_CHUNK, hash=member_hash(supply), empty_hash=member_hash([]),
+         grown_hash=member_hash([*supply, HUANG_KEY]),
+         lone_with_metric=member_hash([HUANG_KEY, METRIC_KEY]),
+         all_with_metric=member_hash([*supply, HUANG_KEY, METRIC_KEY]))
+
+    assert _failures(community_graph) == {check: 1}
+
+
+def test_a_top_report_may_cite_any_childs_members_evidence(community_graph):
+    _run(community_graph, "MATCH (c:Community {community_id: 'top-all'}) "
+                          "SET c.report_chunk_ids = [$supply, $segments]",
+         supply=SUPPLY_CHUNK, segments=SEGMENTS_CHUNK)
+
+    assert _failures(community_graph) == {}
 
 
 # ── reporting ──────────────────────────────────────────────────────────────────

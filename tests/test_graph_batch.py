@@ -22,9 +22,12 @@ from tests.graph_test_data import (
     QUOTES,
     SEGMENTS_CHUNK,
     SUPPLY_CHUNK,
+    SUPPLY_COMMUNITY,
     TEST_PROMPT,
+    TOP_CUSTOMER_SHARE,
     TSMC,
     edge_evidence,
+    with_communities,
 )
 
 UNKNOWN_CHUNK_ID = f"{NVDA_10K}:9999"
@@ -537,3 +540,35 @@ def test_every_violation_in_a_batch_is_reported(graph_test_batch):
     assert "Filing" in messages and "filing_date" in messages
     assert UNKNOWN_CHUNK_ID in messages
     assert str(FILING) in messages
+
+
+# ── communities (ontology version 5) ─────────────────────────────────────────
+
+def test_communities_and_their_edges_have_no_violations(graph_test_batch):
+    assert check_batch(with_communities(graph_test_batch)) == ()
+
+
+def test_a_community_with_evidence_is_rejected(graph_test_batch):
+    batch = _replace_node(
+        with_communities(graph_test_batch), "Community",
+        lambda n: replace(n, evidence=(Evidence(SUPPLY_CHUNK, "TSMC", "stated", TEST_PROMPT),)),
+    )
+    assert _rules(batch) == [Rule.UNEXPECTED_EVIDENCE]
+
+
+def test_a_metric_value_cannot_be_a_community_member(graph_test_batch):
+    batch = _with_edge(with_communities(graph_test_batch),
+                       EdgeRecord("IN_COMMUNITY", TOP_CUSTOMER_SHARE, SUPPLY_COMMUNITY))
+    assert _rules(batch) == [Rule.DISALLOWED_ENDPOINT]
+
+
+def test_a_community_level_outside_top_and_lower_is_rejected(graph_test_batch):
+    batch = _replace_node(with_communities(graph_test_batch), "Community",
+                          lambda n: _set_props(n, level="middle"))
+    assert _rules(batch) == [Rule.DISALLOWED_VALUE]
+
+
+def test_derived_edges_take_no_evidence_lists(graph_test_batch):
+    batch = _replace_edge(with_communities(graph_test_batch), "PARENT_OF",
+                          lambda e: _set_props(e, **edge_evidence(SUPPLY_CHUNK)))
+    assert set(_rules(batch)) == {Rule.UNKNOWN_PROPERTY}

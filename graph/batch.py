@@ -1,4 +1,4 @@
-"""Batches of graph writes and the pure check they must pass (Step 7; version 3 since Step 9).
+"""Batches of graph writes and the pure check they must pass (Step 7; version 5 since Step 12).
 
 A batch holds nodes and edges as plain typed records. check_batch() returns
 every way the batch breaks the ontology or the evidence rules (ADR-0004),
@@ -6,7 +6,8 @@ with no database call: the caller says which chunks and endpoint nodes are
 already in the graph. Each piece of evidence carries a span, a confidence
 and the extract prompt version, on the node's Evidence or at one index of an
 extracted edge's four evidence lists. A Segment or MarketPlatform key must
-hold its filer's CIK (`{label}:{cik}:{name}`, ADR-0005).
+hold its filer's CIK (`{label}:{cik}:{name}`, ADR-0005). Structural and
+derived (Community) nodes and edges carry no evidence.
 """
 from __future__ import annotations
 
@@ -69,6 +70,11 @@ class Rule(StrEnum):
     DUPLICATE_ITEM = "duplicate_item"
 
 
+# Why a node of a non-extracted kind carries no evidence of its own.
+_NO_OWN_EVIDENCE = {
+    Kind.STRUCTURAL: "{label} is structural; its evidence is the filing record",
+    Kind.DERIVED: "{label} is derived; its evidence is its members' evidence",
+}
 # `{label}:{cik}:{name}`: a CIK is digits; the name part is whatever follows.
 _FILER_SCOPED_KEY = {
     label: re.compile(rf"{re.escape(label + KEY_SEPARATOR)}[0-9]+{re.escape(KEY_SEPARATOR)}\S.*",
@@ -329,10 +335,10 @@ def _node_violations(
     yield from _property_violations(item, definition.properties, node.properties)
     if (problem := key_problem(node.label, node.properties.get("key"))) is not None:
         yield Violation(item, Rule.BAD_KEY, problem)
-    if definition.kind is Kind.STRUCTURAL:
+    if definition.kind is not Kind.EXTRACTED:
         if node.evidence:
-            yield Violation(item, Rule.UNEXPECTED_EVIDENCE,
-                            f"{node.label} is structural; its evidence is the filing record")
+            yield Violation(item, Rule.UNEXPECTED_EVIDENCE, _NO_OWN_EVIDENCE[definition.kind]
+                            .format(label=node.label))
         return
     if not node.evidence:
         yield Violation(item, Rule.MISSING_EVIDENCE, "an extracted node needs evidence")

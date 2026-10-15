@@ -234,6 +234,17 @@ def test_structural_edge_type_emitted(nvda_chunks):
     _assert_rejected(run, Reason.STRUCTURAL_LABEL)
 
 
+def test_derived_label_emitted(nvda_chunks):
+    # Ontology version 5: communities are computed, never read from a chunk.
+    run = _supply_run(nvda_chunks, tsmc=_tsmc(label="Community"))
+    _assert_rejected(run, Reason.STRUCTURAL_LABEL, Reason.ENDPOINT_NODE_REJECTED)
+
+
+def test_derived_edge_type_emitted(nvda_chunks):
+    run = _supply_run(nvda_chunks, tsmc_supplies=_tsmc_supplies(type="IN_COMMUNITY"))
+    _assert_rejected(run, Reason.STRUCTURAL_LABEL)
+
+
 def test_missing_required_property(nvda_chunks):
     run = _supply_run(nvda_chunks, tsmc=_tsmc(name=None))
     _assert_rejected(run, Reason.MISSING_PROPERTY, Reason.ENDPOINT_NODE_REJECTED)

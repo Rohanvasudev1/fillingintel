@@ -1,4 +1,4 @@
-"""The graph ontology as frozen data (Step 7; v2 Step 8, v3 Step 9, v4 since Step 11).
+"""The graph ontology as frozen data (Step 7; v2 Step 8, v3 Step 9, v4 Step 11, v5 Step 12).
 
 Every node label and edge type the graph may hold is defined here, with its
 kind, keys, properties, allowed endpoints and a one-line description written
@@ -25,6 +25,13 @@ list, the names entity resolution merged into the node.
 Version 4 (Step 11, ADR-0004 amendment of 2026-10-14) allows Company as a
 CONCERNS end, since an agreement's Organization end can merge into a filer.
 Evidence stays as extracted under version 3's `extract/v2@34a82e2b` prompt.
+
+Version 5 (Step 12, ADR-0004 amendment of 2026-10-15) adds the first derived
+label, Community, computed from other nodes rather than read from EDGAR or a
+chunk. IN_COMMUNITY joins an extracted node other than MetricValue to a lower
+Community, and PARENT_OF a top Community to a lower one. Derived nodes and
+edges carry no evidence of their own: a community's report cites its members'
+evidence chunks, which validate_graph() checks.
 """
 from __future__ import annotations
 
@@ -32,14 +39,16 @@ from dataclasses import dataclass
 from enum import StrEnum
 from types import MappingProxyType
 
-ONTOLOGY_VERSION = 4
+ONTOLOGY_VERSION = 5
 
 
 class Kind(StrEnum):
-    """Structural types come from EDGAR metadata; extracted ones from filing text."""
+    """Structural types come from EDGAR metadata, extracted ones from filing text and
+    derived ones from other nodes."""
 
     STRUCTURAL = "structural"
     EXTRACTED = "extracted"
+    DERIVED = "derived"
 
 
 class Confidence(StrEnum):
@@ -138,6 +147,13 @@ def _extracted(name: str, description: str, props: tuple[Prop, ...] = (_NAME, _A
     return LabelDef(name, Kind.EXTRACTED, ("key",), (_KEY, *props, _VERSION), description)
 
 
+METRIC_VALUE = "MetricValue"
+COMMUNITY = "Community"
+# graph.community's TOP and LOWER; tests/test_ontology.py checks they agree.
+COMMUNITY_LEVELS: tuple[str, ...] = ("top", "lower")
+IN_COMMUNITY = "IN_COMMUNITY"
+PARENT_OF = "PARENT_OF"
+
 LABELS: tuple[LabelDef, ...] = (
     _structural(
         "Company", ("cik",),
@@ -198,15 +214,31 @@ LABELS: tuple[LabelDef, ...] = (
     _extracted("Facility", "A physical site such as a fab, plant or data center."),
     _extracted("Person", "A named individual, such as an executive or a director."),
     _extracted(
-        "MetricValue",
+        METRIC_VALUE,
         "One reported figure for one subject and period, as stated in one filing; a "
         "restated figure is a separate node.",
         (Prop("concept", PropType.STRING), Prop("value", PropType.FLOAT),
          Prop("unit", PropType.STRING), Prop("period", PropType.STRING)),
     ),
+    LabelDef(
+        COMMUNITY, Kind.DERIVED, ("community_id",),
+        (Prop("community_id", PropType.STRING),
+         Prop("level", PropType.STRING, values=COMMUNITY_LEVELS),
+         Prop("member_hash", PropType.STRING),
+         Prop("title", PropType.STRING, required=False),
+         Prop("report", PropType.STRING, required=False),
+         Prop("report_chunk_ids", PropType.LIST_STRING),
+         Prop("report_prompt", PropType.STRING, required=False),
+         _VERSION),
+        "A group of extracted nodes Leiden puts together, at the top or the lower level, "
+        "with a report citing its members' evidence chunks; a community under 3 members has "
+        "no report.",
+    ),
 )
 
 _EXTRACTED_LABEL_NAMES = tuple(d.name for d in LABELS if d.kind is Kind.EXTRACTED)
+# The labels a community may hold: the community graph leaves metric values out.
+COMMUNITY_MEMBER_LABELS = tuple(n for n in _EXTRACTED_LABEL_NAMES if n != METRIC_VALUE)
 # Joins the parts of an extracted node's key (built in extract.keys).
 KEY_SEPARATOR = ":"
 # Labels that belong to one filer: their keys hold its CIK, `{label}:{cik}:{name}`.
@@ -229,6 +261,12 @@ def _extracted_edge(
         name, Kind.EXTRACTED, starts, ends, (*props, *EDGE_EVIDENCE, _VERSION),
         description, symmetric,
     )
+
+
+def _derived_edge(
+    name: str, starts: tuple[str, ...], ends: tuple[str, ...], description: str,
+) -> EdgeDef:
+    return EdgeDef(name, Kind.DERIVED, starts, ends, (_VERSION,), description)
 
 
 _ROLE = Prop("role", PropType.STRING)
@@ -313,6 +351,14 @@ EDGE_TYPES: tuple[EdgeDef, ...] = (
         "HOLDS_ROLE_AT", ("Person",), ("Company",),
         "The person holds the role given at the filer (such as CEO or director).",
         (_ROLE,),
+    ),
+    _derived_edge(
+        IN_COMMUNITY, COMMUNITY_MEMBER_LABELS, (COMMUNITY,),
+        "The node is a member of this lower-level community.",
+    ),
+    _derived_edge(
+        PARENT_OF, (COMMUNITY,), (COMMUNITY,),
+        "The top-level community contains this lower-level one.",
     ),
 )
 

@@ -6,16 +6,20 @@ settings, the estimate, totals, the failures and whether the run is complete.
 Then one line per reportable community that got a report (`kind` "report"),
 in the communities file's order, lower before top. `cost_this_run_usd` is
 what this run's uncached calls cost; Step 12's spend sums it over the
-committed files (graph.step12_spend).
+committed files (graph.step12_spend). read_reports_file() reads a file back
+for the graph load, checking each line at this boundary.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from collections.abc import Mapping
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
+from types import MappingProxyType
 
+from graph.community import LOWER, TOP, Level
 from graph.report_input import InputBudget
 from graph.report_prompt import ReportPrompt
 from graph.report_request import (
@@ -126,3 +130,91 @@ def write_reports_file(path: Path, header: Mapping[str, object],
     lines = [header, *(record_json(r) for r in result.records)]
     write_text_atomic(path, "".join(json.dumps(line, ensure_ascii=False) + "\n"
                                     for line in lines))
+
+
+# ── reading a file back (the graph load) ──────────────────────────────────────
+
+class ReportsFileError(ValueError):
+    """The reports file is missing or malformed; the message is safe to print."""
+
+
+@dataclass(frozen=True, slots=True)
+class ReportEntry:
+    """One community's kept report as the graph stores it."""
+
+    community_id: str
+    member_hash: str
+    level: Level
+    title: str
+    report: str
+    report_chunk_ids: tuple[str, ...]
+    prompt_version: str
+
+
+@dataclass(frozen=True, slots=True)
+class ReportsFile:
+    name: str  # such as reports-run2.jsonl
+    sha256: str
+    communities_file: str  # the communities file the reports were written for
+    communities_sha256: str
+    community_graph_input_sha256: str
+    complete: bool
+    entries: Mapping[str, ReportEntry]  # by community_id
+
+
+def latest_reports_file(directory: Path) -> Path:
+    """The highest-numbered reports run file in *directory*."""
+    runs = reports_runs(directory)
+    if not runs:
+        raise ReportsFileError(f"no {RUN_PREFIX}N.jsonl in {directory.name}; run "
+                               "python -m graph.reports first")
+    return runs[-1]
+
+
+def read_reports_file(path: Path) -> ReportsFile:
+    """The header facts and every report line of *path*; ReportsFileError on any bad line."""
+    try:
+        raw = path.read_bytes()
+        lines = [json.loads(line) for line in raw.decode("utf-8").splitlines()]
+        header = lines[0]
+        if header["kind"] != "header":
+            raise ValueError("the first line is not the header")
+        communities = header["communities"]
+        entries: dict[str, ReportEntry] = {}
+        for number, line in enumerate(lines[1:], start=2):
+            entry = _entry(line, number)
+            if entry.community_id in entries:
+                raise ValueError(f"line {number}: {entry.community_id} has two reports")
+            entries[entry.community_id] = entry
+        found = ReportsFile(path.name, hashlib.sha256(raw).hexdigest(),
+                            _text(communities["file"], "communities.file"),
+                            _text(communities["sha256"], "communities.sha256"),
+                            _text(communities["community_graph_input_sha256"],
+                                  "communities.community_graph_input_sha256"),
+                            header["complete"], MappingProxyType(entries))
+        if not isinstance(found.complete, bool):
+            raise ValueError("complete is not a boolean")
+    except (OSError, UnicodeDecodeError, ValueError, KeyError, TypeError, IndexError) as exc:
+        raise ReportsFileError(f"cannot read {path.name}: {type(exc).__name__}: {exc}") \
+            from exc
+    return found
+
+
+def _text(value: object, what: str) -> str:
+    if not isinstance(value, str):
+        raise ValueError(f"{what} is not a string")
+    return value
+
+
+def _entry(line: dict[str, object], number: int) -> ReportEntry:
+    if line["kind"] != "report":
+        raise ValueError(f"line {number} is not a report")
+    level, chunk_ids = line["level"], line["report_chunk_ids"]
+    if level not in (TOP, LOWER):
+        raise ValueError(f"line {number}: level {level!r} is not top or lower")
+    if not isinstance(chunk_ids, list) or not all(isinstance(c, str) for c in chunk_ids):
+        raise ValueError(f"line {number}: report_chunk_ids is not a list of chunk IDs")
+    texts = {name: _text(line[name], f"line {number}: {name}")
+             for name in ("community_id", "member_hash", "title", "report", "prompt_version")}
+    return ReportEntry(texts["community_id"], texts["member_hash"], level, texts["title"],
+                       texts["report"], tuple(chunk_ids), texts["prompt_version"])

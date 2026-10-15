@@ -1,4 +1,5 @@
-"""Tests for the ontology module and its schema text (Step 7; version 2 in Step 8, 3 in Step 9)."""
+"""Tests for the ontology module and its schema text (Step 7; version 2 in Step 8, 3 in Step 9,
+4 in Step 11, 5 in Step 12)."""
 import dataclasses
 import hashlib
 import re
@@ -7,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from graph.ontology import (
+    COMMUNITY_LEVELS,
     CONFIDENCE_LEVELS,
     EDGE_TYPES,
     EDGE_TYPES_BY_NAME,
@@ -28,6 +30,7 @@ PINNED_SCHEMA_SHA256 = {
     2: "f484740282253d5e48e9d350d06ba8a7b6950ded0dbdb3867740e96ff88083c4",
     3: "ab2c4e455dcc0407371c1ba87c0e3f50caa5df174846d1176326b85eabae8bd9",
     4: "3f8d05a33c59e2580259aacabe24ac09cc90168592dc156b1d4ab1de7a4612bd",
+    5: "b7d200a4148695d7f9cf9df57f39f792fbc1ebfcfa9b3f413bf958bce981e648",
 }
 
 STRUCTURAL_LABELS = ["Company", "Filing", "Period", "Chunk"]
@@ -35,12 +38,15 @@ EXTRACTED_LABELS = [
     "Organization", "Segment", "MarketPlatform", "Product", "RiskFactor", "Regulation",
     "LegalProceeding", "Agreement", "Facility", "Person", "MetricValue",
 ]
+DERIVED_LABELS = ["Community"]
+COMMUNITY_MEMBER_LABELS = [name for name in EXTRACTED_LABELS if name != "MetricValue"]
 # Extracted labels one node spans filings for; they carry an optional aliases list (ADR-0005).
 CROSS_FILING_LABELS = [
     "Organization", "Segment", "MarketPlatform", "Product", "Regulation",
     "LegalProceeding", "Agreement", "Facility", "Person",
 ]
 STRUCTURAL_EDGES = {"FILED", "COVERS_PERIOD", "PART_OF", "EVIDENCED_BY"}
+DERIVED_EDGES = {"IN_COMMUNITY", "PARENT_OF"}
 EDGE_EVIDENCE_LISTS = ("chunk_ids", "evidence_spans", "confidences", "extract_prompts")
 
 REQUIRED_NODE_PROPERTIES = {
@@ -51,6 +57,7 @@ REQUIRED_NODE_PROPERTIES = {
     "RiskFactor": {"key", "title"},
     "MetricValue": {"key", "concept", "value", "unit", "period"},
     **{name: {"key", "name"} for name in CROSS_FILING_LABELS},
+    "Community": {"community_id", "level", "member_hash", "report_chunk_ids"},
 }
 
 KEYS = {
@@ -59,6 +66,7 @@ KEYS = {
     "Period": ("cik", "fiscal_period"),
     "Chunk": ("chunk_id",),
     **{name: ("key",) for name in EXTRACTED_LABELS},
+    "Community": ("community_id",),
 }
 
 
@@ -82,7 +90,9 @@ def _claude_md_endpoints():
         assert match, f"can't parse CLAUDE.md edge entry {entry!r}"
         names, pair = match.groups()
         start, end = (side.strip() for side in pair.split("→"))
-        starts = EXTRACTED_LABELS if start == "extracted node" else start.split("|")
+        starts = {"extracted node": EXTRACTED_LABELS,
+                  "non-metric extracted node": COMMUNITY_MEMBER_LABELS}.get(start,
+                                                                         start.split("|"))
         for name in names.split(","):
             endpoints[name.strip()] = (set(starts), set(end.split("|")))
     return endpoints
@@ -90,18 +100,37 @@ def _claude_md_endpoints():
 
 # --- labels ---------------------------------------------------------------
 
-def test_labels_are_the_structural_then_extracted_lists():
-    assert [d.name for d in LABELS] == STRUCTURAL_LABELS + EXTRACTED_LABELS
+def _label_kind(name):
+    if name in STRUCTURAL_LABELS:
+        return Kind.STRUCTURAL
+    return Kind.DERIVED if name in DERIVED_LABELS else Kind.EXTRACTED
+
+
+def test_labels_are_the_structural_then_extracted_then_derived_lists():
+    assert [d.name for d in LABELS] == STRUCTURAL_LABELS + EXTRACTED_LABELS + DERIVED_LABELS
     for d in LABELS:
-        expected = Kind.STRUCTURAL if d.name in STRUCTURAL_LABELS else Kind.EXTRACTED
-        assert d.kind is expected, d.name
+        assert d.kind is _label_kind(d.name), d.name
 
 
-def test_community_waits_for_step_12():
-    assert "Community" not in LABELS_BY_NAME
+def test_community_levels_are_the_community_modules_levels():
+    from graph.community import LOWER, TOP
+
+    assert set(COMMUNITY_LEVELS) == {TOP, LOWER}
 
 
-@pytest.mark.parametrize("name", STRUCTURAL_LABELS + EXTRACTED_LABELS)
+def test_community_is_a_derived_label_with_an_optional_report():
+    # Step 12 (ADR-0004 amendment of 2026-10-15): a community too small for a report loads
+    # with none, so its title, report and report prompt are optional.
+    community = LABELS_BY_NAME["Community"]
+    optional = _props_by_name(community, required=False)
+    assert set(optional) == {"title", "report", "report_prompt"}
+    assert all(p.type is PropType.STRING for p in optional.values())
+    required = _props_by_name(community)
+    assert required["report_chunk_ids"].type is PropType.LIST_STRING
+    assert required["level"].values == ("top", "lower")
+
+
+@pytest.mark.parametrize("name", STRUCTURAL_LABELS + EXTRACTED_LABELS + DERIVED_LABELS)
 def test_label_required_properties(name):
     required = set(_props_by_name(LABELS_BY_NAME[name]))
     assert required == REQUIRED_NODE_PROPERTIES[name] | {"ontology_version"}
@@ -131,7 +160,7 @@ def test_segment_and_market_platform_keys_are_scoped_by_filer():
     assert FILER_SCOPED_LABELS == ("Segment", "MarketPlatform")
 
 
-@pytest.mark.parametrize("name", STRUCTURAL_LABELS + EXTRACTED_LABELS)
+@pytest.mark.parametrize("name", STRUCTURAL_LABELS + EXTRACTED_LABELS + DERIVED_LABELS)
 def test_label_keys(name):
     definition = LABELS_BY_NAME[name]
     assert definition.keys == KEYS[name]
@@ -157,12 +186,26 @@ def test_property_types():
 
 # --- edge types -----------------------------------------------------------
 
-def test_twenty_one_edge_types_with_their_kinds():
-    assert len(EDGE_TYPES) == 21
-    assert len(EDGE_TYPES_BY_NAME) == 21
+def test_twenty_three_edge_types_with_their_kinds():
+    assert len(EDGE_TYPES) == 23
+    assert len(EDGE_TYPES_BY_NAME) == 23
     for d in EDGE_TYPES:
-        expected = Kind.STRUCTURAL if d.name in STRUCTURAL_EDGES else Kind.EXTRACTED
+        expected = (Kind.STRUCTURAL if d.name in STRUCTURAL_EDGES
+                    else Kind.DERIVED if d.name in DERIVED_EDGES else Kind.EXTRACTED)
         assert d.kind is expected, d.name
+
+
+def test_community_edges_join_non_metric_extracted_nodes_and_communities():
+    in_community, parent_of = EDGE_TYPES_BY_NAME["IN_COMMUNITY"], EDGE_TYPES_BY_NAME["PARENT_OF"]
+    assert set(in_community.starts) == set(COMMUNITY_MEMBER_LABELS)
+    assert in_community.ends == ("Community",)
+    assert (parent_of.starts, parent_of.ends) == (("Community",), ("Community",))
+    for d in (in_community, parent_of):
+        assert [p.name for p in d.properties] == ["ontology_version"], d.name
+
+
+def test_only_extracted_nodes_have_evidence_edges():
+    assert set(EDGE_TYPES_BY_NAME["EVIDENCED_BY"].starts) == set(EXTRACTED_LABELS)
 
 
 def test_edge_endpoints_match_claude_md():
@@ -183,7 +226,7 @@ def test_market_platform_endpoints():
     assert "MarketPlatform" in edges["OFFERS"].starts
     assert "MarketPlatform" not in edges["HAS_SEGMENT"].ends
     others = {d.name for d in EDGE_TYPES
-              if "MarketPlatform" in (*d.starts, *d.ends)} - {"EVIDENCED_BY"}
+              if "MarketPlatform" in (*d.starts, *d.ends)} - {"EVIDENCED_BY", "IN_COMMUNITY"}
     assert others == {"HAS_MARKET_PLATFORM", "MEASURES", "AFFECTS", "OFFERS"}
 
 
@@ -219,7 +262,7 @@ def test_only_confidence_properties_restrict_their_values():
         (d.name, p.name) for d in (*LABELS, *EDGE_TYPES) for p in d.properties if p.values
     }
     extracted_edges = {d.name for d in EDGE_TYPES if d.kind is Kind.EXTRACTED}
-    assert restricted == {("EVIDENCED_BY", "confidence")} | {
+    assert restricted == {("EVIDENCED_BY", "confidence"), ("Community", "level")} | {
         (name, "confidences") for name in extracted_edges
     }
 
@@ -316,8 +359,8 @@ def test_schema_text_carries_properties_endpoints_and_descriptions():
     assert "extract_prompt: STRING," in text
 
 
-def test_ontology_is_version_4():
-    assert ONTOLOGY_VERSION == 4
+def test_ontology_is_version_5():
+    assert ONTOLOGY_VERSION == 5
 
 
 def test_version_4_allows_company_as_a_concerns_end():
