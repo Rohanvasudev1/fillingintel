@@ -12,6 +12,7 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
 from graph.constraints import apply_constraints
+from graph.ontology import ONTOLOGY_VERSION
 from graph.schema_text import SCHEMA_TEXT_SHA256
 from graph.write import write_batch
 from ingest.chunker import chunk_filing
@@ -224,7 +225,7 @@ def test_config_records_the_graph_the_arm_read(corpus, graph, tmp_path):
     arm = _arm(corpus, graph, tmp_path, reports=_reports(tmp_path, "load-run3", "load-run12"))
     assert arm.name == "graph_local"
     assert arm.config.graph == GraphProvenance(
-        ontology_version=4, schema_sha256=SCHEMA_TEXT_SHA256, load_run="load-run12")
+        ontology_version=ONTOLOGY_VERSION, schema_sha256=SCHEMA_TEXT_SHA256, load_run="load-run12")
     assert dict(arm.config.models) == {"embedding": MODEL, "answer": "claude-sonnet-5-5"}
     assert arm.config.k == 10
 

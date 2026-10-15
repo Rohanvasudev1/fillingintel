@@ -45,6 +45,7 @@ EXPECTED_CONSTRAINTS = {
     "facility_key_unique": ("Facility", ["key"]),
     "person_key_unique": ("Person", ["key"]),
     "metric_value_key_unique": ("MetricValue", ["key"]),
+    "community_community_id_unique": ("Community", ["community_id"]),  # ontology 5
 }
 
 
