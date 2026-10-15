@@ -28,7 +28,7 @@ Matt Pocock's skills (plugin `mattpocock-skills`, official marketplace) run the 
 4. `/implement` one ticket at a time, clearing context between tickets. It drives `/tdd`: for deterministic logic, show each test failing before writing the code.
 5. Matt's code review before each commit: invoke `mattpocock-skills:code-review` by that full name, including when `/implement` says `/code-review`. Never use Claude Code's built-in `/code-review`, which has the same short name but reviews only for bugs, with no Standards or Spec axis. The Spec axis checks the ticket, the step spec, the RUNBOOK step and docs/OPEN-DECISIONS.md. For SQL or Cypher, the Standards axis also checks injection safety, indexes and constraints. Fix every finding, or report why it can't be fixed. Never resolve a finding by weakening an acceptance check.
 6. Verify: `uv run ruff check .`, `uv run --env-file .env pytest`, and the relevant eval slice.
-7. Append a dated entry to docs/BUILD-LOG.md, ending with a "Next session starts with" note. Stop and report.
+7. Append a dated entry to docs/BUILD-LOG.md, ending with a "Next session starts with" note. Commit, push the branch and open a ready-for-review PR against `main` without asking (user decision, 2026-10-15); the user reviews and merges. Never merge it or enable auto-merge. Stop and report with the PR link.
 Hard bugs go through `/diagnosing-bugs`.
 Apply the unslop skill to all prose: replies, docs, BUILD-LOG entries and commit messages.
 Records stay as before: RUNBOOK defines the steps, BUILD-LOG gets an entry per session, OPEN-DECISIONS holds unsettled questions, and Decisions below holds settled ones. The plans in .claude/plans/ (Steps 3–4) are history; .claude/skills/step-review is kept but no longer used.
