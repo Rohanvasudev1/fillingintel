@@ -62,7 +62,7 @@ from persist.links import PersistLink
 from persist.paths import LINKS, parse_links
 from resolve.paths import ALIAS_MAP, CANDIDATES_DIR, parse_alias_map
 
-__all__ = ["LoadInputs", "LoadResult", "load_graph", "main", "read_inputs"]
+__all__ = ["LoadInputs", "LoadResult", "load_graph", "main", "read_inputs", "read_repo_inputs"]
 
 EXTRACTION_REPORTS = REPO_ROOT / "benchmarks" / "extraction"
 OUTPUT_DIR = REPO_ROOT / "benchmarks" / "graph"
@@ -114,6 +114,11 @@ def read_inputs(
                       {a: failed for a, (failed, _) in reports.items()},
                       persist_links, hashlib.sha256(raw_links).hexdigest(),
                       tuple(sorted({version for _, version in reports.values()})))
+
+
+def read_repo_inputs() -> LoadInputs:
+    """read_inputs() over the repo's own extract, alias map, report and link files."""
+    return read_inputs(CANDIDATES_DIR, ALIAS_MAP, EXTRACTION_REPORTS, LINKS)
 
 
 def _run_report(report: Path) -> tuple[tuple[str, ...], int]:
@@ -171,7 +176,7 @@ def _run(rebuild: bool) -> tuple[LoadInputs, LoadResult]:
     if not url:
         raise _CouldNotRun("DATABASE_URL is not set")
     try:
-        inputs = read_inputs(CANDIDATES_DIR, ALIAS_MAP, EXTRACTION_REPORTS, LINKS)
+        inputs = read_repo_inputs()
     except InputError as exc:
         raise _CouldNotRun(str(exc)) from exc
     try:
