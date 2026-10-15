@@ -1,0 +1,291 @@
+{
+  "recorded": "real API response, recorded by scripts/capture_report_responses.py",
+  "prompt_version": "report/v1@d296f30d",
+  "community": {
+    "community_id": "lower-5a541eb7341f",
+    "level": "lower",
+    "members": [
+      "0000050863-25-000109:pausing or discontinuing the pursuit of intel 14a and successor leading-edge process technologies may be effectively irreversible",
+      "0000050863-26-000011:failure to secure a significant external foundry customer for intel 14a",
+      "0000050863-26-000011:few external foundry customers to date",
+      "0000050863-26-000011:intel 14a may not be economical without a significant external customer",
+      "Facility:china assembly and test facility",
+      "Facility:costa rican assembly and test operations",
+      "Facility:germany fab",
+      "Facility:ireland wafer fabrication facilities",
+      "Facility:malaysia assembly and test facility",
+      "Facility:ohio fab",
+      "Facility:oregon wafer production facilities",
+      "Facility:poland assembly and test facility",
+      "Facility:vietnam assembly and test facility",
+      "Product:intel 14a",
+      "Product:intel 18a",
+      "Product:intel 20a",
+      "Product:intel 3",
+      "Product:intel 4",
+      "Product:intel 7",
+      "Product:intel core ultra series 3",
+      "Product:panther lake"
+    ],
+    "member_hash": "5a541eb7341f29fbbcd79d127ecfd966dd80bec6e56d18b48b2a4c3abd8e0b4a",
+    "parent": "top-36ff66bed99f",
+    "reportable": true
+  },
+  "request_sha256": "43c3ac3ca98b798f69df040cb0f700d2b19b2262674022760280b6331cde851c",
+  "evidence": [
+    "0000050863-24-000149:0042",
+    "0000050863-25-000009:0013",
+    "0000050863-25-000009:0014",
+    "0000050863-25-000009:0031",
+    "0000050863-25-000109:0042",
+    "0000050863-25-000109:0065",
+    "0000050863-26-000011:0006",
+    "0000050863-26-000011:0007",
+    "0000050863-26-000011:0008",
+    "0000050863-26-000011:0014",
+    "0000050863-26-000011:0020",
+    "0000050863-26-000011:0021",
+    "0000050863-26-000011:0022",
+    "0000050863-26-000011:0034"
+  ],
+  "inputs": [
+    "0000050863-25-000009:0014",
+    "0000050863-26-000011:0008",
+    "0000050863-26-000011:0034",
+    "0000050863-26-000011:0020",
+    "0000050863-25-000009:0013",
+    "0000050863-26-000011:0021",
+    "0000050863-25-000109:0065"
+  ],
+  "api_ms": 10425.905667012557,
+  "response": {
+    "id": "msg_011Cg46Bk364BQ96pgN73z5d",
+    "container": null,
+    "content": [
+      {
+        "signature": "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",
+        "thinking": "",
+        "type": "thinking"
+      },
+      {
+        "citations": null,
+        "text": "{\"title\":\"Intel 14A and dependence on an external foundry customer\",\"summary\":\"This community centers on Intel's 14A process node and whether it can be economically pursued without a significant external foundry customer [0000050863-26-000011:0008]. Intel says that if it cannot secure such a customer and meet customer milestones, it may pause or discontinue its pursuit of 14A and successor nodes [0000050863-26-000011:0034]. The community concerns Intel only, and it ties those node decisions to Intel's Oregon, Ireland, Ohio, Germany, Costa Rica, Malaysia, Vietnam, China and Poland facilities [0000050863-25-000009:0014].\",\"findings\":[{\"text\":\"Intel says any decision to pause or discontinue its pursuit of Intel 14A and successor leading-edge process technologies may be effectively irreversible, given the decades of investment needed to compete in leading-edge node design and manufacturing [0000050863-25-000109:0065].\"},{\"text\":\"Intel says 14A is its first node designed from inception for offering to external customers, and that it is actively seeking customers for it [0000050863-26-000011:0021]. Intel also says it has few external foundry customers to date [0000050863-26-000011:0008].\"},{\"text\":\"Intel says that if it discontinued 14A and successor nodes, a majority of its products would continue to be manufactured in its own facilities on nodes up to Intel 18A-P through at least 2030 [0000050863-26-000011:0034].\"},{\"text\":\"Intel says the cost of 14A is highly capital intensive and requires wafer volumes beyond what its own products would need to achieve economic efficiency [0000050863-26-000011:0021].\"},{\"text\":\"In 2025 Intel began consolidating its Costa Rican assembly and test operations, slowed construction of its Ohio fab, and discontinued planned expansions in Germany and Poland [0000050863-26-000011:0008].\"},{\"text\":\"Intel canceled the productization of Intel 20A to focus on Intel 18A, which it expected to put into high-volume production with Panther Lake [0000050863-25-000009:0014].\"}]}",
+        "type": "text"
+      }
+    ],
+    "diagnostics": null,
+    "model": "claude-haiku-5-5",
+    "role": "assistant",
+    "stop_details": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 999
+      },
+      "cache_creation_input_tokens": 999,
+      "cache_read_input_tokens": 0,
+      "inference_geo": "global",
+      "input_tokens": 9016,
+      "output_tokens": 2090,
+      "output_tokens_details": {
+        "thinking_tokens": 1370
+      },
+      "server_tool_use": null,
+      "service_tier": "standard"
+    }
+  },
+  "lower_input": {
+    "community_id": "lower-5a541eb7341f",
+    "members": [
+      {
+        "key": "0000050863-25-000109:pausing or discontinuing the pursuit of intel 14a and successor leading-edge process technologies may be effectively irreversible",
+        "label": "RiskFactor",
+        "name": "Pausing or discontinuing the pursuit of Intel 14A and successor leading-edge process technologies may be effectively irreversible"
+      },
+      {
+        "key": "0000050863-26-000011:failure to secure a significant external foundry customer for intel 14a",
+        "label": "RiskFactor",
+        "name": "Failure to secure a significant external foundry customer for Intel 14A"
+      },
+      {
+        "key": "0000050863-26-000011:few external foundry customers to date",
+        "label": "RiskFactor",
+        "name": "Few external foundry customers to date"
+      },
+      {
+        "key": "0000050863-26-000011:intel 14a may not be economical without a significant external customer",
+        "label": "RiskFactor",
+        "name": "Intel 14A may not be economical without a significant external customer"
+      },
+      {
+        "key": "Facility:china assembly and test facility",
+        "label": "Facility",
+        "name": "China assembly and test facility"
+      },
+      {
+        "key": "Facility:costa rican assembly and test operations",
+        "label": "Facility",
+        "name": "Costa Rican assembly and test operations"
+      },
+      {
+        "key": "Facility:germany fab",
+        "label": "Facility",
+        "name": "Germany fab"
+      },
+      {
+        "key": "Facility:ireland wafer fabrication facilities",
+        "label": "Facility",
+        "name": "Ireland wafer fabrication facilities"
+      },
+      {
+        "key": "Facility:malaysia assembly and test facility",
+        "label": "Facility",
+        "name": "Malaysia assembly and test facility"
+      },
+      {
+        "key": "Facility:ohio fab",
+        "label": "Facility",
+        "name": "Ohio fab"
+      },
+      {
+        "key": "Facility:oregon wafer production facilities",
+        "label": "Facility",
+        "name": "Oregon wafer production facilities"
+      },
+      {
+        "key": "Facility:poland assembly and test facility",
+        "label": "Facility",
+        "name": "Poland assembly and test facility"
+      },
+      {
+        "key": "Facility:vietnam assembly and test facility",
+        "label": "Facility",
+        "name": "Vietnam assembly and test facility"
+      },
+      {
+        "key": "Product:intel 14a",
+        "label": "Product",
+        "name": "Intel 14A"
+      },
+      {
+        "key": "Product:intel 18a",
+        "label": "Product",
+        "name": "Intel 18A"
+      },
+      {
+        "key": "Product:intel 20a",
+        "label": "Product",
+        "name": "Intel 20A"
+      },
+      {
+        "key": "Product:intel 3",
+        "label": "Product",
+        "name": "Intel 3"
+      },
+      {
+        "key": "Product:intel 4",
+        "label": "Product",
+        "name": "Intel 4"
+      },
+      {
+        "key": "Product:intel 7",
+        "label": "Product",
+        "name": "Intel 7"
+      },
+      {
+        "key": "Product:intel core ultra series 3",
+        "label": "Product",
+        "name": "Intel Core Ultra Series 3"
+      },
+      {
+        "key": "Product:panther lake",
+        "label": "Product",
+        "name": "Panther Lake"
+      }
+    ],
+    "edges": [
+      {
+        "type": "AFFECTS",
+        "start": "0000050863-25-000109:pausing or discontinuing the pursuit of intel 14a and successor leading-edge process technologies may be effectively irreversible",
+        "end": "Product:intel 14a",
+        "chunk_ids": [
+          "0000050863-25-000109:0065"
+        ],
+        "spans": [
+          "any decision to pause or discontinue our pursuit of Intel 14A"
+        ]
+      },
+      {
+        "type": "AFFECTS",
+        "start": "0000050863-26-000011:failure to secure a significant external foundry customer for intel 14a",
+        "end": "Product:intel 14a",
+        "chunk_ids": [
+          "0000050863-26-000011:0008"
+        ],
+        "spans": [
+          "may pause or discontinue our pursuit of Intel 14A"
+        ]
+      },
+      {
+        "type": "AFFECTS",
+        "start": "0000050863-26-000011:intel 14a may not be economical without a significant external customer",
+        "end": "Product:intel 14a",
+        "chunk_ids": [
+          "0000050863-26-000011:0034"
+        ],
+        "spans": [
+          "we face the prospect that it will not be economical to develop and manufacture Intel 14A"
+        ]
+      }
+    ],
+    "passages": [
+      {
+        "chunk_id": "0000050863-25-000009:0014",
+        "text": "| Manufacturing Capital |\n\nWe are one of only a few companies in the world with the process technology and manufacturing facilities to produce leading\\-edge semiconductor logic chips\\.\n\nProcess Technology\n\nOur technology development group, with its R&D and semiconductor fabrication facilities in Oregon, designs and develops each new process technology node before high\\-volume production is shifted to one of our high\\-volume manufacturing sites\\. With each new node, we seek improvements in performance, power efficiency, cost, and size to meet the needs of our products and of external foundry customers\\. The continued development of leading\\-edge nodes that are competitive with the offerings of other foundries requires significant ongoing capital investment as we pursue incremental improvements and refinements of existing transistor and layout designs and manufacturing technologies, such as EUV lithography, while also pursuing new transistor and layout designs, such as gate\\-all\\-around and backside power in our upcoming Intel 18A process node, and new manufacturing technologies, such as high\\-NA EUV lithography for use in our upcoming Intel 14A process node\\.\n\nAs of the end of 2024, a significant majority of our products were manufactured using our Intel 7 process node in Arizona and Israel, we successfully ramped our Intel 4 and Intel 3 process nodes as our first EUV lithography nodes and shifted high\\-volume production of those nodes to Ireland, and we canceled the productization of our Intel 20A process node to focus efforts on the improved version of the node, Intel 18A, that we expect to put into high\\-volume production in 2025 with our new client family of products code\\-named Panther Lake\\.\n\n| Our Capital | 8 |\n\nManufacturing Facilities\n\nOur geographically distributed network of semiconductor manufacturing facilities and assembly and test facilities allows us to produce advanced semiconductor logic chips in high volume\\. After a process technology node is developed by our technology development group, we seek to shift production to one or more high\\-volume manufacturing facilities\\. Maintaining reliable production capacity is of critical importance\\. Wafer and packaging manufacturing facilities take a number of years to build, making it prudent to build space ahead of demand\\. We refer to this strategy as \"shell ahead\\.” As a result of the supply shocks driven by the Covid\\-19 pandemic and the projected growth of our products businesses, we set out to expand our capacity network beyond our existing wafer production facilities in Oregon \\(mostly utilized for technology development and early production on new nodes\\), Arizona, Ireland, and Israel to meet this demand and get to “shell ahead” status\\. We are in the later stages of an expansion of our wafer fabrication facilities in Ireland for our Intel 4 and Intel 3 process nodes and undertaking a significant expansion of our Arizona facility for our upcoming Intel 18A process node\\. We are building a new wafer production facility in Ohio and have plans for an additional new wafer production facility in Germany, but have slowed the completion of the Ohio facility and put the plans for the facility in Germany on hold as we have reassessed demand and our \"shell ahead\" status and sought to limit our capital expenditures given recent financial results\\. We have assembly and test facilities in Costa Rica, China, Malaysia, New Mexico, and Vietnam\\. We are expanding our facilities in New Mexico and Malaysia, though we recently reduced the extent of the expansion plans for Malaysia\\. We have plans for an additional assembly and test facility in Poland, but have put those plans on hold in conjunction with the delay of the facility in Germany\\.\n\nSemiconductor manufacturing requires extremely sophisticated equipment, and we work closely with the tool vendors to align their roadmaps to our needs\\. In 2024, we made the transition from non\\-EUV lithography to EUV lithography with the Intel 4 and Intel 3 process nodes\\. EUV lithography equipment drives a higher capital investment than the preceding lithography technology\\."
+      },
+      {
+        "chunk_id": "0000050863-26-000011:0008",
+        "text": "We expect Intel 18A to serve as the manufacturing process for multiple generations of our future client and server CPU products\\. We are also continuing development of Intel 14A, our next\\-generation node, which has been designed from inception as an offering to external customers\\. Intel 14A builds upon the architectural innovations of Intel 18A to deliver further improvements in performance per watt and density scaling\\.\n\nWe remain committed to advancing leading\\-edge semiconductor process technology and manufacturing in the U\\.S\\., where we are the only company conducting both leading\\-edge semiconductor logic R&D and related high\\-volume manufacturing\\. We intend to remain a leading developer of semiconductor process technology and a major manufacturer of semiconductors, and we plan to continue manufacturing the majority of our products in our own factories\\. This integrated approach helps enable us to optimize product performance, accelerate time\\-to\\-market and scale efficiently to meet customer demand\\. It also provides strategic control over manufacturing operations, supports differentiation in process technology capabilities and advanced packaging, provides increased supply resilience and reinforces our role as a U\\.S\\.\\-based provider of leading\\-edge semiconductor manufacturing\\. However, the development and manufacturing of modern leading\\-edge process technologies, particularly those utilizing EUV lithography such as Intel 4, Intel 3, Intel 18A, Intel 14A and future nodes, require substantial capital investment\\. These leading\\-edge process technologies are essential to deliver competitive products, but their cost structure requires manufacturing volumes beyond what we expect from our own products to achieve economic efficiency\\. In light of these considerations, in 2025, we streamlined our footprint to improve operational efficiency and better align capacity with anticipated demand\\. We initiated the consolidation of our Costa Rican assembly and test operations into our other facilities, which we expect to be completed by the end of 2026, slowed the pace of construction for our new Ohio wafer fabrication facility, or fab, and discontinued planned expansions in Germany \\(fab\\) and Poland \\(assembly and test facility\\)\\. Further, we announced that if we are unable to secure a significant external foundry customer for Intel 14A, we may pause or discontinue our pursuit of Intel 14A and successor leading\\-edge process technologies\\. In such event, we would expect, over time, to shift manufacturing to third\\-party foundries, particularly TSMC, as we develop products for nodes beyond Intel 18A and its derivative node, Intel 18A\\-P\\.\n\n| Our Strategy | 4 |\n\n| Growing Our External Foundry Business |\n\nIn recent years, the cost of developing leading\\-edge semiconductor process technologies and of the manufacturing facilities utilizing such process technologies has increased significantly and outpaced the growth in our products business\\. As a result, to improve the financial viability of our continued development of leading\\-edge semiconductor process technologies and the utilization of our manufacturing assets, a few years ago we started transitioning our semiconductor manufacturing business from one that has historically been designed to serve our internal product groups into a customer\\-centric foundry business designed to also serve third\\-party external semiconductor customers\\. Our foundry strategy was also designed to enable us to participate in the increasing demand for U\\.S\\.\\-based foundry capacity and a more secure, resilient and balanced semiconductor supply chain\\. Since that decision, demand for leading\\-edge foundry capacity has increased significantly to support the demand for compute, particularly from AI workloads, and we expect continued increases in such demand in future years\\. While we have few external customers to date, developing an external foundry business is a key long\\-term strategy for our business and one that we aim to have more success with as we move to more advanced nodes\\."
+      },
+      {
+        "chunk_id": "0000050863-26-000011:0034",
+        "text": "**Table of Contents**\n\nOn the manufacturing side, we initiated the consolidation of our Costa Rican assembly and test operations into larger existing sites in Vietnam and Malaysia, slowed the pace of construction for our new Ohio fab and discontinued planned expansions in Germany \\(fab\\) and Poland \\(assembly and test\\) to better align capital spending with market demand\\. These actions reflect our focus on deploying capital in coordination with tangible milestones and scaling capacity as needed\\.\n\nWith respect to leading\\-edge process technology development, we recently released the Intel Core Ultra Series 3 processors, our first products manufactured on our new leading\\-edge node, Intel 18A, and we continue to develop its derivative node, Intel 18A\\-P, designed for future Intel products and external Intel Foundry customers\\. We are also focused on the continued development of Intel 14A, the next generation node beyond Intel 18A and Intel 18A\\-P, and on securing a significant external customer for such node\\. However, if we are unable to secure a significant external customer and meet important customer milestones for Intel 14A, we face the prospect that it will not be economical to develop and manufacture Intel 14A and successor leading\\-edge nodes on a go\\-forward basis\\. In such event, we may pause or discontinue our pursuit of Intel 14A and successor nodes and various of our manufacturing expansion projects\\. While we continue to evaluate Intel 14A for use in future Intel products and our plan includes an initial product designed to utilize Intel 14A, at present we are maintaining the option to design future Intel products requiring nodes with performance beyond Intel 18A and Intel 18A\\-P to be produced internally or by an external foundry\\. If we were to discontinue development of Intel 14A and successor nodes, we expect that a majority of our products would continue to be manufactured in our own facilities utilizing our nodes up to Intel 18A\\-P through at least 2030\\. By focusing on our customers and delivering the best semiconductor products to the market, manufactured on the most appropriate internal or external node from a performance and cost perspective, and only deploying capital on new nodes and manufacturing facilities where we believe they will yield an attractive return, we believe we can improve the competitiveness of our products business, and the overall financial results for the company\\.\n\n| MD&A | 20 |\n\n| Operating Segment Results |\n\nIn Q1 2025, we made an organizational change to integrate NEX into CCG and DCAI and modified our segment reporting to align to this and certain other business reorganizations\\. All prior period segment data has been retrospectively adjusted to reflect the way our CODM internally receives information and manages and monitors our operating segment performance\\. There were no changes to our Consolidated Financial Statements for any prior periods\\. As a result of these organizational changes, in 2025 we managed our business through the operating segments presented below and have included the 2025, 2024 and 2023 segment financial results and related discussions of our segments' results of operations\\. Our discussion regarding our segments' results of operations presented below excludes restructuring and other charges for all periods presented and $9\\.9 billion of 2024 charges resulting from valuation allowances recorded against our net deferred tax assets, in addition to certain other items, as our CODM receives, views and uses information for decision\\-making purposes based upon segment results that exclude such items\\. \"Note 3: Operating Segments\" within Notes to Consolidated Financial Statements of this Form 10\\-K reconciles our segment and consolidated results for each of the periods presented\\.\n\nIntel Products"
+      },
+      {
+        "chunk_id": "0000050863-26-000011:0020",
+        "text": "Investments are required years in advance of a return, and achieving favorable returns generally requires that a node be continually optimized over a long lifespan\\. Our external foundry strategy is driven by a need for additional volume for leading\\-edge node development and manufacturing capacity from customers seeking leading\\-edge capacity, beyond that of our products group, as well as a need for external customers for established node manufacturing capacity to extend the lifespan of such capacity as our product groups move to more advanced nodes\\.\n\nProcess Technology\n\nOur technology development group, with its R&D, fabs and other manufacturing facilities in Oregon, designs and develops each new process technology node from conception to high\\-volume production and supports the gradual transition of high\\-volume production to one of our other high\\-volume manufacturing sites\\. The continued development of leading\\-edge nodes that are competitive with the offerings of other foundries requires significant ongoing capital investment as we pursue incremental improvements and refinements of existing transistor and layout designs and manufacturing technologies, such as EUV lithography, while also pursuing new transistor and layout designs, such as gate\\-all\\-around and backside power in our Intel 18A process node and new manufacturing technologies, such as high\\-NA EUV lithography for use in the development of our Intel 14A process node\\. Where we historically moved quickly from node to node and did not make significant changes to nodes once they were in high\\-volume production, with the significantly higher capital intensity of semiconductor manufacturing in recent years and intense competitive environment, we have shifted our approach and now aim to extend the lifespan of each node and continuously improve yields of products being manufactured on each node through continued development and optimization\\. Through such continuous improvements, finding additional uses of older nodes for our products \\(including through our disaggregated architecture approach\\), and seeking external customers for older nodes through our external foundry strategy, we aim to extend the utilization of our manufacturing asset base\\.\n\nOur leading\\-edge process technology, which we use to manufacture our CCG and DCAI product offerings and also offer to external customers, is an important tenet of our strategy\\. Our principal current and planned future nodes consist of the following:\n\n**▪**\n\n## Intel 7,\n\n which first went into high\\-volume manufacturing in 2017 and has undergone a number of enhancements over its lifespan, continues in production for our 13th and 14th Gen Intel Core processors\\. Intel 7 was utilized for the majority of our internal processor production and products by revenue in 2025 and is expected to continue to be utilized for almost half of our internal processor production and products by revenue in 2026\\.\n\n| Our Business | 11 |\n\n**Table of Contents**\n\n**▪**\n\n## Intel 4\n\n# , our first process node incorporating EUV lithography, first went into high-volume manufacturing in 2023 and\n\ndelivered significant scaling improvements over Intel 7\\. Intel 4 is utilized for our internal production of Intel Core Ultra Series 1 processors and represented a modest portion of our internal processor production and products by revenue in 2025, with its percentage contribution expected to decrease in 2026 as sales of processors using more advanced process technologies increase\\.\n\n**▪**\n\n## Intel 3\n\n, a derivative node of Intel 4 that delivers enhanced performance over Intel 4, first went into high\\-volume manufacturing in 2024\\. Intel Xeon 6 Scalable server processor offerings are manufactured using this node\\. This node represented a modest portion of our internal processor production and products by revenue in 2025, with its percentage contribution expected to increase in 2026\\.\n\n**▪**\n\n## Intel 18A,"
+      },
+      {
+        "chunk_id": "0000050863-25-000009:0013",
+        "text": "Intel 3 is offered to external foundry customers and is optimized for the needs of data center products\\. This node, which is produced in the same facilities as Intel 4, was in high\\-volume manufacturing in Oregon during 2024, with high\\-volume manufacturing shifted to Ireland for 2025\\. Intel’s Xeon 6 Scalable server processor offerings are built on this technology\\.\n\n**▪** Intel 18A is our next generation leading\\-edge process technology and has been designed to incorporate the first high volume commercial implementation of two breakthrough technologies: gate\\-all\\-around transistors and backside power\\. RibbonFET, our implementation of a gate\\-all\\-around transistor, is designed to deliver faster transistor switching speeds while achieving the same drive current as multiple fins, but in a smaller footprint\\. PowerVia is our unique industry\\-first implementation of backside power delivery that is designed to optimize signal transmission by eliminating the need for power routing on the front side of the wafer\\. Intel 18A is offered to external foundry customers and is designed to deliver improvements in performance per watt and density scaling over Intel 3\\. We expect to commence high\\-volume manufacturing of Panther Lake, our new client family of products and our first processors on Intel 18A, in 2025\\.\n\n**▪** Intel 14A, our third advanced process technology offering to external customers, is in active development with performance\\-per\\-watt and density scaling improvements over Intel 18A\\.\n\nIP Rights\n\nWe own and develop significant IP and related IP rights around the world that support our products, services, R&D, and other activities and assets\\. Our IP portfolio includes patents, copyrights, trade secrets, trademarks, mask works, and other rights\\. We actively seek to protect our global IP rights and deter unauthorized use of our IP and other assets\\.\n\nWe have obtained patents in the US and other countries\\. Because of the fast pace of innovation and product development, our products are often obsolete before the patents related to them expire, and in some cases our products may be obsolete before the patents are granted\\. As we expand our product offerings, particularly around our foundry business, we also seek to extend our patent development efforts\\. In addition to developing patents based on our own R&D efforts, we may purchase or license patents from third parties\\.\n\nThe software that we distribute, including software embedded in our products, is entitled to copyright and other IP protection\\. To distinguish our products from our competitors' products, we have obtained trademarks and trade names for our products, and we maintain cooperative advertising programs with customers to promote our brands and to identify products containing genuine Intel components\\. We also protect details about our processes, products, and strategies as trade secrets, keeping confidential the information that we believe provides us with a competitive advantage\\.\n\nEfforts to protect our IP can be difficult, particularly in countries that provide less protection to IP rights and in the absence of harmonized international IP standards\\. Competitors and others may already have IP rights covering similar products\\. There is no assurance that we will be able to obtain IP rights covering our own products or that we will be able to obtain IP licenses from other companies on favorable terms or at all\\. For a discussion of IP\\-related risks, see \"Risk Factors\" within Risk Factors and Other Key Information\\. While our IP rights are important to our success, our business as a whole is not significantly dependent on any single patent, copyright, or other IP right\\."
+      },
+      {
+        "chunk_id": "0000050863-26-000011:0021",
+        "text": "**▪**\n\n## Intel 3\n\n, a derivative node of Intel 4 that delivers enhanced performance over Intel 4, first went into high\\-volume manufacturing in 2024\\. Intel Xeon 6 Scalable server processor offerings are manufactured using this node\\. This node represented a modest portion of our internal processor production and products by revenue in 2025, with its percentage contribution expected to increase in 2026\\.\n\n**▪**\n\n## Intel 18A,\n\ncurrently our most advanced leading\\-edge node, first went into high\\-volume manufacturing in late 2025 and delivers significant improvements in performance per watt and density scaling over Intel 3\\. Intel 18A introduced two breakthrough technologies: RibbonFET and PowerVia\\. RibbonFET, our implementation of a gate\\-all\\-around transistor, is designed to deliver faster transistor switching speeds while achieving the same drive current as multiple fins of prior finFET transistor architectures, but in a smaller footprint\\. PowerVia is our unique industry\\-first implementation of backside power delivery that is designed to optimize signal transmission by eliminating the need for power routing on the front side of the wafer\\. Intel 18A is utilized for our first Intel Core Ultra Series 3 processor, the latest generation of our Intel Core Ultra processor family, and is expected to represent an increasing portion of our processor production and products by revenue in 2026 and subsequent years\\. We expect Intel 18A and its derivative nodes, notably Intel 18A\\-P, to be the key manufacturing process technology for multiple generations of our future client and server CPU products\\. We are seeking to establish Intel 18A as our first significant foundry node for government and commercial customers\\.\n\n**▪**\n\n## Intel 14A\n\n, our next\\-generation leading\\-edge node, is being designed to potentially incorporate an industry\\-first use of high\\-NA EUV lithography in high\\-volume semiconductor logic manufacturing\\. The new node is in active development, builds on the architectural innovations of Intel 18A and is designed to deliver further improvements in performance\\-per\\-watt and density scaling improvements over Intel 18A\\. We are actively seeking customers for Intel 14A, which is our first node designed from inception for offering to external customers\\. However, the development and manufacturing of next\\-generation leading\\-edge nodes like Intel 14A is highly capital intensive and their cost structure requires wafer volumes beyond what we expect from our own products to achieve economic efficiency\\. As such, in 2025 we announced that if we are unable to secure a significant external foundry customer for Intel 14A, we may pause or discontinue our pursuit of next generation leading\\-edge process technologies\\. We continue to evaluate Intel 14A for use in future Intel products and our plan includes an initial product designed to utilize Intel 14A, though we are maintaining the option to utilize an external foundry for future Intel products requiring nodes with performance beyond Intel 18A and Intel 18A\\-P\\.\n\nPackaging Technology"
+      },
+      {
+        "chunk_id": "0000050863-25-000109:0065",
+        "text": "Further, given the decades of significant continuous investments in R&D, talent accumulation, intellectual property, state\\-of\\-the\\-art facilities, and technical know\\-how needed to compete in leading\\-edge node design, development and manufacturing, any decision to pause or discontinue our pursuit of Intel 14A and successor leading\\-edge process technologies may be effectively irreversible\\.\n\nQuantitative and Qualitative Disclosures About Market Risk\n\nWe are affected by changes in currency exchange and interest rates, as well as equity and commodity prices\\. Our risk management programs are designed to reduce, but may not entirely eliminate, the impacts of these risks\\. We performed an evaluation of these risks to our financial positions as of December 28, 2024, and updated that analysis as of June 28, 2025, to determine whether material changes in market risks pertaining to currency and interest rates or equity and commodity prices have occurred as a result of the changes in international trade policies, including tariffs and export controls\\. No material revisions were noted since disclosing \"Quantitative and Qualitative Disclosures About Market Risk\" within MD&A, in our 2024 Form 10\\-K\\. Risks related to changes in international trade policies, including tariffs and export controls, particularly those involving the United States and China are described under \"Risk Factors\" within Risk Factors and Other Key Information in our 2024 Form 10\\-K and in our Q1 2025 Form 10\\-Q\\.\n\nControls and Procedures\n\nInherent Limitations on Effectiveness of Controls\n\nOur management, including the principal executive officer and principal financial officer, does not expect that our disclosure controls and procedures or our internal control over financial reporting will prevent or detect all errors and all fraud\\. A control system, no matter how well\\-designed and operated, can provide only reasonable, not absolute, assurance that the control system’s objectives will be met\\. The design of a control system must reflect the fact that there are resource constraints, and the benefits of controls must be considered relative to their costs\\. Further, because of the inherent limitations in all control systems, no evaluation of controls can provide absolute assurance that misstatements due to error or fraud will not occur or that all control issues and instances of fraud, if any, have been detected\\.\n\nEvaluation of Disclosure Controls and Procedures\n\nBased on management’s evaluation \\(with the participation of our principal executive officer and principal financial officer\\), as of the end of the period covered by this report, our principal executive officer and principal financial officer have concluded that our disclosure controls and procedures \\(as defined in Rules 13a\\-15\\(e\\) and 15d\\-15\\(e\\) under the Securities Exchange Act of 1934, as amended \\(the Exchange Act\\)\\), were effective to provide reasonable assurance that information required to be disclosed by us in reports that we file or submit under the Exchange Act is recorded, processed, summarized, and reported within the time periods specified in SEC rules and forms, and is accumulated and communicated to management, including our principal executive officer and principal financial officer, as appropriate, to allow timely decisions regarding required disclosure\\.\n\nChanges in Internal Control Over Financial Reporting\n\nThere were no changes to our internal control over financial reporting \\(as defined in Rules 13a\\-15\\(f\\) and 15d\\-15\\(f\\) under the Exchange Act\\) that occurred during the quarter ended June 28, 2025 that have materially affected, or are reasonably likely to materially affect, our internal control over financial reporting\\.\n\n| Other Key Information | 42 |\n\n**Table of Contents**\n\nIssuer Purchases of Equity Securities"
+      }
+    ],
+    "evidence": [
+      "0000050863-24-000149:0042",
+      "0000050863-25-000009:0013",
+      "0000050863-25-000009:0014",
+      "0000050863-25-000009:0031",
+      "0000050863-25-000109:0042",
+      "0000050863-25-000109:0065",
+      "0000050863-26-000011:0006",
+      "0000050863-26-000011:0007",
+      "0000050863-26-000011:0008",
+      "0000050863-26-000011:0014",
+      "0000050863-26-000011:0020",
+      "0000050863-26-000011:0021",
+      "0000050863-26-000011:0022",
+      "0000050863-26-000011:0034"
+    ]
+  }
+}

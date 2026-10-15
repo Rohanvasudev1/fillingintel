@@ -30,3 +30,23 @@ def write_json_atomic(
     except OSError:
         tmp.unlink(missing_ok=True)
         raise
+
+
+def write_text_atomic(path: Path, text: str) -> None:
+    """Write *text* to *path* as write_json_atomic writes JSON: whole, or not at all."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        "w", encoding="utf-8", dir=path.parent, prefix=f".{path.name}.", delete=False
+    ) as fh:
+        tmp = Path(fh.name)
+        try:
+            fh.write(text)
+        except OSError:
+            fh.close()
+            tmp.unlink(missing_ok=True)
+            raise
+    try:
+        os.replace(tmp, path)
+    except OSError:
+        tmp.unlink(missing_ok=True)
+        raise

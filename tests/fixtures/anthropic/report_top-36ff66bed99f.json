@@ -1,0 +1,114 @@
+{
+  "recorded": "real API response, recorded by scripts/capture_report_responses.py",
+  "prompt_version": "report/v1@d296f30d",
+  "community": {
+    "community_id": "top-36ff66bed99f",
+    "level": "top",
+    "members": [
+      "0000050863-25-000109:pausing or discontinuing the pursuit of intel 14a and successor leading-edge process technologies may be effectively irreversible",
+      "0000050863-26-000011:failure to secure a significant external foundry customer for intel 14a",
+      "0000050863-26-000011:few external foundry customers to date",
+      "0000050863-26-000011:intel 14a may not be economical without a significant external customer",
+      "Facility:arizona facility",
+      "Facility:china",
+      "Facility:china assembly and test facility",
+      "Facility:costa rican assembly and test operations",
+      "Facility:germany fab",
+      "Facility:ireland",
+      "Facility:ireland wafer fabrication facilities",
+      "Facility:israel",
+      "Facility:malaysia",
+      "Facility:malaysia assembly and test facility",
+      "Facility:new mexico",
+      "Facility:ohio fab",
+      "Facility:oregon",
+      "Facility:oregon wafer production facilities",
+      "Facility:poland assembly and test facility",
+      "Facility:vietnam",
+      "Facility:vietnam assembly and test facility",
+      "Product:13th and 14th gen intel core processors",
+      "Product:emib",
+      "Product:emib‐t",
+      "Product:foveros",
+      "Product:foveros direct",
+      "Product:intel 14a",
+      "Product:intel 18a",
+      "Product:intel 18a‐pt",
+      "Product:intel 20a",
+      "Product:intel 3",
+      "Product:intel 4",
+      "Product:intel 7",
+      "Product:intel core ultra processor",
+      "Product:intel core ultra series 1",
+      "Product:intel core ultra series 3",
+      "Product:intel gaudi 3 ai accelerators",
+      "Product:intel xeon 6 processor with performance-cores",
+      "Product:oneapi",
+      "Product:open platform for enterprise ai",
+      "Product:openvinotm toolkit",
+      "Product:panther lake",
+      "Product:xeon 6 scalable server processor"
+    ],
+    "member_hash": "36ff66bed99f091794c26cf4d7cf1978656577b8868656daa8c36b01a364364f",
+    "parent": null,
+    "reportable": true
+  },
+  "request_sha256": "d530b273667dd1163cbb721abf512ce1019c85f798ea01efc486d2901d75b27d",
+  "evidence": [
+    "0000050863-25-000009:0012",
+    "0000050863-25-000009:0014",
+    "0000050863-25-000009:0024",
+    "0000050863-25-000109:0065",
+    "0000050863-26-000011:0008",
+    "0000050863-26-000011:0014",
+    "0000050863-26-000011:0021",
+    "0000050863-26-000011:0022",
+    "0000050863-26-000011:0034",
+    "0000050863-26-000011:0068"
+  ],
+  "inputs": [
+    "lower-5a541eb7341f",
+    "lower-ac71ab119f3f",
+    "lower-cb23d1979aad"
+  ],
+  "api_ms": 9027.737666998291,
+  "response": {
+    "id": "msg_011Cg46EH3hXHhHN6BPjYjLu",
+    "container": null,
+    "content": [
+      {
+        "signature": "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",
+        "thinking": "",
+        "type": "thinking"
+      },
+      {
+        "citations": null,
+        "text": "{\"title\":\"Intel 14A node decisions, fab footprint and AI products\",\"summary\":\"This community covers Intel's manufacturing strategy around the 14A node, its fab and packaging footprint, and its AI and data center products, and it concerns Intel only [0000050863-26-000011:0008][0000050863-25-000009:0024]. Intel says it may pause or discontinue 14A and successor nodes if it cannot secure a significant external foundry customer and meet customer milestones [0000050863-26-000011:0034]. Its key fab, assembly and packaging sites span Oregon, Arizona, Ireland, Israel, China, New Mexico, Vietnam and Malaysia [0000050863-26-000011:0022]. Its Core Ultra and Xeon 6 products are tied to specific Intel process nodes, linking the product and manufacturing themes [0000050863-26-000011:0014][0000050863-26-000011:0021].\",\"findings\":[{\"text\":\"Intel says any decision to pause or discontinue its pursuit of Intel 14A and successor leading-edge process technologies may be effectively irreversible, given the decades of investment needed to compete in leading-edge node design and manufacturing [0000050863-25-000109:0065].\"},{\"text\":\"Intel says 14A is its first node designed from inception for external customers and that it is actively seeking them, but it also says it has few external foundry customers to date [0000050863-26-000011:0021][0000050863-26-000011:0008].\"},{\"text\":\"Intel says that if it discontinued 14A and successor nodes, most of its products would still be made in its own facilities on nodes up to Intel 18A-P through at least 2030 [0000050863-26-000011:0034].\"},{\"text\":\"In 2025 Intel began consolidating its Costa Rican assembly and test operations, slowed construction of its Ohio fab, and discontinued planned expansions in Germany and Poland [0000050863-26-000011:0008].\"},{\"text\":\"Intel is undertaking a significant expansion of its Arizona facility for Intel 18A and is in the later stages of expanding its Ireland wafer fabs for Intel 4 and Intel 3 [0000050863-25-000009:0014].\"},{\"text\":\"EMIB entered high-volume manufacturing in 2017 and EMIB-T was introduced in 2025, while Foveros-B and Foveros-R are targeted for high-volume manufacturing in 2027 [0000050863-26-000011:0022].\"},{\"text\":\"Intel launched Gaudi 3 in 2024 and says it offers significant price-performance advantages for AI inference applications [0000050863-25-000009:0012]. Intel says it will use Falcon Shores as an internal test chip rather than bring it to market, focusing instead on Jaguar Shores [0000050863-25-000009:0024].\"}]}",
+        "type": "text"
+      }
+    ],
+    "diagnostics": null,
+    "model": "claude-haiku-5-5",
+    "role": "assistant",
+    "stop_details": null,
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "type": "message",
+    "usage": {
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "cache_creation_input_tokens": 0,
+      "cache_read_input_tokens": 999,
+      "inference_geo": "global",
+      "input_tokens": 2306,
+      "output_tokens": 2261,
+      "output_tokens_details": {
+        "thinking_tokens": 1313
+      },
+      "server_tool_use": null,
+      "service_tier": "standard"
+    }
+  }
+}
