@@ -43,6 +43,10 @@ Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstra
 - H5 latency (ticket 07): the full traversal run replayed its Cypher calls from the cache, so no live latency exists for `graph_traversal`. Step 13's runs need live Cypher timings, or an uncached repeat, before H5's latency half is judged.
 - A filter on `uncertain` evidence, as an ablation, if wrong-evidence rates point at it. The reviews found no error at any confidence level, but only 3 counted `uncertain` samples.
 
+## Step 12 — communities and global search
+- Ablations not run in Step 12: `graph_global` handing its top 10 chunks to `answer/v1` (ADR-0007 style, the research note's recommendation); Haiku 5.5 for map calls; a cheap model rating reports (GraphRAG's dynamic community selection) instead of embedding rank.
+- Full `graph_global` runs on lookup, local and multi-hop questions wait for Step 13's matrix and its budget.
+
 ## Step 13b — agentic arms
 - Set the tool-call cap before the benchmark run.
 
