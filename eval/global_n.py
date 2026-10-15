@@ -32,7 +32,7 @@ from pathlib import Path
 from statistics import fmean
 from typing import Protocol
 
-from eval.gate_scores import GATED_CLASSES, POOLED, ClassScores, score_questions
+from eval.gate_scores import DECIMALS, GATED_CLASSES, POOLED, ClassScores, score_questions
 from eval.metrics import recall_at_k
 from eval.question_sets import EVAL_DIR, agent_drafted_set, load_question_sets
 from eval.schema import EvalRecord
@@ -59,6 +59,8 @@ EXIT_USAGE = 2
 EXIT_COULD_NOT_RUN = 3
 QUESTIONS_LABEL = "agent-drafted questions, dev, answerable only"
 TUNED_LABEL = "tuned on dev, n = 10"
+TIE_NOTE = ("uninformative on recall@10: global recall@10 is the same at every N, so the tie "
+            "rule chose the smallest N; the shown-chunk diagnostics are not used to choose")
 CHOICE_CLASS = "global"
 REPORT_PREFIX = "global-n-run"
 LEVELS: tuple[Level, ...] = (LOWER, TOP)
@@ -75,6 +77,11 @@ Retrieved = Sequence[tuple[EvalRecord, GlobalRetrieval]]
 def choose_n(scores: Mapping[int, Mapping[str, ClassScores]]) -> int:
     """The N with the highest global recall@10; a tie goes to the smaller N."""
     return max(sorted(scores), key=lambda n: (scores[n][CHOICE_CLASS].recall_at_10, -n))
+
+
+def ties_at_every_n(scores: Mapping[int, Mapping[str, ClassScores]]) -> bool:
+    """Whether global recall@10 is the same at every N, so only the tie rule chose."""
+    return len({round(s[CHOICE_CLASS].recall_at_10, DECIMALS) for s in scores.values()}) == 1
 
 
 def _classes(records: Sequence[EvalRecord]) -> list[str]:
@@ -158,7 +165,10 @@ def main(argv: Sequence[str] | None = None, *, open_selection: OpenSelection | N
     shown = {level: {n: _shown(found[level], n, classes) for n in N_CHOICES}
              for level in LEVELS}
     chosen = choose_n(scores[LOWER])
+    tied = ties_at_every_n(scores[LOWER])
     _print(scores, shown, chosen)
+    if tied:
+        print(f"Note: {TIE_NOTE}.")
     path = next_report_path(report_dir, REPORT_PREFIX)
     write_json_atomic(path, {
         "commit": commit if commit is not None else git_state(),
@@ -170,6 +180,8 @@ def main(argv: Sequence[str] | None = None, *, open_selection: OpenSelection | N
                    "ablation_level": TOP},
         "rule": "highest lower-level global recall@10; a tie goes to the smaller N",
         "chosen_n": chosen,
+        "recall_at_10_ties_at_every_n": tied,
+        "choice_note": TIE_NOTE if tied else None,
         "scores": {level: {str(n): {c: s.model_dump(by_alias=True) for c, s in by_class.items()}
                            for n, by_class in by_n.items()}
                    for level, by_n in scores.items()},

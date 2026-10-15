@@ -127,3 +127,17 @@ def test_an_arm_error_stops_with_nothing_written(eval_dir, tmp_path, capsys):
     assert code == EXIT_COULD_NOT_RUN
     assert "graph down" in capsys.readouterr().err
     assert not (tmp_path / "reports").exists()
+
+
+def test_a_choice_made_by_the_tie_rule_alone_is_labelled(eval_dir, tmp_path):
+    _main(eval_dir, tmp_path, FakeSelection(1))
+    report = _report(tmp_path)
+    assert report["recall_at_10_ties_at_every_n"] is True
+    assert "tie" in report["choice_note"]
+
+
+def test_a_choice_recall_at_10_separates_is_not_labelled_a_tie(eval_dir, tmp_path):
+    _main(eval_dir, tmp_path, FakeSelection(5))
+    report = _report(tmp_path)
+    assert report["recall_at_10_ties_at_every_n"] is False
+    assert report["choice_note"] is None
