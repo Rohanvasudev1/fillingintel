@@ -34,6 +34,10 @@ _MS_PER_SECOND = 1000.0
 
 logger = logging.getLogger(__name__)
 
+# openai leaves Response's schema to be built on first use, and judge threads building
+# it at once raised AttributeError ('__pydantic_core_schema__') in a full run.
+Response.model_rebuild()
+
 
 @dataclass(frozen=True)
 class OpenAIUsage:

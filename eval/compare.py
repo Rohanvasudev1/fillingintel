@@ -15,6 +15,9 @@ difference counts only when its interval excludes 0.  Questions in only one
 run, and shared questions only one run scored on a metric, are counted, never
 silently dropped.
 
+A run limited with ``eval.run --classes`` pairs with a full run on the
+questions both hold; the full run's other questions are listed as only in it.
+
 Cells and questions are matched by question set, not arm, so the same command
 compares a repeat with its baseline or one arm with another.  Runs on a
 different eval set, split or answer prompt are refused, because their scores
@@ -324,7 +327,9 @@ def main(argv: list[str] | None = None) -> int:
         return EXIT_USAGE
     for label, path, document in (("before", args.before, before), ("after", args.after, after)):
         header = document["header"]
-        print(f"{label}: {path.name} (arm {header.get('arm')}, commit {header.get('commit')})")
+        classes = ",".join(header.get("classes") or ()) or "all"
+        print(f"{label}: {path.name} (arm {header.get('arm')}, commit {header.get('commit')}, "
+              f"classes {classes})")
     print("set\tclass\tmetric\tbefore\tafter\tchange")
     for c in changes:
         print("\t".join([c.question_set, c.class_, c.metric,

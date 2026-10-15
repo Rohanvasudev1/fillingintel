@@ -303,3 +303,33 @@ def test_the_command_prints_paired_differences_and_unpaired_questions(tmp_path, 
     assert "only in before: 1 (agent_drafted:q99)" in out
     assert "only in after: 0" in out
     assert "seed 7" in out
+
+
+def test_a_class_limited_run_pairs_with_a_full_run_on_the_shared_questions(
+    eval_dir, tmp_path, env  # noqa: F811
+):
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    assert run() == 0
+    assert run("--classes", "global,decline,unanswerable") == 0
+    (limited_path,) = runs.glob("*-2.json")
+    (full_path,) = set(runs.glob("*.json")) - {limited_path}
+    full, limited = _load(full_path), _load(limited_path)
+    paired = compare_paired(full, limited)
+    assert {d.class_ for d in paired.differences} == {"global", "decline", "unanswerable", POOLED}
+    assert all(d.mean == 0 for d in paired.differences)
+    assert [q for _, q in paired.only_before] == ["q0072", "q0073", "q0113"]
+    assert paired.only_after == ()
+    shared = {c.class_ for c in compare(full, limited) if c.delta is not None}
+    assert shared == {"global", "decline", "unanswerable"}
+
+
+def test_the_command_prints_each_runs_class_selection(eval_dir, tmp_path, env, capsys):  # noqa: F811
+    _, _, runs, run = _setup(eval_dir, tmp_path)
+    assert run() == 0
+    assert run("--classes", "global") == 0
+    (limited,) = runs.glob("*-2.json")
+    (full,) = set(runs.glob("*.json")) - {limited}
+    capsys.readouterr()
+    assert main([str(full), str(limited)]) == 0
+    before, after = capsys.readouterr().out.splitlines()[:2]
+    assert "classes all" in before and "classes global" in after

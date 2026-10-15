@@ -182,6 +182,7 @@ class RunInfo:
     seed: int
     uncached: bool  # True: answers and judges came from fresh API calls, none replayed
     response_cache_dir: str  # the response cache folder's name
+    classes: tuple[Class, ...] | None = None  # the --classes selection; None runs every class
 
 
 def build_header(
@@ -196,6 +197,7 @@ def build_header(
         "arm": run.arm,
         "split": run.split,
         "final": run.final,
+        **({"classes": list(run.classes)} if run.classes is not None else {}),
         "seed": run.seed,
         "response_cache": {"uncached": run.uncached, "dir": run.response_cache_dir},
         "bootstrap": {"resamples": bootstrap.BOOTSTRAP_RESAMPLES,
