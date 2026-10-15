@@ -41,7 +41,7 @@ from graph.report_writer import (  # noqa: E402
     plan_lower,
     plan_top,
 )
-from graph.reports import read_repo_inputs  # noqa: E402
+from graph.reports import read_batch_and_texts  # noqa: E402
 from graph.step12_spend import COMMUNITIES_DIR  # noqa: E402
 from retrieve.answer_model import AnswerModelError, AnthropicAnswerModel  # noqa: E402
 
@@ -70,11 +70,15 @@ def _community_json(community) -> dict[str, object]:
 
 
 def main(argv: list[str]) -> int:
+    if os.environ.get("ANTHROPIC_BASE_URL"):
+        print("ANTHROPIC_BASE_URL is set; unset it so filing text and the API key go only to "
+              "Anthropic", file=sys.stderr)
+        return 1
     prompt = load_prompt()
     communities = read_communities_file(latest_communities_file(COMMUNITIES_DIR)).communities
     chosen = [c for c in communities
               if c.community_id == CAPTURE_TOP or c.parent == CAPTURE_TOP]
-    batch, texts = read_repo_inputs()
+    batch, texts = read_batch_and_texts()
     index = CommunityIndex.from_batch(batch)
     lower = plan_lower(chosen, index, texts, prompt)
     estimate = estimate_reports([p.request for p in lower], [len(lower)], prompt, workers=1)

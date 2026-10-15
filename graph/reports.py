@@ -41,7 +41,6 @@ from pathlib import Path
 import psycopg
 
 from graph.batch import Batch
-from graph.communities import CouldNotRun, read_built
 from graph.community import LOWER, TOP, Community
 from graph.community_file import (
     CommunitiesFile,
@@ -50,6 +49,7 @@ from graph.community_file import (
     read_communities_file,
 )
 from graph.community_graph import DuplicateKey, community_graph
+from graph.repo_build import DATABASE_ENV, CouldNotRun, read_built
 from graph.report_estimate import estimate_reports
 from graph.report_file import next_reports_path, run_header, write_reports_file
 from graph.report_input import DEFAULT_BUDGET, CommunityIndex
@@ -85,7 +85,6 @@ EXIT_USAGE = 2
 EXIT_RUN_ERROR = 3
 MAX_COST_USD = 1.0
 BASE_URL_ENV = "ANTHROPIC_BASE_URL"
-DATABASE_ENV = "DATABASE_URL"
 
 ReadInputs = Callable[[], tuple[Batch, Mapping[str, str]]]
 OpenModel = Callable[[], AbstractContextManager[AnswerModel]]
@@ -116,7 +115,7 @@ class _Plan:
     estimate: CostEstimate
 
 
-def read_repo_inputs() -> tuple[Batch, Mapping[str, str]]:
+def read_batch_and_texts() -> tuple[Batch, Mapping[str, str]]:
     """The builder's batch, as `graph.load` builds it, and every chunk's text."""
     _, built = read_built()
     try:
@@ -158,7 +157,7 @@ def _check_env() -> None:
 
 
 def main(argv: Sequence[str] | None = None, *, communities_dir: Path = COMMUNITIES_DIR,
-         read: ReadInputs = read_repo_inputs, open_model: OpenModel = _anthropic_model,
+         read: ReadInputs = read_batch_and_texts, open_model: OpenModel = _anthropic_model,
          response_cache: Path = DEFAULT_CACHE_DIR) -> int:
     """CLI entry point; see the module docstring for the exit codes."""
     try:
@@ -295,7 +294,7 @@ def _run(writer: ReportWriter, communities: CommunitiesFile, index: CommunityInd
     except (CacheError, OSError) as exc:
         raise _Stop(EXIT_RUN_ERROR, f"could not write the reports: {exc}") from exc
     records = result.records
-    dropped = sum(r.report.dropped for r in records if r.report)
+    dropped = sum(r.report.dropped for r in records)
     print(f"{len(records)} reports ({dropped} sentences dropped); this run cost "
           f"${header['cost_this_run_usd']:.4f}. Wrote {_display(path)}")
     if result.failures:

@@ -9,6 +9,7 @@ top community's lists its lower reports' kept text.
 from __future__ import annotations
 
 import hashlib
+import html
 import json
 from dataclasses import dataclass
 from string import Template
@@ -78,7 +79,8 @@ def build_lower_request(prompt: ReportPrompt, built: LowerInput) -> ReportReques
 
 
 def report_block(child: ChildReport) -> str:
-    return f'<report id="{child.community_id}" title="{child.title}">\n{child.text}\n</report>'
+    title = html.escape(child.title, quote=True)
+    return f'<report id="{child.community_id}" title="{title}">\n{child.text}\n</report>'
 
 
 def build_top_request(prompt: ReportPrompt, built: TopInput) -> ReportRequest:

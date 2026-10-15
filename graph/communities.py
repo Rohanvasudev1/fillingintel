@@ -18,17 +18,13 @@ Reads DATABASE_URL. Exit codes as graph.validate: 0 written; 2 bad arguments;
 from __future__ import annotations
 
 import argparse
-import os
 import statistics
 import sys
 from collections.abc import Callable, Sequence
 from importlib.metadata import version
 from pathlib import Path
 
-import psycopg
-
-from graph.build_input import InputError
-from graph.builder import BuildError, Built, build_graph
+from graph.builder import Built
 from graph.community import (
     DEFAULT_SETTINGS,
     LOWER,
@@ -40,9 +36,9 @@ from graph.community import (
     find_communities,
 )
 from graph.community_graph import CommunityGraph, DuplicateKey, community_graph
-from graph.load import LoadInputs, read_repo_inputs
+from graph.load import LoadInputs
 from graph.load_report import next_report_path
-from graph.structural import read_structural
+from graph.repo_build import CouldNotRun, read_built
 from graph.validate import EXIT_OK, EXIT_RUN_ERROR
 from ingest.atomic_json import write_json_atomic
 from ingest.provenance import REPO_ROOT, git_state
@@ -52,25 +48,6 @@ __all__ = ["OUTPUT_DIR", "CouldNotRun", "communities_run", "main", "read_built"]
 OUTPUT_DIR = REPO_ROOT / "benchmarks" / "communities"
 RUN_PREFIX = "communities-run"
 LIBRARY = "graspologic-native"
-
-
-class CouldNotRun(RuntimeError):
-    """The inputs could not be read or built; the message is safe to print."""
-
-
-def read_built() -> tuple[LoadInputs, Built]:
-    """The load inputs and the builder's output, as `graph.load` makes them."""
-    url = os.environ.get("DATABASE_URL")
-    if not url:
-        raise CouldNotRun("DATABASE_URL is not set")
-    try:
-        inputs = read_repo_inputs()
-        with psycopg.connect(url) as conn:
-            conn.read_only = True
-            rows = read_structural(conn)
-        return inputs, build_graph(rows, inputs.files, inputs.alias_map, inputs.links)
-    except (InputError, BuildError, psycopg.Error) as exc:
-        raise CouldNotRun(f"{type(exc).__name__}: {exc}") from exc
 
 
 def _level(communities: Sequence[Community], level: Level) -> dict[str, object]:

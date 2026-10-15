@@ -55,7 +55,7 @@ def _usage(usage: TokenUsage | None) -> dict[str, int] | None:
 def _uncached_cost(result: ReportsResult) -> float:
     """What this run's calls cost, failed replies included; replays cost nothing."""
     reports = sum(r.cost_usd for r in result.records if r.usage is not None and not r.from_cache)
-    failed = sum(anthropic_cost(REPORT_MODEL, f.usage, REPORT_PRICES) for f in result.failures
+    failed = sum(anthropic_cost(f.model, f.usage, REPORT_PRICES) for f in result.failures
                  if f.usage is not None and not f.from_cache)
     return reports + failed
 
@@ -65,21 +65,19 @@ def record_json(record: ReportRecord) -> dict[str, object]:
     return {
         "kind": "report", "community_id": record.community_id,
         "member_hash": record.member_hash, "level": record.level, "status": record.status,
-        "title": report.title if report else "", "summary": report.summary if report else "",
-        "findings": list(report.findings) if report else [], "report": record.text,
-        "report_chunk_ids": list(record.chunk_ids),
-        "kept_sentences": report.kept_sentences if report else 0,
-        "dropped": report.dropped if report else 0,
-        "dropped_by_reason": dict(report.dropped_by_reason) if report else {},
+        "title": report.title, "summary": report.summary, "findings": list(report.findings),
+        "report": report.text, "report_chunk_ids": list(report.report_chunk_ids),
+        "kept_sentences": report.kept_sentences, "dropped": report.dropped,
+        "dropped_by_reason": dict(report.dropped_by_reason),
         "inputs": list(record.inputs), "prompt_version": record.prompt_version,
-        "model": REPORT_MODEL, "effort": REPORT_EFFORT, "usage": _usage(record.usage),
+        "model": record.model, "effort": record.effort, "usage": _usage(record.usage),
         "cost_usd": record.cost_usd, "from_cache": record.from_cache,
     }
 
 
 def failure_json(failure: ReportFailure) -> dict[str, object]:
     return {"community_id": failure.community_id, "level": failure.level,
-            "reason": failure.reason, "detail": failure.detail,
+            "reason": failure.reason, "detail": failure.detail, "model": failure.model,
             "usage": _usage(failure.usage), "from_cache": failure.from_cache}
 
 
@@ -98,8 +96,8 @@ def _totals(result: ReportsResult) -> dict[str, object]:
         "cache_read_input_tokens": sum(u.cache_read_input_tokens for u in usages),
         "cache_creation_input_tokens": sum(u.cache_creation_input_tokens for u in usages),
         "cost_usd": sum(r.cost_usd for r in records),
-        "kept_sentences": sum(r.report.kept_sentences for r in records if r.report),
-        "dropped_sentences": sum(r.report.dropped for r in records if r.report),
+        "kept_sentences": sum(r.report.kept_sentences for r in records),
+        "dropped_sentences": sum(r.report.dropped for r in records),
         "failures": len(result.failures),
     }
 

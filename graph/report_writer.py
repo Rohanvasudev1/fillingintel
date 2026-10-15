@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from typing import Literal, TypeVar
 
 from graph.community import LOWER, TOP, Community, Level
-from graph.report_check import CheckedReport, ReplyError, check_report, parse_report_reply
+from graph.report_check import EMPTY, CheckedReport, ReplyError, check_report, parse_report_reply
 from graph.report_input import (
     DEFAULT_BUDGET,
     ChildReport,
@@ -34,6 +34,8 @@ from graph.report_input import (
 )
 from graph.report_prompt import ReportPrompt
 from graph.report_request import (
+    REPORT_EFFORT,
+    REPORT_MODEL,
     REPORT_PRICES,
     ReportRequest,
     build_lower_request,
@@ -56,24 +58,25 @@ class ReportRecord:
     member_hash: str
     level: Level
     status: Status
-    report: CheckedReport | None  # None for `no_input`
+    report: CheckedReport  # EMPTY for `no_input`
     inputs: tuple[str, ...]  # passages shown (lower) or lower reports read (top)
     prompt_version: str
+    model: str
+    effort: str
     usage: TokenUsage | None
     cost_usd: float  # what the call cost when it was made
     from_cache: bool
 
     @property
     def text(self) -> str:
-        return self.report.text if self.report is not None else ""
+        return self.report.text
 
     @property
     def chunk_ids(self) -> tuple[str, ...]:
-        return self.report.report_chunk_ids if self.report is not None else ()
+        return self.report.report_chunk_ids
 
     def child(self) -> ChildReport:
-        title = self.report.title if self.report is not None else ""
-        return ChildReport(self.community_id, title, self.text, self.chunk_ids)
+        return ChildReport(self.community_id, self.report.title, self.text, self.chunk_ids)
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,6 +85,7 @@ class ReportFailure:
     level: Level
     reason: Reason
     detail: str
+    model: str
     usage: TokenUsage | None = None
     from_cache: bool = False
 
@@ -139,14 +143,15 @@ def plan_top(communities: Sequence[Community], lower: Sequence[Outcome],
                     if c.parent == community.community_id]
         if failed := [c.community_id for c in children if isinstance(c, ReportFailure)]:
             plans.append(ReportFailure(community.community_id, TOP, "lower_report_failed",
-                                       f"lower reports failed: {', '.join(failed)}"))
+                                       f"lower reports failed: {', '.join(failed)}",
+                                       REPORT_MODEL))
             continue
         built = top_input(community, [c.child() for c in children
                                       if isinstance(c, ReportRecord)])
         if not built.children:
             plans.append(ReportRecord(community.community_id, community.member_hash, TOP,
-                                      "no_input", None, (), prompt.prompt_version, None, 0.0,
-                                      False))
+                                      "no_input", EMPTY, (), prompt.prompt_version,
+                                      REPORT_MODEL, REPORT_EFFORT, None, 0.0, False))
             continue
         plans.append(Planned(community, build_top_request(prompt, built), built.evidence,
                              tuple(c.community_id for c in built.children)))
@@ -175,30 +180,33 @@ class ReportWriter:
 
     def write(self, plan: Planned) -> Outcome:
         """The report for *plan*; an error not about this community (the cache) raises."""
-        community, level = plan.community, plan.request.level
+        community, request = plan.community, plan.request
+
+        def failed(reason: Reason, detail: str, usage: TokenUsage | None = None,
+                   from_cache: bool = False) -> ReportFailure:
+            return ReportFailure(community.community_id, request.level, reason, detail,
+                                 request.model, usage, from_cache)
+
         try:
-            response = self._model.complete(plan.request)
+            response = self._model.complete(request)
         except AnswerModelError as exc:
-            return ReportFailure(community.community_id, level, "call_failed", str(exc))
+            return failed("call_failed", str(exc))
         try:
             reply = parse_reply(response.body)
         except AnswerModelError as exc:
-            return ReportFailure(community.community_id, level, "invalid_reply", str(exc),
-                                 None, response.from_cache)
+            return failed("invalid_reply", str(exc), None, response.from_cache)
         if reply.stop_reason in _UNUSABLE_STOPS:
-            return ReportFailure(community.community_id, level, "invalid_reply",
-                                 f"the reply stopped with {reply.stop_reason}", reply.usage,
-                                 response.from_cache)
+            return failed("invalid_reply", f"the reply stopped with {reply.stop_reason}",
+                          reply.usage, response.from_cache)
         try:
             parsed = parse_report_reply(reply.text)
         except ReplyError as exc:
-            return ReportFailure(community.community_id, level, "invalid_reply", str(exc),
-                                 reply.usage, response.from_cache)
+            return failed("invalid_reply", str(exc), reply.usage, response.from_cache)
         return ReportRecord(
-            community.community_id, community.member_hash, level, "written",
+            community.community_id, community.member_hash, request.level, "written",
             check_report(parsed, plan.evidence), plan.inputs, self._prompt.prompt_version,
-            reply.usage, anthropic_cost(plan.request.model, reply.usage, REPORT_PRICES),
-            response.from_cache)
+            request.model, request.effort, reply.usage,
+            anthropic_cost(request.model, reply.usage, REPORT_PRICES), response.from_cache)
 
 
 def _map(fn: Callable[[T], R], items: Sequence[T], workers: int) -> list[R]:

@@ -48,6 +48,9 @@ class CheckedReport:
         return "\n".join([*lines, *(FINDING_PREFIX + f for f in self.findings)])
 
 
+EMPTY = CheckedReport("", "", (), (), 0, 0, {})
+
+
 def check_report(reply: ReportReply, evidence: Collection[str]) -> CheckedReport:
     """*reply* with every sentence whose citations are not all in *evidence* dropped."""
     checks = [enforce_citations(text, evidence) for text in (reply.summary, *reply.findings)]
