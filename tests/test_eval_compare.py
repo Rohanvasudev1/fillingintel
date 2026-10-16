@@ -102,6 +102,51 @@ def test_the_command_prints_both_runs_and_every_change(two_runs, capsys):
     assert "metrics.recall@5" in out
 
 
+def _other_prompt(two_runs, tmp_path):
+    after = _load(two_runs[1])
+    after["header"]["answer_prompt"] = {"version": "global_reduce/v1@1a2b3c4d", "sha256": "0" * 64}
+    path = tmp_path / "other_prompt.json"
+    path.write_text(json.dumps(after), encoding="utf-8")
+    return path
+
+
+def test_the_command_refuses_another_answer_prompt_by_default(two_runs, tmp_path, capsys):
+    assert main([str(two_runs[0]), str(_other_prompt(two_runs, tmp_path))]) == EXIT_USAGE
+    assert "--allow-answer-prompts" in capsys.readouterr().err
+
+
+def test_with_the_flag_another_answer_prompt_is_compared_and_labelled(two_runs, tmp_path, capsys):
+    after = _other_prompt(two_runs, tmp_path)
+    assert main([str(two_runs[0]), str(after), "--allow-answer-prompts"]) == 0
+    out = capsys.readouterr().out
+    assert out.count("answer prompts differ") == 2  # the change table and the paired table
+    assert "global_reduce/v1@1a2b3c4d" in out and "metrics.recall@5" in out
+
+
+def test_prompts_with_one_version_and_two_hashes_are_told_apart(two_runs, tmp_path, capsys):
+    after = _load(two_runs[1])
+    after["header"]["answer_prompt"]["sha256"] = "9" * 64
+    path = tmp_path / "other_hash.json"
+    path.write_text(json.dumps(after), encoding="utf-8")
+    assert main([str(two_runs[0]), str(path), "--allow-answer-prompts"]) == 0
+    assert "sha256 99999999" in capsys.readouterr().out
+
+
+def test_paired_differences_with_another_answer_prompt_need_the_flag(two_runs):
+    before, after = (_load(p) for p in two_runs)
+    after["header"]["answer_prompt"] = {"version": "global_reduce/v1", "sha256": "0" * 64}
+    with pytest.raises(CompareError, match="answer_prompt"):
+        compare_paired(before, after)
+    assert compare_paired(before, after, allow_answer_prompts=True).differences
+
+
+def test_the_flag_still_refuses_another_split(two_runs):
+    before, after = (_load(p) for p in two_runs)
+    after["header"]["split"] = "test"
+    with pytest.raises(CompareError, match="split"):
+        compare(before, after, allow_answer_prompts=True)
+
+
 def test_the_command_refuses_a_file_that_is_not_json(two_runs, tmp_path, capsys):
     broken = tmp_path / "broken.json"
     broken.write_text("{not json", encoding="utf-8")

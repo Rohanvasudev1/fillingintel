@@ -4,7 +4,7 @@ Citation-grounded question answering over SEC filings. Ask what NVDA, AMD or INT
 
 The project compares four retrieval strategies (vector search, graph neighbourhood search, Cypher traversal and community summaries) on one set of agent-drafted questions (140, used without human review), and publishes where each one wins and loses.
 
-**Status:** in progress. Ingest, chunking and `resolve(chunk_id)` are built and verified on 24 filings (RUNBOOK Steps 2–3). Step 4 is closed with 140 agent-drafted eval questions, used without human review and labelled as such wherever results appear. Measured so far: entity resolution (Steps 9 and 9b) and the two graph retrieval arms against vector search on the `dev` split (Step 11), below. The full benchmark on the held-out `test` split comes in Step 13.
+**Status:** in progress. Ingest, chunking and `resolve(chunk_id)` are built and verified on 24 filings (RUNBOOK Steps 2–3). Step 4 is closed with 140 agent-drafted eval questions, used without human review and labelled as such wherever results appear. Measured so far: entity resolution (Steps 9 and 9b), the two graph retrieval arms against vector search on the `dev` split (Step 11) and community summaries with global search (Step 12), below. The full benchmark on the held-out `test` split comes in Step 13.
 
 ## Docs
 
@@ -129,6 +129,25 @@ Paired against `vector` (fixed-seed bootstrap, 95% intervals), pooled recall@10 
 | 0.946 (88 of 93) | 1.000 | 1.000 | 0 |
 
 A query counts as valid when it passes the ontology check and runs without error inside the timeout. A revised prompt, `cypher/v2`, was valid first time on all 93 questions but retrieved worse (pooled recall@10 0.727), so `v1` is used. These are `dev` figures; `test` is scored once, in Step 13.
+
+## Community summaries and global search (Step 12)
+
+Leiden clustering (`graspologic-native` 1.3.1, fixed seed, modularity at resolution 1.0) runs over the extracted entities, with edges weighted by evidence chunks and by chunks two entities share. It gives 35 top-level and 122 lower-level communities (median 13.5 members at the lower level). claude-haiku-5-5 wrote a report for each of the 144 communities with 3 or more members. Every report sentence cites a chunk inside its community, and uncited sentences are dropped (1,477 kept, 57 dropped). The reports cost $0.27.
+
+`graph_global` answers by map-reduce (ADR-0008). It picks the 4 lower communities whose reports sit closest to the question. One map call per community reads the report and 6 evidence chunks and writes scored points citing those chunks. A reduce call turns the points into the answer. Reports are never cited; every claim cites a filing chunk.
+
+**Agent-drafted questions, `dev` split, N tuned on `dev`** (it tied at every value tried). Run at commit `5bb0799` on load run 5 (ontology 5); `vector` is the Step 5 baseline at `96e8c69`. `graph_global` answers with its own reduce prompt, so judged scores compare whole pipelines.
+
+| 10 global questions | `vector` | `graph_global` | Paired difference [95% interval] |
+|---|---|---|---|
+| Recall@10 | **0.800** | 0.458 [0.300, 0.617] | −0.342 [−0.500, −0.183] |
+| Recall@5 | **0.592** | 0.333 | −0.258 [−0.508, −0.025] |
+| Answer relevancy (judged, uncalibrated) | **0.781** | 0.694 | −0.088 [−0.160, −0.027] |
+| Faithfulness (judged, uncalibrated) | 0.787 | 0.818 | +0.031 [−0.115, 0.170] |
+| Citation support (judged, uncalibrated) | **0.974** | 0.931 | −0.043 [−0.085, −0.009] |
+| Cost per question | **$0.035** | $0.082 | |
+
+Community search did find relevant evidence: its recall@10 interval excludes 0, and a check traced all 163 kept citations through a selected community to their chunks with no break. It still lost to vector search on the questions it was built for. The research plan predicted a relevancy gain of at least 0.10 (H4); the measured change is a loss. Both arms declined all 6 advice questions and answered "not found" on all 5 unanswerable ones (directional, n under 10). Lookup, local and multi-hop questions, and the `test` split, wait for Step 13.
 
 ## Running it
 

@@ -21,7 +21,10 @@ questions both hold; the full run's other questions are listed as only in it.
 Cells and questions are matched by question set, not arm, so the same command
 compares a repeat with its baseline or one arm with another.  Runs on a
 different eval set, split or answer prompt are refused, because their scores
-answer different questions.
+answer different questions.  ``--allow-answer-prompts`` (user decision,
+2026-10-16) compares runs whose answer prompts differ, as graph_global's reduce
+prompt differs from ``answer/v1``: it prints both prompts and labels the output,
+since judged metrics then compare whole pipelines, not retrieval alone.
 """
 from __future__ import annotations
 
@@ -46,7 +49,9 @@ from eval.schema import NO_GOLD_CLASSES, Class
 
 EXIT_USAGE = 2
 # Header fields two runs must share for their scores to be comparable.
-MUST_MATCH = ("split", "answer_prompt")
+ANSWER_PROMPT = "answer_prompt"
+MUST_MATCH = ("split", ANSWER_PROMPT)
+ALLOW_PROMPTS_FLAG = "--allow-answer-prompts"
 _INTERVAL_KEYS = frozenset({"interval", "intervals", "share_of_wrong_interval"})
 WRONG_EVIDENCE = "wrong_evidence.rate"  # the cell path of the wrong-evidence rate
 
@@ -77,13 +82,17 @@ def _question_sets(header: Mapping[str, object]) -> list[tuple[object, object]]:
     return [(s.get("name"), s.get("sha256")) for s in sets if isinstance(s, dict)]
 
 
-def _check_setup(before: Mapping[str, object], after: Mapping[str, object]) -> None:
-    differ = [f for f in MUST_MATCH if before.get(f) != after.get(f)]
+def _check_setup(before: Mapping[str, object], after: Mapping[str, object],
+                 allow_answer_prompts: bool) -> None:
+    fields = [f for f in MUST_MATCH if not (allow_answer_prompts and f == ANSWER_PROMPT)]
+    differ = [f for f in fields if before.get(f) != after.get(f)]
     if _question_sets(before) != _question_sets(after):
         differ.append("question_sets")
     if differ:
+        hint = (f" ({ALLOW_PROMPTS_FLAG} compares runs whose answer prompts differ)"
+                if differ == [ANSWER_PROMPT] else "")
         raise CompareError(f"the runs differ in {', '.join(differ)}; "
-                           "only runs of the same setup can be compared")
+                           f"only runs of the same setup can be compared{hint}")
 
 
 def _leaves(node: object, prefix: str = "") -> Iterator[tuple[str, float]]:
@@ -113,19 +122,22 @@ def _cells(document: Mapping[str, object]) -> dict[tuple[str, str], dict[str, fl
 
 
 def _headers(
-    before: Mapping[str, object], after: Mapping[str, object]
+    before: Mapping[str, object], after: Mapping[str, object], allow_answer_prompts: bool
 ) -> tuple[Mapping[str, object], Mapping[str, object]]:
     """Both headers, once the runs are known to share a setup."""
     headers = before.get("header"), after.get("header")
     if not (isinstance(headers[0], Mapping) and isinstance(headers[1], Mapping)):
         raise CompareError("a results file has no header")
-    _check_setup(*headers)
+    _check_setup(*headers, allow_answer_prompts)
     return headers[0], headers[1]
 
 
-def compare(before: Mapping[str, object], after: Mapping[str, object]) -> list[Change]:
-    """One ``Change`` per numeric cell value in either run, in *before*'s cell order."""
-    _headers(before, after)
+def compare(before: Mapping[str, object], after: Mapping[str, object], *,
+            allow_answer_prompts: bool = False) -> list[Change]:
+    """One ``Change`` per numeric cell value in either run, in *before*'s cell order.
+
+    *allow_answer_prompts* compares runs whose answer prompts differ."""
+    _headers(before, after, allow_answer_prompts)
     before_cells, after_cells = _cells(before), _cells(after)
     changes = []
     for key in dict.fromkeys([*before_cells, *after_cells]):
@@ -271,14 +283,16 @@ def _class_rank(class_: str) -> int:
     return _CLASS_ORDER.index(class_) if class_ in _CLASS_ORDER else len(_CLASS_ORDER)
 
 
-def compare_paired(before: Mapping[str, object], after: Mapping[str, object]) -> Paired:
+def compare_paired(before: Mapping[str, object], after: Mapping[str, object], *,
+                   allow_answer_prompts: bool = False) -> Paired:
     """Paired differences per (question set, class) and pooled, on the questions both hold.
 
     Classes come in schema order.  ``POOLED`` holds the answerable classes only; decline
     and unanswerable are reported in their own rows (research plan).  Each interval's
     generator is seeded by *before*'s seed and the set, class and metric.
+    *allow_answer_prompts* compares runs whose answer prompts differ.
     """
-    before_header, _ = _headers(before, after)
+    before_header, _ = _headers(before, after, allow_answer_prompts)
     seed = _seed(before_header)
     old, new = _questions(before), _questions(after)
     shared = [key for key in old if key in new]
@@ -312,16 +326,39 @@ def _load(path: Path) -> Mapping[str, object]:
     return document
 
 
+def _prompt_note(before: Mapping[str, object], after: Mapping[str, object]) -> str | None:
+    """The label both tables carry when the answer prompts differ; None when they match."""
+    prompts = before.get(ANSWER_PROMPT), after.get(ANSWER_PROMPT)
+    if prompts[0] == prompts[1]:
+        return None
+    names = [_prompt_name(p) for p in prompts]
+    if names[0] == names[1]:
+        names = [_prompt_name(p, with_hash=True) for p in prompts]
+    return (f"answer prompts differ: before {names[0]}, after {names[1]}; judged metrics "
+            "compare whole pipelines, not retrieval alone")
+
+
+def _prompt_name(prompt: object, with_hash: bool = False) -> str:
+    if not isinstance(prompt, Mapping):
+        return str(prompt)
+    sha = prompt.get("sha256")
+    suffix = f" (sha256 {str(sha)[:8]})" if with_hash else ""
+    return f"{prompt.get('version')}{suffix}"
+
+
 def main(argv: list[str] | None = None) -> int:
     """CLI entry point.  Exit codes: 0 ok; 2 the files cannot be compared."""
     parser = argparse.ArgumentParser(description="Score change between two results files.")
     parser.add_argument("before", type=Path)
     parser.add_argument("after", type=Path)
+    parser.add_argument(ALLOW_PROMPTS_FLAG, action="store_true",
+                        help="compare runs whose answer prompts differ, labelled as such")
     args = parser.parse_args(argv)
+    allow = args.allow_answer_prompts
     try:
         before, after = _load(args.before), _load(args.after)
-        changes = compare(before, after)
-        paired = compare_paired(before, after)
+        changes = compare(before, after, allow_answer_prompts=allow)
+        paired = compare_paired(before, after, allow_answer_prompts=allow)
     except CompareError as exc:
         print(str(exc), file=sys.stderr)
         return EXIT_USAGE
@@ -330,11 +367,16 @@ def main(argv: list[str] | None = None) -> int:
         classes = ",".join(header.get("classes") or ()) or "all"
         print(f"{label}: {path.name} (arm {header.get('arm')}, commit {header.get('commit')}, "
               f"classes {classes})")
+    prompt_note = _prompt_note(before["header"], after["header"])
+    if prompt_note:
+        print(prompt_note)
     print("set\tclass\tmetric\tbefore\tafter\tchange")
     for c in changes:
         print("\t".join([c.question_set, c.class_, c.metric,
                          _fmt(c.before), _fmt(c.after), _fmt(c.delta)]))
     print()
+    if prompt_note:
+        print(prompt_note)
     _print_paired(paired)
     return 0
 
