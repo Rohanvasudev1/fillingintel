@@ -2475,6 +2475,22 @@ Both are harness changes the user approved on 2026-10-15 (Step 12 grilling). Bra
 
 ---
 
+## 2026-10-16 — Step 13 grilling, spec and tickets
+
+- **Grilling.** Every round was answered "as recommended", with three changes from the user: judge calibration is B + C, spend is capped at $10, and the tickets are run one at a time.
+  - B: the user scores 30 dev answers, with the claims split by a separate agent call.
+  - C: a corruption test that plants known errors.
+  - The $10 cap replaces an estimate of about $17.60. To fit it, `graph_global` gets no dev answer run outside global questions and runs retrieval-only on 33 `test` questions.
+  - Decisions are in CLAUDE.md (Step 13 entry), with a dated RESEARCH-PLAN amendment (dev-best and oracle router rows, a calibration statistic per score type, retrieval-only `graph_global` cells, H5 on total latency).
+- **Research** (docs/research/router-langgraph-and-judge-calibration.md). LangGraph 1.2.12 is already locked through ragas, makes no network calls, and adds only a diagram for a classify-then-dispatch router. The router is a plain dispatch function, and LangGraph is reconsidered at Step 13b. Cohen's kappa fits only the yes/no judge scores; Spearman's rho with MAE and signed bias covers the 0–1 scores.
+- **Docs.** New CONTEXT.md terms: router, predicted class, routing map, oracle router, router accuracy and corruption test; the calibration entry is updated. ARCHITECTURE's router and `results.md` lines are updated. OPEN-DECISIONS items settled here are removed.
+- **Spec and tickets.** `.scratch/step-13/spec.md` and five tickets: harness additions, `results.md` with the dev-best map, the router through the freeze, calibration with the corruption test, and the `test` run. Planned spend is about $8.20 of $10. Nothing was spent in this session.
+
+**Next session starts with**
+1. `/implement` on `.scratch/step-13/issues/01-harness-additions-and-graph-housekeeping.md`.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.

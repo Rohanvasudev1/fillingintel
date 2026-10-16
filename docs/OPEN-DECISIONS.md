@@ -11,13 +11,12 @@ Decisions raised but not yet made, grouped by the step where each must be settle
 - Optional, before the final benchmark: the friend Ctrl-F test on five dev multi-hop drafts (skipped on 2026-10-04).
 
 ## Steps 5–6 — eval harness
-Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstrap 95% intervals on every results cell. Still open:
-- Calibrate the LLM judges against ~60 hand-scored answers (Cohen's kappa). Until then every judged number is labelled "uncalibrated". Must happen before the final benchmark.
+Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstrap 95% intervals on every results cell. Judge calibration is scheduled in Step 13 (CLAUDE.md Decisions).
 
-## Step 13 — router and benchmark
-- `benchmarks/results.md`: ARCHITECTURE.md says CI regenerates it. Deferred at the Step 6 grilling and again at Step 11's (2026-10-14): decide whether a local command or CI writes it when the full matrix runs.
-- Path context for graph arms: rendered paths in a new answer prompt, path-level citations and the path precision metric (ADR-0007 leaves them out of Step 11).
+## After Step 13 — router and benchmark
+- Path context for graph arms: rendered paths in a new answer prompt, path-level citations and the path precision metric (ADR-0007 leaves them out of Step 11; kept out of Step 13 at its grilling, since adding them now would tune the graph arms after their loss).
 - Extending the quality gate to graph arms: a Neo4j snapshot in CI and a Cypher validity floor.
+- Full judge calibration (about 60–100 answers, claims split by the user) if the n = 30 check is too loose to read.
 
 ## After Step 8
 - Haiku 5.5 against Sonnet 5.5 extraction quality is not compared: Step 9 switched the extractor to Haiku for cost (2026-10-10) and round 3 judges Haiku with prompt v2 only. A comparison would need a Sonnet run under v2 and its own review round.
@@ -37,21 +36,14 @@ Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstra
 - Risk factors without a body (ticket 01, load run 4): 257 of 1,405 have no span in their filing's risk-factor section (most were extracted from Item 1 or MD&A), and 371 are sentences from inside a body, so they get no body of their own. Whether body-sentence factors should merge into the factor whose body holds them, or be dropped at extraction, is open. Decide if `graph_local` anchors on them poorly.
 - Extraction spend caps count committed spend per ontology version (`extract/spend.py`). Under ontology 4 they see none of the ontology 3 runs, so a new extraction run would start from $0 against the caps. Nothing is extracted in Step 11; fix before the next extraction.
 - Hops in the run header (ticket 05): `ArmConfig` has no hop field, so `graph_local`'s frozen hop count appears only per question. Recommendation: leave it; adding a field changes the header schema.
-- Load-run check (ticket 05): the run header names the newest `load-run*.json` on disk, not one tied to the live graph. Recommendation: in Step 13, `graph.load` writes the run name onto `:GraphMeta` and the arms read it there.
-- Graph arms lost to `vector` on `dev` (ticket 07): pooled recall@10 −0.10 and −0.11, and traversal level with `vector` on multi-hop. `test` is scored once, in Step 13. Any change to the arms before then (more anchors, path context, a different ranking) is a new tuning round on `dev` and has to be labelled as one.
-- H5 latency (ticket 07): the full traversal run replayed its Cypher calls from the cache, so no live latency exists for `graph_traversal`. Step 13's runs need live Cypher timings, or an uncached repeat, before H5's latency half is judged.
 - A filter on `uncertain` evidence, as an ablation, if wrong-evidence rates point at it. The reviews found no error at any confidence level, but only 3 counted `uncertain` samples.
 
 ## Step 12 — communities and global search
-- Ablations not run in Step 12: `graph_global` handing its top 10 chunks to `answer/v1` (ADR-0007 style, the research note's recommendation); Haiku 5.5 for map calls; a cheap model rating reports (GraphRAG's dynamic community selection) instead of embedding rank.
-- Full `graph_global` runs on lookup, local and multi-hop questions wait for Step 13's matrix and its budget.
-- `graph_global` lost to `vector` on the 10 dev global questions (recall@10 −0.342, relevancy −0.088, both intervals excluding 0). Whether Step 13's router sends global questions to `graph_global` at all, and whether to run the chunk-handoff ablation first, is open. Recommendation: run the ablation on `dev` retrieval only ($0), since recall@10 shows the first 10 shown chunks come from only two communities.
-- The provenance check passes a citation when any selected community holds the chunk. A stricter check would trace it through the map point that cited it. Recommendation: add it in Step 13 as a second count, keeping the spec's rule as the gate.
-- The Step 12 cap check is a separate command, not a refusal inside `eval.run`. Recommendation: for Step 13's paid matrix, have `eval.run` take a `--max-cost` from an arm-supplied estimate.
-- Query-embedding cache writes (ticket 01): a cache-only replay of the vector baseline moved q0105's third answer-relevancy run from 0.94512 to 0.94588 with identical judge replies, most likely because two judge threads embedded the same text in the live run and the later write replaced the vector used. Recommendation: in Step 13, make a second write keep the existing vector.
+- Ablations not run in Step 12 or 13: Haiku 5.5 for map calls; a cheap model rating reports (GraphRAG's dynamic community selection) instead of embedding rank.
 
 ## Step 13b — agentic arms
 - Set the tool-call cap before the benchmark run.
+- Whether to use LangGraph for the agentic loops (not adopted in Step 13). If used: set `recursion_limit` explicitly (the installed default is 10,007) and count tool calls in state.
 
 ## Paper
 - Decide on a UCSD faculty co-author.

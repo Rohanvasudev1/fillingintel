@@ -49,7 +49,12 @@ A small comparison of one judge against a stronger reference judge, used to choo
 _Avoid_: validation
 
 **Calibration**:
-Measuring a judge's agreement with hand scores, as Cohen's kappa. Required before the final benchmark.
+Measuring a judge's agreement with the user's own scores of the same answers, with a statistic suited to each score type. Only the user's scores count as hand scores.
+_Avoid_: validation, alignment
+
+**Corruption test**:
+A check that plants known errors (a changed number, a swapped period, a wrong citation, an unsupported sentence) in real answers and counts how often a judge catches each kind. The truth is known by construction, so no human scores are needed. It is not calibration.
+_Avoid_: adversarial test, perturbation calibration
 
 ## Graph
 
@@ -225,6 +230,26 @@ _Avoid_: accuracy, success rate
 **Question filter**:
 The company, period and form-type constraints an arm derives from the question text alone, never from an eval record's labels.
 _Avoid_: metadata filter, gold filter
+
+**Router**:
+The step that gives each question a predicted class (`lookup`, `local`, `multi_hop`, `global` or `decline`) and either declines it or hands it to the arm a routing map names. It is benchmarked as its own row, beside the arms. It is not an arm, because it retrieves nothing itself.
+_Avoid_: classifier, when meaning the whole step; dispatcher
+
+**Predicted class**:
+The class the router gives a question, compared with the eval record's gold class. The router never predicts `unanswerable`, since it cannot tell up front that the filings lack the answer.
+_Avoid_: route, intent
+
+**Routing map**:
+The table from predicted class to arm. The pre-registered map is the one fixed in RESEARCH-PLAN (H6) before any run. The dev-best map is chosen from dev results afterwards and is always labelled as tuned on dev.
+_Avoid_: routing table, policy
+
+**Oracle router**:
+A router that is given each question's gold class and uses the pre-registered routing map. Comparing it with the router separates misclassification from the map's choice of arms.
+_Avoid_: perfect router, upper bound
+
+**Router accuracy**:
+The share of questions whose predicted class equals the gold class. A `decline` question counts only when the router declined it.
+_Avoid_: routing precision, arm accuracy
 
 ## Checks
 
