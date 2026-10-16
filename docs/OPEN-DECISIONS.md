@@ -45,6 +45,9 @@ Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstra
 ## Step 12 — communities and global search
 - Ablations not run in Step 12: `graph_global` handing its top 10 chunks to `answer/v1` (ADR-0007 style, the research note's recommendation); Haiku 5.5 for map calls; a cheap model rating reports (GraphRAG's dynamic community selection) instead of embedding rank.
 - Full `graph_global` runs on lookup, local and multi-hop questions wait for Step 13's matrix and its budget.
+- `graph_global` lost to `vector` on the 10 dev global questions (recall@10 −0.342, relevancy −0.088, both intervals excluding 0). Whether Step 13's router sends global questions to `graph_global` at all, and whether to run the chunk-handoff ablation first, is open. Recommendation: run the ablation on `dev` retrieval only ($0), since recall@10 shows the first 10 shown chunks come from only two communities.
+- The provenance check passes a citation when any selected community holds the chunk. A stricter check would trace it through the map point that cited it. Recommendation: add it in Step 13 as a second count, keeping the spec's rule as the gate.
+- The Step 12 cap check is a separate command, not a refusal inside `eval.run`. Recommendation: for Step 13's paid matrix, have `eval.run` take a `--max-cost` from an arm-supplied estimate.
 - Query-embedding cache writes (ticket 01): a cache-only replay of the vector baseline moved q0105's third answer-relevancy run from 0.94512 to 0.94588 with identical judge replies, most likely because two judge threads embedded the same text in the live run and the later write replaced the vector used. Recommendation: in Step 13, make a second write keep the existing vector.
 
 ## Step 13b — agentic arms
