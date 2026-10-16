@@ -30,32 +30,41 @@ from pathlib import Path
 from neo4j import Driver
 from neo4j.exceptions import DriverError, Neo4jError
 
+from graph.batch import CHUNK, CHUNK_ID, EVIDENCED_BY
 from graph.connection import DATABASE, GraphSettingsMissing, driver_from_env, read_session
+from graph.cypher import quoted
+from graph.load import OUTPUT_DIR as LOAD_REPORT_DIR
 from graph.load_report import latest_load_run
+from graph.ontology import COMMUNITY, IN_COMMUNITY, PARENT_OF
+from graph.step12_spend import GLOBAL_ARM
 from graph.validate import EXIT_OK, EXIT_RUN_ERROR, EXIT_USAGE, EXIT_VIOLATIONS
 from ingest.atomic_json import write_json_atomic
 from ingest.provenance import REPO_ROOT, git_state
 
-ARM = "graph_global"
 LABEL = "agent-drafted questions"
 REPORT_DIR = REPO_ROOT / "benchmarks" / "graph"
-LOAD_REPORT_DIR = REPORT_DIR
 
 _REPORT = re.compile(r"global-provenance-run(\d+)\.json")
+_IN, _PARENT = quoted(IN_COMMUNITY), quoted(PARENT_OF)
+_C, _CHUNK, _EVIDENCE = quoted(COMMUNITY), quoted(CHUNK), quoted(EVIDENCED_BY)
+# A selected community's members: its own, or a top community's through its children.
 _MEMBERS = (
     "UNWIND $ids AS cid "
-    "MATCH (s:Community {community_id: cid}) "
-    "MATCH (m)-[:IN_COMMUNITY]->(g:Community) WHERE g = s OR (s)-[:PARENT_OF]->(g) "
-    "RETURN cid, collect(m.key) AS keys"
+    f"MATCH (s:{_C} {{community_id: cid}}) "
+    f"OPTIONAL MATCH (s)-[:{_PARENT}*0..1]->(:{_C})<-[:{_IN}]-(m) "
+    "RETURN cid, collect(DISTINCT elementId(m)) AS members"
 )
 _NODE_EVIDENCE = (
-    "MATCH (m)-[:EVIDENCED_BY]->(c:Chunk) WHERE m.key IN $keys AND c.chunk_id IN $chunks "
-    "RETURN m.key AS key, c.chunk_id AS chunk_id"
+    f"MATCH (m)-[:{_EVIDENCE}]->(c:{_CHUNK}) "
+    f"WHERE elementId(m) IN $members AND c.{CHUNK_ID} IN $chunks "
+    f"RETURN elementId(m) AS member, m.key AS key, c.{CHUNK_ID} AS chunk_id"
 )
 _EDGE_EVIDENCE = (
-    "MATCH (a)-[r]->(b) WHERE a.key IN $keys AND b.key IN $keys AND r.chunk_ids IS NOT NULL "
+    "MATCH (a)-[r]->(b) WHERE elementId(a) IN $members AND elementId(b) IN $members "
+    "AND r.chunk_ids IS NOT NULL "
     "UNWIND [c IN r.chunk_ids WHERE c IN $chunks] AS chunk_id "
-    "RETURN a.key AS start, type(r) AS type, b.key AS end, chunk_id"
+    "RETURN elementId(a) AS a, elementId(b) AS b, a.key AS start, type(r) AS type, "
+    "b.key AS end, chunk_id"
 )
 
 
@@ -86,8 +95,8 @@ def read_run(path: Path) -> tuple[dict, list[Citation]]:
         header, questions = run["header"], run["questions"]
     except (OSError, UnicodeDecodeError, json.JSONDecodeError, KeyError, TypeError) as exc:
         raise RunFileError(f"cannot read {path}: {type(exc).__name__}: {exc}") from exc
-    if header.get("arm") != ARM:
-        raise RunFileError(f"{path.name} is a {header.get('arm')!r} run, not {ARM}")
+    if header.get("arm") != GLOBAL_ARM:
+        raise RunFileError(f"{path.name} is a {header.get('arm')!r} run, not {GLOBAL_ARM}")
     try:
         return header, [
             Citation(q["id"], s["text"], chunk_id,
@@ -114,25 +123,38 @@ def trace(citation: Citation, evidence: Mapping[str, Evidence]) -> dict[str, str
 
 def community_evidence(driver: Driver, community_ids: Sequence[str], chunk_ids: Sequence[str],
                        database: str = DATABASE) -> dict[str, Evidence]:
-    """Each named community's member evidence for *chunk_ids*, read in read transactions."""
+    """Each named community's member evidence for *chunk_ids*, read in read transactions.
+
+    Raises RuntimeError naming any community the graph does not hold.
+    """
     with read_session(driver, database) as session:
         def read(cypher: str, **params: object) -> list[dict]:
             return session.execute_read(lambda tx: [r.data() for r in tx.run(cypher, params)])
 
-        members = {r["cid"]: r["keys"] for r in read(_MEMBERS, ids=list(community_ids))}
-        result = {}
-        for community_id, keys in members.items():
-            nodes: dict[str, list[str]] = {}
-            for row in read(_NODE_EVIDENCE, keys=keys, chunks=list(chunk_ids)):
-                nodes.setdefault(row["chunk_id"], []).append(row["key"])
-            edges: dict[str, list[tuple[str, str, str]]] = {}
-            for row in read(_EDGE_EVIDENCE, keys=keys, chunks=list(chunk_ids)):
-                edges.setdefault(row["chunk_id"], []).append(
-                    (row["start"], row["type"], row["end"]))
-            result[community_id] = Evidence(
-                {c: tuple(sorted(k)) for c, k in nodes.items()},
-                {c: tuple(sorted(e)) for c, e in edges.items()})
-        return result
+        members = {r["cid"]: set(r["members"]) for r in read(_MEMBERS, ids=list(community_ids))}
+        missing = sorted(set(community_ids) - set(members))
+        if missing:
+            raise RuntimeError(f"the graph holds no community {', '.join(missing)}")
+        every = sorted(set().union(*members.values())) if members else []
+        nodes = read(_NODE_EVIDENCE, members=every, chunks=list(chunk_ids))
+        edges = read(_EDGE_EVIDENCE, members=every, chunks=list(chunk_ids))
+    return {cid: _evidence(ids, nodes, edges) for cid, ids in members.items()}
+
+
+def _evidence(members: set[str], nodes: Sequence[Mapping], edges: Sequence[Mapping]) -> Evidence:
+    """The rows that fall inside one community: a node among *members*, or an edge with both
+    ends among them."""
+    by_chunk: dict[str, set[str]] = {}
+    for row in nodes:
+        if row["member"] in members:
+            by_chunk.setdefault(row["chunk_id"], set()).add(row["key"])
+    edge_chunk: dict[str, set[tuple[str, str, str]]] = {}
+    for row in edges:
+        if row["a"] in members and row["b"] in members:
+            edge_chunk.setdefault(row["chunk_id"], set()).add(
+                (row["start"], row["type"], row["end"]))
+    return Evidence({c: tuple(sorted(k)) for c, k in by_chunk.items()},
+                    {c: tuple(sorted(e)) for c, e in edge_chunk.items()})
 
 
 def next_report_path(directory: Path) -> Path:

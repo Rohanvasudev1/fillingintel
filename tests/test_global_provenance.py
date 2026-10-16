@@ -159,3 +159,9 @@ def test_a_graph_rebuilt_since_the_run_cannot_be_checked(graph_env, tmp_path, ca
     assert _main(run, graph_env, tmp_path) == EXIT_RUN_ERROR
     assert "load-run8" in capsys.readouterr().err
     assert not list(tmp_path.glob("global-provenance-run*.json"))
+
+
+def test_a_selected_community_the_graph_lacks_cannot_be_checked(graph_env, tmp_path, capsys):
+    run = _run_file(tmp_path, _question("q1", ["lower-gone"], kept=[("Wafers.", [SUPPLY_CHUNK])]))
+    assert _main(run, graph_env, tmp_path) == EXIT_RUN_ERROR
+    assert "lower-gone" in capsys.readouterr().err

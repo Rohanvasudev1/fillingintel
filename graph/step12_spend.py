@@ -7,7 +7,9 @@ extract.spend sums extraction reports, plus every graph_global run file in
 benchmarks/runs: its questions' `cost_usd.total` and its `judge_usage.cost_usd`
 (ticket 07). A run file prices replies replayed from the response cache as if
 sent, and a local file not yet committed counts too; both err high. Calls made
-outside the commands, such as recording test replies, are not counted.
+outside these run files, such as recording test replies and the report-text
+embeddings `retrieve.node_embed --embed` sends, are not counted; BUILD-LOG
+records them.
 """
 from __future__ import annotations
 
@@ -21,7 +23,8 @@ from ingest.provenance import REPO_ROOT
 STEP_12_CAP_USD = 6.0
 COMMUNITIES_DIR = REPO_ROOT / "benchmarks" / "communities"
 RUNS_DIR = REPO_ROOT / "benchmarks" / "runs"
-GLOBAL_RUNS = "*-graph_global-*.json"
+GLOBAL_ARM = "graph_global"
+GLOBAL_RUNS = f"*-{GLOBAL_ARM}-*.json"
 
 
 def spent_usd(communities_dir: Path = COMMUNITIES_DIR, runs_dir: Path = RUNS_DIR) -> float:
@@ -38,7 +41,7 @@ def _global_run_usd(path: Path) -> float:
     """A graph_global run's question and judge costs; 0 for another arm's file."""
     try:
         run = json.loads(path.read_text(encoding="utf-8"))
-        if run["header"]["arm"] != "graph_global":
+        if run["header"]["arm"] != GLOBAL_ARM:
             return 0.0
         costs = [q["cost_usd"]["total"] for q in run["questions"]]
         costs.append(run["judge_usage"]["cost_usd"])
