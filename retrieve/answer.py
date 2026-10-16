@@ -10,7 +10,7 @@ cited sentences that survived.  An API refusal is recorded, with no answer text.
 from __future__ import annotations
 
 import re
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from typing import Literal, cast
 
@@ -20,6 +20,7 @@ from retrieve.answer_model import (
     ANSWER_MODEL,
     AnswerModel,
     AnswerRequest,
+    ApiResponse,
     TokenUsage,
     parse_reply,
 )
@@ -82,10 +83,17 @@ def write_answer(
     request = AnswerRequest(model=ANSWER_MODEL, effort=ANSWER_EFFORT,
                             max_tokens=ANSWER_MAX_TOKENS, system=prompt.system,
                             user=render_user(prompt, question, chunks))
-    response = model.complete(request)
+    return read_answer(model.complete(request), {c.chunk_id for c in chunks})
+
+
+def read_answer(response: ApiResponse, allowed: Collection[str]) -> Answer:
+    """The answer in *response*, keeping only sentences whose citations are all *allowed*.
+
+    The reply must carry the status line; graph_global's reduce reply does too.
+    """
     reply = parse_reply(response.body)
     status, body = ("refused", "") if reply.stop_reason == "refusal" else _read_status(reply.text)
-    check = enforce_citations(body, {c.chunk_id for c in chunks})
+    check = enforce_citations(body, allowed)
     return Answer(
         status=status,
         text=_shown_text(status, check),  # empty for a refusal: no lead text, nothing kept
@@ -100,3 +108,12 @@ def write_answer(
         generation_ms=response.api_ms,
         from_cache=response.from_cache,
     )
+
+
+def not_found_without_call() -> Answer:
+    """``not_found`` with no model call: graph_global when no map point scored above 0."""
+    check = enforce_citations("", ())
+    return Answer(status="not_found", text=_shown_text("not_found", check), raw_text="",
+                  citation_check=check, model="", message_id="", stop_reason=None,
+                  refusal_category=None, usage=TokenUsage(0, 0), cost_usd=0.0,
+                  generation_ms=0.0, from_cache=False)

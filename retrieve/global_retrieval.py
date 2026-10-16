@@ -22,7 +22,7 @@ from __future__ import annotations
 import hashlib
 import json
 import time
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -54,8 +54,20 @@ from retrieve.graph_local import GRAPH_ERRORS, graph_provenance
 from retrieve.graph_nodes import NODE_INPUT_TYPE
 from retrieve.pricing import embedding_cost
 from retrieve.query_cache import CachedBatchEmbedder, CacheError
-from retrieve.question_filter import companies_without_chunks, parse_question_filter
-from retrieve.tracing import SpanRecorder
+from retrieve.question_filter import (
+    CorpusFiling,
+    companies_without_chunks,
+    parse_question_filter,
+)
+from retrieve.tracing import (
+    COMMUNITY_SELECT_SPAN,
+    FILTER_SPAN,
+    Kind,
+    SpanRecorder,
+    community_select_attributes,
+    filter_attributes,
+    question_input,
+)
 
 ARM_NAME = "graph_global"
 # The choices eval.global_n scores, and the one frozen from them (Step 12 ticket 05,
@@ -131,21 +143,30 @@ class GlobalSelection:
             raise arm_error(ARM_NAME, exc) from exc
         self._filings = corpus_filings(conn)
 
+    @property
+    def filings(self) -> tuple[CorpusFiling, ...]:
+        """The stored filings the question filter resolves against."""
+        return self._filings
+
     def retrieve(self, question: str) -> GlobalRetrieval:
-        """Filter, embed, select and rank for one question; failures raise ``ArmError``."""
-        question_filter = parse_question_filter(question, self._filings)
+        """Filter, embed, select and rank for one question; failures raise ``ArmError``.
+
+        The filter and the selection are recorded as the ``question_filter`` and
+        ``community_select`` spans.
+        """
+        with self._spans.span(FILTER_SPAN, Kind.CHAIN, question_input(question)) as span:
+            question_filter = parse_question_filter(question, self._filings)
+            span.set_attributes(filter_attributes(question_filter))
         try:
             start = self._clock()
             embedding = embed_question(self._embedder, self._model, question, self._spans)
             embedded = self._clock()
-            selected = self._index.select(embedding.vector, question_filter.accession_nos,
-                                          self._n)
-            scores = chunk_cosines(self._conn, self._model, embedding.vector,
-                                   {c for s in selected for c in s.chunk_ids})
-            communities = tuple(
-                ShownCommunity(s.community_id, rank, s.similarity,
-                               shown_chunks(s.chunk_ids, scores, self._per_community))
-                for rank, s in enumerate(selected, start=1))
+            with self._spans.span(COMMUNITY_SELECT_SPAN, Kind.RETRIEVER) as span:
+                communities = self._select(embedding.vector, question_filter.accession_nos)
+                span.set_attributes(community_select_attributes(
+                    [{"community_id": c.community_id, "rank": c.rank,
+                      "similarity": c.similarity, "shown": [k.chunk_id for k in c.chunks]}
+                     for c in communities]))
             searched = self._clock()
         except RETRIEVAL_ERRORS as exc:
             raise arm_error(ARM_NAME, exc) from exc
@@ -162,6 +183,16 @@ class GlobalSelection:
             embed_cost_usd=embedding_cost(self._model, embedding.api_token_count),
         )
         return GlobalRetrieval(retrieval, communities)
+
+    def _select(self, query_vector: Sequence[float],
+                accession_nos: Collection[str] | None) -> tuple[ShownCommunity, ...]:
+        selected = self._index.select(query_vector, accession_nos, self._n)
+        scores = chunk_cosines(self._conn, self._model, query_vector,
+                               {c for s in selected for c in s.chunk_ids})
+        return tuple(
+            ShownCommunity(s.community_id, rank, s.similarity,
+                           shown_chunks(s.chunk_ids, scores, self._per_community))
+            for rank, s in enumerate(selected, start=1))
 
 
 def read_reported_communities(driver: Driver, level: Level, reports: ReportsFile,

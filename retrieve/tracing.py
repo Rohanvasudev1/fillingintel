@@ -40,7 +40,7 @@ from opentelemetry.util.types import AttributeValue
 from ingest.voyage import QUERY_INPUT, Embedding
 from retrieve.answer import Answer
 from retrieve.answer_model import TokenUsage
-from retrieve.arm import Anchor, CypherAttempt, FallbackReason, RetrievedChunk
+from retrieve.arm import Anchor, CypherAttempt, FallbackReason, MapCall, RetrievedChunk
 from retrieve.question_filter import QuestionFilter
 
 if TYPE_CHECKING:
@@ -65,6 +65,10 @@ CYPHER_GENERATION_SPAN = "cypher_generation"
 CYPHER_GUARD_SPAN = "cypher_guard"
 CYPHER_EXECUTE_SPAN = "cypher_execute"
 FALLBACK_SPAN = "fallback"
+# graph_global (Step 12): one global_map span per map call; global_reduce writes the answer.
+COMMUNITY_SELECT_SPAN = "community_select"
+GLOBAL_MAP_SPAN = "global_map"
+GLOBAL_REDUCE_SPAN = "global_reduce"
 
 COST_ATTR = "filingintel.cost_usd"  # Phoenix ignores llm.cost.*, and has no Voyage price
 CACHE_HIT_ATTR = "filingintel.cache_hit"
@@ -75,6 +79,11 @@ CYPHER_OUTCOME_ATTR = "filingintel.cypher.outcome"
 CYPHER_RULE_ATTR = "filingintel.cypher.rule"
 CYPHER_ROWS_ATTR = "filingintel.cypher.rows"
 FALLBACK_REASON_ATTR = "filingintel.fallback.reason"
+COMMUNITY_ATTR = "filingintel.community_id"
+MAP_OUTCOME_ATTR = "filingintel.map.outcome"
+MAP_KEPT_ATTR = "filingintel.map.points_kept"
+MAP_DROPPED_ATTR = "filingintel.map.points_dropped"
+REDUCE_POINTS_ATTR = "filingintel.reduce.points"
 
 Kind = OpenInferenceSpanKindValues
 Attributes = Mapping[str, AttributeValue]
@@ -342,3 +351,41 @@ def cypher_reply_attributes(query: str, *, cost_usd: float, from_cache: bool, us
 def fallback_attributes(reason: FallbackReason) -> dict[str, AttributeValue]:
     """Why a traversal question fell back to local search."""
     return {FALLBACK_REASON_ATTR: reason}
+
+
+def community_select_attributes(selected: Sequence[Mapping[str, object]]
+                                ) -> dict[str, AttributeValue]:
+    """The communities a question selected, best first: each one's ID, rank, similarity
+    and the chunk IDs it shows."""
+    return {
+        SpanAttributes.OUTPUT_VALUE: json.dumps(list(selected)),
+        SpanAttributes.OUTPUT_MIME_TYPE: _JSON,
+    }
+
+
+def map_call_attributes(call: MapCall, model: str, usage: TokenUsage,
+                        messages: tuple[str, str, str] | None) -> dict[str, AttributeValue]:
+    """One map call's outcome: its community, point counts, cost and, unless replayed, tokens.
+
+    *messages* is (system, user, assistant reply) when text capture is on.
+    """
+    kept = sum(p.kept for p in call.points)
+    attributes: dict[str, AttributeValue] = {
+        SpanAttributes.LLM_MODEL_NAME: model,
+        COMMUNITY_ATTR: call.community_id,
+        MAP_OUTCOME_ATTR: call.outcome,
+        MAP_KEPT_ATTR: kept,
+        MAP_DROPPED_ATTR: len(call.points) - kept,
+        CACHE_HIT_ATTR: call.cost.from_cache,
+        COST_ATTR: call.cost.cost_usd,
+    }
+    if not call.cost.from_cache:
+        attributes.update(token_count_attributes(usage))
+    if messages is not None:
+        attributes.update(message_attributes(*messages))
+    return attributes
+
+
+def reduce_points_attributes(points: int) -> dict[str, AttributeValue]:
+    """How many map points the reduce call read."""
+    return {REDUCE_POINTS_ATTR: points}

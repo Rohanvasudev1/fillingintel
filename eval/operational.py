@@ -13,7 +13,7 @@ from functools import partial
 from statistics import fmean
 
 from eval.bootstrap import RngFor, bootstrap_interval, mean_interval, percentile
-from retrieve.arm import GRAPH_STAGES, ArmResult
+from retrieve.arm import GRAPH_STAGES, ArmResult, GraphStage
 
 PERCENTILES = (("p50", 0.50), ("p95", 0.95))
 DEFINITIONS = {
@@ -52,8 +52,21 @@ def _stats(values: Sequence[float], stage: str, rng_for: RngFor) -> dict[str, ob
     )
 
 
-def _graphed(results: Sequence[ArmResult]) -> bool:
-    return any(r.graph is not None for r in results)
+GLOBAL_DEFINITIONS = {  # in graph_global's header only
+    "graph_stages": (
+        "community_select and global_map latency counts the questions that ran the stage; "
+        "global_map's is the map step's wall time, its tokens and cost summed over the map "
+        "calls; their cost is a mean over every question, a stage that did not run costing 0; "
+        "search covers every stage after the query embedding; the reduce call writes the "
+        "answer, so its latency and cost are generation's"
+    ),
+}
+
+
+def _stages(results: Sequence[ArmResult]) -> tuple[GraphStage, ...]:
+    """The graph stages *results*' arm families report, in ``GRAPH_STAGES`` order."""
+    names = {s for r in results if r.graph is not None for s in r.graph.stage_names}
+    return tuple(s for s in GRAPH_STAGES if s in names)
 
 
 def latency_cell(results: Sequence[ArmResult], rng_for: RngFor) -> dict[str, dict[str, object]]:
@@ -68,9 +81,9 @@ def latency_cell(results: Sequence[ArmResult], rng_for: RngFor) -> dict[str, dic
         "embed": _stats([r.embed_ms for r in fresh], "embed", rng_for),
         "search": _stats([r.search_ms for r in results], "search", rng_for),
         "generation": _stats([r.answer.generation_ms for r in results], "generation", rng_for),
-        **({stage: _stats([g.stages[stage].ms for g in graphs if stage in g.stages], stage,
-                          rng_for)
-            for stage in GRAPH_STAGES} if graphs else {}),
+        **{stage: _stats([g.stages[stage].ms for g in graphs if stage in g.stages], stage,
+                         rng_for)
+           for stage in _stages(results)},
     }
 
 
@@ -80,7 +93,7 @@ def question_cost(result: ArmResult) -> dict[str, float]:
     if result.graph is not None:
         stages = {stage: (result.graph.stages[stage].cost_usd
                           if stage in result.graph.stages else 0.0)
-                  for stage in GRAPH_STAGES}
+                  for stage in result.graph.stage_names}
     return {
         "embedding": result.embed_cost_usd,
         **stages,
@@ -91,7 +104,7 @@ def question_cost(result: ArmResult) -> dict[str, float]:
 
 def _per_query(results: Sequence[ArmResult]) -> dict[str, str]:
     """Each cost cell field and the question-cost stage it averages."""
-    stages = ("embedding", *(GRAPH_STAGES if _graphed(results) else ()), "generation", "total")
+    stages = ("embedding", *_stages(results), "generation", "total")
     return {f"per_query_{stage}": stage for stage in stages}
 
 

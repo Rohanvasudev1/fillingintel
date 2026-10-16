@@ -1,10 +1,10 @@
 """graph_global's retrieval on ``neo4j-test`` and a throwaway Postgres schema
 (Step 12 ticket 05).
 
-The graph is ``tests/graph_local_data.py``'s, around real fixture chunk IDs,
-with four lower communities and two top ones written over it.  Report vectors
-and chunk vectors are fakes whose cosine with the query (the first axis) is the
-similarity each test states, so the expected order follows from the rule.
+The graph, reports and fake vectors are ``tests/global_data.py``'s: four lower
+communities and two top ones over ``tests/graph_local_data.py``'s graph, with
+vectors whose cosine with the query is the similarity stated there, so the
+expected order follows from the rule.
 Needs ``DATABASE_URL`` and ``NEO4J_TEST_URI``.
 """
 import hashlib
@@ -14,124 +14,43 @@ from types import MappingProxyType
 
 import pytest
 
-from graph.batch import Batch, EdgeRecord, NodeRecord, NodeRef
-from graph.community import LOWER, TOP, member_hash
+from graph.community import TOP
 from graph.constraints import apply_constraints
-from graph.report_file import ReportEntry, ReportsFile
 from graph.write import write_batch
 from ingest.chunker import chunk_filing
 from ingest.store import load_filing, save_embedding
-from ingest.voyage import BatchEmbedding
 from retrieve.arm import ArmError
 from retrieve.global_retrieval import GlobalSelection, loaded_reports_file
-from retrieve.query_cache import CachedBatchEmbedder
 from tests.conftest import FIXTURE_NAMES, throwaway_schema
+from tests.global_data import (
+    AMD_FY2025,
+    CHUNK_SIMILARITIES,
+    LOADED,
+    NVDA_FY2026,
+    SIMILARITIES,
+    UNFILTERED,
+    community_batch,
+    load_reports_dir,
+    report_cache,
+    reports_file,
+)
 from tests.graph_local_data import (
-    BLACKWELL,
     K_BLACKWELL_CHUNK,
-    K_RISK,
     K_RISK_CHUNK,
     Q_BLACKWELL_CHUNK,
-    Q_RISK,
     Q_RISK_CHUNK,
     QUERY_VECTOR,
     at_similarity,
     graph_local_batch,
-    key_of,
 )
 from tests.graph_test_data import (
-    COMPUTE,
-    DATA_CENTER,
     EXPORT_CHUNK,
-    EXPORT_CONTROLS,
-    HUANG,
     OFFICERS_CHUNK,
     SEGMENTS_CHUNK,
     SUPPLY_CHUNK,
     TEST_REPORT_PROMPT,
-    TSMC,
 )
 from tests.vector_fakes import MODEL, FakeQueryEmbedder
-
-LOADED = ("nvda_10k", "nvda_10q", "amd_10k")
-UNFILTERED = "What are the main supply chain risks?"
-NVDA_FY2026 = "What did NVIDIA say about supply in fiscal 2026?"  # the 10-K only
-AMD_FY2025 = "What did AMD's fiscal 2025 10-K say about competition?"  # no community
-
-MEMBERS = {
-    "lower-supply": (TSMC, COMPUTE, DATA_CENTER),  # 10-K chunks 0006, 0012
-    "lower-blackwell": (BLACKWELL, Q_RISK),  # 10-K 0061; 10-Q 0035, 0057
-    "lower-export": (EXPORT_CONTROLS, K_RISK),  # 10-K 0013, 0041
-    "lower-lone": (HUANG,),  # no report
-}
-CHILDREN = {"top-a": ("lower-supply", "lower-lone"),
-            "top-b": ("lower-blackwell", "lower-export")}
-REPORTED = ("lower-supply", "lower-blackwell", "lower-export", "top-a", "top-b")
-CHUNK_SIMILARITIES = {
-    SUPPLY_CHUNK: 0.7, SEGMENTS_CHUNK: 0.6, K_BLACKWELL_CHUNK: 0.5, Q_BLACKWELL_CHUNK: 0.8,
-    Q_RISK_CHUNK: 0.4, EXPORT_CHUNK: 0.3, K_RISK_CHUNK: 0.9, OFFICERS_CHUNK: 0.2,
-}
-SIMILARITIES = {"lower-supply": 0.5, "lower-blackwell": 0.9, "lower-export": 0.7,
-                "top-a": 0.8, "top-b": 0.6}
-
-
-def _keys(community_id: str) -> list[str]:
-    refs = MEMBERS.get(community_id) or [m for c in CHILDREN[community_id] for m in MEMBERS[c]]
-    return [key_of(r) for r in refs]
-
-
-def _summary(community_id: str) -> str:
-    return f"The {community_id} community."
-
-
-def _text(community_id: str) -> str:
-    return f"Title {community_id}: {_summary(community_id)}"
-
-
-def _community(community_id: str) -> NodeRecord:
-    level = TOP if community_id in CHILDREN else LOWER
-    props = {"community_id": community_id, "level": level,
-             "member_hash": member_hash(_keys(community_id)), "report_chunk_ids": []}
-    if community_id in REPORTED:
-        props |= {"title": f"Title {community_id}", "report": _summary(community_id),
-                  "report_prompt": TEST_REPORT_PROMPT}
-    return NodeRecord("Community", props)
-
-
-def _ref(community_id: str) -> NodeRef:
-    return NodeRef.of("Community", community_id=community_id)
-
-
-def community_batch(base: Batch) -> Batch:
-    nodes = tuple(_community(c) for c in (*MEMBERS, *CHILDREN))
-    edges = (
-        *(EdgeRecord("IN_COMMUNITY", m, _ref(c)) for c, ms in MEMBERS.items() for m in ms),
-        *(EdgeRecord("PARENT_OF", _ref(t), _ref(c)) for t, cs in CHILDREN.items() for c in cs),
-    )
-    return Batch(nodes=(*base.nodes, *nodes), edges=(*base.edges, *edges))
-
-
-def reports_file(**changed: dict) -> ReportsFile:
-    entries = {}
-    for community_id in REPORTED:
-        level = TOP if community_id in CHILDREN else LOWER
-        fields = {"member_hash": member_hash(_keys(community_id)),
-                  "title": f"Title {community_id}", "summary": _summary(community_id),
-                  **changed.get(community_id, {})}
-        entries[community_id] = ReportEntry(
-            community_id, fields["member_hash"], level, fields["title"], fields["summary"], (),
-            TEST_REPORT_PROMPT, fields["summary"])
-    return ReportsFile("reports-run1.jsonl", "r" * 64, "communities-run1.json", "c" * 64,
-                       "a" * 64, True, MappingProxyType(entries))
-
-
-class FakeReportEmbedder:
-    def __init__(self, similarities):
-        self._by_text = {_text(c): s for c, s in similarities.items()}
-
-    def embed_batch(self, texts, model, input_type) -> BatchEmbedding:
-        return BatchEmbedding(vectors=tuple(at_similarity(self._by_text[t]) for t in texts),
-                              total_tokens=5 * len(texts))
 
 
 @pytest.fixture(scope="module")
@@ -164,23 +83,14 @@ def graph(neo4j_driver, chunks):
     return neo4j_driver
 
 
-def _load_reports(tmp_path):
-    directory = tmp_path / "load"
-    directory.mkdir(exist_ok=True)
-    (directory / "load-run5.json").write_text("{}", encoding="utf-8")
-    return directory
-
-
-def _cache(tmp_path, similarities=SIMILARITIES) -> CachedBatchEmbedder:
-    cache = CachedBatchEmbedder(FakeReportEmbedder(similarities), cache_dir=tmp_path / "reports")
-    cache.embed([_text(c) for c in similarities], MODEL, "document")
-    return cache
+def _cache(tmp_path, similarities=SIMILARITIES):
+    return report_cache(tmp_path / "reports", similarities)
 
 
 def _selection(corpus, graph, tmp_path, *, cache=None, reports=None, **kwargs):
     return GlobalSelection(corpus, graph, FakeQueryEmbedder(QUERY_VECTOR),
                            cache or _cache(tmp_path), reports or reports_file(),
-                           load_reports=_load_reports(tmp_path), **kwargs)
+                           load_reports=load_reports_dir(tmp_path), **kwargs)
 
 
 def _shown(found) -> dict[str, list[str]]:

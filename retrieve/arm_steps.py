@@ -9,7 +9,7 @@ prompt is sent, and sentences citing chunks outside the retrieval are dropped
 """
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import fields
 from types import MappingProxyType
 
@@ -59,17 +59,17 @@ class ChunkAnswerer:
         self._answer_model = answer_model
         self._prompt = prompt
         self._spans = spans
-        self._tickers = MappingProxyType({f.accession_no: f.ticker for f in filings})
+        self._tickers = filing_tickers(filings)
 
     def answer(self, question: str, retrieval: Retrieval) -> ArmResult:
         """The arm result for *retrieval*; any failure is raised as ``ArmError``."""
         try:
-            chunks = self._source_chunks([r.chunk_id for r in retrieval.retrieved])
+            chunks = source_chunks(self._conn, self._tickers,
+                                   [r.chunk_id for r in retrieval.retrieved])
             answer = self._write_answer(question, chunks)
         except ANSWER_ERRORS as exc:
             raise arm_error(self._arm_name, exc) from exc
-        retrieval_fields = {f.name: getattr(retrieval, f.name) for f in fields(Retrieval)}
-        return ArmResult(**retrieval_fields, answer=answer, sources=chunks)
+        return arm_result(retrieval, answer, chunks)
 
     def _write_answer(self, question: str, chunks: Sequence[SourceChunk]) -> Answer:
         attributes = generation_request_attributes(ANSWER_MODEL, ANSWER_EFFORT, ANSWER_MAX_TOKENS,
@@ -82,17 +82,35 @@ class ChunkAnswerer:
             span.set_attributes(generation_attributes(answer, messages))
         return answer
 
-    def _source_chunks(self, chunk_ids: Sequence[str]) -> tuple[SourceChunk, ...]:
-        """Each chunk's resolved text and the source the answer model is told about."""
-        chunks = [get_chunk(self._conn, chunk_id) for chunk_id in chunk_ids]
-        unknown = sorted({c.accession_no for c in chunks} - set(self._tickers))
-        if unknown:
-            raise ArmError(f"retrieved chunks from filings outside the corpus: {unknown}")
-        return tuple(
-            SourceChunk(c.chunk_id, self._tickers[c.accession_no], c.form_type, c.fiscal_period,
-                        c.section, resolve(self._conn, c.chunk_id))
-            for c in chunks
-        )
+
+def arm_result(retrieval: Retrieval, answer: Answer,
+               sources: Sequence[SourceChunk]) -> ArmResult:
+    """*retrieval* with the answer written from it and the chunks the model saw."""
+    retrieval_fields = {f.name: getattr(retrieval, f.name) for f in fields(Retrieval)}
+    return ArmResult(**retrieval_fields, answer=answer, sources=tuple(sources))
+
+
+def source_chunks(conn: psycopg.Connection, tickers: Mapping[str, str],
+                  chunk_ids: Sequence[str]) -> tuple[SourceChunk, ...]:
+    """Each chunk's resolved text and the source a model is told about, in order.
+
+    *tickers* maps the corpus's accession numbers to tickers; a chunk from another
+    filing raises ``ArmError``.
+    """
+    chunks = [get_chunk(conn, chunk_id) for chunk_id in chunk_ids]
+    unknown = sorted({c.accession_no for c in chunks} - set(tickers))
+    if unknown:
+        raise ArmError(f"retrieved chunks from filings outside the corpus: {unknown}")
+    return tuple(
+        SourceChunk(c.chunk_id, tickers[c.accession_no], c.form_type, c.fiscal_period,
+                    c.section, resolve(conn, c.chunk_id))
+        for c in chunks
+    )
+
+
+def filing_tickers(filings: Sequence[CorpusFiling]) -> Mapping[str, str]:
+    """Each corpus filing's ticker, by accession number."""
+    return MappingProxyType({f.accession_no: f.ticker for f in filings})
 
 
 class _SentRequests:

@@ -42,8 +42,16 @@ FallbackReason = Literal["invalid", "error", "timeout", "empty"]
 # but returned none; the others failed the guard, raised an error or timed out.
 CypherOutcome = Literal["ok", FallbackReason]
 VALID_OUTCOMES: frozenset[CypherOutcome] = frozenset({"ok", "empty"})  # passed the guard, ran
-GraphStage = Literal["anchor_linking", "cypher_generation", "cypher_repair", "cypher_execution"]
+# graph_global (Step 12) adds community_select and global_map.  Its reduce call writes the
+# answer, so its cost and latency are the answer's ("generation"), not a stage.
+GraphStage = Literal["anchor_linking", "cypher_generation", "cypher_repair", "cypher_execution",
+                     "community_select", "global_map"]
 GRAPH_STAGES: tuple[GraphStage, ...] = get_args(GraphStage)
+# Each arm family reports its own stages, so adding graph_global left the files of the
+# entity arms (graph_local, graph_traversal) unchanged.
+ENTITY_STAGES: tuple[GraphStage, ...] = ("anchor_linking", "cypher_generation", "cypher_repair",
+                                         "cypher_execution")
+GLOBAL_STAGES: tuple[GraphStage, ...] = ("community_select", "global_map")
 
 
 @dataclass(frozen=True)
@@ -98,12 +106,65 @@ class StageCost:
         )
 
 
+# Why a map point was left out before the reduce step; how one map call's reply ended.
+MapDropReason = Literal["no_citation", "citation_not_shown", "bad_score"]
+MapOutcome = Literal["ok", "invalid_reply", "refused", "max_tokens"]
+
+
+@dataclass(frozen=True)
+class MapPoint:
+    """One statement a map call wrote, with its score and whether it was kept."""
+
+    community_id: str
+    text: str
+    score: int | None  # None when the reply's score was not an integer from 0 to 100
+    citations: tuple[str, ...]
+    drop_reason: MapDropReason | None = None
+    in_reduce: bool = False  # sent to the reduce call
+
+    @property
+    def kept(self) -> bool:
+        return self.drop_reason is None
+
+
+@dataclass(frozen=True)
+class MapCall:
+    """One selected community and what its map call returned."""
+
+    community_id: str
+    rank: int  # 1 for the best
+    similarity: float  # cosine between the question and the community's report
+    shown: tuple[str, ...]  # the chunk IDs the call was shown, best first
+    outcome: MapOutcome
+    points: tuple[MapPoint, ...]
+    cost: StageCost  # ms is the call's API latency when it was made
+
+
+@dataclass(frozen=True)
+class GlobalSearch:
+    """What graph_global's map and reduce steps did for one question."""
+
+    calls: tuple[MapCall, ...]  # by community rank
+    reduce_points: int  # points sent to the reduce call; 0 when none scored above 0
+    reduce_input_tokens: int  # their cl100k_base count, as the budget measures it
+    cut_by_budget: int  # points above 0 left out by the reduce budget
+
+    @property
+    def points(self) -> tuple[MapPoint, ...]:
+        return tuple(p for c in self.calls for p in c.points)
+
+    @property
+    def reduce_called(self) -> bool:
+        return self.reduce_points > 0
+
+
 @dataclass(frozen=True)
 class GraphRetrieval:
     """What a graph arm adds to a retrieval.
 
     ``graph_local`` fills the anchors and hop count; ``graph_traversal`` fills the
-    Cypher attempts and, after a fallback to ``graph_local``, both.  ``stages``
+    Cypher attempts and, after a fallback to ``graph_local``, both; ``graph_global``
+    fills its map and reduce steps.  ``stages``
     holds only the stages that ran, keyed by ``GRAPH_STAGES`` names.
     """
 
@@ -113,11 +174,17 @@ class GraphRetrieval:
     no_anchor: bool = False
     cypher_attempts: tuple[CypherAttempt, ...] = ()
     fallback_reason: FallbackReason | None = None
+    global_search: GlobalSearch | None = None  # graph_global only
 
     def __post_init__(self) -> None:
         unknown = sorted(set(self.stages) - set(GRAPH_STAGES))
         if unknown:
             raise ValueError(f"unknown graph stages {unknown}; expected {GRAPH_STAGES}")
+
+    @property
+    def stage_names(self) -> tuple[GraphStage, ...]:
+        """The stages this arm family reports, in ``GRAPH_STAGES`` order."""
+        return GLOBAL_STAGES if self.global_search is not None else ENTITY_STAGES
 
     @property
     def first_pass_valid(self) -> bool | None:
@@ -166,6 +233,24 @@ class ArmResult(Retrieval):
 
 
 @dataclass(frozen=True)
+class GlobalSearchConfig:
+    """graph_global's frozen settings and the files it read, for the results header."""
+
+    n: int  # communities selected per question
+    level: str  # the community level selected from
+    chunks_per_community: int
+    reduce_budget_tokens: int
+    map_workers: int
+    map_prompt_version: str  # e.g. "global_map/v1@1a2b3c4d"
+    map_prompt_sha256: str
+    reduce_prompt_version: str
+    reduce_prompt_sha256: str
+    report_prompt_versions: tuple[str, ...]  # those of the reports the graph holds
+    communities_file: str  # e.g. "communities-run1.json"
+    reports_file: str  # e.g. "reports-run2.jsonl"
+
+
+@dataclass(frozen=True)
 class GraphProvenance:
     """What a graph arm read, for the results header."""
 
@@ -174,6 +259,7 @@ class GraphProvenance:
     load_run: str  # the graph load report the graph came from, e.g. "load-run4"
     cypher_prompt_version: str | None = None  # graph_traversal only, e.g. "cypher/v1@1a2b3c4d"
     cypher_prompt_sha256: str | None = None
+    global_search: GlobalSearchConfig | None = None  # graph_global only
 
 
 @dataclass(frozen=True)

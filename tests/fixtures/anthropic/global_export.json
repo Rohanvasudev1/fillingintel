@@ -1,0 +1,167 @@
+{
+  "recorded": "real API response, recorded by scripts/capture_global_responses.py",
+  "question": "Beyond lost direct sales, what knock-on competitive effects of U.S.-China export controls and trade tensions do NVIDIA, AMD and Intel describe in their latest 10-Ks?",
+  "map_prompt": "global_map/v1@dd20df63",
+  "reduce_prompt": "global_reduce/v1@a5415ee1",
+  "map_calls": [
+    {
+      "community_id": "lower-blackwell",
+      "request_sha256": "337dfaa37070f083f0896fb063e6720370c7451d857a397cf2e30f094b34ce8f",
+      "api_ms": 4172.012333991006,
+      "response": {
+        "id": "msg_011Cg4rSk4s45ouXPeCTsbxe",
+        "container": null,
+        "content": [
+          {
+            "citations": null,
+            "text": "{\"points\":[{\"text\":\"NVIDIA says that after the U.S. government required a license in April 2025 for H20 exports to China, demand for H20 diminished and it took a $4.5 billion charge in Q1 FY2026 for excess inventory and purchase obligations. This is a direct financial effect and not a competitive knock-on effect, so it gives only context.[0001045810-26-000021:0061]\",\"score\":30},{\"text\":\"NVIDIA says licenses granted in August 2025 let it ship certain H20 products to certain China-based customers, yielding only about $60 million in H20 revenue. This suggests the China opportunity under controls was limited.[0001045810-26-000021:0061]\",\"score\":25},{\"text\":\"NVIDIA says Blackwell architectures were the majority of its FY2026 Data Center revenue. It also says product transitions on a one-year cadence (Rubin, Blackwell Ultra) can cause supply and demand management challenges, delays and revenue volatility. These are general risks and are not tied to export controls in this excerpt.[0001045810-26-000021:0061]\",\"score\":15},{\"text\":\"The excerpt does not describe knock-on competitive effects of export controls, such as the rise of China-based competitors, customers shifting to alternative suppliers, or effects on AMD or Intel. No AMD or Intel material is provided here.[0001045810-26-000021:0061]\",\"score\":10}]}",
+            "type": "text"
+          }
+        ],
+        "diagnostics": null,
+        "model": "claude-sonnet-5-5",
+        "role": "assistant",
+        "stop_details": null,
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "type": "message",
+        "usage": {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 945,
+          "inference_geo": "global",
+          "input_tokens": 1427,
+          "output_tokens": 469,
+          "output_tokens_details": {
+            "thinking_tokens": 0
+          },
+          "server_tool_use": null,
+          "service_tier": "standard",
+          "speed": "standard"
+        }
+      }
+    },
+    {
+      "community_id": "lower-export",
+      "request_sha256": "5833ff56a3e6ae05ce74e2fba5a38a69955948329c89ccd78f7b8ef190916cc8",
+      "api_ms": 4531.447374989511,
+      "response": {
+        "id": "msg_011Cg4rT3qgpcc38g5Sjt6dE",
+        "container": null,
+        "content": [
+          {
+            "citations": null,
+            "text": "{\"points\":[{\"text\":\"NVIDIA says the possibility of additional export controls has hurt and may keep hurting demand for its products, benefiting competitors that offer alternatives less likely to be restricted by further controls [0001045810-26-000021:0041].\",\"score\":90},{\"text\":\"NVIDIA says export controls have subjected downstream users to limits on use, resale, repair or transfer of its products, and could raise cost or limit its ability to offer services such as NVIDIA AI cloud services, as well as its CSPs' and customers' ability to serve their end customers, even outside China [0001045810-26-000021:0041].\",\"score\":70},{\"text\":\"NVIDIA says export controls have disrupted and could disrupt its supply chain and distribution channels, hurting its ability to serve demand outside China and for non-data center products. Reduced demand due to controls could cause excess inventory or related supply charges [0001045810-26-000021:0041].\",\"score\":70},{\"text\":\"NVIDIA warns that further export restrictions may provoke responses from foreign governments, including China, that hurt its supply chain or its ability to serve customers worldwide. China's antitrust regulators issued a preliminary finding on September 15, 2025 that its compliance with U.S. controls, which required offering degraded products in China, violated the terms of China's Mellanox approval, with possible penalties and restrictions on its networking business [0001045810-26-000021:0041].\",\"score\":75},{\"text\":\"NVIDIA says deemed export control limitations could impair its R&D teams' ability to execute its roadmap on time, and repeated rule changes impose compliance burdens on it and its customers [0001045810-26-000021:0041].\",\"score\":50}]}",
+            "type": "text"
+          }
+        ],
+        "diagnostics": null,
+        "model": "claude-sonnet-5-5",
+        "role": "assistant",
+        "stop_details": null,
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "type": "message",
+        "usage": {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 945,
+          "inference_geo": "global",
+          "input_tokens": 2796,
+          "output_tokens": 560,
+          "output_tokens_details": {
+            "thinking_tokens": 0
+          },
+          "server_tool_use": null,
+          "service_tier": "standard",
+          "speed": "standard"
+        }
+      }
+    },
+    {
+      "community_id": "lower-supply",
+      "request_sha256": "671176ad8e2f6f2f93b0f70f89a7829ce933a53d11257f71a8238fbda1940580",
+      "api_ms": 1591.7023750080261,
+      "response": {
+        "id": "msg_011Cg4rTPBn5y1AweZD8c999",
+        "container": null,
+        "content": [
+          {
+            "citations": null,
+            "text": "{\"points\":[]}",
+            "type": "text"
+          }
+        ],
+        "diagnostics": null,
+        "model": "claude-sonnet-5-5",
+        "role": "assistant",
+        "stop_details": null,
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "type": "message",
+        "usage": {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 945,
+          "inference_geo": "global",
+          "input_tokens": 2972,
+          "output_tokens": 9,
+          "output_tokens_details": {
+            "thinking_tokens": 0
+          },
+          "server_tool_use": null,
+          "service_tier": "standard",
+          "speed": "standard"
+        }
+      }
+    }
+  ],
+  "reduce": {
+    "request_sha256": "f858a8e0fc5ea2b9bd4c8142b2fac36c4feb4ad798c24ab81795e4ae5fd74a99",
+    "api_ms": 4255.713040998671,
+    "response": {
+      "id": "msg_011Cg4rTW6kipQrpRUhrLVTj",
+      "container": null,
+      "content": [
+        {
+          "citations": null,
+          "text": "STATUS: answered\n\nThe points cover only NVIDIA; they contain no AMD or Intel material, so nothing can be said about what those two companies describe [0001045810-26-000021:0061].\n\nNVIDIA says the possibility of additional export controls has hurt and may keep hurting demand for its products. It says this benefits competitors that offer alternatives less likely to be restricted by further controls [0001045810-26-000021:0041].\n\nNVIDIA warns that further export restrictions may provoke responses from foreign governments, including China, that hurt its supply chain or its ability to serve customers worldwide [0001045810-26-000021:0041]. China's antitrust regulators issued a preliminary finding on September 15, 2025 that NVIDIA's compliance with U.S. controls, which required offering degraded products in China, violated the terms of China's Mellanox approval. Possible penalties and restrictions on its networking business could follow [0001045810-26-000021:0041].\n\nNVIDIA says export controls have subjected downstream users to limits on use, resale, repair or transfer of its products, even outside China. They could raise costs or limit its ability to offer services such as NVIDIA AI cloud services, and could limit its CSPs' and customers' ability to serve their end customers [0001045810-26-000021:0041].\n\nNVIDIA says controls have disrupted and could disrupt its supply chain and distribution channels, hurting its ability to serve demand outside China and for non-data center products. Reduced demand due to controls could cause excess inventory or related supply charges [0001045810-26-000021:0041].\n\nNVIDIA also says deemed export control limitations could impair its R&D teams' ability to execute its roadmap on time. Repeated rule changes impose compliance burdens on it and its customers [0001045810-26-000021:0041].\n\nFor context on the direct effects, NVIDIA took a $4.5 billion charge in Q1 FY2026 for excess inventory and purchase obligations after the April 2025 H20 license requirement [0001045810-26-000021:0061]. Licenses granted in August 2025 yielded only about $60 million in H20 revenue [0001045810-26-000021:0061].",
+          "type": "text"
+        }
+      ],
+      "diagnostics": null,
+      "model": "claude-sonnet-5-5",
+      "role": "assistant",
+      "stop_details": null,
+      "stop_reason": "end_turn",
+      "stop_sequence": null,
+      "type": "message",
+      "usage": {
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 0,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "inference_geo": "global",
+        "input_tokens": 1699,
+        "output_tokens": 717,
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "server_tool_use": null,
+        "service_tier": "standard",
+        "speed": "standard"
+      }
+    }
+  }
+}
