@@ -41,3 +41,16 @@ def test_a_graph_global_run_without_judge_usage_cannot_be_summed(dirs):
         json.dumps({"header": {"arm": "graph_global"}, "questions": []}))
     with pytest.raises(ValueError, match="2026-10-16-graph_global-dev-abc1234.json"):
         spent_usd(communities, runs)
+
+
+def test_a_retrieval_only_graph_global_run_spends_nothing(dirs):
+    communities, runs = dirs
+    _reports_run(communities, 1, 0.5)
+    (runs / "2026-10-17-graph_global-dev-6e26741.json").write_text(json.dumps({
+        "header": {"arm": "graph_global", "mode": "retrieval_only"},
+        "questions": [{"id": "q0072"}]}))  # no cost or judge fields: no model call
+    assert spent_usd(communities, runs) == pytest.approx(0.5)
+
+
+def test_the_committed_run_files_can_be_summed():
+    assert spent_usd() >= 0  # every file under benchmarks/runs reads, retrieval-only included
