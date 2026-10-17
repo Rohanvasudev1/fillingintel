@@ -13,7 +13,7 @@ from functools import partial
 from statistics import fmean
 
 from eval.bootstrap import RngFor, bootstrap_interval, mean_interval, percentile
-from retrieve.arm import GRAPH_STAGES, ArmResult, GraphStage
+from retrieve.arm import GRAPH_STAGES, ArmResult, GraphStage, Retrieval
 
 PERCENTILES = (("p50", 0.50), ("p95", 0.95))
 DEFINITIONS = {
@@ -22,6 +22,12 @@ DEFINITIONS = {
         "retrieval (embed plus search) count only questions whose query embedding was made in "
         "this run; generation is each answer call's API latency when it was made, also for an "
         "answer replayed from the cache"
+    ),
+    "total_ms": (
+        "the wall time of each question's whole arm call, p50 and p95 by linear interpolation "
+        "over every question in the cell; replayed counts the questions with any call replayed "
+        "from a cache (query embedding, answer, Cypher or map call), whose total is shorter "
+        "than a fresh run's, and each such question record says replayed"
     ),
     "cost_usd": (
         "from the token counts each API reported and the header's dated price table; Voyage at "
@@ -63,28 +69,49 @@ GLOBAL_DEFINITIONS = {  # in graph_global's header only
 }
 
 
-def _stages(results: Sequence[ArmResult]) -> tuple[GraphStage, ...]:
+def _stages(results: Sequence[Retrieval]) -> tuple[GraphStage, ...]:
     """The graph stages *results*' arm families report, in ``GRAPH_STAGES`` order."""
     names = {s for r in results if r.graph is not None for s in r.graph.stage_names}
     return tuple(s for s in GRAPH_STAGES if s in names)
 
 
-def latency_cell(results: Sequence[ArmResult], rng_for: RngFor) -> dict[str, dict[str, object]]:
+def latency_cell(results: Sequence[Retrieval], rng_for: RngFor) -> dict[str, dict[str, object]]:
     """p50 and p95 latency per stage over *results*, each with a bootstrap interval.
 
-    A graph arm's cell adds each graph stage, over the questions that ran it.
+    Answered results add generation; retrieval-only ones have none.  A graph arm's
+    cell adds each graph stage, over the questions that ran it.
     """
     fresh = [r for r in results if not r.query_cached]
     graphs = [r.graph for r in results if r.graph is not None]
+    answered = [r for r in results if isinstance(r, ArmResult)]
     return {
         "retrieval": _stats([r.retrieval_ms for r in fresh], "retrieval", rng_for),
         "embed": _stats([r.embed_ms for r in fresh], "embed", rng_for),
         "search": _stats([r.search_ms for r in results], "search", rng_for),
-        "generation": _stats([r.answer.generation_ms for r in results], "generation", rng_for),
+        **({"generation": _stats([r.answer.generation_ms for r in answered], "generation",
+                                 rng_for)} if answered else {}),
         **{stage: _stats([g.stages[stage].ms for g in graphs if stage in g.stages], stage,
                          rng_for)
            for stage in _stages(results)},
     }
+
+
+def replayed(result: ArmResult) -> bool:
+    """Whether any of the question's calls replayed from a cache: its query embedding, its
+    answer, a graph stage's call or a map call."""
+    graph = result.graph
+    return (result.query_cached or result.answer.from_cache
+            or (graph is not None and (
+                any(stage.from_cache for stage in graph.stages.values())
+                or (graph.global_search is not None
+                    and any(c.cost.from_cache for c in graph.global_search.calls)))))
+
+
+def total_cell(questions: Sequence[tuple[float, bool]], rng_for: RngFor) -> dict[str, object]:
+    """p50 and p95 of each question's ``(total_ms, replayed)`` with bootstrap intervals, and
+    how many questions replayed a call."""
+    return {**_stats([ms for ms, _ in questions], "total", rng_for),
+            "replayed": sum(flag for _, flag in questions)}
 
 
 def question_cost(result: ArmResult) -> dict[str, float]:

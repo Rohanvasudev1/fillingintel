@@ -59,7 +59,13 @@ from graph.batch import (
     key_values,
 )
 from graph.connection import DATABASE, WHOLE_GRAPH_TIMEOUT_S
-from graph.constraints import GRAPH_META, require_graph_meta, upgrade_graph_meta
+from graph.constraints import (
+    GRAPH_META,
+    OTHER_NODES,
+    record_load_run,
+    require_graph_meta,
+    upgrade_graph_meta,
+)
 from graph.cypher import quoted
 from graph.ontology import (
     EDGE_TYPES,
@@ -107,8 +113,8 @@ def write_batch(driver: Driver, batch: Batch, database: str = DATABASE) -> None:
 
 
 def rebuild_graph(
-    driver: Driver, batch: Batch, *, replace: bool = True, database: str = DATABASE,
-    upgrade_from: int | None = None,
+    driver: Driver, batch: Batch, *, load_run: str, replace: bool = True,
+    database: str = DATABASE, upgrade_from: int | None = None,
 ) -> None:
     """Make *batch* the whole graph, keeping only :GraphMeta, in one transaction.
 
@@ -118,29 +124,30 @@ def rebuild_graph(
     or failure rolls the delete back: the previous graph stays. The delete is
     one full scan, which is what a rebuild needs. With *upgrade_from*, the
     version prepare_upgrade() returned, :GraphMeta moves to the code's ontology
-    in the same transaction. Same errors as write_batch().
+    in the same transaction. *load_run*, the load report's name (such as
+    "load-run6"), is recorded on :GraphMeta in the same transaction too, so a
+    failed rebuild keeps the previous one. Same errors as write_batch().
     """
     with driver.session(database=database) as session:
         session.execute_write(unit_of_work(timeout=WHOLE_GRAPH_TIMEOUT_S)(_rebuild),
-                              batch, replace, upgrade_from)
-
-
-_OTHER_NODES = f"MATCH (n) WHERE NOT n:{quoted(GRAPH_META)}"
+                              batch, replace, upgrade_from, load_run)
 
 
 def _rebuild(
     tx: ManagedTransaction, batch: Batch, replace: bool, upgrade_from: int | None,
+    load_run: str,
 ) -> None:
     # _write checks :GraphMeta before writing; a mismatch rolls the delete back with it.
     if upgrade_from is not None:
         upgrade_graph_meta(tx, upgrade_from)
     if replace:
-        tx.run(f"{_OTHER_NODES} DETACH DELETE n").consume()
+        tx.run(f"{OTHER_NODES} DETACH DELETE n").consume()
     else:
-        found = tx.run(f"{_OTHER_NODES} RETURN count(n) AS n").single(strict=True)["n"]
+        found = tx.run(f"{OTHER_NODES} RETURN count(n) AS n").single(strict=True)["n"]
         if found:
             raise GraphNotEmpty(f"the graph holds {found} nodes besides :{GRAPH_META}")
     _write(tx, batch)
+    record_load_run(tx, load_run)
 
 
 def _write(tx: ManagedTransaction, batch: Batch) -> None:

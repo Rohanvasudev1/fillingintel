@@ -65,6 +65,7 @@ from tests.test_eval_run import (
     FakeJudge,
     ReplayModel,
     _judge_spec,
+    no_cost,
 )
 
 IDS = ["q0072", "q0073", "q0113"]  # lookup, lookup, multi_hop
@@ -225,7 +226,7 @@ def _run(eval_dir: Path, tmp_path: Path, models: dict[str, str] | None = None,
         opened.append(arm)
         return nullcontext(arm)
 
-    spec = ArmSpec(name="graph_stub", required_env=(), open=open_arm)
+    spec = ArmSpec(name="graph_stub", required_env=(), open=open_arm, estimate=no_cost)
     runs = tmp_path / "runs"
     code = main(["--arm", "graph_stub"], arms={"graph_stub": spec},
                 judges=_judge_spec(FakeJudge(records)), eval_dir=eval_dir, runs_dir=runs,
@@ -395,7 +396,8 @@ def test_a_vector_run_file_gains_no_graph_field(tmp_path):
     (directory / "eval_set.jsonl").write_text("", encoding="utf-8")
     records = load_records(directory / "agent_drafted_set.jsonl")
     spec = ArmSpec(name="fake", required_env=("FAKE_ARM_KEY",),
-                   open=lambda _cache, _spans=None: nullcontext(FakeArm(records)))
+                   open=lambda _cache, _spans=None: nullcontext(FakeArm(records)),
+                   estimate=no_cost)
     runs = tmp_path / "runs"
     assert main(["--arm", "fake"], arms={"fake": spec}, judges=_judge_spec(FakeJudge(records)),
                 eval_dir=directory, runs_dir=runs, today=TODAY) == 0

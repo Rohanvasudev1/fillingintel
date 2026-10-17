@@ -14,6 +14,7 @@ import pytest
 from neo4j import Driver
 
 from graph.connection import DATABASE, driver_from_env
+from graph.constraints import record_load_run
 
 TEST_ENV_PREFIX = "NEO4J_TEST"
 MARKER_LABEL = "FilingIntelTestMarker"
@@ -64,6 +65,13 @@ def wipe_except_marker(driver: Driver) -> None:
     )
     for row in indexes:
         driver.execute_query(f"DROP INDEX {_quote(row['name'])}", database_=DATABASE)
+
+
+def record_test_load_run(driver: Driver, load_run: str = "load-run1") -> None:
+    """Mark a graph written through the write path as a graph load would: graph.load
+    records its load run on :GraphMeta, and validation and the graph arms read it."""
+    with driver.session(database=DATABASE) as session:
+        session.execute_write(record_load_run, load_run)
 
 
 @pytest.fixture(scope="session")

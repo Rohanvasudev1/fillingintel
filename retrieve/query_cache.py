@@ -1,7 +1,8 @@
 """A disk cache of query embeddings, keyed by model and text hash (Step 5).
 
 Rerunning the same questions makes no embedding calls.  Each vector is one file,
-``{cache_dir}/{model}/{sha256 of the text}.json``, written atomically.  The
+``{cache_dir}/{model}/{sha256 of the text}.json``, written atomically and
+never replaced: a second write of the same key keeps the first vector (Step 13).  The
 question text itself is not stored.  A file that cannot be read or does not
 match the model is an error, never a silent miss, so a damaged cache is noticed.
 
@@ -16,9 +17,10 @@ from __future__ import annotations
 import json
 import math
 from collections.abc import Sequence
+from dataclasses import replace
 from pathlib import Path
 
-from ingest.atomic_json import write_json_atomic
+from ingest.atomic_json import write_json_atomic, write_json_once
 from ingest.parsed_files import text_sha256
 from ingest.voyage import (
     MAX_BATCH_TEXTS,
@@ -59,8 +61,10 @@ class CachedQueryEmbedder:
         if path.exists():
             return _read(path, model, sha)
         embedding = self._inner.embed_query(text, model)
-        _write(path, model, sha, embedding)
-        return embedding
+        if _write(path, model, sha, embedding):
+            return embedding
+        # Another run cached this text first; its vector stays, and this run uses it.
+        return replace(_read(path, model, sha), from_cache=False)
 
 
 def _read(path: Path, model: str, sha: str) -> Embedding:
@@ -88,8 +92,9 @@ def _checked_vector(path: Path, vector: object, model: str) -> tuple[float, ...]
     return tuple(float(x) for x in vector)
 
 
-def _write(path: Path, model: str, sha: str, embedding: Embedding) -> None:
-    write_json_atomic(path, {
+def _write(path: Path, model: str, sha: str, embedding: Embedding) -> bool:
+    """Cache *embedding* unless the key is already cached; True when this call wrote it."""
+    return write_json_once(path, {
         "model": model,
         "text_sha256": sha,
         "vector": list(embedding.vector),

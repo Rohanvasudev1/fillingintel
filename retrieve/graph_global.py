@@ -53,6 +53,7 @@ from retrieve.arm import (
     GlobalSearchConfig,
     GraphRetrieval,
     MapCall,
+    Retrieval,
     StageCost,
 )
 from retrieve.arm_steps import (
@@ -90,9 +91,10 @@ from retrieve.global_retrieval import (
     ShownCommunity,
     loaded_reports_file,
 )
-from retrieve.graph_local import NEO4J_ENV, graph_connections
+from retrieve.graph_local import GRAPH_ERRORS, NEO4J_ENV, graph_connections, graph_provenance
 from retrieve.query_cache import CachedBatchEmbedder, CachedQueryEmbedder
 from retrieve.response_cache import CachedAnswerModel
+from retrieve.run_estimate import GLOBAL_ANSWER_STAGES, GRAPH_GLOBAL_RUN, MeasuredEstimate
 from retrieve.tracing import (
     GLOBAL_MAP_SPAN,
     GLOBAL_REDUCE_SPAN,
@@ -130,7 +132,6 @@ class GraphGlobalArm:
         embedding_model: str = DEFAULT_MODEL,
         clock: Callable[[], float] = time.perf_counter,
         spans: SpanRecorder | None = None,
-        load_reports: Path = LOAD_REPORT_DIR,
         database: str = DATABASE,
     ):
         check_prices((embedding_model, MAP_MODEL, REDUCE_MODEL))
@@ -145,7 +146,7 @@ class GraphGlobalArm:
         self.selection = GlobalSelection(
             conn, driver, embedder, report_embeddings, reports, n=n, level=LOWER,
             per_community=per_community, model=embedding_model, clock=clock, spans=self._spans,
-            load_reports=load_reports, database=database)
+            database=database)
         self._tickers = filing_tickers(self.selection.filings)
         try:
             chunker_version = corpus_chunker_version(conn)
@@ -177,6 +178,10 @@ class GraphGlobalArm:
             report_prompt_versions=tuple(sorted({e.prompt_version
                                                  for e in reports.entries.values()})),
             communities_file=reports.communities_file, reports_file=reports.name)
+
+    def retrieve(self, question: str) -> Retrieval:
+        """The ranked shown chunks ``run`` would map, with no map or reduce call."""
+        return self.selection.retrieve(question).retrieval
 
     def run(self, question: str) -> ArmResult:
         """Select, map and reduce for one question; any failure is raised as ``ArmError``."""
@@ -285,10 +290,14 @@ def _as_answer_prompt(prompt: GlobalPrompt) -> AnswerPrompt:
 def open_graph_global_arm(response_cache: Path,
                           spans: SpanRecorder | None = None) -> Iterator[GraphGlobalArm]:
     """The arm on ``DATABASE_URL`` and ``NEO4J_*``, with Voyage, Claude and their caches,
-    reading the reports file the latest graph load names."""
-    reports = loaded_reports_file(LOAD_REPORT_DIR, COMMUNITIES_DIR)
+    reading the reports file of the load run :GraphMeta records."""
     with (graph_connections() as (conn, driver), VoyageClient.from_env() as voyage,
           AnthropicAnswerModel.from_env() as claude):
+        try:
+            load_run = graph_provenance(driver, DATABASE).load_run
+        except GRAPH_ERRORS as exc:
+            raise arm_error(ARM_NAME, exc) from exc
+        reports = loaded_reports_file(LOAD_REPORT_DIR, COMMUNITIES_DIR, load_run)
         yield GraphGlobalArm(conn, driver, CachedQueryEmbedder(voyage),
                              CachedBatchEmbedder(voyage), CachedAnswerModel(claude, response_cache),
                              reports, spans=spans)
@@ -298,4 +307,5 @@ GRAPH_GLOBAL = ArmSpec(
     name=ARM_NAME,
     required_env=(*NEO4J_ENV, "DATABASE_URL", API_KEY_ENV, ANTHROPIC_KEY_ENV),
     open=open_graph_global_arm,
+    estimate=MeasuredEstimate(GRAPH_GLOBAL_RUN, answer_stages=GLOBAL_ANSWER_STAGES),
 )

@@ -38,7 +38,6 @@ from tests.global_data import (
     SHOWN_10K,
     SIMILARITIES,
     community_batch,
-    load_reports_dir,
     recorded,
     report_cache,
     reports_file,
@@ -52,6 +51,7 @@ from tests.graph_local_data import (
     graph_local_batch,
 )
 from tests.graph_test_data import EXPORT_CHUNK, OFFICERS_CHUNK, SEGMENTS_CHUNK, SUPPLY_CHUNK
+from tests.neo4j_fixtures import record_test_load_run
 from tests.vector_fakes import EXCERPT_ID, MODEL, FakeQueryEmbedder
 
 QUESTION = QUESTIONS["foundries"]
@@ -150,13 +150,14 @@ def graph(neo4j_test_session, chunks):
     wipe_except_marker(neo4j_test_session)
     apply_constraints(neo4j_test_session)
     write_batch(neo4j_test_session, community_batch(graph_local_batch(*chunks)))
+    record_test_load_run(neo4j_test_session, "load-run5")
     return neo4j_test_session
 
 
 def _arm(corpus, graph, tmp_path, model, *, similarities=SIMILARITIES, **kwargs):
     return GraphGlobalArm(corpus, graph, FakeQueryEmbedder(QUERY_VECTOR),
                           report_cache(tmp_path / "reports", similarities), model,
-                          reports_file(), load_reports=load_reports_dir(tmp_path), **kwargs)
+                          reports_file(), **kwargs)
 
 
 def _ids(result) -> list[str]:

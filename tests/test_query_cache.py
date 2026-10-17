@@ -5,6 +5,7 @@ recorded voyage-4-large response.  A query response has the same shape as a
 document response, so the one recording serves both.
 """
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import httpx
@@ -92,3 +93,33 @@ def test_a_cache_file_with_the_wrong_dimensions_is_refused(tmp_path):
     path.write_text(json.dumps({**stored, "vector": stored["vector"][:10]}), encoding="utf-8")
     with pytest.raises(CacheError, match="dimensions"):
         CachedQueryEmbedder(_client(Replay()), tmp_path).embed_query(QUESTION, MODEL)
+
+
+class _Shifted:
+    """Embeds through another client, then shifts every value, so its vector differs."""
+
+    def __init__(self, inner: VoyageClient, before_return=None):
+        self._inner = inner
+        self._before_return = before_return
+
+    def embed_query(self, text: str, model: str):
+        embedding = self._inner.embed_query(text, model)
+        if self._before_return is not None:
+            self._before_return()
+        return replace(embedding, vector=tuple(x + 1.0 for x in embedding.vector))
+
+
+def test_a_second_write_of_the_same_key_keeps_the_first_vector(tmp_path):
+    first = CachedQueryEmbedder(_client(Replay()), tmp_path)
+
+    def write_first():  # another run caches the same question while this call is in flight
+        first.embed_query(QUESTION, MODEL)
+
+    late = CachedQueryEmbedder(_Shifted(_client(Replay()), write_first), tmp_path)
+    returned = late.embed_query(QUESTION, MODEL)
+    stored = CachedQueryEmbedder(_client(Replay()), tmp_path).embed_query(QUESTION, MODEL)
+    recorded = _client(Replay()).embed_query(QUESTION, MODEL)
+    assert stored.vector == recorded.vector  # the first write, not the shifted one
+    assert returned.vector == stored.vector
+    assert len(list(tmp_path.rglob("*.json"))) == 1
+    assert not list(tmp_path.rglob(".*"))  # no temporary file left behind

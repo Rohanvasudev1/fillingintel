@@ -30,7 +30,6 @@ from tests.global_data import (
     SIMILARITIES,
     UNFILTERED,
     community_batch,
-    load_reports_dir,
     report_cache,
     reports_file,
 )
@@ -50,6 +49,7 @@ from tests.graph_test_data import (
     SUPPLY_CHUNK,
     TEST_REPORT_PROMPT,
 )
+from tests.neo4j_fixtures import record_test_load_run
 from tests.vector_fakes import MODEL, FakeQueryEmbedder
 
 
@@ -80,6 +80,7 @@ def corpus(fixture_records, chunks):
 def graph(neo4j_driver, chunks):
     apply_constraints(neo4j_driver)
     write_batch(neo4j_driver, community_batch(graph_local_batch(*chunks)))
+    record_test_load_run(neo4j_driver, "load-run5")
     return neo4j_driver
 
 
@@ -89,8 +90,7 @@ def _cache(tmp_path, similarities=SIMILARITIES):
 
 def _selection(corpus, graph, tmp_path, *, cache=None, reports=None, **kwargs):
     return GlobalSelection(corpus, graph, FakeQueryEmbedder(QUERY_VECTOR),
-                           cache or _cache(tmp_path), reports or reports_file(),
-                           load_reports=load_reports_dir(tmp_path), **kwargs)
+                           cache or _cache(tmp_path), reports or reports_file(), **kwargs)
 
 
 def _shown(found) -> dict[str, list[str]]:
@@ -235,3 +235,12 @@ def test_a_load_without_communities_is_refused(tmp_path):
     (directory / "load-run4.json").write_text(json.dumps({"communities": None}))
     with pytest.raises(ArmError, match="no communities"):
         loaded_reports_file(directory, communities)
+
+
+def test_a_named_load_run_is_read_instead_of_the_latest(tmp_path):
+    communities, sha = _reports_dir(tmp_path, REPORT_LINE)
+    directory = _load_dir(tmp_path, sha)  # load-run5 loaded reports; load-run4 did not
+    with pytest.raises(ArmError, match="load-run4.json loaded no communities"):
+        loaded_reports_file(directory, communities, load_run="load-run4")
+    assert loaded_reports_file(directory, communities, load_run="load-run5").name \
+        == "reports-run2.jsonl"

@@ -25,6 +25,7 @@ from retrieve.arm import ArmSpec
 from retrieve.pricing import embedding_cost
 from retrieve.tracing import ENDPOINT_ENV, TEXT_ENV, Kind, SpanRecorder
 from retrieve.vector import VectorArm
+from tests.test_eval_run import no_cost
 from tests.vector_fakes import (
     EMBED_TOKENS,
     MODEL,
@@ -93,10 +94,11 @@ def _run(db_conn, eval_dir, runs_dir, provider, answer_model=None, judges=JUDGES
                                      answer_model or ScriptedAnswerModel(), MODEL,
                                      clock=lambda: float(next(ticks)), spans=spans))
 
-    spec = ArmSpec(name="vector", required_env=(), open=open_arm)
+    spec = ArmSpec(name="vector", required_env=(), open=open_arm, estimate=no_cost)
     return main(["--arm", "vector"], arms={"vector": spec}, judges=judges, eval_dir=eval_dir,
                 runs_dir=runs_dir, today=TODAY, response_cache=runs_dir / "responses",
-                uncached_root=runs_dir / "uncached", tracing=lambda environ: provider)
+                uncached_root=runs_dir / "uncached", tracing=lambda environ: provider,
+                clock=lambda: 0.0)  # total_ms is wall time, which differs between two runs
 
 
 def _traced(db_conn, eval_dir, tmp_path, answer_model=None):
@@ -256,7 +258,8 @@ def test_a_bad_tracing_setting_stops_the_run_before_the_arm_opens(eval_dir, tmp_
                                                                   capsys, name, value):
     monkeypatch.setenv(name, value)
     opened = []
-    spec = ArmSpec(name="vector", required_env=(), open=lambda cache, spans=None: opened.append(1))
+    spec = ArmSpec(name="vector", required_env=(), estimate=no_cost,
+                   open=lambda cache, spans=None: opened.append(1))
     code = main(["--arm", "vector"], arms={"vector": spec}, judges=JUDGES, eval_dir=eval_dir,
                 runs_dir=tmp_path / "runs", today=TODAY)
     assert code == EXIT_USAGE

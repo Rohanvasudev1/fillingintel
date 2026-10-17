@@ -6,6 +6,11 @@ per question.  Each cell holds retrieval metrics, answer and citation counts,
 latency per stage, cost and the judged scores, labelled uncalibrated.  Records
 without gold chunks (decline, unanswerable) get their own cells, with no
 retrieval metrics; their judged scores are decline and not-found correctness.
+
+A retrieval-only run (Step 13) has no answers: its cells hold retrieval metrics,
+the wrong-evidence rate by rank alone and retrieval latency, and its records and
+header hold no answer, judged or cost fields.  An answered question also
+records ``total_ms``, the wall time of its whole arm call, and ``replayed``.
 """
 from __future__ import annotations
 
@@ -34,11 +39,19 @@ from eval.judging.scoring import JudgeConfig
 from eval.metrics import DEFINITIONS, METRIC_KS, precision_at_k, recall_at_k
 from eval.question_sets import QuestionSet
 from eval.schema import Class, EvalRecord
-from retrieve.arm import ArmConfig, ArmResult, RetrievedChunk
+from retrieve.arm import ArmConfig, ArmResult, Retrieval, RetrievedChunk
 from retrieve.pricing import price_table
 
 CLASS_ORDER = get_args(Class)
 NO_GOLD_NOTE = "no gold chunks; retrieval metrics do not apply"
+MODE_DEFINITIONS = {
+    "mode": (
+        "full: retrieval, answers and judges; retrieval_only: retrieval alone, with no answer "
+        "or judge call, so cells hold retrieval metrics, retrieval latency and the "
+        "wrong-evidence rate from ranks alone (nothing is cited), and no answer, judged, cost "
+        "or total_ms fields"
+    ),
+}
 _MAX_RUNS_PER_NAME = 1000
 
 
@@ -48,11 +61,19 @@ class Outcome:
 
     question_set: str
     record: EvalRecord
-    result: ArmResult
+    result: Retrieval  # an ArmResult, unless the run was retrieval-only
     judged: JudgedQuestion | None = None  # set once the judges have run
+    total_ms: float | None = None  # the whole arm call's wall time; None retrieval-only
+
+    @property
+    def answered(self) -> ArmResult:
+        """The arm's result with its answer; TypeError for a retrieval-only outcome."""
+        if not isinstance(self.result, ArmResult):
+            raise TypeError(f"{self.record.id} was retrieved only; it has no answer")
+        return self.result
 
 
-def score(record: EvalRecord, result: ArmResult) -> dict[str, float]:
+def score(record: EvalRecord, result: Retrieval) -> dict[str, float]:
     """Recall and precision at each of ``METRIC_KS``; empty for a record with no gold."""
     if not record.gold_chunk_ids:
         return {}
@@ -66,13 +87,13 @@ def score(record: EvalRecord, result: ArmResult) -> dict[str, float]:
 
 
 def hard_negative_hits(outcome: Outcome) -> tuple[wrong_evidence.WrongEvidenceHit, ...]:
-    """The hard negatives that ranked above a gold chunk or were cited, for one question."""
+    """The hard negatives that ranked above a gold chunk or were cited, for one question;
+    a retrieval-only question cites nothing."""
     result = outcome.result
+    cited = (wrong_evidence.cited_in(result.answer) if isinstance(result, ArmResult)
+             else set())
     return wrong_evidence.wrong_evidence_hits(
-        outcome.record,
-        [r.chunk_id for r in result.retrieved],
-        wrong_evidence.cited_in(result.answer),
-    )
+        outcome.record, [r.chunk_id for r in result.retrieved], cited)
 
 
 def _retrieval_metrics(
@@ -87,30 +108,43 @@ def _retrieval_metrics(
     }
 
 
-def _cell(outcomes: Sequence[Outcome], judge_runs: int, rng_for: RngFor) -> dict[str, object]:
+def _cell(outcomes: Sequence[Outcome], judge_runs: int | None,
+          rng_for: RngFor) -> dict[str, object]:
+    """One cell; with no *judge_runs* (a retrieval-only run), retrieval fields only."""
     results = [o.result for o in outcomes]
-    judged = [o.judged for o in outcomes if o.judged is not None]
     graph = graph_report.graph_cell(results)
-    return {
+    retrieval = {
         "n": len(outcomes),
         "directional": is_directional(len(outcomes)),
         **_retrieval_metrics([score(o.record, o.result) for o in outcomes], rng_for),
         "wrong_evidence": wrong_evidence.wrong_evidence_cell(
             [(o.record, hard_negative_hits(o)) for o in outcomes], rng_for),
-        "answers": answer_report.answer_cell([r.answer for r in results], rng_for),
-        "latency_ms": operational.latency_cell(results, rng_for),
-        "cost_usd": operational.cost_cell(results, rng_for),
+    }
+    graph_part = {"graph": graph} if graph is not None else {}
+    if judge_runs is None:
+        return {**retrieval, "latency_ms": operational.latency_cell(results, rng_for),
+                **graph_part}
+    answered = [o.answered for o in outcomes]
+    judged = [o.judged for o in outcomes if o.judged is not None]
+    return {
+        **retrieval,
+        "answers": answer_report.answer_cell([r.answer for r in answered], rng_for),
+        "latency_ms": operational.latency_cell(answered, rng_for),
+        "total_ms": operational.total_cell(
+            [(o.total_ms, operational.replayed(o.answered)) for o in outcomes], rng_for),
+        "cost_usd": operational.cost_cell(answered, rng_for),
         "judged": judged_report.judged_cell(judged, judge_runs, rng_for),
-        **({"graph": graph} if graph is not None else {}),
+        **graph_part,
     }
 
 
 def build_cells(
-    outcomes: Sequence[Outcome], arm: str, seed: int, judge_runs: int
+    outcomes: Sequence[Outcome], arm: str, seed: int, judge_runs: int | None
 ) -> dict[str, dict[str, dict[str, object]]]:
     """``cells[question_set][arm][class]``: counts, metrics and intervals, classes in schema order.
 
     Each interval's generator is seeded by *seed* and the interval's set, arm, class and metric.
+    *judge_runs* is None for a retrieval-only run.
     """
     cells: dict[str, dict[str, dict[str, object]]] = {}
     for set_name in dict.fromkeys(o.question_set for o in outcomes):
@@ -129,7 +163,26 @@ def build_cells(
 
 
 def question_record(outcome: Outcome) -> dict[str, object]:
-    """Everything needed to read one question's failure on its own."""
+    """Everything needed to read one question's failure on its own; a retrieval-only
+    question has no answer, judged, cost or end-to-end fields."""
+    result = outcome.result
+    retrieval = _retrieval_record(outcome)
+    if not isinstance(result, ArmResult):
+        return retrieval
+    fields = {
+        **retrieval,
+        "generation_ms": result.answer.generation_ms,
+        "total_ms": outcome.total_ms,
+        "replayed": operational.replayed(result),
+        "cost_usd": operational.question_cost(result),
+        "answer": answer_report.answer_record(result.answer),
+        "judged": (judged_report.question_judged(outcome.judged, len(outcome.judged.runs))
+                   if outcome.judged is not None else None),
+    }
+    return {name: fields[name] for name in _FULL_RECORD_ORDER if name in fields}
+
+
+def _retrieval_record(outcome: Outcome) -> dict[str, object]:
     record, result = outcome.record, outcome.result
     return {
         "id": record.id,
@@ -146,20 +199,25 @@ def question_record(outcome: Outcome) -> dict[str, object]:
         "embed_ms": result.embed_ms,
         "search_ms": result.search_ms,
         "query_cached": result.query_cached,
-        "generation_ms": result.answer.generation_ms,
         "embed_tokens": result.embed_tokens,
-        "cost_usd": operational.question_cost(result),
         "metrics": score(record, result),
         "wrong_evidence": (
             [wrong_evidence.hit_record(h) for h in hard_negative_hits(outcome)]
             if wrong_evidence.has_hard_negatives(record) else None
         ),
-        "answer": answer_report.answer_record(result.answer),
-        "judged": (judged_report.question_judged(outcome.judged, len(outcome.judged.runs))
-                   if outcome.judged is not None else None),
         **({"graph": graph_report.question_graph(result.graph)}
            if result.graph is not None else {}),
     }
+
+
+# An answered record's fields in the order files had before Step 13, end-to-end time added.
+_FULL_RECORD_ORDER = (
+    "id", "question_set", "class", "question", "gold_chunk_ids", "filter",
+    "filter_matches_labels", "filter_excluded_gold", "retrieved", "companies_without_chunks",
+    "retrieval_ms", "embed_ms", "search_ms", "query_cached", "generation_ms", "total_ms",
+    "replayed", "embed_tokens", "cost_usd", "metrics", "wrong_evidence", "answer", "judged",
+    "graph",
+)
 
 
 def _retrieved_record(chunk: RetrievedChunk) -> dict[str, object]:
@@ -183,13 +241,20 @@ class RunInfo:
     uncached: bool  # True: answers and judges came from fresh API calls, none replayed
     response_cache_dir: str  # the response cache folder's name
     classes: tuple[Class, ...] | None = None  # the --classes selection; None runs every class
+    retrieval_only: bool = False  # --retrieval-only: no answer or judge call
 
 
 def build_header(
-    run: RunInfo, config: ArmConfig, question_sets: Sequence[QuestionSet], judge: JudgeConfig
+    run: RunInfo, config: ArmConfig, question_sets: Sequence[QuestionSet],
+    judge: JudgeConfig | None,
 ) -> dict[str, object]:
-    """The provenance header (invariant 2).  The agent-drafted label is always first."""
-    models = {**config.models, "judge": judge.model}
+    """The provenance header (invariant 2).  The agent-drafted label is always first.
+
+    A retrieval-only run has no *judge*: its header has no answer prompt, prices or
+    judge entries, since it makes no answer or judge call.
+    """
+    judge_model = {"judge": judge.model} if judge is not None else {}
+    models = {**config.models, **judge_model}
     return {
         "label": question_sets[0].label,
         "created_at": run.created_at,
@@ -197,21 +262,16 @@ def build_header(
         "arm": run.arm,
         "split": run.split,
         "final": run.final,
+        "mode": "retrieval_only" if run.retrieval_only else "full",
         **({"classes": list(run.classes)} if run.classes is not None else {}),
         "seed": run.seed,
         "response_cache": {"uncached": run.uncached, "dir": run.response_cache_dir},
         "bootstrap": {"resamples": bootstrap.BOOTSTRAP_RESAMPLES,
                       "confidence": bootstrap.CONFIDENCE},
         "models": models,
-        "efforts": {**config.efforts, "judge": judge.effort},
-        "answer_prompt": {
-            "version": config.answer_prompt.version,
-            "sha256": config.answer_prompt.sha256,
-            "path": config.answer_prompt.path,
-        },
-        "answer_max_tokens": config.answer_max_tokens,
-        "prices": price_table(models.values()),
-        "judging": judge.as_header(),
+        "efforts": {**config.efforts,
+                    **({"judge": judge.effort} if judge is not None else {})},
+        **(_answering(config, models, judge) if judge is not None else {}),
         "k": config.k,
         "metric_ks": list(METRIC_KS),
         "chunker_version": config.chunker_version,
@@ -231,7 +291,22 @@ def build_header(
                                | filter_report.DEFINITIONS | answer_report.DEFINITIONS
                                | operational.DEFINITIONS | bootstrap.DEFINITIONS
                                | judged_report.DEFINITIONS
-                               | _graph_definitions(config)),
+                               | _graph_definitions(config) | MODE_DEFINITIONS),
+    }
+
+
+def _answering(config: ArmConfig, models: Mapping[str, str],
+               judge: JudgeConfig) -> dict[str, object]:
+    """The header's answer prompt, prices and judging, for a run that answers."""
+    return {
+        "answer_prompt": {
+            "version": config.answer_prompt.version,
+            "sha256": config.answer_prompt.sha256,
+            "path": config.answer_prompt.path,
+        },
+        "answer_max_tokens": config.answer_max_tokens,
+        "prices": price_table(models.values()),
+        "judging": judge.as_header(),
     }
 
 

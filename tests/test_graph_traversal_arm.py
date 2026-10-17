@@ -37,6 +37,7 @@ from tests.graph_local_data import (
     graph_local_batch,
 )
 from tests.graph_test_data import EXPORT_CHUNK, EXPORT_CONTROLS, SUPPLY_CHUNK, TSMC
+from tests.neo4j_fixtures import record_test_load_run
 from tests.traversal_data import FILINGS, QUESTIONS, recorded
 from tests.vector_fakes import MODEL, FakeQueryEmbedder, ScriptedAnswerModel
 
@@ -106,19 +107,16 @@ def chunks(nvda_10k_filing, nvda_10q_filing, amd_10k_filing):
 def graph(neo4j_driver, chunks):
     apply_constraints(neo4j_driver)
     write_batch(neo4j_driver, graph_local_batch(*chunks))
+    record_test_load_run(neo4j_driver, "load-run4")
     return neo4j_driver
 
 
 def _arm(corpus, graph, tmp_path, cypher_model, *, answer_model=None,
          **kwargs) -> GraphTraversalArm:
-    reports = tmp_path / "reports"
-    reports.mkdir(exist_ok=True)
-    (reports / "load-run4.json").write_text("{}", encoding="utf-8")
     nodes = CachedBatchEmbedder(FakeNodeEmbedder(SIMILARITIES), cache_dir=tmp_path / "nodes")
     nodes.embed(list(TEXTS.values()), MODEL, "document")
     return GraphTraversalArm(corpus, graph, FakeQueryEmbedder(QUERY_VECTOR), nodes,
-                             cypher_model, answer_model or ScriptedAnswerModel(),
-                             load_reports=reports, **kwargs)
+                             cypher_model, answer_model or ScriptedAnswerModel(), **kwargs)
 
 
 def _ids(result) -> list[str]:

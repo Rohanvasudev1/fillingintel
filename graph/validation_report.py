@@ -30,7 +30,8 @@ class Check(StrEnum):
 
 
 DESCRIPTIONS = {
-    Check.GRAPH_META: "one :GraphMeta node records this ontology's version and schema hash",
+    Check.GRAPH_META: ("one :GraphMeta node records this ontology's version and schema hash, "
+                       "and the load run of a graph holding data"),
     Check.NODE_LABELS: "every node has exactly one ontology label and no other",
     Check.EDGE_TYPES: "every edge type is in the ontology",
     Check.ENDPOINTS: "every edge joins labels its type allows",

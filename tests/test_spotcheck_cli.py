@@ -23,6 +23,7 @@ from retrieve.arm import ArmConfig, ArmResult, ArmSpec, RetrievedChunk
 from retrieve.pricing import anthropic_cost
 from retrieve.question_filter import QuestionFilter
 from tests.anthropic_fixtures import load, with_text
+from tests.test_eval_run import no_cost
 
 TODAY = date(2026, 10, 5)
 CACHE = Path("/nonexistent/responses")  # the fakes never touch it
@@ -99,7 +100,7 @@ def _run(tmp_path, off=frozenset(), error=None, runs=None, from_cache=True):
         return nullcontext(FakeJudge(config, off, seen))
 
     argv = [] if runs is None else ["--runs", str(runs)]
-    code = main(argv, arm_spec=ArmSpec("fake", (), lambda cache: nullcontext(arm)),
+    code = main(argv, arm_spec=ArmSpec("fake", (), lambda cache: nullcontext(arm), no_cost),
                 open_judges_=open_judges, runs_dir=tmp_path, today=TODAY,
                 response_cache=CACHE)
     return code, arm, opened, seen
