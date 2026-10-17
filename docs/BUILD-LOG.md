@@ -2491,6 +2491,23 @@ Both are harness changes the user approved on 2026-10-15 (Step 12 grilling). Bra
 
 ---
 
+## 2026-10-17 — Step 13 ticket 01: harness additions and graph housekeeping
+
+- **End-to-end time.** `eval.run` records `total_ms` per question, the wall time of the whole arm call, and `replayed` when any of its calls came from a cache (query embedding, answer, Cypher or map call). Cells give p50 and p95 with bootstrap intervals and a replayed count. Per-stage latency is unchanged.
+- **Estimates and `--max-cost`.** Each arm spec supplies an estimate, printed before the arm opens. With `--max-cost`, a run estimated above the cap exits 2 and opens nothing. User decision (2026-10-17): the estimate prices each question from the arm's committed dev run file (its total plus judges there, its class mean if unscored, the file's most expensive question if the class is absent), times 1.5, with nothing assumed to replay. This replaces reusing the token-count estimators, which ran about 2× high and need the databases open. An estimate that cannot be read stops the run (exit 3), with or without the flag.
+- **`--retrieval-only`.** It calls `Arm.retrieve`, opens no judge and needs no judge settings. The file records `mode`, and holds retrieval metrics, the wrong-evidence rate from ranks alone and retrieval latency, with no answer, judged, cost or answer-prompt fields. It works with `--classes` and with `--final` on `test`. `graph_global` gained `retrieve()`; its retrieval-only records carry no graph details (the selection time is in `search_ms`).
+- **Load run on `:GraphMeta`.** `graph.load --rebuild` writes the load report's name in the rebuild transaction. A rejected rebuild keeps the old name. `validate_graph()` requires it on a graph holding data. The graph arms read it there for the header and refuse without it; `graph_global` also reads that load's reports file, not the newest one on disk. Ontology version and schema hash are unchanged. Dev graph rebuilt once: load run 6 at `6e26741`, the same counts as run 5, zero violations with the Postgres check.
+- **Query-embedding cache.** A new entry is linked into place only when the key is absent, so a second write keeps the first vector.
+- **graph_global retrieval-only, dev.** `benchmarks/runs/2026-10-17-graph_global-dev-6e26741.json` covers the 82 answerable dev questions (agent-drafted questions), load run 6, $0 (every query embedding cached; dummy API keys, so a miss would have failed). Recall@10: lookup 0.556, local 0.841, multi_hop 0.489, global 0.458, the same as `global-n-run1.json` at N = 4.
+- **Review.** `mattpocock-skills:code-review`: no spec gaps. Fixed: answer fields dropped from retrieval-only headers, `graph_global`'s reports file read from the graph's load run, the existing `cost_cap` argument type reused, the "nodes besides `:GraphMeta`" query shared, `main()` back under 50 lines, the reference runs named. Kept: the `Retrieval`/`ArmResult` type checks in four result builders, since the type is what tells a retrieval-only outcome apart; retrieval-only files share the full-run file name, and `mode` tells them apart.
+- **Verify.** `uv run ruff check .` clean. Full `uv run --env-file .env pytest`: 2681 passed, 1 failed (`test_tracing_run` compared two runs' wall times; it now uses a fixed clock). The 320 tests in the files touched after that run then passed. The red step was seen for the cache, `:GraphMeta` and `eval.run` tests; the estimator's unit tests were written with its code.
+- **Spend.** $0 in this ticket. Step 13: $0 of $10.
+
+**Next session starts with**
+1. `/implement` on `.scratch/step-13/issues/02-results-table-dev-best-map-and-global-diagnostics.md`. `results_table` must read `header.mode` (absent in older files means full).
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.
