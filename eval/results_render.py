@@ -15,7 +15,6 @@ from eval.gate_scores import GATED_CLASSES, POOLED
 from eval.results_inputs import CONTROL_ARM
 from eval.results_paired import difference_text, paired
 from eval.results_sources import FULL, RETRIEVAL_ONLY, ResultsInputError, RunFile, Split
-from eval.schema import NO_GOLD_CLASSES
 
 RETRIEVAL_ONLY_TEXT = "retrieval only"
 NOT_RECORDED = "not recorded"
@@ -135,7 +134,7 @@ def paired_rows(split: Split) -> list[tuple[str, str, PairedDifference]]:
     for arm, runs in split.items():
         if arm == CONTROL_ARM:
             continue
-        for class_ in (*GATED_CLASSES, POOLED, *NO_GOLD_CLASSES):
+        for class_ in (*GATED_CLASSES, POOLED, *NO_GOLD_JUDGED):  # a fixed order
             source = _pooled_source(runs.files) if class_ == POOLED else runs.source(class_)
             base = (_pooled_source(control.files) if class_ == POOLED
                     else control.source(class_))

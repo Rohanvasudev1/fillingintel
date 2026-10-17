@@ -3,6 +3,9 @@
 ``test`` role."""
 import hashlib
 import json
+import os
+import subprocess
+import sys
 
 import pytest
 
@@ -25,8 +28,17 @@ def _rows(text: str, *starts: str) -> list[str]:
     return [line for line in text.splitlines() if line.startswith(prefix)]
 
 
+def _build_with_hash_seed(seed: str) -> str:
+    env = {**os.environ, "PYTHONHASHSEED": seed}
+    code = "import sys; from eval.results_table import build; sys.stdout.write(build())"
+    return subprocess.run([sys.executable, "-c", code], env=env, cwd=REPO_ROOT,
+                          capture_output=True, text=True, check=True).stdout
+
+
 def test_the_build_is_byte_identical_across_runs(text):
     assert build() == text
+    # Separate processes with different hash seeds, so set iteration order cannot leak in.
+    assert _build_with_hash_seed("1") == _build_with_hash_seed("2") == text
 
 
 def test_the_header_lists_every_input_with_its_sha256_and_states_the_question_source(text):
