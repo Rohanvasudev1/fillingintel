@@ -203,10 +203,10 @@ def _same_build(load_reports: Path, first: str | None, second: str | None) -> bo
     try:
         reports = [json.loads((load_reports / f"{name}.json").read_text(encoding="utf-8"))
                    for name in (first, second)]
-    except (OSError, ValueError):
-        return False
+    except (OSError, ValueError) as exc:
+        raise RuntimeError(f"cannot compare load reports {first} and {second}: {exc}") from exc
     if not all(isinstance(r, dict) for r in reports):
-        return False
+        raise RuntimeError(f"load report {first} or {second} is not an object")
     a, b = ({k: v for k, v in r.items() if k not in _RUN_FIELDS} for r in reports)
     return a == b
 
@@ -244,7 +244,7 @@ def main(argv: Sequence[str] | None = None, *, load_reports: Path = LOAD_REPORT_
         write_json_atomic(path, {
             "commit": git_state(), "label": LABEL, "run_file": args.run_file.name,
             "run_sha256": hashlib.sha256(args.run_file.read_bytes()).hexdigest(),
-            "load_run": load_run, "checked_load_run": checked,
+            "load_run": load_run, "latest_load_run": checked,
             "citations": len(traces), "breaks": len(breaks),
             "strict": {"rule": STRICT_RULE, "citations": len(strict),
                        "breaks": strict_breaks, "traces": strict},

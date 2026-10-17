@@ -13,7 +13,7 @@ from eval.bootstrap import is_directional
 from eval.compare import PairedDifference
 from eval.gate_scores import GATED_CLASSES, POOLED
 from eval.results_inputs import CONTROL_ARM
-from eval.results_paired import paired
+from eval.results_paired import difference_text, paired
 from eval.results_sources import FULL, RETRIEVAL_ONLY, ResultsInputError, RunFile, Split
 from eval.schema import NO_GOLD_CLASSES
 
@@ -162,6 +162,6 @@ def paired_table(split: Split) -> list[str]:
         notes = [n for n in ("directional" if d.directional else None, d.label,
                              f"{d.unpaired} unpaired" if d.unpaired else None) if n]
         lines.append(_row([arm, d.class_, METRIC_NAMES.get(d.metric, d.metric), str(d.n),
-                           value(d.mean, {"low": d.low, "high": d.high}),
+                           difference_text(d),
                            "yes" if d.counts else "no", ", ".join(notes) or "-"]))
     return lines

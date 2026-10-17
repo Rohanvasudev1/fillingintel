@@ -101,9 +101,10 @@ def extraction(root: Path = REPO_ROOT) -> Block:
               "compared.",
               "",
               f"Over the latest `extract/v2` run of each of the {len(runs)} filings "
-              f"(`{EXTRACTION_DIR}/*-run*.json`, commit {commits}): {violations} ontology "
-              f"violations reached the write path out of {candidates:,} candidate triples; "
-              f"{rejected} candidates were rejected before it ({rejected / candidates:.3f})."]
+              f"(`{EXTRACTION_DIR}/*-run*.json`, commit {commits}): violation rate "
+              f"{violations / candidates:.3f} ({violations} ontology violations reached the "
+              f"write path out of {candidates:,} candidate triples); rejection rate "
+              f"{rejected / candidates:.3f} ({rejected} candidates rejected before it)."]
     return lines, inputs + run_inputs
 
 

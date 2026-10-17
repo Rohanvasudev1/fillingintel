@@ -185,7 +185,7 @@ def test_a_later_load_of_the_same_build_checks_the_run(graph_env, tmp_path):
     run = _run_file(tmp_path, _question("q1", ["top-a"], kept=[("Wafers.", [SUPPLY_CHUNK])]))
     assert _main(run, graph_env, tmp_path) == EXIT_OK
     report = _report(tmp_path)
-    assert (report["load_run"], report["checked_load_run"]) == (LOAD_RUN, "load-run8")
+    assert (report["load_run"], report["latest_load_run"]) == (LOAD_RUN, "load-run8")
 
 
 def test_the_strict_count_traces_through_the_citing_map_points_community(graph_env, tmp_path):

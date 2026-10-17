@@ -55,8 +55,10 @@ class ClassChoice:
     contenders: tuple[Contender, ...]
 
 
-def _includes_zero(d: PairedDifference) -> bool:
-    return d.low <= 0 <= d.high
+def best_arm(recalls: Mapping[str, float]) -> str:
+    """The arm with the highest recall, an exact tie going to the earlier arm."""
+    arms = list(recalls)
+    return max(arms, key=lambda a: (recalls[a], -arms.index(a)))
 
 
 def choose_class(class_: str, recalls: Mapping[str, float],
@@ -66,10 +68,10 @@ def choose_class(class_: str, recalls: Mapping[str, float],
     """The rule on one class.  *differences* holds each arm's difference against the
     arm with the highest recall (``best``); arms are taken in *recalls*' order."""
     arms = list(recalls)
-    best = max(arms, key=lambda a: (recalls[a], -arms.index(a)))
+    best = best_arm(recalls)
     contenders = tuple(
         Contender(a, recalls[a], None if a == best else differences[a], costs[a],
-                  tied=a == best or _includes_zero(differences[a]),
+                  tied=a == best or not differences[a].counts,
                   source=(sources or {}).get(a, ""))
         for a in arms)
     tied = [c for c in contenders if c.tied]
@@ -87,7 +89,7 @@ def dev_best_choices(split: Split) -> tuple[ClassChoice, ...]:
         if not sources:
             continue
         recalls = {a: float(s.cell(class_)["metrics"]["recall@10"]) for a, s in sources.items()}
-        best = max(recalls, key=lambda a: (recalls[a], -list(recalls).index(a)))
+        best = best_arm(recalls)
         differences = {}
         for arm, source in sources.items():
             if arm == best:

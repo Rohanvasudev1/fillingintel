@@ -5,7 +5,9 @@ rule as printed in ``benchmarks/results.md``, the verdict, and one line per
 number read.  "Beats by at least x" needs the mean paired difference at or
 above x and an interval excluding 0 (the plan's test for a difference).  A
 verdict read on fewer than 10 questions is directional, with whether the rule
-was met.  H6 reads the router runs and comes with them (ticket 03).
+was met; "not testable" when the runs lack what the rule reads.  These labels
+extend the spec's "supported", "not supported" and "directional" so a reader sees
+which way a directional result fell.  H6 reads the router runs and comes with them (ticket 03).
 """
 from __future__ import annotations
 
@@ -85,19 +87,19 @@ def h2(difference: PairedDifference | None) -> Verdict:
 def h3(wrong: Mapping[str, Sequence[Sequence[str]]]) -> Verdict:
     """*wrong*: per arm, the hard-negative relations hit on each answerable question with
     wrong evidence."""
-    readings, shares, smallest = [], [], None
+    readings, shares = [], []
     for arm, questions in wrong.items():
         if not questions:
             readings.append(f"{arm}: no wrong-evidence questions")
             continue
         period = sum(PERIOD in relations for relations in questions)
         shares.append(period / len(questions) > 0.5)
-        smallest = len(questions) if smallest is None else min(smallest, len(questions))
         readings.append(f"{arm}: {period} of {len(questions)} wrong-evidence questions "
                         f"involve {PERIOD}")
     if not shares:
         return Verdict(H3_RULE, NOT_TESTABLE, tuple(readings))
-    return Verdict(H3_RULE, _verdict(all(shares), is_directional(smallest)), tuple(readings))
+    # H3 pools the answerable classes, so the plan's per-class directional rule never applies.
+    return Verdict(H3_RULE, _verdict(all(shares), directional=False), tuple(readings))
 
 
 def h4(difference: PairedDifference | None) -> Verdict:
@@ -119,14 +121,14 @@ def h5(vector: Mapping[str, ArmLatencyCost], arms: Mapping[str, ArmLatencyCost])
     readings, met, testable = [], True, True
     for arm, own in arms.items():
         base = vector[arm]
-        cheaper = own.cost > base.cost
+        costlier = own.cost > base.cost
         cost = f"cost ${own.cost:.4f} against ${base.cost:.4f}"
         if own.p95_total_ms is None or base.p95_total_ms is None:
             testable = False
             readings.append(f"{arm}: total_ms not recorded in these runs; {cost}, n {own.n}")
             continue
         ratio = own.p95_total_ms / base.p95_total_ms
-        met = met and ratio >= H5_LATENCY_FACTOR and cheaper
+        met = met and ratio >= H5_LATENCY_FACTOR and costlier
         readings.append(f"{arm}: p95 total_ms {own.p95_total_ms:,.0f} against "
                         f"{base.p95_total_ms:,.0f} ({ratio:.2f}x); {cost}, n {own.n}")
     if not testable:

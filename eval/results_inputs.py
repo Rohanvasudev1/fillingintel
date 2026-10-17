@@ -1,6 +1,8 @@
 """The committed files ``benchmarks/results.md`` is built from (Step 13 ticket 02).
 
-Named here, not globbed, so a stray local run never enters the table.  Each arm
+Named here, not globbed, so a stray local run never enters the table.  The one
+exception is the extraction run reports: the latest ``extract/v2`` run of each of
+the 24 filings is found in ``EXTRACTION_DIR``, which holds only committed files.  Each arm
 lists its run files per split; an arm may hold a full run and a retrieval-only
 run, and ``eval.results_sources`` picks, per class, the full run when one holds
 the class.  Ticket 05 adds the ``test`` runs.

@@ -42,8 +42,9 @@ def test_h3_needs_most_errors_of_every_arm_to_be_period_confusion():
     half = [[period]] * 5 + [[filing]] * 5  # 5 of 10: not most
     assert h3({"vector": many, "graph_local": many}).verdict == SUPPORTED
     assert h3({"vector": many, "graph_local": half}).verdict == NOT_SUPPORTED
-    assert h3({"vector": [[period, filing]] * 3}).verdict == DIRECTIONAL_MET
-    assert h3({"vector": [[filing]] * 3}).verdict == DIRECTIONAL_NOT_MET
+    # H3 pools the answerable classes: a few errors are still read in full.
+    assert h3({"vector": [[period, filing]] * 3}).verdict == SUPPORTED
+    assert h3({"vector": [[filing]] * 3}).verdict == NOT_SUPPORTED
     # An arm with no errors has nothing to be mostly anything; it is listed and skipped.
     verdict = h3({"vector": many, "graph_local": []})
     assert verdict.verdict == SUPPORTED

@@ -77,9 +77,10 @@ def _commit(document: object) -> str | None:
     return None
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, eq=False)
 class RunFile:
-    """One results file written by ``eval.run``."""
+    """One results file written by ``eval.run``; hashed by identity, so paired
+    comparisons can be cached per pair of loaded files."""
 
     input: InputFile
     document: Mapping[str, object]

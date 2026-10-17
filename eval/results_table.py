@@ -46,8 +46,8 @@ from eval.results_inputs import (
     RunNames,
 )
 from eval.results_numbers import numbers_block
-from eval.results_paired import paired_difference
-from eval.results_render import answerable_table, no_gold_table, paired_table, value
+from eval.results_paired import difference_text, paired_difference
+from eval.results_render import answerable_table, no_gold_table, paired_table
 from eval.results_sources import (
     InputFile,
     ResultsInputError,
@@ -67,6 +67,8 @@ QUESTIONS_NOTE = ("**Every number here is on agent-drafted questions**: 140 ques
                   "wrote with their gold chunks, not reviewed by a human "
                   "(`eval/agent_drafted_set.jsonl`). Judged columns come from gpt-6-luna and "
                   "are uncalibrated until judge calibration (Step 13 ticket 04).")
+GLOBAL_COST_NOTE = ("graph_global's dev cost per question comes from its full run, which answered "
+                    "only global questions; its other classes were scored retrieval only.")
 TUNING_NOTE = ("Tuning data: every choice (hop count, Cypher prompt, N, the dev-best map) "
                "was made on these questions.")
 
@@ -173,12 +175,11 @@ def _router_section(dev: Split, root: Path) -> tuple[list[str], list[InputFile]]
               "(USD) | chosen |", "|---|---|---|---|---|---|---|"]
     for choice in choices:
         for c in choice.contenders:
-            diff = ("best" if c.difference is None else
-                    value(c.difference.mean, {"low": c.difference.low, "high": c.difference.high}))
+            diff = "best" if c.difference is None else difference_text(c.difference)
             lines.append(f"| {choice.class_} | {c.arm} | {c.recall_at_10:.3f} | {diff} | "
                          f"{'yes' if c.tied else 'no'} | {c.cost_per_question:.4f} | "
                          f"{'**yes**' if c.arm == choice.chosen else ''} |")
-    return [*lines, ""], inputs
+    return [*lines, "", GLOBAL_COST_NOTE, ""], inputs
 
 
 def _inputs_table(inputs: Sequence[InputFile]) -> list[str]:
