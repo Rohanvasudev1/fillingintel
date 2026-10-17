@@ -7,8 +7,13 @@ chunk, or an extracted edge between two of its members with the chunk in
 ``chunk_ids``.  A top community's members are its lower communities' members.
 Dropped sentences are not checked; the answer filter already removed them.
 
+Beside that count (the gate), a strict count (Step 13): a kept citation passes
+only through a community whose kept map point, sent to the reduce call, cites
+the chunk.  A citation no such point names breaks the strict count.
+
 The graph must be the one the run read: the run header's load run must be the
-latest graph load report.  Results go to
+latest graph load report, or one whose report matches it in everything but its
+commit and write time (a rebuild of the same inputs).  Results go to
 `benchmarks/graph/global-provenance-run{N}.json` with every trace, labelled
 agent-drafted.
 
@@ -24,7 +29,7 @@ import json
 import re
 import sys
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from neo4j import Driver
@@ -42,6 +47,8 @@ from ingest.atomic_json import write_json_atomic
 from ingest.provenance import REPO_ROOT, git_state
 
 LABEL = "agent-drafted questions"
+STRICT_RULE = ("a kept citation passes only through a community whose kept map point in the "
+               "reduce input cites the chunk; reported beside the gate, not a gate")
 REPORT_DIR = REPO_ROOT / "benchmarks" / "graph"
 
 _REPORT = re.compile(r"global-provenance-run(\d+)\.json")
@@ -72,12 +79,17 @@ class RunFileError(ValueError):
     """The run file is missing, unreadable or not a graph_global run."""
 
 
+# Load report fields that differ between two loads of the same inputs.
+_RUN_FIELDS = frozenset({"commit", "write_seconds"})
+
+
 @dataclass(frozen=True)
 class Citation:
     question_id: str
     sentence: str
     chunk_id: str
     selected: tuple[str, ...]  # community IDs, by rank
+    citing: tuple[str, ...] = ()  # communities whose kept, reduced map points cite the chunk
 
 
 @dataclass(frozen=True)
@@ -98,12 +110,23 @@ def read_run(path: Path) -> tuple[dict, list[Citation]]:
     if header.get("arm") != GLOBAL_ARM:
         raise RunFileError(f"{path.name} is a {header.get('arm')!r} run, not {GLOBAL_ARM}")
     try:
-        return header, [
-            Citation(q["id"], s["text"], chunk_id,
-                     tuple(c["community_id"] for c in q["graph"]["global_search"]["map_calls"]))
-            for q in questions for s in q["answer"]["kept"] for chunk_id in s["citations"]]
+        citations = []
+        for q in questions:
+            calls = q["graph"]["global_search"]["map_calls"]
+            selected = tuple(c["community_id"] for c in calls)
+            citations += [Citation(q["id"], s["text"], chunk_id, selected,
+                                   _citing(calls, chunk_id))
+                          for s in q["answer"]["kept"] for chunk_id in s["citations"]]
+        return header, citations
     except (KeyError, TypeError) as exc:
         raise RunFileError(f"{path.name}: a question lacks {exc}") from exc
+
+
+def _citing(map_calls: Sequence[Mapping], chunk_id: str) -> tuple[str, ...]:
+    """The communities, by rank, with a kept map point in the reduce input citing *chunk_id*."""
+    return tuple(c["community_id"] for c in map_calls
+                 if any(p.get("kept") and p.get("in_reduce") and chunk_id in p["citations"]
+                        for p in c.get("points", ())))
 
 
 def trace(citation: Citation, evidence: Mapping[str, Evidence]) -> dict[str, str] | None:
@@ -163,13 +186,29 @@ def next_report_path(directory: Path) -> Path:
     return directory / f"global-provenance-run{max(used, default=0) + 1}.json"
 
 
-def _check_load_run(header: Mapping, load_reports: Path) -> str:
+def _check_load_run(header: Mapping, load_reports: Path) -> tuple[str, str]:
+    """The run's load run and the latest one, refusing when the latest is another build."""
     run_load = (header.get("graph") or {}).get("load_run")
     latest = latest_load_run(load_reports)
-    if run_load != latest:
+    if run_load != latest and not _same_build(load_reports, run_load, latest):
         raise RuntimeError(f"the run read {run_load} but the latest graph load is {latest}; "
                            "check against the graph the run read")
-    return latest
+    return run_load, latest
+
+
+def _same_build(load_reports: Path, first: str | None, second: str | None) -> bool:
+    """Whether two load reports differ only in their commit and write time."""
+    if first is None or second is None:
+        return False
+    try:
+        reports = [json.loads((load_reports / f"{name}.json").read_text(encoding="utf-8"))
+                   for name in (first, second)]
+    except (OSError, ValueError):
+        return False
+    if not all(isinstance(r, dict) for r in reports):
+        return False
+    a, b = ({k: v for k, v in r.items() if k not in _RUN_FIELDS} for r in reports)
+    return a == b
 
 
 def main(argv: Sequence[str] | None = None, *, load_reports: Path = LOAD_REPORT_DIR,
@@ -186,7 +225,7 @@ def main(argv: Sequence[str] | None = None, *, load_reports: Path = LOAD_REPORT_
         print(f"provenance check: {exc}", file=sys.stderr)
         return EXIT_USAGE
     try:
-        load_run = _check_load_run(header, load_reports)
+        load_run, checked = _check_load_run(header, load_reports)
         communities = sorted({c for cit in citations for c in cit.selected})
         chunks = sorted({cit.chunk_id for cit in citations})
         with driver_from_env() as driver:
@@ -196,11 +235,19 @@ def main(argv: Sequence[str] | None = None, *, load_reports: Path = LOAD_REPORT_
                    "selected": list(c.selected), "found": trace(c, evidence)}
                   for c in citations]
         breaks = [t for t in traces if t["found"] is None]
+        strict = [{"id": c.question_id, "chunk_id": c.chunk_id,
+                   "citing_communities": list(c.citing),
+                   "found": trace(replace(c, selected=c.citing), evidence)}
+                  for c in citations]
+        strict_breaks = sum(t["found"] is None for t in strict)
         path = next_report_path(report_dir)
         write_json_atomic(path, {
             "commit": git_state(), "label": LABEL, "run_file": args.run_file.name,
             "run_sha256": hashlib.sha256(args.run_file.read_bytes()).hexdigest(),
-            "load_run": load_run, "citations": len(traces), "breaks": len(breaks),
+            "load_run": load_run, "checked_load_run": checked,
+            "citations": len(traces), "breaks": len(breaks),
+            "strict": {"rule": STRICT_RULE, "citations": len(strict),
+                       "breaks": strict_breaks, "traces": strict},
             "traces": traces,
         }, indent=2)
     except (RuntimeError, GraphSettingsMissing, OSError, Neo4jError, DriverError) as exc:
@@ -208,7 +255,8 @@ def main(argv: Sequence[str] | None = None, *, load_reports: Path = LOAD_REPORT_
         return EXIT_RUN_ERROR
     for b in breaks:
         print(f"BREAK {b['id']}: {b['chunk_id']} not reached from {', '.join(b['selected'])}")
-    print(f"{len(traces)} citations, {len(breaks)} breaks ({LABEL}); report: {path}")
+    print(f"{len(traces)} citations, {len(breaks)} breaks ({LABEL}); strict count: "
+          f"{strict_breaks} breaks; report: {path}")
     return EXIT_OK if not breaks else EXIT_VIOLATIONS
 
 
