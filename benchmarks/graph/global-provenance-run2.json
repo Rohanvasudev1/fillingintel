@@ -1,0 +1,4619 @@
+{
+  "commit": "d2f3fa1",
+  "label": "agent-drafted questions",
+  "run_file": "2026-10-16-graph_global-dev-5bb0799.json",
+  "run_sha256": "9a221011a43e5ef4dc3efe15e667bdc2799fb7274ca91d28ff5b2ee9818b081e",
+  "load_run": "load-run5",
+  "latest_load_run": "load-run6",
+  "citations": 163,
+  "breaks": 0,
+  "strict": {
+    "rule": "a kept citation passes only through a community whose kept map point in the reduce input cites the chunk; reported beside the gate, not a gate",
+    "citations": 163,
+    "breaks": 0,
+    "traces": [
+      {
+        "id": "q0011",
+        "chunk_id": "0001045810-26-000021:0036",
+        "citing_communities": [
+          "lower-103ba85b420b"
+        ],
+        "found": {
+          "community_id": "lower-103ba85b420b",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+        }
+      },
+      {
+        "id": "q0011",
+        "chunk_id": "0001045810-26-000021:0036",
+        "citing_communities": [
+          "lower-103ba85b420b"
+        ],
+        "found": {
+          "community_id": "lower-103ba85b420b",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+        }
+      },
+      {
+        "id": "q0011",
+        "chunk_id": "0001045810-26-000021:0036",
+        "citing_communities": [
+          "lower-103ba85b420b"
+        ],
+        "found": {
+          "community_id": "lower-103ba85b420b",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+        }
+      },
+      {
+        "id": "q0011",
+        "chunk_id": "0001045810-26-000021:0052",
+        "citing_communities": [
+          "lower-d3a6f3b3e188"
+        ],
+        "found": {
+          "community_id": "lower-d3a6f3b3e188",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:delaware law and our certificate of incorporation, bylaws and agreement with microsoft could delay or prevent a change in control."
+        }
+      },
+      {
+        "id": "q0012",
+        "chunk_id": "0001045810-26-000021:0061",
+        "citing_communities": [
+          "lower-cfac871fdedb"
+        ],
+        "found": {
+          "community_id": "lower-cfac871fdedb",
+          "via": "evidenced_by",
+          "node": "Product:blackwell"
+        }
+      },
+      {
+        "id": "q0012",
+        "chunk_id": "0001045810-26-000021:0063",
+        "citing_communities": [
+          "lower-cfac871fdedb",
+          "lower-088f36d7da83"
+        ],
+        "found": {
+          "community_id": "lower-cfac871fdedb",
+          "via": "evidenced_by",
+          "node": "Product:blackwell"
+        }
+      },
+      {
+        "id": "q0012",
+        "chunk_id": "0001045810-26-000021:0067",
+        "citing_communities": [
+          "lower-088f36d7da83"
+        ],
+        "found": {
+          "community_id": "lower-088f36d7da83",
+          "via": "evidenced_by",
+          "node": "MarketPlatform:1045810:data center"
+        }
+      },
+      {
+        "id": "q0012",
+        "chunk_id": "0001045810-26-000021:0061",
+        "citing_communities": [
+          "lower-cfac871fdedb"
+        ],
+        "found": {
+          "community_id": "lower-cfac871fdedb",
+          "via": "evidenced_by",
+          "node": "Product:blackwell"
+        }
+      },
+      {
+        "id": "q0012",
+        "chunk_id": "0001045810-25-000209:0034",
+        "citing_communities": [
+          "lower-cfac871fdedb"
+        ],
+        "found": {
+          "community_id": "lower-cfac871fdedb",
+          "via": "evidenced_by",
+          "node": "Product:blackwell"
+        }
+      },
+      {
+        "id": "q0012",
+        "chunk_id": "0001045810-25-000209:0036",
+        "citing_communities": [
+          "lower-cfac871fdedb",
+          "lower-088f36d7da83"
+        ],
+        "found": {
+          "community_id": "lower-cfac871fdedb",
+          "via": "evidenced_by",
+          "node": "Product:blackwell"
+        }
+      },
+      {
+        "id": "q0012",
+        "chunk_id": "0001045810-25-000230:0037",
+        "citing_communities": [
+          "lower-088f36d7da83"
+        ],
+        "found": {
+          "community_id": "lower-088f36d7da83",
+          "via": "evidenced_by",
+          "node": "MarketPlatform:1045810:data center"
+        }
+      },
+      {
+        "id": "q0013",
+        "chunk_id": "0001045810-25-000023:0025",
+        "citing_communities": [
+          "lower-cfac871fdedb"
+        ],
+        "found": {
+          "community_id": "lower-cfac871fdedb",
+          "via": "evidenced_by",
+          "node": "0001045810-25-000023:dependency on third-party suppliers and their technology to manufacture, assemble, test, or package our products reduces our control over product quantity and quality, manufacturing yields, and product delivery schedules and could harm our business"
+        }
+      },
+      {
+        "id": "q0013",
+        "chunk_id": "0001045810-25-000023:0025",
+        "citing_communities": [
+          "lower-cfac871fdedb"
+        ],
+        "found": {
+          "community_id": "lower-cfac871fdedb",
+          "via": "evidenced_by",
+          "node": "0001045810-25-000023:dependency on third-party suppliers and their technology to manufacture, assemble, test, or package our products reduces our control over product quantity and quality, manufacturing yields, and product delivery schedules and could harm our business"
+        }
+      },
+      {
+        "id": "q0013",
+        "chunk_id": "0001045810-24-000124:0041",
+        "citing_communities": [
+          "lower-c837a974e3de"
+        ],
+        "found": {
+          "community_id": "lower-c837a974e3de",
+          "via": "evidenced_by",
+          "node": "0001045810-24-000124:failure to estimate customer demand accurately has led and could lead to mismatches between supply and demand."
+        }
+      },
+      {
+        "id": "q0013",
+        "chunk_id": "0001045810-24-000316:0050",
+        "citing_communities": [
+          "lower-cfac871fdedb"
+        ],
+        "found": {
+          "community_id": "lower-cfac871fdedb",
+          "via": "evidenced_by",
+          "node": "Product:blackwell"
+        }
+      },
+      {
+        "id": "q0013",
+        "chunk_id": "0001045810-24-000264:0048",
+        "citing_communities": [
+          "lower-cfac871fdedb"
+        ],
+        "found": {
+          "community_id": "lower-cfac871fdedb",
+          "via": "evidenced_by",
+          "node": "0001045810-24-000264:long manufacturing lead times and uncertain supply and component availability, combined with a failure to estimate customer demand accurately, has led and could lead to mismatches between supply and demand."
+        }
+      },
+      {
+        "id": "q0013",
+        "chunk_id": "0001045810-24-000316:0033",
+        "citing_communities": [
+          "lower-cfac871fdedb"
+        ],
+        "found": {
+          "community_id": "lower-cfac871fdedb",
+          "via": "evidenced_by",
+          "node": "Product:blackwell"
+        }
+      },
+      {
+        "id": "q0013",
+        "chunk_id": "0001045810-24-000124:0042",
+        "citing_communities": [
+          "lower-c837a974e3de"
+        ],
+        "found": {
+          "community_id": "lower-c837a974e3de",
+          "via": "evidenced_by",
+          "node": "0001045810-24-000124:failure to estimate customer demand accurately has led and could lead to mismatches between supply and demand."
+        }
+      },
+      {
+        "id": "q0013",
+        "chunk_id": "0001045810-24-000124:0044",
+        "citing_communities": [
+          "lower-c837a974e3de"
+        ],
+        "found": {
+          "community_id": "lower-c837a974e3de",
+          "via": "evidenced_by",
+          "node": "0001045810-24-000124:cryptocurrency mining affects demand for our products"
+        }
+      },
+      {
+        "id": "q0018",
+        "chunk_id": "0000050863-26-000011:0063",
+        "citing_communities": [
+          "lower-8ee03241eed7"
+        ],
+        "found": {
+          "community_id": "lower-8ee03241eed7",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:disaggregated design architecture and supply chain risk"
+        }
+      },
+      {
+        "id": "q0019",
+        "chunk_id": "0000050863-25-000009:0014",
+        "citing_communities": [
+          "lower-5a541eb7341f"
+        ],
+        "found": {
+          "community_id": "lower-5a541eb7341f",
+          "via": "evidenced_by",
+          "node": "Facility:china assembly and test facility"
+        }
+      },
+      {
+        "id": "q0019",
+        "chunk_id": "0000050863-26-000011:0022",
+        "citing_communities": [
+          "lower-5a541eb7341f"
+        ],
+        "found": {
+          "community_id": "lower-5a541eb7341f",
+          "via": "evidenced_by",
+          "node": "Product:intel 14a"
+        }
+      },
+      {
+        "id": "q0019",
+        "chunk_id": "0000050863-26-000011:0022",
+        "citing_communities": [
+          "lower-5a541eb7341f"
+        ],
+        "found": {
+          "community_id": "lower-5a541eb7341f",
+          "via": "evidenced_by",
+          "node": "Product:intel 14a"
+        }
+      },
+      {
+        "id": "q0022",
+        "chunk_id": "0000002488-24-000056:0035",
+        "citing_communities": [
+          "lower-9e876013aaa1"
+        ],
+        "found": {
+          "community_id": "lower-9e876013aaa1",
+          "via": "evidenced_by",
+          "node": "0000002488-24-000056:the loss of a significant customer may have a material adverse effect on us"
+        }
+      },
+      {
+        "id": "q0022",
+        "chunk_id": "0000002488-24-000056:0036",
+        "citing_communities": [
+          "lower-9e876013aaa1"
+        ],
+        "found": {
+          "community_id": "lower-9e876013aaa1",
+          "via": "evidenced_by",
+          "node": "0000002488-24-000056:economic and market uncertainty may adversely impact our business and operating results"
+        }
+      },
+      {
+        "id": "q0022",
+        "chunk_id": "0000002488-25-000047:0034",
+        "citing_communities": [
+          "lower-16d3cb75fb70"
+        ],
+        "found": {
+          "community_id": "lower-16d3cb75fb70",
+          "via": "evidenced_by",
+          "node": "0000002488-25-000047:intel corporation\u2019s dominance of the microprocessor market and its aggressive business practices may limit our ability to compete effectively on a level playing field"
+        }
+      },
+      {
+        "id": "q0022",
+        "chunk_id": "0000002488-25-000012:0023",
+        "citing_communities": [
+          "lower-41758a480a2d"
+        ],
+        "found": {
+          "community_id": "lower-41758a480a2d",
+          "via": "evidenced_by",
+          "node": "0000002488-25-000012:nvidia\u2019s dominance in the graphics processing unit market and its aggressive business practices may limit our ability to compete effectively on a level playing field"
+        }
+      },
+      {
+        "id": "q0022",
+        "chunk_id": "0000002488-26-000018:0023",
+        "citing_communities": [
+          "lower-41758a480a2d"
+        ],
+        "found": {
+          "community_id": "lower-41758a480a2d",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:competition is expected to remain intense"
+        }
+      },
+      {
+        "id": "q0022",
+        "chunk_id": "0000002488-24-000056:0034",
+        "citing_communities": [
+          "lower-9e876013aaa1"
+        ],
+        "found": {
+          "community_id": "lower-9e876013aaa1",
+          "via": "evidenced_by",
+          "node": "0000002488-24-000056:the demand for our products depends in part on the market conditions in the industries into which they are sold"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0001045810-26-000021:0044",
+        "citing_communities": [
+          "lower-c17000ce1902"
+        ],
+        "found": {
+          "community_id": "lower-c17000ce1902",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:any regulatory control or other restriction that limits our ability to provide products and services"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0001045810-26-000021:0045",
+        "citing_communities": [
+          "lower-c17000ce1902",
+          "lower-301b260ee3ae"
+        ],
+        "found": {
+          "community_id": "lower-c17000ce1902",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:export controls have and are likely in the future to have a disproportionate impact on nvidia"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0001045810-26-000021:0045",
+        "citing_communities": [
+          "lower-c17000ce1902",
+          "lower-301b260ee3ae"
+        ],
+        "found": {
+          "community_id": "lower-c17000ce1902",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:export controls have and are likely in the future to have a disproportionate impact on nvidia"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0001045810-26-000021:0042",
+        "citing_communities": [
+          "lower-ed1771d60785"
+        ],
+        "found": {
+          "community_id": "lower-ed1771d60785",
+          "via": "evidenced_by",
+          "node": "Product:h20"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0001045810-26-000021:0014",
+        "citing_communities": [
+          "lower-ed1771d60785"
+        ],
+        "found": {
+          "community_id": "lower-ed1771d60785",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:tariff pass-through and litigation risk on china sales"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0001045810-26-000021:0043",
+        "citing_communities": [
+          "lower-c17000ce1902",
+          "lower-ed1771d60785"
+        ],
+        "found": {
+          "community_id": "lower-c17000ce1902",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:competitive position harmed by export controls"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0001045810-26-000021:0043",
+        "citing_communities": [
+          "lower-c17000ce1902",
+          "lower-ed1771d60785"
+        ],
+        "found": {
+          "community_id": "lower-c17000ce1902",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:competitive position harmed by export controls"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0001045810-26-000021:0045",
+        "citing_communities": [
+          "lower-c17000ce1902",
+          "lower-301b260ee3ae"
+        ],
+        "found": {
+          "community_id": "lower-c17000ce1902",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:export controls have and are likely in the future to have a disproportionate impact on nvidia"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0001045810-26-000021:0015",
+        "citing_communities": [
+          "lower-ed1771d60785"
+        ],
+        "found": {
+          "community_id": "lower-ed1771d60785",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:chinese government restrictions on gaming and data center activities"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0001045810-26-000021:0041",
+        "citing_communities": [
+          "lower-c17000ce1902",
+          "lower-ed1771d60785"
+        ],
+        "found": {
+          "community_id": "lower-c17000ce1902",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:export controls and other restrictions targeting gpus and semiconductors associated with ai, which have been imposed and are likely to be more restrictive, would further limit our ability to export our technology, products, or services, creating a competitive disadvantage for us and negatively impacting our business"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0001045810-26-000021:0045",
+        "citing_communities": [
+          "lower-c17000ce1902",
+          "lower-301b260ee3ae"
+        ],
+        "found": {
+          "community_id": "lower-c17000ce1902",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:export controls have and are likely in the future to have a disproportionate impact on nvidia"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0001045810-26-000021:0045",
+        "citing_communities": [
+          "lower-c17000ce1902",
+          "lower-301b260ee3ae"
+        ],
+        "found": {
+          "community_id": "lower-c17000ce1902",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:export controls have and are likely in the future to have a disproportionate impact on nvidia"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0001045810-26-000021:0041",
+        "citing_communities": [
+          "lower-c17000ce1902",
+          "lower-ed1771d60785"
+        ],
+        "found": {
+          "community_id": "lower-c17000ce1902",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:export controls and other restrictions targeting gpus and semiconductors associated with ai, which have been imposed and are likely to be more restrictive, would further limit our ability to export our technology, products, or services, creating a competitive disadvantage for us and negatively impacting our business"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0001045810-26-000021:0041",
+        "citing_communities": [
+          "lower-c17000ce1902",
+          "lower-ed1771d60785"
+        ],
+        "found": {
+          "community_id": "lower-c17000ce1902",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:export controls and other restrictions targeting gpus and semiconductors associated with ai, which have been imposed and are likely to be more restrictive, would further limit our ability to export our technology, products, or services, creating a competitive disadvantage for us and negatively impacting our business"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0001045810-26-000021:0045",
+        "citing_communities": [
+          "lower-c17000ce1902",
+          "lower-301b260ee3ae"
+        ],
+        "found": {
+          "community_id": "lower-c17000ce1902",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:export controls have and are likely in the future to have a disproportionate impact on nvidia"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0001045810-26-000021:0045",
+        "citing_communities": [
+          "lower-c17000ce1902",
+          "lower-301b260ee3ae"
+        ],
+        "found": {
+          "community_id": "lower-c17000ce1902",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:export controls have and are likely in the future to have a disproportionate impact on nvidia"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0001045810-26-000021:0045",
+        "citing_communities": [
+          "lower-c17000ce1902",
+          "lower-301b260ee3ae"
+        ],
+        "found": {
+          "community_id": "lower-c17000ce1902",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:export controls have and are likely in the future to have a disproportionate impact on nvidia"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0001045810-26-000021:0046",
+        "citing_communities": [
+          "lower-301b260ee3ae"
+        ],
+        "found": {
+          "community_id": "lower-301b260ee3ae",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:chinese government restrictions on gaming and oversight of digital platform companies"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0000002488-26-000018:0042",
+        "citing_communities": [
+          "lower-a4594796ad3b"
+        ],
+        "found": {
+          "community_id": "lower-a4594796ad3b",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:evolving u.s. government policy toward semiconductor exports, particularly in the context of national security and foreign policy priorities could adversely affect our business."
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0000002488-26-000018:0043",
+        "citing_communities": [
+          "lower-a4594796ad3b",
+          "lower-ed1771d60785"
+        ],
+        "found": {
+          "community_id": "lower-a4594796ad3b",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:additional export restrictions may affect other markets"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0000002488-26-000018:0044",
+        "citing_communities": [
+          "lower-a4594796ad3b"
+        ],
+        "found": {
+          "community_id": "lower-a4594796ad3b",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:customer demand for our products may decline"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0000002488-26-000018:0043",
+        "citing_communities": [
+          "lower-a4594796ad3b",
+          "lower-ed1771d60785"
+        ],
+        "found": {
+          "community_id": "lower-a4594796ad3b",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:additional export restrictions may affect other markets"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0000002488-26-000018:0043",
+        "citing_communities": [
+          "lower-a4594796ad3b",
+          "lower-ed1771d60785"
+        ],
+        "found": {
+          "community_id": "lower-a4594796ad3b",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:additional export restrictions may affect other markets"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0000002488-26-000018:0044",
+        "citing_communities": [
+          "lower-a4594796ad3b"
+        ],
+        "found": {
+          "community_id": "lower-a4594796ad3b",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:customer demand for our products may decline"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0000002488-26-000018:0043",
+        "citing_communities": [
+          "lower-a4594796ad3b",
+          "lower-ed1771d60785"
+        ],
+        "found": {
+          "community_id": "lower-a4594796ad3b",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:additional export restrictions may affect other markets"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0000002488-26-000018:0044",
+        "citing_communities": [
+          "lower-a4594796ad3b"
+        ],
+        "found": {
+          "community_id": "lower-a4594796ad3b",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:customer demand for our products may decline"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0000002488-26-000018:0043",
+        "citing_communities": [
+          "lower-a4594796ad3b",
+          "lower-ed1771d60785"
+        ],
+        "found": {
+          "community_id": "lower-a4594796ad3b",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:additional export restrictions may affect other markets"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0000050863-26-000011:0072",
+        "citing_communities": [
+          "lower-c17000ce1902"
+        ],
+        "found": {
+          "community_id": "lower-c17000ce1902",
+          "via": "evidenced_by",
+          "node": "Regulation:export control rules"
+        }
+      },
+      {
+        "id": "q0023",
+        "chunk_id": "0000050863-26-000011:0072",
+        "citing_communities": [
+          "lower-c17000ce1902"
+        ],
+        "found": {
+          "community_id": "lower-c17000ce1902",
+          "via": "evidenced_by",
+          "node": "Regulation:export control rules"
+        }
+      },
+      {
+        "id": "q0024",
+        "chunk_id": "0000050863-26-000011:0087",
+        "citing_communities": [
+          "lower-1f668aab6bf7"
+        ],
+        "found": {
+          "community_id": "lower-1f668aab6bf7",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:we are subject to risks associated with environmental, health, safety and product regulations"
+        }
+      },
+      {
+        "id": "q0024",
+        "chunk_id": "0000050863-26-000011:0087",
+        "citing_communities": [
+          "lower-1f668aab6bf7"
+        ],
+        "found": {
+          "community_id": "lower-1f668aab6bf7",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:we are subject to risks associated with environmental, health, safety and product regulations"
+        }
+      },
+      {
+        "id": "q0024",
+        "chunk_id": "0000050863-26-000011:0087",
+        "citing_communities": [
+          "lower-1f668aab6bf7"
+        ],
+        "found": {
+          "community_id": "lower-1f668aab6bf7",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:we are subject to risks associated with environmental, health, safety and product regulations"
+        }
+      },
+      {
+        "id": "q0024",
+        "chunk_id": "0000050863-26-000011:0086",
+        "citing_communities": [
+          "lower-1f668aab6bf7"
+        ],
+        "found": {
+          "community_id": "lower-1f668aab6bf7",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:we are subject to risks associated with environmental, health, safety and product regulations"
+        }
+      },
+      {
+        "id": "q0024",
+        "chunk_id": "0000002488-26-000018:0018",
+        "citing_communities": [
+          "lower-d26783ca198d"
+        ],
+        "found": {
+          "community_id": "lower-d26783ca198d",
+          "via": "evidenced_by",
+          "node": "Agreement:agreement with another responsible party"
+        }
+      },
+      {
+        "id": "q0024",
+        "chunk_id": "0000002488-26-000018:0040",
+        "citing_communities": [
+          "lower-3831f99c7e29"
+        ],
+        "found": {
+          "community_id": "lower-3831f99c7e29",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:climate change may have an impact on our business."
+        }
+      },
+      {
+        "id": "q0024",
+        "chunk_id": "0000002488-26-000018:0040",
+        "citing_communities": [
+          "lower-3831f99c7e29"
+        ],
+        "found": {
+          "community_id": "lower-3831f99c7e29",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:climate change may have an impact on our business."
+        }
+      },
+      {
+        "id": "q0024",
+        "chunk_id": "0000002488-26-000018:0041",
+        "citing_communities": [
+          "lower-3831f99c7e29"
+        ],
+        "found": {
+          "community_id": "lower-3831f99c7e29",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:climate change may have an impact on our business."
+        }
+      },
+      {
+        "id": "q0024",
+        "chunk_id": "0000002488-26-000018:0041",
+        "citing_communities": [
+          "lower-3831f99c7e29"
+        ],
+        "found": {
+          "community_id": "lower-3831f99c7e29",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:climate change may have an impact on our business."
+        }
+      },
+      {
+        "id": "q0024",
+        "chunk_id": "0000002488-26-000018:0019",
+        "citing_communities": [
+          "lower-d26783ca198d",
+          "lower-5d8b541f89da"
+        ],
+        "found": {
+          "community_id": "lower-d26783ca198d",
+          "via": "evidenced_by",
+          "node": "Agreement:agreement with another responsible party"
+        }
+      },
+      {
+        "id": "q0024",
+        "chunk_id": "0000002488-26-000018:0018",
+        "citing_communities": [
+          "lower-d26783ca198d"
+        ],
+        "found": {
+          "community_id": "lower-d26783ca198d",
+          "via": "evidenced_by",
+          "node": "Agreement:agreement with another responsible party"
+        }
+      },
+      {
+        "id": "q0024",
+        "chunk_id": "0000002488-26-000018:0019",
+        "citing_communities": [
+          "lower-d26783ca198d",
+          "lower-5d8b541f89da"
+        ],
+        "found": {
+          "community_id": "lower-d26783ca198d",
+          "via": "evidenced_by",
+          "node": "Agreement:agreement with another responsible party"
+        }
+      },
+      {
+        "id": "q0025",
+        "chunk_id": "0001045810-26-000021:0037",
+        "citing_communities": [
+          "lower-103ba85b420b"
+        ],
+        "found": {
+          "community_id": "lower-103ba85b420b",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+        }
+      },
+      {
+        "id": "q0025",
+        "chunk_id": "0001045810-26-000021:0037",
+        "citing_communities": [
+          "lower-103ba85b420b"
+        ],
+        "found": {
+          "community_id": "lower-103ba85b420b",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+        }
+      },
+      {
+        "id": "q0025",
+        "chunk_id": "0001045810-26-000021:0038",
+        "citing_communities": [
+          "lower-103ba85b420b"
+        ],
+        "found": {
+          "community_id": "lower-103ba85b420b",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:our operating results have in the past fluctuated and may in the future fluctuate, and if our operating results are below the expectations of securities analysts or investors, our stock price could decline"
+        }
+      },
+      {
+        "id": "q0025",
+        "chunk_id": "0001045810-26-000021:0037",
+        "citing_communities": [
+          "lower-103ba85b420b"
+        ],
+        "found": {
+          "community_id": "lower-103ba85b420b",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+        }
+      },
+      {
+        "id": "q0025",
+        "chunk_id": "0001045810-26-000021:0037",
+        "citing_communities": [
+          "lower-103ba85b420b"
+        ],
+        "found": {
+          "community_id": "lower-103ba85b420b",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+        }
+      },
+      {
+        "id": "q0026",
+        "chunk_id": "0000002488-26-000018:0005",
+        "citing_communities": [
+          "lower-5e4a15af3708"
+        ],
+        "found": {
+          "community_id": "lower-5e4a15af3708",
+          "via": "evidenced_by",
+          "node": "Product:5th gen amd epyc family of server processors"
+        }
+      },
+      {
+        "id": "q0026",
+        "chunk_id": "0000002488-26-000018:0024",
+        "citing_communities": [
+          "lower-5e4a15af3708",
+          "lower-3b9761ebebb1"
+        ],
+        "found": {
+          "community_id": "lower-5e4a15af3708",
+          "via": "evidenced_by",
+          "node": "Segment:2488:client and gaming"
+        }
+      },
+      {
+        "id": "q0026",
+        "chunk_id": "0000002488-26-000018:0100",
+        "citing_communities": [
+          "lower-3b9761ebebb1",
+          "lower-3b339463fc36"
+        ],
+        "found": {
+          "community_id": "lower-3b9761ebebb1",
+          "via": "evidenced_by",
+          "node": "Product:adaptive soc products"
+        }
+      },
+      {
+        "id": "q0026",
+        "chunk_id": "0000002488-26-000018:0072",
+        "citing_communities": [
+          "lower-5e4a15af3708"
+        ],
+        "found": {
+          "community_id": "lower-5e4a15af3708",
+          "via": "evidenced_by",
+          "node": "Product:amd instincttm mi308"
+        }
+      },
+      {
+        "id": "q0026",
+        "chunk_id": "0000002488-26-000018:0099",
+        "citing_communities": [
+          "lower-5e4a15af3708"
+        ],
+        "found": {
+          "community_id": "lower-5e4a15af3708",
+          "via": "evidenced_by",
+          "node": "Product:amd instincttm mi308"
+        }
+      },
+      {
+        "id": "q0026",
+        "chunk_id": "0001045810-26-000021:0061",
+        "citing_communities": [
+          "lower-3b339463fc36"
+        ],
+        "found": {
+          "community_id": "lower-3b339463fc36",
+          "via": "evidenced_by",
+          "node": "Product:nvidia rubin platform"
+        }
+      },
+      {
+        "id": "q0026",
+        "chunk_id": "0001045810-26-000021:0061",
+        "citing_communities": [
+          "lower-3b339463fc36"
+        ],
+        "found": {
+          "community_id": "lower-3b339463fc36",
+          "via": "evidenced_by",
+          "node": "Product:nvidia rubin platform"
+        }
+      },
+      {
+        "id": "q0026",
+        "chunk_id": "0001045810-26-000021:0009",
+        "citing_communities": [
+          "lower-3b9761ebebb1"
+        ],
+        "found": {
+          "community_id": "lower-3b9761ebebb1",
+          "via": "evidenced_by",
+          "node": "Product:dpus"
+        }
+      },
+      {
+        "id": "q0026",
+        "chunk_id": "0001045810-26-000021:0061",
+        "citing_communities": [
+          "lower-3b339463fc36"
+        ],
+        "found": {
+          "community_id": "lower-3b339463fc36",
+          "via": "evidenced_by",
+          "node": "Product:nvidia rubin platform"
+        }
+      },
+      {
+        "id": "q0026",
+        "chunk_id": "0000050863-26-000011:0062",
+        "citing_communities": [
+          "lower-90f16cb61339"
+        ],
+        "found": {
+          "community_id": "lower-90f16cb61339",
+          "via": "evidenced_by",
+          "node": "Product:gaudi ai accelerator"
+        }
+      },
+      {
+        "id": "q0026",
+        "chunk_id": "0000050863-26-000011:0037",
+        "citing_communities": [
+          "lower-90f16cb61339"
+        ],
+        "found": {
+          "community_id": "lower-90f16cb61339",
+          "via": "evidenced_by",
+          "node": "Segment:50863:intel foundry"
+        }
+      },
+      {
+        "id": "q0026",
+        "chunk_id": "0000050863-26-000011:0062",
+        "citing_communities": [
+          "lower-90f16cb61339"
+        ],
+        "found": {
+          "community_id": "lower-90f16cb61339",
+          "via": "evidenced_by",
+          "node": "Product:gaudi ai accelerator"
+        }
+      },
+      {
+        "id": "q0026",
+        "chunk_id": "0000050863-26-000011:0037",
+        "citing_communities": [
+          "lower-90f16cb61339"
+        ],
+        "found": {
+          "community_id": "lower-90f16cb61339",
+          "via": "evidenced_by",
+          "node": "Segment:50863:intel foundry"
+        }
+      },
+      {
+        "id": "q0028",
+        "chunk_id": "0001045810-26-000021:0051",
+        "citing_communities": [
+          "lower-d3a6f3b3e188"
+        ],
+        "found": {
+          "community_id": "lower-d3a6f3b3e188",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:we may have exposure to additional tax liabilities and our operating results may be adversely impacted by changes in tax laws, higher than expected tax rates and other tax-related factors."
+        }
+      },
+      {
+        "id": "q0028",
+        "chunk_id": "0001045810-26-000021:0051",
+        "citing_communities": [
+          "lower-d3a6f3b3e188"
+        ],
+        "found": {
+          "community_id": "lower-d3a6f3b3e188",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:we may have exposure to additional tax liabilities and our operating results may be adversely impacted by changes in tax laws, higher than expected tax rates and other tax-related factors."
+        }
+      },
+      {
+        "id": "q0028",
+        "chunk_id": "0001045810-26-000021:0052",
+        "citing_communities": [
+          "lower-d3a6f3b3e188"
+        ],
+        "found": {
+          "community_id": "lower-d3a6f3b3e188",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:delaware law and our certificate of incorporation, bylaws and agreement with microsoft could delay or prevent a change in control."
+        }
+      },
+      {
+        "id": "q0028",
+        "chunk_id": "0001045810-26-000021:0051",
+        "citing_communities": [
+          "lower-d3a6f3b3e188"
+        ],
+        "found": {
+          "community_id": "lower-d3a6f3b3e188",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:we may have exposure to additional tax liabilities and our operating results may be adversely impacted by changes in tax laws, higher than expected tax rates and other tax-related factors."
+        }
+      },
+      {
+        "id": "q0028",
+        "chunk_id": "0001045810-26-000021:0052",
+        "citing_communities": [
+          "lower-d3a6f3b3e188"
+        ],
+        "found": {
+          "community_id": "lower-d3a6f3b3e188",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:delaware law and our certificate of incorporation, bylaws and agreement with microsoft could delay or prevent a change in control."
+        }
+      },
+      {
+        "id": "q0028",
+        "chunk_id": "0000002488-26-000018:0079",
+        "citing_communities": [
+          "lower-fcc5094b6ed2"
+        ],
+        "found": {
+          "community_id": "lower-fcc5094b6ed2",
+          "via": "evidenced_by",
+          "node": "Regulation:pillar two"
+        }
+      },
+      {
+        "id": "q0028",
+        "chunk_id": "0000002488-26-000018:0079",
+        "citing_communities": [
+          "lower-fcc5094b6ed2"
+        ],
+        "found": {
+          "community_id": "lower-fcc5094b6ed2",
+          "via": "evidenced_by",
+          "node": "Regulation:pillar two"
+        }
+      },
+      {
+        "id": "q0028",
+        "chunk_id": "0000002488-26-000018:0079",
+        "citing_communities": [
+          "lower-fcc5094b6ed2"
+        ],
+        "found": {
+          "community_id": "lower-fcc5094b6ed2",
+          "via": "evidenced_by",
+          "node": "Regulation:pillar two"
+        }
+      },
+      {
+        "id": "q0028",
+        "chunk_id": "0000002488-26-000018:0046",
+        "citing_communities": [
+          "lower-fcc5094b6ed2"
+        ],
+        "found": {
+          "community_id": "lower-fcc5094b6ed2",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:export control restrictions on ai semiconductors"
+        }
+      },
+      {
+        "id": "q0028",
+        "chunk_id": "0000002488-26-000018:0079",
+        "citing_communities": [
+          "lower-fcc5094b6ed2"
+        ],
+        "found": {
+          "community_id": "lower-fcc5094b6ed2",
+          "via": "evidenced_by",
+          "node": "Regulation:pillar two"
+        }
+      },
+      {
+        "id": "q0028",
+        "chunk_id": "0000002488-26-000018:0046",
+        "citing_communities": [
+          "lower-fcc5094b6ed2"
+        ],
+        "found": {
+          "community_id": "lower-fcc5094b6ed2",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:export control restrictions on ai semiconductors"
+        }
+      },
+      {
+        "id": "q0028",
+        "chunk_id": "0000002488-26-000018:0047",
+        "citing_communities": [
+          "lower-fcc5094b6ed2"
+        ],
+        "found": {
+          "community_id": "lower-fcc5094b6ed2",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:our business is subject to potential tax liabilities, and exposure to greater-than-anticipated income tax liabilities as a result of changes in tax rules and regulations, changes in interpretation of tax rules and regulations, or unfavorable assessments from tax audits, could affect our effective tax rates, financial condition, and results of operations."
+        }
+      },
+      {
+        "id": "q0028",
+        "chunk_id": "0000002488-26-000018:0079",
+        "citing_communities": [
+          "lower-fcc5094b6ed2"
+        ],
+        "found": {
+          "community_id": "lower-fcc5094b6ed2",
+          "via": "evidenced_by",
+          "node": "Regulation:pillar two"
+        }
+      },
+      {
+        "id": "q0028",
+        "chunk_id": "0001045810-26-000021:0052",
+        "citing_communities": [
+          "lower-d3a6f3b3e188"
+        ],
+        "found": {
+          "community_id": "lower-d3a6f3b3e188",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:delaware law and our certificate of incorporation, bylaws and agreement with microsoft could delay or prevent a change in control."
+        }
+      },
+      {
+        "id": "q0030",
+        "chunk_id": "0000002488-26-000018:0029",
+        "citing_communities": [
+          "lower-88049f736a36"
+        ],
+        "found": {
+          "community_id": "lower-88049f736a36",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:we rely on third parties to manufacture our products, and if they are unable to do so on a timely basis in sufficient quantities and using competitive technologies, our business could be materially adversely affected."
+        }
+      },
+      {
+        "id": "q0030",
+        "chunk_id": "0000002488-26-000018:0032",
+        "citing_communities": [
+          "lower-88049f736a36",
+          "lower-70386ee9ef57"
+        ],
+        "found": {
+          "community_id": "lower-88049f736a36",
+          "via": "evidenced_by",
+          "node": "Organization:tsmc"
+        }
+      },
+      {
+        "id": "q0030",
+        "chunk_id": "0000002488-26-000018:0032",
+        "citing_communities": [
+          "lower-88049f736a36",
+          "lower-70386ee9ef57"
+        ],
+        "found": {
+          "community_id": "lower-88049f736a36",
+          "via": "evidenced_by",
+          "node": "Organization:tsmc"
+        }
+      },
+      {
+        "id": "q0030",
+        "chunk_id": "0000002488-26-000018:0032",
+        "citing_communities": [
+          "lower-88049f736a36",
+          "lower-70386ee9ef57"
+        ],
+        "found": {
+          "community_id": "lower-88049f736a36",
+          "via": "evidenced_by",
+          "node": "Organization:tsmc"
+        }
+      },
+      {
+        "id": "q0030",
+        "chunk_id": "0000002488-26-000018:0029",
+        "citing_communities": [
+          "lower-88049f736a36"
+        ],
+        "found": {
+          "community_id": "lower-88049f736a36",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:we rely on third parties to manufacture our products, and if they are unable to do so on a timely basis in sufficient quantities and using competitive technologies, our business could be materially adversely affected."
+        }
+      },
+      {
+        "id": "q0030",
+        "chunk_id": "0000002488-26-000018:0030",
+        "citing_communities": [
+          "lower-70386ee9ef57"
+        ],
+        "found": {
+          "community_id": "lower-70386ee9ef57",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:if essential equipment, materials, substrates or manufacturing processes are not available to manufacture our products, we could be materially adversely affected."
+        }
+      },
+      {
+        "id": "q0030",
+        "chunk_id": "0000050863-26-000011:0018",
+        "citing_communities": [
+          "lower-88049f736a36"
+        ],
+        "found": {
+          "community_id": "lower-88049f736a36",
+          "via": "evidenced_by",
+          "node": "Organization:tsmc"
+        }
+      },
+      {
+        "id": "q0030",
+        "chunk_id": "0000050863-26-000011:0076",
+        "citing_communities": [
+          "lower-3e417445d79c"
+        ],
+        "found": {
+          "community_id": "lower-3e417445d79c",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:we are subject to the risks of product defects, errata or other product issues"
+        }
+      },
+      {
+        "id": "q0030",
+        "chunk_id": "0000050863-26-000011:0075",
+        "citing_communities": [
+          "lower-88049f736a36",
+          "lower-3e417445d79c"
+        ],
+        "found": {
+          "community_id": "lower-88049f736a36",
+          "via": "evidenced_by",
+          "node": "Organization:tsmc"
+        }
+      },
+      {
+        "id": "q0030",
+        "chunk_id": "0000050863-26-000011:0063",
+        "citing_communities": [
+          "lower-88049f736a36"
+        ],
+        "found": {
+          "community_id": "lower-88049f736a36",
+          "via": "evidenced_by",
+          "node": "Organization:tsmc"
+        }
+      },
+      {
+        "id": "q0030",
+        "chunk_id": "0000050863-26-000011:0075",
+        "citing_communities": [
+          "lower-88049f736a36",
+          "lower-3e417445d79c"
+        ],
+        "found": {
+          "community_id": "lower-88049f736a36",
+          "via": "evidenced_by",
+          "node": "Organization:tsmc"
+        }
+      },
+      {
+        "id": "q0030",
+        "chunk_id": "0000050863-26-000011:0075",
+        "citing_communities": [
+          "lower-88049f736a36",
+          "lower-3e417445d79c"
+        ],
+        "found": {
+          "community_id": "lower-88049f736a36",
+          "via": "evidenced_by",
+          "node": "Organization:tsmc"
+        }
+      },
+      {
+        "id": "q0030",
+        "chunk_id": "0000050863-26-000011:0075",
+        "citing_communities": [
+          "lower-88049f736a36",
+          "lower-3e417445d79c"
+        ],
+        "found": {
+          "community_id": "lower-88049f736a36",
+          "via": "evidenced_by",
+          "node": "Organization:tsmc"
+        }
+      },
+      {
+        "id": "q0030",
+        "chunk_id": "0000050863-26-000011:0074",
+        "citing_communities": [
+          "lower-3e417445d79c"
+        ],
+        "found": {
+          "community_id": "lower-3e417445d79c",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:geopolitical and security issues, such as armed conflict and civil or military unrest, political instability, human rights concerns and terrorist activity, present significant risks to our global operations"
+        }
+      },
+      {
+        "id": "q0030",
+        "chunk_id": "0000050863-26-000011:0073",
+        "citing_communities": [
+          "lower-3e417445d79c"
+        ],
+        "found": {
+          "community_id": "lower-3e417445d79c",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:geopolitical and security issues, such as armed conflict and civil or military unrest, political instability, human rights concerns and terrorist activity, present significant risks to our global operations"
+        }
+      },
+      {
+        "id": "q0030",
+        "chunk_id": "0000050863-26-000011:0023",
+        "citing_communities": [
+          "lower-3e417445d79c"
+        ],
+        "found": {
+          "community_id": "lower-3e417445d79c",
+          "via": "evidenced_by",
+          "node": "Organization:asml holding n.v."
+        }
+      },
+      {
+        "id": "q0030",
+        "chunk_id": "0000050863-26-000011:0075",
+        "citing_communities": [
+          "lower-88049f736a36",
+          "lower-3e417445d79c"
+        ],
+        "found": {
+          "community_id": "lower-88049f736a36",
+          "via": "evidenced_by",
+          "node": "Organization:tsmc"
+        }
+      },
+      {
+        "id": "q0030",
+        "chunk_id": "0001045810-26-000021:0030",
+        "citing_communities": [
+          "lower-e2fe6bd9ef7b"
+        ],
+        "found": {
+          "community_id": "lower-e2fe6bd9ef7b",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:cybersecurity threats and security incidents"
+        }
+      },
+      {
+        "id": "q0031",
+        "chunk_id": "0001045810-26-000021:0036",
+        "citing_communities": [
+          "lower-103ba85b420b",
+          "lower-5206c9bf93c6"
+        ],
+        "found": {
+          "community_id": "lower-103ba85b420b",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+        }
+      },
+      {
+        "id": "q0031",
+        "chunk_id": "0001045810-26-000021:0036",
+        "citing_communities": [
+          "lower-103ba85b420b",
+          "lower-5206c9bf93c6"
+        ],
+        "found": {
+          "community_id": "lower-103ba85b420b",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+        }
+      },
+      {
+        "id": "q0031",
+        "chunk_id": "0001045810-26-000021:0036",
+        "citing_communities": [
+          "lower-103ba85b420b",
+          "lower-5206c9bf93c6"
+        ],
+        "found": {
+          "community_id": "lower-103ba85b420b",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+        }
+      },
+      {
+        "id": "q0031",
+        "chunk_id": "0001045810-26-000021:0067",
+        "citing_communities": [
+          "lower-5206c9bf93c6"
+        ],
+        "found": {
+          "community_id": "lower-5206c9bf93c6",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:concentration of revenue"
+        }
+      },
+      {
+        "id": "q0031",
+        "chunk_id": "0001045810-26-000021:0125",
+        "citing_communities": [
+          "lower-5206c9bf93c6"
+        ],
+        "found": {
+          "community_id": "lower-5206c9bf93c6",
+          "via": "evidenced_by",
+          "node": "Segment:1045810:compute & networking"
+        }
+      },
+      {
+        "id": "q0031",
+        "chunk_id": "0001045810-26-000021:0067",
+        "citing_communities": [
+          "lower-5206c9bf93c6"
+        ],
+        "found": {
+          "community_id": "lower-5206c9bf93c6",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:concentration of revenue"
+        }
+      },
+      {
+        "id": "q0031",
+        "chunk_id": "0001045810-26-000021:0036",
+        "citing_communities": [
+          "lower-103ba85b420b",
+          "lower-5206c9bf93c6"
+        ],
+        "found": {
+          "community_id": "lower-103ba85b420b",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+        }
+      },
+      {
+        "id": "q0031",
+        "chunk_id": "0000050863-26-000011:0083",
+        "citing_communities": [
+          "lower-3f4a443c1597"
+        ],
+        "found": {
+          "community_id": "lower-3f4a443c1597",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:we are subject to risks associated with our strategic transactions and investments."
+        }
+      },
+      {
+        "id": "q0031",
+        "chunk_id": "0000050863-26-000011:0083",
+        "citing_communities": [
+          "lower-3f4a443c1597"
+        ],
+        "found": {
+          "community_id": "lower-3f4a443c1597",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:we are subject to risks associated with our strategic transactions and investments."
+        }
+      },
+      {
+        "id": "q0031",
+        "chunk_id": "0000050863-26-000011:0084",
+        "citing_communities": [
+          "lower-3f4a443c1597"
+        ],
+        "found": {
+          "community_id": "lower-3f4a443c1597",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:we receive a significant portion of our revenue from a limited number of customers."
+        }
+      },
+      {
+        "id": "q0031",
+        "chunk_id": "0000050863-26-000011:0084",
+        "citing_communities": [
+          "lower-3f4a443c1597"
+        ],
+        "found": {
+          "community_id": "lower-3f4a443c1597",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:we receive a significant portion of our revenue from a limited number of customers."
+        }
+      },
+      {
+        "id": "q0031",
+        "chunk_id": "0000002488-26-000018:0024",
+        "citing_communities": [
+          "lower-5e4a15af3708"
+        ],
+        "found": {
+          "community_id": "lower-5e4a15af3708",
+          "via": "evidenced_by",
+          "node": "Segment:2488:client and gaming"
+        }
+      },
+      {
+        "id": "q0031",
+        "chunk_id": "0000002488-26-000018:0012",
+        "citing_communities": [
+          "lower-5e4a15af3708"
+        ],
+        "found": {
+          "community_id": "lower-5e4a15af3708",
+          "via": "evidenced_by",
+          "node": "Product:amd ryzen"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0001045810-26-000021:0009",
+        "citing_communities": [
+          "lower-3b339463fc36"
+        ],
+        "found": {
+          "community_id": "lower-3b339463fc36",
+          "via": "evidenced_by",
+          "node": "Product:ai blueprints"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0001045810-26-000021:0004",
+        "citing_communities": [
+          "lower-3b339463fc36"
+        ],
+        "found": {
+          "community_id": "lower-3b339463fc36",
+          "via": "evidenced_by",
+          "node": "Product:cuda"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0001045810-26-000021:0005",
+        "citing_communities": [
+          "lower-3b339463fc36"
+        ],
+        "found": {
+          "community_id": "lower-3b339463fc36",
+          "via": "evidenced_by",
+          "node": "Product:clara"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0001045810-26-000021:0009",
+        "citing_communities": [
+          "lower-3b339463fc36"
+        ],
+        "found": {
+          "community_id": "lower-3b339463fc36",
+          "via": "evidenced_by",
+          "node": "Product:ai blueprints"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0001045810-26-000021:0004",
+        "citing_communities": [
+          "lower-3b339463fc36"
+        ],
+        "found": {
+          "community_id": "lower-3b339463fc36",
+          "via": "evidenced_by",
+          "node": "Product:cuda"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0001045810-26-000021:0005",
+        "citing_communities": [
+          "lower-3b339463fc36"
+        ],
+        "found": {
+          "community_id": "lower-3b339463fc36",
+          "via": "evidenced_by",
+          "node": "Product:clara"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0001045810-26-000021:0004",
+        "citing_communities": [
+          "lower-3b339463fc36"
+        ],
+        "found": {
+          "community_id": "lower-3b339463fc36",
+          "via": "evidenced_by",
+          "node": "Product:cuda"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0001045810-26-000021:0005",
+        "citing_communities": [
+          "lower-3b339463fc36"
+        ],
+        "found": {
+          "community_id": "lower-3b339463fc36",
+          "via": "evidenced_by",
+          "node": "Product:clara"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0001045810-26-000021:0012",
+        "citing_communities": [
+          "lower-f9a158f69cf1"
+        ],
+        "found": {
+          "community_id": "lower-f9a158f69cf1",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:competition"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0001045810-26-000021:0006",
+        "citing_communities": [
+          "lower-5206c9bf93c6"
+        ],
+        "found": {
+          "community_id": "lower-5206c9bf93c6",
+          "via": "evidenced_by",
+          "node": "Product:geforce gpus"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0001045810-26-000021:0009",
+        "citing_communities": [
+          "lower-3b339463fc36"
+        ],
+        "found": {
+          "community_id": "lower-3b339463fc36",
+          "via": "evidenced_by",
+          "node": "Product:ai blueprints"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0001045810-26-000021:0007",
+        "citing_communities": [
+          "lower-3b339463fc36"
+        ],
+        "found": {
+          "community_id": "lower-3b339463fc36",
+          "via": "evidenced_by",
+          "node": "Product:cuda"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0001045810-26-000021:0005",
+        "citing_communities": [
+          "lower-3b339463fc36"
+        ],
+        "found": {
+          "community_id": "lower-3b339463fc36",
+          "via": "evidenced_by",
+          "node": "Product:clara"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0001045810-26-000021:0007",
+        "citing_communities": [
+          "lower-3b339463fc36"
+        ],
+        "found": {
+          "community_id": "lower-3b339463fc36",
+          "via": "evidenced_by",
+          "node": "Product:cuda"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0001045810-26-000021:0009",
+        "citing_communities": [
+          "lower-3b339463fc36"
+        ],
+        "found": {
+          "community_id": "lower-3b339463fc36",
+          "via": "evidenced_by",
+          "node": "Product:ai blueprints"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0001045810-26-000021:0010",
+        "citing_communities": [
+          "lower-3b339463fc36"
+        ],
+        "found": {
+          "community_id": "lower-3b339463fc36",
+          "via": "evidenced_by",
+          "node": "Product:drive"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0001045810-26-000021:0123",
+        "citing_communities": [
+          "lower-5206c9bf93c6"
+        ],
+        "found": {
+          "community_id": "lower-5206c9bf93c6",
+          "via": "evidenced_by",
+          "node": "Product:geforce gpus"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0000002488-26-000018:0014",
+        "citing_communities": [
+          "lower-f9a158f69cf1"
+        ],
+        "found": {
+          "community_id": "lower-f9a158f69cf1",
+          "via": "evidenced_by",
+          "node": "Organization:broadcom"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0000002488-26-000018:0004",
+        "citing_communities": [
+          "lower-3b339463fc36"
+        ],
+        "found": {
+          "community_id": "lower-3b339463fc36",
+          "via": "evidenced_by",
+          "node": "Product:cpus"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0000002488-26-000018:0004",
+        "citing_communities": [
+          "lower-3b339463fc36"
+        ],
+        "found": {
+          "community_id": "lower-3b339463fc36",
+          "via": "evidenced_by",
+          "node": "Product:cpus"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0000050863-26-000011:0011",
+        "citing_communities": [
+          "lower-f9a158f69cf1"
+        ],
+        "found": {
+          "community_id": "lower-f9a158f69cf1",
+          "via": "evidenced_by",
+          "node": "Organization:amazon, inc."
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0000050863-26-000011:0011",
+        "citing_communities": [
+          "lower-f9a158f69cf1"
+        ],
+        "found": {
+          "community_id": "lower-f9a158f69cf1",
+          "via": "evidenced_by",
+          "node": "Organization:amazon, inc."
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0000050863-26-000011:0059",
+        "citing_communities": [
+          "lower-f9a158f69cf1"
+        ],
+        "found": {
+          "community_id": "lower-f9a158f69cf1",
+          "via": "evidenced_by",
+          "node": "Organization:qualcomm"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0000050863-26-000011:0180",
+        "citing_communities": [
+          "lower-f9a158f69cf1"
+        ],
+        "found": {
+          "community_id": "lower-f9a158f69cf1",
+          "via": "evidenced_by",
+          "node": "Organization:qualcomm"
+        }
+      },
+      {
+        "id": "q0033",
+        "chunk_id": "0000050863-26-000011:0014",
+        "citing_communities": [
+          "lower-cb23d1979aad"
+        ],
+        "found": {
+          "community_id": "lower-cb23d1979aad",
+          "via": "evidenced_by",
+          "node": "Product:intel core ultra series 1"
+        }
+      },
+      {
+        "id": "q0034",
+        "chunk_id": "0000050863-26-000011:0080",
+        "citing_communities": [
+          "lower-1d99191c6f7f"
+        ],
+        "found": {
+          "community_id": "lower-1d99191c6f7f",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:our licenses with other companies and participation in industry initiatives at times allow competitors to use some of our patent rights"
+        }
+      },
+      {
+        "id": "q0034",
+        "chunk_id": "0000050863-26-000011:0080",
+        "citing_communities": [
+          "lower-1d99191c6f7f"
+        ],
+        "found": {
+          "community_id": "lower-1d99191c6f7f",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:our licenses with other companies and participation in industry initiatives at times allow competitors to use some of our patent rights"
+        }
+      },
+      {
+        "id": "q0034",
+        "chunk_id": "0000050863-26-000011:0080",
+        "citing_communities": [
+          "lower-1d99191c6f7f"
+        ],
+        "found": {
+          "community_id": "lower-1d99191c6f7f",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:our licenses with other companies and participation in industry initiatives at times allow competitors to use some of our patent rights"
+        }
+      },
+      {
+        "id": "q0034",
+        "chunk_id": "0000050863-26-000011:0079",
+        "citing_communities": [
+          "lower-1d99191c6f7f"
+        ],
+        "found": {
+          "community_id": "lower-1d99191c6f7f",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:cyber attack attempts are increasing in number, magnitude and technical sophistication, and if successful, may expose us and the affected parties to loss or misuse of proprietary or confidential information or disruptions to our supply chain or business operations, including our manufacturing operations, and could impact our financial results"
+        }
+      },
+      {
+        "id": "q0034",
+        "chunk_id": "0000050863-26-000011:0080",
+        "citing_communities": [
+          "lower-1d99191c6f7f"
+        ],
+        "found": {
+          "community_id": "lower-1d99191c6f7f",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:our licenses with other companies and participation in industry initiatives at times allow competitors to use some of our patent rights"
+        }
+      }
+    ]
+  },
+  "traces": [
+    {
+      "id": "q0011",
+      "sentence": "The excerpts give no figure for NVIDIA's revenue from Microsoft in fiscal year 2026, and they do not name Microsoft as a customer [0001045810-26-000021:0036].",
+      "chunk_id": "0001045810-26-000021:0036",
+      "selected": [
+        "lower-103ba85b420b",
+        "lower-a6a56bbee8da",
+        "lower-088f36d7da83",
+        "lower-d3a6f3b3e188"
+      ],
+      "found": {
+        "community_id": "lower-103ba85b420b",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+      }
+    },
+    {
+      "id": "q0011",
+      "sentence": "NVIDIA reports that for fiscal year 2026 one direct customer represented 22% of total revenue and another represented 14%, primarily attributable to the Compute & Networking segment, and it does not name either customer [0001045810-26-000021:0036].",
+      "chunk_id": "0001045810-26-000021:0036",
+      "selected": [
+        "lower-103ba85b420b",
+        "lower-a6a56bbee8da",
+        "lower-088f36d7da83",
+        "lower-d3a6f3b3e188"
+      ],
+      "found": {
+        "community_id": "lower-103ba85b420b",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+      }
+    },
+    {
+      "id": "q0011",
+      "sentence": "NVIDIA also says it generates a significant amount of revenue from a limited number of indirect customers, some of which it estimates individually represent 10% or more of revenue, and it does not identify them by name [0001045810-26-000021:0036].",
+      "chunk_id": "0001045810-26-000021:0036",
+      "selected": [
+        "lower-103ba85b420b",
+        "lower-a6a56bbee8da",
+        "lower-088f36d7da83",
+        "lower-d3a6f3b3e188"
+      ],
+      "found": {
+        "community_id": "lower-103ba85b420b",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+      }
+    },
+    {
+      "id": "q0011",
+      "sentence": "The only Microsoft reference is to the Xbox agreement, under which Microsoft may have first and last rights of refusal if someone offers to buy at least 30% of NVIDIA's outstanding common stock [0001045810-26-000021:0052].",
+      "chunk_id": "0001045810-26-000021:0052",
+      "selected": [
+        "lower-103ba85b420b",
+        "lower-a6a56bbee8da",
+        "lower-088f36d7da83",
+        "lower-d3a6f3b3e188"
+      ],
+      "found": {
+        "community_id": "lower-d3a6f3b3e188",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:delaware law and our certificate of incorporation, bylaws and agreement with microsoft could delay or prevent a change in control."
+      }
+    },
+    {
+      "id": "q0012",
+      "sentence": "NVIDIA says Blackwell architectures represented the majority of its Data Center revenue in the FY2026 10-K [0001045810-26-000021:0061].",
+      "chunk_id": "0001045810-26-000021:0061",
+      "selected": [
+        "lower-cfac871fdedb",
+        "lower-905ee39b17a5",
+        "lower-088f36d7da83",
+        "lower-a6a56bbee8da"
+      ],
+      "found": {
+        "community_id": "lower-cfac871fdedb",
+        "via": "evidenced_by",
+        "node": "Product:blackwell"
+      }
+    },
+    {
+      "id": "q0012",
+      "sentence": "Total revenue for fiscal year 2026 was $215.9 billion, up 65% from a year ago, and Data Center revenue was up 68% [0001045810-26-000021:0063].",
+      "chunk_id": "0001045810-26-000021:0063",
+      "selected": [
+        "lower-cfac871fdedb",
+        "lower-905ee39b17a5",
+        "lower-088f36d7da83",
+        "lower-a6a56bbee8da"
+      ],
+      "found": {
+        "community_id": "lower-cfac871fdedb",
+        "via": "evidenced_by",
+        "node": "Product:blackwell"
+      }
+    },
+    {
+      "id": "q0012",
+      "sentence": "Data Center computing revenue grew 59% on demand for the Blackwell computing platform, and Graphics revenue growth was driven by Blackwell sales [0001045810-26-000021:0067].",
+      "chunk_id": "0001045810-26-000021:0067",
+      "selected": [
+        "lower-cfac871fdedb",
+        "lower-905ee39b17a5",
+        "lower-088f36d7da83",
+        "lower-a6a56bbee8da"
+      ],
+      "found": {
+        "community_id": "lower-cfac871fdedb",
+        "via": "evidenced_by",
+        "node": "Product:blackwell"
+      }
+    },
+    {
+      "id": "q0012",
+      "sentence": "NVIDIA began shipping production units of Blackwell Ultra platforms including GB300 in the second quarter of fiscal year 2026, but no shipment quantities are given [0001045810-26-000021:0061][0001045810-25-000209:0034].",
+      "chunk_id": "0001045810-26-000021:0061",
+      "selected": [
+        "lower-cfac871fdedb",
+        "lower-905ee39b17a5",
+        "lower-088f36d7da83",
+        "lower-a6a56bbee8da"
+      ],
+      "found": {
+        "community_id": "lower-cfac871fdedb",
+        "via": "evidenced_by",
+        "node": "Product:blackwell"
+      }
+    },
+    {
+      "id": "q0012",
+      "sentence": "NVIDIA began shipping production units of Blackwell Ultra platforms including GB300 in the second quarter of fiscal year 2026, but no shipment quantities are given [0001045810-26-000021:0061][0001045810-25-000209:0034].",
+      "chunk_id": "0001045810-25-000209:0034",
+      "selected": [
+        "lower-cfac871fdedb",
+        "lower-905ee39b17a5",
+        "lower-088f36d7da83",
+        "lower-a6a56bbee8da"
+      ],
+      "found": {
+        "community_id": "lower-cfac871fdedb",
+        "via": "evidenced_by",
+        "node": "Product:blackwell"
+      }
+    },
+    {
+      "id": "q0012",
+      "sentence": "In Q2 FY2026, Blackwell revenue grew 17% sequentially, and Data Center revenue was $41.1 billion [0001045810-25-000209:0036].",
+      "chunk_id": "0001045810-25-000209:0036",
+      "selected": [
+        "lower-cfac871fdedb",
+        "lower-905ee39b17a5",
+        "lower-088f36d7da83",
+        "lower-a6a56bbee8da"
+      ],
+      "found": {
+        "community_id": "lower-cfac871fdedb",
+        "via": "evidenced_by",
+        "node": "Product:blackwell"
+      }
+    },
+    {
+      "id": "q0012",
+      "sentence": "In Q3 FY2026, Blackwell Ultra was the leading architecture across all customer categories, with Data Center revenue of $51.2 billion [0001045810-25-000230:0037].",
+      "chunk_id": "0001045810-25-000230:0037",
+      "selected": [
+        "lower-cfac871fdedb",
+        "lower-905ee39b17a5",
+        "lower-088f36d7da83",
+        "lower-a6a56bbee8da"
+      ],
+      "found": {
+        "community_id": "lower-088f36d7da83",
+        "via": "evidenced_by",
+        "node": "MarketPlatform:1045810:data center"
+      }
+    },
+    {
+      "id": "q0013",
+      "sentence": "The excerpts do not state a price per wafer that NVIDIA pays TSMC or any other foundry for its GPUs [0001045810-25-000023:0025].",
+      "chunk_id": "0001045810-25-000023:0025",
+      "selected": [
+        "lower-cfac871fdedb",
+        "lower-2bafffbe2349",
+        "lower-c837a974e3de",
+        "lower-3dfa1c412b89"
+      ],
+      "found": {
+        "community_id": "lower-cfac871fdedb",
+        "via": "evidenced_by",
+        "node": "0001045810-25-000023:dependency on third-party suppliers and their technology to manufacture, assemble, test, or package our products reduces our control over product quantity and quality, manufacturing yields, and product delivery schedules and could harm our business"
+      }
+    },
+    {
+      "id": "q0013",
+      "sentence": "It also lists risks such as a lack of guaranteed wafer, component and capacity supply, and potentially higher wafer and component prices if it misestimates demand [0001045810-25-000023:0025].",
+      "chunk_id": "0001045810-25-000023:0025",
+      "selected": [
+        "lower-cfac871fdedb",
+        "lower-2bafffbe2349",
+        "lower-c837a974e3de",
+        "lower-3dfa1c412b89"
+      ],
+      "found": {
+        "community_id": "lower-cfac871fdedb",
+        "via": "evidenced_by",
+        "node": "0001045810-25-000023:dependency on third-party suppliers and their technology to manufacture, assemble, test, or package our products reduces our control over product quantity and quality, manufacturing yields, and product delivery schedules and could harm our business"
+      }
+    },
+    {
+      "id": "q0013",
+      "sentence": "NVIDIA says it has paid premiums and provided deposits to secure future supply and capacity, which have increased its product costs, but it gives no per-wafer price or dollar amounts [0001045810-24-000124:0041].",
+      "chunk_id": "0001045810-24-000124:0041",
+      "selected": [
+        "lower-cfac871fdedb",
+        "lower-2bafffbe2349",
+        "lower-c837a974e3de",
+        "lower-3dfa1c412b89"
+      ],
+      "found": {
+        "community_id": "lower-c837a974e3de",
+        "via": "evidenced_by",
+        "node": "0001045810-24-000124:failure to estimate customer demand accurately has led and could lead to mismatches between supply and demand."
+      }
+    },
+    {
+      "id": "q0013",
+      "sentence": "The passages that mention these premiums and deposits do not name TSMC [0001045810-24-000316:0050][0001045810-24-000264:0048].",
+      "chunk_id": "0001045810-24-000316:0050",
+      "selected": [
+        "lower-cfac871fdedb",
+        "lower-2bafffbe2349",
+        "lower-c837a974e3de",
+        "lower-3dfa1c412b89"
+      ],
+      "found": {
+        "community_id": "lower-cfac871fdedb",
+        "via": "evidenced_by",
+        "node": "Product:blackwell"
+      }
+    },
+    {
+      "id": "q0013",
+      "sentence": "The passages that mention these premiums and deposits do not name TSMC [0001045810-24-000316:0050][0001045810-24-000264:0048].",
+      "chunk_id": "0001045810-24-000264:0048",
+      "selected": [
+        "lower-cfac871fdedb",
+        "lower-2bafffbe2349",
+        "lower-c837a974e3de",
+        "lower-3dfa1c412b89"
+      ],
+      "found": {
+        "community_id": "lower-cfac871fdedb",
+        "via": "evidenced_by",
+        "node": "0001045810-24-000264:long manufacturing lead times and uncertain supply and component availability, combined with a failure to estimate customer demand accurately, has led and could lead to mismatches between supply and demand."
+      }
+    },
+    {
+      "id": "q0013",
+      "sentence": "NVIDIA also says it has entered into prepaid manufacturing and capacity agreements with existing and new suppliers, and no pricing terms are given [0001045810-24-000316:0033].",
+      "chunk_id": "0001045810-24-000316:0033",
+      "selected": [
+        "lower-cfac871fdedb",
+        "lower-2bafffbe2349",
+        "lower-c837a974e3de",
+        "lower-3dfa1c412b89"
+      ],
+      "found": {
+        "community_id": "lower-cfac871fdedb",
+        "via": "evidenced_by",
+        "node": "Product:blackwell"
+      }
+    },
+    {
+      "id": "q0013",
+      "sentence": "It expects its purchase obligations and prepaids to become a greater portion of its total supply, and no per-wafer terms are stated [0001045810-24-000124:0042][0001045810-24-000124:0044].",
+      "chunk_id": "0001045810-24-000124:0042",
+      "selected": [
+        "lower-cfac871fdedb",
+        "lower-2bafffbe2349",
+        "lower-c837a974e3de",
+        "lower-3dfa1c412b89"
+      ],
+      "found": {
+        "community_id": "lower-cfac871fdedb",
+        "via": "evidenced_by",
+        "node": "Product:blackwell"
+      }
+    },
+    {
+      "id": "q0013",
+      "sentence": "It expects its purchase obligations and prepaids to become a greater portion of its total supply, and no per-wafer terms are stated [0001045810-24-000124:0042][0001045810-24-000124:0044].",
+      "chunk_id": "0001045810-24-000124:0044",
+      "selected": [
+        "lower-cfac871fdedb",
+        "lower-2bafffbe2349",
+        "lower-c837a974e3de",
+        "lower-3dfa1c412b89"
+      ],
+      "found": {
+        "community_id": "lower-c837a974e3de",
+        "via": "evidenced_by",
+        "node": "0001045810-24-000124:cryptocurrency mining affects demand for our products"
+      }
+    },
+    {
+      "id": "q0018",
+      "sentence": "The filing says only that new process nodes typically cost more than mature nodes because of higher depreciation and lower yields, and that costs and yields at times do not improve at the same rate as on prior nodes [0000050863-26-000011:0063].",
+      "chunk_id": "0000050863-26-000011:0063",
+      "selected": [
+        "lower-3e417445d79c",
+        "lower-5a541eb7341f",
+        "lower-8ee03241eed7",
+        "lower-c34543d48b81"
+      ],
+      "found": {
+        "community_id": "lower-8ee03241eed7",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:disaggregated design architecture and supply chain risk"
+      }
+    },
+    {
+      "id": "q0019",
+      "sentence": "They describe Oregon only as the location of Intel's R&D and semiconductor fabrication facilities for process technology development, and as a site now also used for high-volume manufacturing [0000050863-25-000009:0014][0000050863-26-000011:0022].",
+      "chunk_id": "0000050863-25-000009:0014",
+      "selected": [
+        "lower-5a541eb7341f",
+        "lower-1f668aab6bf7",
+        "lower-ac71ab119f3f",
+        "lower-b552717824f1"
+      ],
+      "found": {
+        "community_id": "lower-5a541eb7341f",
+        "via": "evidenced_by",
+        "node": "Facility:china assembly and test facility"
+      }
+    },
+    {
+      "id": "q0019",
+      "sentence": "They describe Oregon only as the location of Intel's R&D and semiconductor fabrication facilities for process technology development, and as a site now also used for high-volume manufacturing [0000050863-25-000009:0014][0000050863-26-000011:0022].",
+      "chunk_id": "0000050863-26-000011:0022",
+      "selected": [
+        "lower-5a541eb7341f",
+        "lower-1f668aab6bf7",
+        "lower-ac71ab119f3f",
+        "lower-b552717824f1"
+      ],
+      "found": {
+        "community_id": "lower-5a541eb7341f",
+        "via": "evidenced_by",
+        "node": "Product:intel 14a"
+      }
+    },
+    {
+      "id": "q0019",
+      "sentence": "Intel's FY2025 10-K says its Oregon fabs were ramping Intel 18A in 2025, and that Oregon fab assets are used for high-volume manufacturing in addition to R&D, but it gives no employee numbers [0000050863-26-000011:0022].",
+      "chunk_id": "0000050863-26-000011:0022",
+      "selected": [
+        "lower-5a541eb7341f",
+        "lower-1f668aab6bf7",
+        "lower-ac71ab119f3f",
+        "lower-b552717824f1"
+      ],
+      "found": {
+        "community_id": "lower-5a541eb7341f",
+        "via": "evidenced_by",
+        "node": "Product:intel 14a"
+      }
+    },
+    {
+      "id": "q0022",
+      "sentence": "AMD says it may face competition from some of its own customers who internally develop the same products as AMD [0000002488-24-000056:0035][0000002488-24-000056:0036].",
+      "chunk_id": "0000002488-24-000056:0035",
+      "selected": [
+        "lower-f9a158f69cf1",
+        "lower-41758a480a2d",
+        "lower-16d3cb75fb70",
+        "lower-9e876013aaa1"
+      ],
+      "found": {
+        "community_id": "lower-9e876013aaa1",
+        "via": "evidenced_by",
+        "node": "0000002488-24-000056:the loss of a significant customer may have a material adverse effect on us"
+      }
+    },
+    {
+      "id": "q0022",
+      "sentence": "AMD says it may face competition from some of its own customers who internally develop the same products as AMD [0000002488-24-000056:0035][0000002488-24-000056:0036].",
+      "chunk_id": "0000002488-24-000056:0036",
+      "selected": [
+        "lower-f9a158f69cf1",
+        "lower-41758a480a2d",
+        "lower-16d3cb75fb70",
+        "lower-9e876013aaa1"
+      ],
+      "found": {
+        "community_id": "lower-9e876013aaa1",
+        "via": "evidenced_by",
+        "node": "0000002488-24-000056:economic and market uncertainty may adversely impact our business and operating results"
+      }
+    },
+    {
+      "id": "q0022",
+      "sentence": "In its FY2025 Q1 10-Q, AMD says it expects intense competition from companies such as Nvidia in supplying GPUs and other accelerators for the AI market, and that it may face competition from customers who internally develop the same products [0000002488-25-000047:0034].",
+      "chunk_id": "0000002488-25-000047:0034",
+      "selected": [
+        "lower-f9a158f69cf1",
+        "lower-41758a480a2d",
+        "lower-16d3cb75fb70",
+        "lower-9e876013aaa1"
+      ],
+      "found": {
+        "community_id": "lower-16d3cb75fb70",
+        "via": "evidenced_by",
+        "node": "0000002488-25-000047:intel corporation\u2019s dominance of the microprocessor market and its aggressive business practices may limit our ability to compete effectively on a level playing field"
+      }
+    },
+    {
+      "id": "q0022",
+      "sentence": "The FY2024 10-K repeats this wording [0000002488-25-000012:0023].",
+      "chunk_id": "0000002488-25-000012:0023",
+      "selected": [
+        "lower-f9a158f69cf1",
+        "lower-41758a480a2d",
+        "lower-16d3cb75fb70",
+        "lower-9e876013aaa1"
+      ],
+      "found": {
+        "community_id": "lower-41758a480a2d",
+        "via": "evidenced_by",
+        "node": "0000002488-25-000012:nvidia\u2019s dominance in the graphics processing unit market and its aggressive business practices may limit our ability to compete effectively on a level playing field"
+      }
+    },
+    {
+      "id": "q0022",
+      "sentence": "In its FY2025 10-K, AMD says it may encounter competition from customers who internally develop products to support AI workloads similar to those its products support, and that competitors with stronger market positions and greater resources may limit its ability to gain share [0000002488-26-000018:0023].",
+      "chunk_id": "0000002488-26-000018:0023",
+      "selected": [
+        "lower-f9a158f69cf1",
+        "lower-41758a480a2d",
+        "lower-16d3cb75fb70",
+        "lower-9e876013aaa1"
+      ],
+      "found": {
+        "community_id": "lower-41758a480a2d",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:competition is expected to remain intense"
+      }
+    },
+    {
+      "id": "q0022",
+      "sentence": "AMD also says it depends on a small number of customers for a substantial portion of its revenue, and that losing a key customer or reduced demand from one would materially adversely affect the business [0000002488-24-000056:0034].",
+      "chunk_id": "0000002488-24-000056:0034",
+      "selected": [
+        "lower-f9a158f69cf1",
+        "lower-41758a480a2d",
+        "lower-16d3cb75fb70",
+        "lower-9e876013aaa1"
+      ],
+      "found": {
+        "community_id": "lower-f9a158f69cf1",
+        "via": "evidenced_by",
+        "node": "Organization:microsoft"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "NVIDIA says export controls have a disproportionate impact on it and may disadvantage it against competitors selling chips outside the controls' scope [0001045810-26-000021:0044][0001045810-26-000021:0045].",
+      "chunk_id": "0001045810-26-000021:0044",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-c17000ce1902",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:any regulatory control or other restriction that limits our ability to provide products and services"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "NVIDIA says export controls have a disproportionate impact on it and may disadvantage it against competitors selling chips outside the controls' scope [0001045810-26-000021:0044][0001045810-26-000021:0045].",
+      "chunk_id": "0001045810-26-000021:0045",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-c17000ce1902",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:export controls have and are likely in the future to have a disproportionate impact on nvidia"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "It says the controls have encouraged customers to \"design-out\" certain U.S. semiconductors, and overseas governments to ask customers to buy from competitors rather than NVIDIA [0001045810-26-000021:0045].",
+      "chunk_id": "0001045810-26-000021:0045",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-c17000ce1902",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:export controls have and are likely in the future to have a disproportionate impact on nvidia"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "It says this helped competitors build larger developer and customer ecosystems to challenge it worldwide [0001045810-26-000021:0042][0001045810-26-000021:0014].",
+      "chunk_id": "0001045810-26-000021:0042",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-ed1771d60785",
+        "via": "evidenced_by",
+        "node": "Product:h20"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "It says this helped competitors build larger developer and customer ecosystems to challenge it worldwide [0001045810-26-000021:0042][0001045810-26-000021:0014].",
+      "chunk_id": "0001045810-26-000021:0014",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-ed1771d60785",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:tariff pass-through and litigation risk on china sales"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "This pushes customers in China, the Middle East and elsewhere toward suppliers based in China, Europe and Israel [0001045810-26-000021:0043].",
+      "chunk_id": "0001045810-26-000021:0043",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-c17000ce1902",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:competitive position harmed by export controls"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "It also says its competitive position has been harmed and will be harmed further if restrictions persist or expand, if customers buy from competitors or develop internal solutions, or if licenses are delayed [0001045810-26-000021:0043].",
+      "chunk_id": "0001045810-26-000021:0043",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-c17000ce1902",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:competitive position harmed by export controls"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "It has also discouraged them from buying, importing or using NVIDIA data center products, including China-specific products designed to comply with U.S. rules [0001045810-26-000021:0045].",
+      "chunk_id": "0001045810-26-000021:0045",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-c17000ce1902",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:export controls have and are likely in the future to have a disproportionate impact on nvidia"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "Chinese regulators published a preliminary finding on September 15, 2025 that NVIDIA's compliance with U.S. export controls violated the terms of China's approval of its Mellanox acquisition, which could bring penalties or restrictions [0001045810-26-000021:0015][0001045810-26-000021:0041].",
+      "chunk_id": "0001045810-26-000021:0015",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-ed1771d60785",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:chinese government restrictions on gaming and data center activities"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "Chinese regulators published a preliminary finding on September 15, 2025 that NVIDIA's compliance with U.S. export controls violated the terms of China's approval of its Mellanox acquisition, which could bring penalties or restrictions [0001045810-26-000021:0015][0001045810-26-000021:0041].",
+      "chunk_id": "0001045810-26-000021:0041",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-c17000ce1902",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:export controls and other restrictions targeting gpus and semiconductors associated with ai, which have been imposed and are likely to be more restrictive, would further limit our ability to export our technology, products, or services, creating a competitive disadvantage for us and negatively impacting our business"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "Controls have hurt and may hurt demand in Europe, Latin America and Southeast Asia, and may increase investment in foreign competitors less likely to be restricted [0001045810-26-000021:0045].",
+      "chunk_id": "0001045810-26-000021:0045",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-c17000ce1902",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:export controls have and are likely in the future to have a disproportionate impact on nvidia"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "They can also disrupt supply chains and distribution channels, including for non-data-center products [0001045810-26-000021:0045][0001045810-26-000021:0041].",
+      "chunk_id": "0001045810-26-000021:0045",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-c17000ce1902",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:export controls have and are likely in the future to have a disproportionate impact on nvidia"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "They can also disrupt supply chains and distribution channels, including for non-data-center products [0001045810-26-000021:0045][0001045810-26-000021:0041].",
+      "chunk_id": "0001045810-26-000021:0041",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-c17000ce1902",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:export controls and other restrictions targeting gpus and semiconductors associated with ai, which have been imposed and are likely to be more restrictive, would further limit our ability to export our technology, products, or services, creating a competitive disadvantage for us and negatively impacting our business"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "The possibility of further controls has already reduced demand, benefiting competitors with alternatives less likely to be restricted, and can leave NVIDIA with excess inventory and purchase obligations, as with the H20 [0001045810-26-000021:0041][0001045810-26-000021:0045].",
+      "chunk_id": "0001045810-26-000021:0041",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-c17000ce1902",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:export controls and other restrictions targeting gpus and semiconductors associated with ai, which have been imposed and are likely to be more restrictive, would further limit our ability to export our technology, products, or services, creating a competitive disadvantage for us and negatively impacting our business"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "The possibility of further controls has already reduced demand, benefiting competitors with alternatives less likely to be restricted, and can leave NVIDIA with excess inventory and purchase obligations, as with the H20 [0001045810-26-000021:0041][0001045810-26-000021:0045].",
+      "chunk_id": "0001045810-26-000021:0045",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-c17000ce1902",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:export controls have and are likely in the future to have a disproportionate impact on nvidia"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "NVIDIA also says possible U.S. restrictions on supporting applications and models built on China-originating open-source foundation models would favor foreign competitors [0001045810-26-000021:0045].",
+      "chunk_id": "0001045810-26-000021:0045",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-c17000ce1902",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:export controls have and are likely in the future to have a disproportionate impact on nvidia"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "If U.S. controls were eased, China could modify or implement the plan so that NVIDIA cannot design products to meet it, which could materially and adversely affect its business [0001045810-26-000021:0045][0001045810-26-000021:0046].",
+      "chunk_id": "0001045810-26-000021:0045",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-c17000ce1902",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:export controls have and are likely in the future to have a disproportionate impact on nvidia"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "If U.S. controls were eased, China could modify or implement the plan so that NVIDIA cannot design products to meet it, which could materially and adversely affect its business [0001045810-26-000021:0045][0001045810-26-000021:0046].",
+      "chunk_id": "0001045810-26-000021:0046",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-301b260ee3ae",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:chinese government restrictions on gaming and oversight of digital platform companies"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "AMD says U.S. export restrictions on semiconductors to China make it easier for China-based competitors to develop and sell their own solutions, reducing the need for AMD's products [0000002488-26-000018:0042].",
+      "chunk_id": "0000002488-26-000018:0042",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-a4594796ad3b",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:evolving u.s. government policy toward semiconductor exports, particularly in the context of national security and foreign policy priorities could adversely affect our business."
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "Limits on China sales could hurt its competitive position against domestic Chinese competitors and others not subject to the same restrictions, so it could lose market position [0000002488-26-000018:0043].",
+      "chunk_id": "0000002488-26-000018:0043",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-a4594796ad3b",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:additional export restrictions may affect other markets"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "Downstream recipients of its products can face added restrictions on use, resale, repair or transfer, and AMD may be at a disadvantage if competitors are not subject to the same restrictions [0000002488-26-000018:0044].",
+      "chunk_id": "0000002488-26-000018:0044",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-a4594796ad3b",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:customer demand for our products may decline"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "A U.S. government request for 15% of licensed MI308 China revenue could raise AMD's costs, harm its competitive position and benefit competitors not subject to such arrangements [0000002488-26-000018:0043].",
+      "chunk_id": "0000002488-26-000018:0043",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-a4594796ad3b",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:additional export restrictions may affect other markets"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "Licenses may be temporary or carry onerous conditions, and without them AMD may be unable to develop a competitive China-market product [0000002488-26-000018:0043].",
+      "chunk_id": "0000002488-26-000018:0043",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-a4594796ad3b",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:additional export restrictions may affect other markets"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "New export controls could affect R&D teams outside the U.S. that execute product roadmaps, and raise compliance costs for AMD and its customers [0000002488-26-000018:0044].",
+      "chunk_id": "0000002488-26-000018:0044",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-a4594796ad3b",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:customer demand for our products may decline"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "Replacement rules for the rescinded AI Diffusion Rule could disrupt key customer and supplier relationships and cost AMD competitive positioning in international markets [0000002488-26-000018:0043].",
+      "chunk_id": "0000002488-26-000018:0043",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-a4594796ad3b",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:additional export restrictions may affect other markets"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "Retaliatory actions or policies promoting domestic products could further hurt its business, with possible inventory impairment charges [0000002488-26-000018:0044][0000002488-26-000018:0043].",
+      "chunk_id": "0000002488-26-000018:0044",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-a4594796ad3b",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:customer demand for our products may decline"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "Retaliatory actions or policies promoting domestic products could further hurt its business, with possible inventory impairment charges [0000002488-26-000018:0044][0000002488-26-000018:0043].",
+      "chunk_id": "0000002488-26-000018:0043",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-a4594796ad3b",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:additional export restrictions may affect other markets"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "It says China has responded with its own restrictions, including on critical minerals [0000050863-26-000011:0072].",
+      "chunk_id": "0000050863-26-000011:0072",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-c17000ce1902",
+        "via": "evidenced_by",
+        "node": "Regulation:export control rules"
+      }
+    },
+    {
+      "id": "q0023",
+      "sentence": "It also says Chinese semiconductor companies such as SMIC are investing heavily, often with government support, to build products that compete with Intel's [0000050863-26-000011:0072].",
+      "chunk_id": "0000050863-26-000011:0072",
+      "selected": [
+        "lower-c17000ce1902",
+        "lower-a4594796ad3b",
+        "lower-301b260ee3ae",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-c17000ce1902",
+        "via": "evidenced_by",
+        "node": "Regulation:export control rules"
+      }
+    },
+    {
+      "id": "q0024",
+      "sentence": "They can also require pollution abatement or remediation equipment, product redesign, or ceasing use of a material or process [0000050863-26-000011:0087].",
+      "chunk_id": "0000050863-26-000011:0087",
+      "selected": [
+        "lower-3831f99c7e29",
+        "lower-d26783ca198d",
+        "lower-5d8b541f89da",
+        "lower-1f668aab6bf7"
+      ],
+      "found": {
+        "community_id": "lower-1f668aab6bf7",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:we are subject to risks associated with environmental, health, safety and product regulations"
+      }
+    },
+    {
+      "id": "q0024",
+      "sentence": "New limits could require abatement equipment, carbon offsets or altered production processes, and stricter climate regulation could raise manufacturing and energy costs, for example through carbon pricing on electrical utilities [0000050863-26-000011:0087].",
+      "chunk_id": "0000050863-26-000011:0087",
+      "selected": [
+        "lower-3831f99c7e29",
+        "lower-d26783ca198d",
+        "lower-5d8b541f89da",
+        "lower-1f668aab6bf7"
+      ],
+      "found": {
+        "community_id": "lower-1f668aab6bf7",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:we are subject to risks associated with environmental, health, safety and product regulations"
+      }
+    },
+    {
+      "id": "q0024",
+      "sentence": "It says feasible alternatives are limited, and that expanding manufacturing capacity could magnify the impact of future laws [0000050863-26-000011:0087].",
+      "chunk_id": "0000050863-26-000011:0087",
+      "selected": [
+        "lower-3831f99c7e29",
+        "lower-d26783ca198d",
+        "lower-5d8b541f89da",
+        "lower-1f668aab6bf7"
+      ],
+      "found": {
+        "community_id": "lower-1f668aab6bf7",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:we are subject to risks associated with environmental, health, safety and product regulations"
+      }
+    },
+    {
+      "id": "q0024",
+      "sentence": "Violations or amended laws can bring penalties, fines, remediation obligations, suspension of production, altered manufacturing processes and restrictions on operations or sales [0000050863-26-000011:0086].",
+      "chunk_id": "0000050863-26-000011:0086",
+      "selected": [
+        "lower-3831f99c7e29",
+        "lower-d26783ca198d",
+        "lower-5d8b541f89da",
+        "lower-1f668aab6bf7"
+      ],
+      "found": {
+        "community_id": "lower-1f668aab6bf7",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:we are subject to risks associated with environmental, health, safety and product regulations"
+      }
+    },
+    {
+      "id": "q0024",
+      "sentence": "Compliance has no presently material adverse impact, but regulatory changes could have one in the future [0000002488-26-000018:0018].",
+      "chunk_id": "0000002488-26-000018:0018",
+      "selected": [
+        "lower-3831f99c7e29",
+        "lower-d26783ca198d",
+        "lower-5d8b541f89da",
+        "lower-1f668aab6bf7"
+      ],
+      "found": {
+        "community_id": "lower-d26783ca198d",
+        "via": "evidenced_by",
+        "node": "Agreement:agreement with another responsible party"
+      }
+    },
+    {
+      "id": "q0024",
+      "sentence": "AMD's climate risk centers on natural disasters that could disrupt energy or water, interrupt its supply chain, delay manufacturing and shipments, and raise costs, affecting its own, its suppliers' and its customers' operations [0000002488-26-000018:0040].",
+      "chunk_id": "0000002488-26-000018:0040",
+      "selected": [
+        "lower-3831f99c7e29",
+        "lower-d26783ca198d",
+        "lower-5d8b541f89da",
+        "lower-1f668aab6bf7"
+      ],
+      "found": {
+        "community_id": "lower-3831f99c7e29",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:climate change may have an impact on our business."
+      }
+    },
+    {
+      "id": "q0024",
+      "sentence": "It also cites a demand-side risk: data centers depend on clean water and reliable energy, and customers who cannot secure sufficient power or water may reduce or stop purchases from AMD [0000002488-26-000018:0040][0000002488-26-000018:0041].",
+      "chunk_id": "0000002488-26-000018:0040",
+      "selected": [
+        "lower-3831f99c7e29",
+        "lower-d26783ca198d",
+        "lower-5d8b541f89da",
+        "lower-1f668aab6bf7"
+      ],
+      "found": {
+        "community_id": "lower-3831f99c7e29",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:climate change may have an impact on our business."
+      }
+    },
+    {
+      "id": "q0024",
+      "sentence": "It also cites a demand-side risk: data centers depend on clean water and reliable energy, and customers who cannot secure sufficient power or water may reduce or stop purchases from AMD [0000002488-26-000018:0040][0000002488-26-000018:0041].",
+      "chunk_id": "0000002488-26-000018:0041",
+      "selected": [
+        "lower-3831f99c7e29",
+        "lower-d26783ca198d",
+        "lower-5d8b541f89da",
+        "lower-1f668aab6bf7"
+      ],
+      "found": {
+        "community_id": "lower-3831f99c7e29",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:climate change may have an impact on our business."
+      }
+    },
+    {
+      "id": "q0024",
+      "sentence": "AMD also expects costs to comply with climate disclosure requirements [0000002488-26-000018:0041].",
+      "chunk_id": "0000002488-26-000018:0041",
+      "selected": [
+        "lower-3831f99c7e29",
+        "lower-d26783ca198d",
+        "lower-5d8b541f89da",
+        "lower-1f668aab6bf7"
+      ],
+      "found": {
+        "community_id": "lower-3831f99c7e29",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:climate change may have an impact on our business."
+      }
+    },
+    {
+      "id": "q0024",
+      "sentence": "The inconsistent scope of these laws increases compliance complexity [0000002488-26-000018:0019].",
+      "chunk_id": "0000002488-26-000018:0019",
+      "selected": [
+        "lower-3831f99c7e29",
+        "lower-d26783ca198d",
+        "lower-5d8b541f89da",
+        "lower-1f668aab6bf7"
+      ],
+      "found": {
+        "community_id": "lower-d26783ca198d",
+        "via": "evidenced_by",
+        "node": "Agreement:agreement with another responsible party"
+      }
+    },
+    {
+      "id": "q0024",
+      "sentence": "It has recorded an estimated environmental liability of approximately $5.9 million (FY2025 10-K) and believes any additional amount would not be material [0000002488-26-000018:0018][0000002488-26-000018:0019].",
+      "chunk_id": "0000002488-26-000018:0018",
+      "selected": [
+        "lower-3831f99c7e29",
+        "lower-d26783ca198d",
+        "lower-5d8b541f89da",
+        "lower-1f668aab6bf7"
+      ],
+      "found": {
+        "community_id": "lower-d26783ca198d",
+        "via": "evidenced_by",
+        "node": "Agreement:agreement with another responsible party"
+      }
+    },
+    {
+      "id": "q0024",
+      "sentence": "It has recorded an estimated environmental liability of approximately $5.9 million (FY2025 10-K) and believes any additional amount would not be material [0000002488-26-000018:0018][0000002488-26-000018:0019].",
+      "chunk_id": "0000002488-26-000018:0019",
+      "selected": [
+        "lower-3831f99c7e29",
+        "lower-d26783ca198d",
+        "lower-5d8b541f89da",
+        "lower-1f668aab6bf7"
+      ],
+      "found": {
+        "community_id": "lower-d26783ca198d",
+        "via": "evidenced_by",
+        "node": "Agreement:agreement with another responsible party"
+      }
+    },
+    {
+      "id": "q0025",
+      "sentence": "For NVIDIA, the FY2026 10-K says that in times of stock price volatility, as it has experienced in the past and may experience in the future, the retentive value of its stock-based compensation may decrease [0001045810-26-000021:0037].",
+      "chunk_id": "0001045810-26-000021:0037",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-103ba85b420b",
+        "lower-a6a56bbee8da",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-103ba85b420b",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+      }
+    },
+    {
+      "id": "q0025",
+      "sentence": "NVIDIA also says that competition for skilled talent drives up costs in the form of cash and stock-based compensation, and that it is highly dependent on its longstanding executive team [0001045810-26-000021:0037].",
+      "chunk_id": "0001045810-26-000021:0037",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-103ba85b420b",
+        "lower-a6a56bbee8da",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-103ba85b420b",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+      }
+    },
+    {
+      "id": "q0025",
+      "sentence": "NVIDIA links its stock price to its operating results as well: missing the expectations of investors or analysts is likely to cause its stock price to decline or become substantially volatile, and that volatility is the condition under which it says stock-based compensation loses retentive value [0001045810-26-000021:0038][0001045810-26-000021:0037].",
+      "chunk_id": "0001045810-26-000021:0038",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-103ba85b420b",
+        "lower-a6a56bbee8da",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-103ba85b420b",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:our operating results have in the past fluctuated and may in the future fluctuate, and if our operating results are below the expectations of securities analysts or investors, our stock price could decline"
+      }
+    },
+    {
+      "id": "q0025",
+      "sentence": "NVIDIA links its stock price to its operating results as well: missing the expectations of investors or analysts is likely to cause its stock price to decline or become substantially volatile, and that volatility is the condition under which it says stock-based compensation loses retentive value [0001045810-26-000021:0038][0001045810-26-000021:0037].",
+      "chunk_id": "0001045810-26-000021:0037",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-103ba85b420b",
+        "lower-a6a56bbee8da",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-103ba85b420b",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+      }
+    },
+    {
+      "id": "q0025",
+      "sentence": "The excerpts cover only NVIDIA's FY2026 10-K and contain no risk-factor language from either company on how share price affects talent retention, so no comparison can be drawn [0001045810-26-000021:0037].",
+      "chunk_id": "0001045810-26-000021:0037",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-103ba85b420b",
+        "lower-a6a56bbee8da",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-103ba85b420b",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+      }
+    },
+    {
+      "id": "q0026",
+      "sentence": "AMD: Demand for its data center AI accelerators was strong in 2025, as hyperscale customers, OEMs and ODMs deployed Instinct MI350X Series GPUs [0000002488-26-000018:0005].",
+      "chunk_id": "0000002488-26-000018:0005",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-3b9761ebebb1",
+        "lower-3b339463fc36",
+        "lower-90f16cb61339"
+      ],
+      "found": {
+        "community_id": "lower-5e4a15af3708",
+        "via": "evidenced_by",
+        "node": "Product:5th gen amd epyc family of server processors"
+      }
+    },
+    {
+      "id": "q0026",
+      "sentence": "AMD also says it has seen significant demand for its AI accelerators in the Data Center segment since 2024, though that demand depends on customers' generative AI use, data center capacity and energy access, buildout delays and customers' ability to fund AI infrastructure [0000002488-26-000018:0024].",
+      "chunk_id": "0000002488-26-000018:0024",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-3b9761ebebb1",
+        "lower-3b339463fc36",
+        "lower-90f16cb61339"
+      ],
+      "found": {
+        "community_id": "lower-5e4a15af3708",
+        "via": "evidenced_by",
+        "node": "Segment:2488:client and gaming"
+      }
+    },
+    {
+      "id": "q0026",
+      "sentence": "The points give no AMD Data Center segment revenue figures [0000002488-26-000018:0100].",
+      "chunk_id": "0000002488-26-000018:0100",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-3b9761ebebb1",
+        "lower-3b339463fc36",
+        "lower-90f16cb61339"
+      ],
+      "found": {
+        "community_id": "lower-5e4a15af3708",
+        "via": "evidenced_by",
+        "node": "Segment:2488:client and gaming"
+      }
+    },
+    {
+      "id": "q0026",
+      "sentence": "AMD's offsetting charges: In the second quarter of fiscal 2025 it recorded about $800 million of inventory and related charges on Instinct MI308 GPUs because of new U.S. export restrictions on certain semiconductors to China, and in Q4 2025 it reversed about $360 million of them after receiving some licenses and beginning shipments [0000002488-26-000018:0072].",
+      "chunk_id": "0000002488-26-000018:0072",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-3b9761ebebb1",
+        "lower-3b339463fc36",
+        "lower-90f16cb61339"
+      ],
+      "found": {
+        "community_id": "lower-5e4a15af3708",
+        "via": "evidenced_by",
+        "node": "Product:amd instincttm mi308"
+      }
+    },
+    {
+      "id": "q0026",
+      "sentence": "The Data Center segment recorded about $440 million of net inventory and related charges in cost of sales tied to the MI308 export control, and AMD had no export-control charges in 2024 or 2023 [0000002488-26-000018:0099].",
+      "chunk_id": "0000002488-26-000018:0099",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-3b9761ebebb1",
+        "lower-3b339463fc36",
+        "lower-90f16cb61339"
+      ],
+      "found": {
+        "community_id": "lower-5e4a15af3708",
+        "via": "evidenced_by",
+        "node": "Product:amd instincttm mi308"
+      }
+    },
+    {
+      "id": "q0026",
+      "sentence": "NVIDIA: Its FY2026 revenue growth was driven by data center compute and networking platforms for accelerated computing and AI, with Blackwell architectures representing the majority of Data Center revenue [0001045810-26-000021:0061].",
+      "chunk_id": "0001045810-26-000021:0061",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-3b9761ebebb1",
+        "lower-3b339463fc36",
+        "lower-90f16cb61339"
+      ],
+      "found": {
+        "community_id": "lower-3b339463fc36",
+        "via": "evidenced_by",
+        "node": "Product:nvidia rubin platform"
+      }
+    },
+    {
+      "id": "q0026",
+      "sentence": "NVIDIA reports two operating segments, Compute & Networking and Graphics [0001045810-26-000021:0061].",
+      "chunk_id": "0001045810-26-000021:0061",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-3b9761ebebb1",
+        "lower-3b339463fc36",
+        "lower-90f16cb61339"
+      ],
+      "found": {
+        "community_id": "lower-3b339463fc36",
+        "via": "evidenced_by",
+        "node": "Product:nvidia rubin platform"
+      }
+    },
+    {
+      "id": "q0026",
+      "sentence": "The points give no segment revenue figures [0001045810-26-000021:0009].",
+      "chunk_id": "0001045810-26-000021:0009",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-3b9761ebebb1",
+        "lower-3b339463fc36",
+        "lower-90f16cb61339"
+      ],
+      "found": {
+        "community_id": "lower-3b9761ebebb1",
+        "via": "evidenced_by",
+        "node": "Product:dpus"
+      }
+    },
+    {
+      "id": "q0026",
+      "sentence": "NVIDIA's offsetting charge: It recorded a $4.5 billion charge in the first quarter of fiscal 2026 for excess H20 inventory and purchase obligations after the U.S. government required a license for H20 exports to China and demand diminished, and only about $60 million of H20 revenue was generated under later licenses [0001045810-26-000021:0061].",
+      "chunk_id": "0001045810-26-000021:0061",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-3b9761ebebb1",
+        "lower-3b339463fc36",
+        "lower-90f16cb61339"
+      ],
+      "found": {
+        "community_id": "lower-3b339463fc36",
+        "via": "evidenced_by",
+        "node": "Product:nvidia rubin platform"
+      }
+    },
+    {
+      "id": "q0026",
+      "sentence": "Intel: Intel says it missed the significant shift in compute demand to GPUs optimized for AI workloads and has not become a meaningful participant in that market [0000050863-26-000011:0062].",
+      "chunk_id": "0000050863-26-000011:0062",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-3b9761ebebb1",
+        "lower-3b339463fc36",
+        "lower-90f16cb61339"
+      ],
+      "found": {
+        "community_id": "lower-90f16cb61339",
+        "via": "evidenced_by",
+        "node": "Product:gaudi ai accelerator"
+      }
+    },
+    {
+      "id": "q0026",
+      "sentence": "In its DCAI segment, 2025 operating income rose $2.0 billion from 2024, helped by $1.5 billion of lower operating expenses and lower Gaudi inventory-related charges than in 2024, while higher DCAI revenue was substantially offset by higher server unit costs from a greater mix of newer-generation products [0000050863-26-000011:0037].",
+      "chunk_id": "0000050863-26-000011:0037",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-3b9761ebebb1",
+        "lower-3b339463fc36",
+        "lower-90f16cb61339"
+      ],
+      "found": {
+        "community_id": "lower-90f16cb61339",
+        "via": "evidenced_by",
+        "node": "Segment:50863:intel foundry"
+      }
+    },
+    {
+      "id": "q0026",
+      "sentence": "Intel's offsetting charges: It recognized Gaudi AI accelerator inventory-related charges of $375 million in 2025 and $922 million in 2024, after the Gaudi effort to compete in the accelerator market was unsuccessful [0000050863-26-000011:0062].",
+      "chunk_id": "0000050863-26-000011:0062",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-3b9761ebebb1",
+        "lower-3b339463fc36",
+        "lower-90f16cb61339"
+      ],
+      "found": {
+        "community_id": "lower-90f16cb61339",
+        "via": "evidenced_by",
+        "node": "Product:gaudi ai accelerator"
+      }
+    },
+    {
+      "id": "q0026",
+      "sentence": "In 2024, DCAI operating income rose $469 million from 2023 on lower inventory period charges, partly offset by the $922 million of Gaudi charges and $151 million of higher operating expenses [0000050863-26-000011:0037].",
+      "chunk_id": "0000050863-26-000011:0037",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-3b9761ebebb1",
+        "lower-3b339463fc36",
+        "lower-90f16cb61339"
+      ],
+      "found": {
+        "community_id": "lower-90f16cb61339",
+        "via": "evidenced_by",
+        "node": "Segment:50863:intel foundry"
+      }
+    },
+    {
+      "id": "q0028",
+      "sentence": "Pillar Two imposes a minimum effective corporate tax rate, and NVIDIA says its tax obligations and effective tax rate could increase as a result [0001045810-26-000021:0051].",
+      "chunk_id": "0001045810-26-000021:0051",
+      "selected": [
+        "lower-d3a6f3b3e188",
+        "lower-fcc5094b6ed2",
+        "lower-a6a56bbee8da",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-d3a6f3b3e188",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:we may have exposure to additional tax liabilities and our operating results may be adversely impacted by changes in tax laws, higher than expected tax rates and other tax-related factors."
+      }
+    },
+    {
+      "id": "q0028",
+      "sentence": "It says a number of countries where it does business have enacted, or are enacting, elements of Pillar Two, including the recently released \"side-by-side\" framework with additional safe harbors and coordination mechanisms [0001045810-26-000021:0051].",
+      "chunk_id": "0001045810-26-000021:0051",
+      "selected": [
+        "lower-d3a6f3b3e188",
+        "lower-fcc5094b6ed2",
+        "lower-a6a56bbee8da",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-d3a6f3b3e188",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:we may have exposure to additional tax liabilities and our operating results may be adversely impacted by changes in tax laws, higher than expected tax rates and other tax-related factors."
+      }
+    },
+    {
+      "id": "q0028",
+      "sentence": "It says Pillar Two changes, including those related to the side-by-side framework, may increase tax uncertainty and compliance costs and adversely affect its provision for income taxes, cash tax payments, results of operations and financial condition [0001045810-26-000021:0052][0001045810-26-000021:0051].",
+      "chunk_id": "0001045810-26-000021:0052",
+      "selected": [
+        "lower-d3a6f3b3e188",
+        "lower-fcc5094b6ed2",
+        "lower-a6a56bbee8da",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-d3a6f3b3e188",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:delaware law and our certificate of incorporation, bylaws and agreement with microsoft could delay or prevent a change in control."
+      }
+    },
+    {
+      "id": "q0028",
+      "sentence": "It says Pillar Two changes, including those related to the side-by-side framework, may increase tax uncertainty and compliance costs and adversely affect its provision for income taxes, cash tax payments, results of operations and financial condition [0001045810-26-000021:0052][0001045810-26-000021:0051].",
+      "chunk_id": "0001045810-26-000021:0051",
+      "selected": [
+        "lower-d3a6f3b3e188",
+        "lower-fcc5094b6ed2",
+        "lower-a6a56bbee8da",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-d3a6f3b3e188",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:we may have exposure to additional tax liabilities and our operating results may be adversely impacted by changes in tax laws, higher than expected tax rates and other tax-related factors."
+      }
+    },
+    {
+      "id": "q0028",
+      "sentence": "The excerpts give no dollar or percentage estimate, so NVIDIA has not quantified the impact there [0001045810-26-000021:0052].",
+      "chunk_id": "0001045810-26-000021:0052",
+      "selected": [
+        "lower-d3a6f3b3e188",
+        "lower-fcc5094b6ed2",
+        "lower-a6a56bbee8da",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-d3a6f3b3e188",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:delaware law and our certificate of incorporation, bylaws and agreement with microsoft could delay or prevent a change in control."
+      }
+    },
+    {
+      "id": "q0028",
+      "sentence": "AMD: Its FY2025 10-K says the impact of Pillar Two for 2024 and 2025 was immaterial, which is a qualitative assessment and not a dollar figure [0000002488-26-000018:0079].",
+      "chunk_id": "0000002488-26-000018:0079",
+      "selected": [
+        "lower-d3a6f3b3e188",
+        "lower-fcc5094b6ed2",
+        "lower-a6a56bbee8da",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-fcc5094b6ed2",
+        "via": "evidenced_by",
+        "node": "Regulation:pillar two"
+      }
+    },
+    {
+      "id": "q0028",
+      "sentence": "Many countries have enacted Pillar Two-based laws effective from 2024, though some jurisdictions where AMD operates have not yet adopted them [0000002488-26-000018:0079].",
+      "chunk_id": "0000002488-26-000018:0079",
+      "selected": [
+        "lower-d3a6f3b3e188",
+        "lower-fcc5094b6ed2",
+        "lower-a6a56bbee8da",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-fcc5094b6ed2",
+        "via": "evidenced_by",
+        "node": "Regulation:pillar two"
+      }
+    },
+    {
+      "id": "q0028",
+      "sentence": "It says it continues to evaluate the effect of proposed and enacted changes on its effective tax rate and cash flows [0000002488-26-000018:0079].",
+      "chunk_id": "0000002488-26-000018:0079",
+      "selected": [
+        "lower-d3a6f3b3e188",
+        "lower-fcc5094b6ed2",
+        "lower-a6a56bbee8da",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-fcc5094b6ed2",
+        "via": "evidenced_by",
+        "node": "Regulation:pillar two"
+      }
+    },
+    {
+      "id": "q0028",
+      "sentence": "AMD calls these rules generally favorable but says each country must adopt them before they are enacted for financial accounting purposes [0000002488-26-000018:0046][0000002488-26-000018:0079].",
+      "chunk_id": "0000002488-26-000018:0046",
+      "selected": [
+        "lower-d3a6f3b3e188",
+        "lower-fcc5094b6ed2",
+        "lower-a6a56bbee8da",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-fcc5094b6ed2",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:export control restrictions on ai semiconductors"
+      }
+    },
+    {
+      "id": "q0028",
+      "sentence": "AMD calls these rules generally favorable but says each country must adopt them before they are enacted for financial accounting purposes [0000002488-26-000018:0046][0000002488-26-000018:0079].",
+      "chunk_id": "0000002488-26-000018:0079",
+      "selected": [
+        "lower-d3a6f3b3e188",
+        "lower-fcc5094b6ed2",
+        "lower-a6a56bbee8da",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-fcc5094b6ed2",
+        "via": "evidenced_by",
+        "node": "Regulation:pillar two"
+      }
+    },
+    {
+      "id": "q0028",
+      "sentence": "In its risk factors, AMD lists Pillar One and Pillar Two among OECD discussions that could change tax rules and materially affect its tax obligations and effective tax rate [0000002488-26-000018:0046][0000002488-26-000018:0047].",
+      "chunk_id": "0000002488-26-000018:0046",
+      "selected": [
+        "lower-d3a6f3b3e188",
+        "lower-fcc5094b6ed2",
+        "lower-a6a56bbee8da",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-fcc5094b6ed2",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:export control restrictions on ai semiconductors"
+      }
+    },
+    {
+      "id": "q0028",
+      "sentence": "In its risk factors, AMD lists Pillar One and Pillar Two among OECD discussions that could change tax rules and materially affect its tax obligations and effective tax rate [0000002488-26-000018:0046][0000002488-26-000018:0047].",
+      "chunk_id": "0000002488-26-000018:0047",
+      "selected": [
+        "lower-d3a6f3b3e188",
+        "lower-fcc5094b6ed2",
+        "lower-a6a56bbee8da",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-fcc5094b6ed2",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:our business is subject to potential tax liabilities, and exposure to greater-than-anticipated income tax liabilities as a result of changes in tax rules and regulations, changes in interpretation of tax rules and regulations, or unfavorable assessments from tax audits, could affect our effective tax rates, financial condition, and results of operations."
+      }
+    },
+    {
+      "id": "q0028",
+      "sentence": "AMD describes the impact as immaterial for 2024 and 2025 [0000002488-26-000018:0079], and NVIDIA gives no estimate [0001045810-26-000021:0052].",
+      "chunk_id": "0000002488-26-000018:0079",
+      "selected": [
+        "lower-d3a6f3b3e188",
+        "lower-fcc5094b6ed2",
+        "lower-a6a56bbee8da",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-fcc5094b6ed2",
+        "via": "evidenced_by",
+        "node": "Regulation:pillar two"
+      }
+    },
+    {
+      "id": "q0028",
+      "sentence": "AMD describes the impact as immaterial for 2024 and 2025 [0000002488-26-000018:0079], and NVIDIA gives no estimate [0001045810-26-000021:0052].",
+      "chunk_id": "0001045810-26-000021:0052",
+      "selected": [
+        "lower-d3a6f3b3e188",
+        "lower-fcc5094b6ed2",
+        "lower-a6a56bbee8da",
+        "lower-ed1771d60785"
+      ],
+      "found": {
+        "community_id": "lower-d3a6f3b3e188",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:delaware law and our certificate of incorporation, bylaws and agreement with microsoft could delay or prevent a change in control."
+      }
+    },
+    {
+      "id": "q0030",
+      "sentence": "It relies on TSMC for all microprocessor and GPU wafers at 7 nm or smaller nodes and primarily on GF for larger nodes [0000002488-26-000018:0029].",
+      "chunk_id": "0000002488-26-000018:0029",
+      "selected": [
+        "lower-88049f736a36",
+        "lower-70386ee9ef57",
+        "lower-e2fe6bd9ef7b",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-88049f736a36",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:we rely on third parties to manufacture our products, and if they are unable to do so on a timely basis in sufficient quantities and using competitive technologies, our business could be materially adversely affected."
+      }
+    },
+    {
+      "id": "q0030",
+      "sentence": "AMD says it is focusing its 7 nm and lower microprocessor and GPU portfolio on TSMC's processes, and that its business could be materially adversely affected if TSMC cannot make enough wafers at those nodes to meet demand [0000002488-26-000018:0032].",
+      "chunk_id": "0000002488-26-000018:0032",
+      "selected": [
+        "lower-88049f736a36",
+        "lower-70386ee9ef57",
+        "lower-e2fe6bd9ef7b",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-88049f736a36",
+        "via": "evidenced_by",
+        "node": "Organization:tsmc"
+      }
+    },
+    {
+      "id": "q0030",
+      "sentence": "It also says TSMC manufactures its newest IC products, and that it relies on TSMC, UMC and its other foundries [0000002488-26-000018:0032].",
+      "chunk_id": "0000002488-26-000018:0032",
+      "selected": [
+        "lower-88049f736a36",
+        "lower-70386ee9ef57",
+        "lower-e2fe6bd9ef7b",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-88049f736a36",
+        "via": "evidenced_by",
+        "node": "Organization:tsmc"
+      }
+    },
+    {
+      "id": "q0030",
+      "sentence": "AMD warns that foundry yield problems or delayed transitions to advanced process technologies could raise unit costs, hurt gross margin or force it to allocate supply among customers [0000002488-26-000018:0032].",
+      "chunk_id": "0000002488-26-000018:0032",
+      "selected": [
+        "lower-88049f736a36",
+        "lower-70386ee9ef57",
+        "lower-e2fe6bd9ef7b",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-88049f736a36",
+        "via": "evidenced_by",
+        "node": "Organization:tsmc"
+      }
+    },
+    {
+      "id": "q0030",
+      "sentence": "Some manufacturing suppliers have no long-term commitment contracts and work on a purchase-order basis, and they could prioritize other customers, raise prices on short notice, require prepayments or cut deliveries [0000002488-26-000018:0029].",
+      "chunk_id": "0000002488-26-000018:0029",
+      "selected": [
+        "lower-88049f736a36",
+        "lower-70386ee9ef57",
+        "lower-e2fe6bd9ef7b",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-88049f736a36",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:we rely on third parties to manufacture our products, and if they are unable to do so on a timely basis in sufficient quantities and using competitive technologies, our business could be materially adversely affected."
+      }
+    },
+    {
+      "id": "q0030",
+      "sentence": "AMD's GF wafer supply agreement sets a minimum annual capacity allocation and pricing through 2026, with excess inventory or higher unit cost risk if its wafer needs fall below the purchase target [0000002488-26-000018:0030].",
+      "chunk_id": "0000002488-26-000018:0030",
+      "selected": [
+        "lower-88049f736a36",
+        "lower-70386ee9ef57",
+        "lower-e2fe6bd9ef7b",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-88049f736a36",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:we rely on third parties to manufacture our products, and if they are unable to do so on a timely basis in sufficient quantities and using competitive technologies, our business could be materially adversely affected."
+      }
+    },
+    {
+      "id": "q0030",
+      "sentence": "Intel mostly manufactures in its own fabs but also uses third-party foundries, including TSMC, which it calls a key foundry competitor [0000050863-26-000011:0018].",
+      "chunk_id": "0000050863-26-000011:0018",
+      "selected": [
+        "lower-88049f736a36",
+        "lower-70386ee9ef57",
+        "lower-e2fe6bd9ef7b",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-88049f736a36",
+        "via": "evidenced_by",
+        "node": "Organization:tsmc"
+      }
+    },
+    {
+      "id": "q0030",
+      "sentence": "Some of its most advanced current and future products are made exclusively by TSMC or depend on critical TSMC-made components, including various compute die [0000050863-26-000011:0076][0000050863-26-000011:0075].",
+      "chunk_id": "0000050863-26-000011:0076",
+      "selected": [
+        "lower-88049f736a36",
+        "lower-70386ee9ef57",
+        "lower-e2fe6bd9ef7b",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-88049f736a36",
+        "via": "evidenced_by",
+        "node": "Organization:tsmc"
+      }
+    },
+    {
+      "id": "q0030",
+      "sentence": "Some of its most advanced current and future products are made exclusively by TSMC or depend on critical TSMC-made components, including various compute die [0000050863-26-000011:0076][0000050863-26-000011:0075].",
+      "chunk_id": "0000050863-26-000011:0075",
+      "selected": [
+        "lower-88049f736a36",
+        "lower-70386ee9ef57",
+        "lower-e2fe6bd9ef7b",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-88049f736a36",
+        "via": "evidenced_by",
+        "node": "Organization:tsmc"
+      }
+    },
+    {
+      "id": "q0030",
+      "sentence": "It could not finish products needing TSMC tiles until it designed and sourced replacement tiles, which would likely mean a substantial delay [0000050863-26-000011:0063][0000050863-26-000011:0075].",
+      "chunk_id": "0000050863-26-000011:0063",
+      "selected": [
+        "lower-88049f736a36",
+        "lower-70386ee9ef57",
+        "lower-e2fe6bd9ef7b",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-88049f736a36",
+        "via": "evidenced_by",
+        "node": "Organization:tsmc"
+      }
+    },
+    {
+      "id": "q0030",
+      "sentence": "It could not finish products needing TSMC tiles until it designed and sourced replacement tiles, which would likely mean a substantial delay [0000050863-26-000011:0063][0000050863-26-000011:0075].",
+      "chunk_id": "0000050863-26-000011:0075",
+      "selected": [
+        "lower-88049f736a36",
+        "lower-70386ee9ef57",
+        "lower-e2fe6bd9ef7b",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-88049f736a36",
+        "via": "evidenced_by",
+        "node": "Organization:tsmc"
+      }
+    },
+    {
+      "id": "q0030",
+      "sentence": "It also says it has less control over delivery schedules, yields, quality and costs for third-party-made products, and that insufficient foundry capacity could prevent it from meeting demand [0000050863-26-000011:0075].",
+      "chunk_id": "0000050863-26-000011:0075",
+      "selected": [
+        "lower-88049f736a36",
+        "lower-70386ee9ef57",
+        "lower-e2fe6bd9ef7b",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-88049f736a36",
+        "via": "evidenced_by",
+        "node": "Organization:tsmc"
+      }
+    },
+    {
+      "id": "q0030",
+      "sentence": "Intel has long-term purchase commitments and large prepayments for foundry capacity, which may not meet its needs or be fully recoverable [0000050863-26-000011:0075][0000050863-26-000011:0074].",
+      "chunk_id": "0000050863-26-000011:0075",
+      "selected": [
+        "lower-88049f736a36",
+        "lower-70386ee9ef57",
+        "lower-e2fe6bd9ef7b",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-88049f736a36",
+        "via": "evidenced_by",
+        "node": "Organization:tsmc"
+      }
+    },
+    {
+      "id": "q0030",
+      "sentence": "Intel has long-term purchase commitments and large prepayments for foundry capacity, which may not meet its needs or be fully recoverable [0000050863-26-000011:0075][0000050863-26-000011:0074].",
+      "chunk_id": "0000050863-26-000011:0074",
+      "selected": [
+        "lower-88049f736a36",
+        "lower-70386ee9ef57",
+        "lower-e2fe6bd9ef7b",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-3e417445d79c",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:geopolitical and security issues, such as armed conflict and civil or military unrest, political instability, human rights concerns and terrorist activity, present significant risks to our global operations"
+      }
+    },
+    {
+      "id": "q0030",
+      "sentence": "It also flags Taiwan concentration, since many products depend on Taiwan suppliers for critical components, including compute die, that cannot be easily or quickly replaced [0000050863-26-000011:0073].",
+      "chunk_id": "0000050863-26-000011:0073",
+      "selected": [
+        "lower-88049f736a36",
+        "lower-70386ee9ef57",
+        "lower-e2fe6bd9ef7b",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-3e417445d79c",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:geopolitical and security issues, such as armed conflict and civil or military unrest, political instability, human rights concerns and terrorist activity, present significant risks to our global operations"
+      }
+    },
+    {
+      "id": "q0030",
+      "sentence": "Unlike AMD, Intel is itself a manufacturer through Intel Foundry, so its risk mixes its own fabs, reliance on ASML as sole EUV tool supplier, and dependence on TSMC for some advanced products [0000050863-26-000011:0023][0000050863-26-000011:0075].",
+      "chunk_id": "0000050863-26-000011:0023",
+      "selected": [
+        "lower-88049f736a36",
+        "lower-70386ee9ef57",
+        "lower-e2fe6bd9ef7b",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-3e417445d79c",
+        "via": "evidenced_by",
+        "node": "Organization:asml holding n.v."
+      }
+    },
+    {
+      "id": "q0030",
+      "sentence": "Unlike AMD, Intel is itself a manufacturer through Intel Foundry, so its risk mixes its own fabs, reliance on ASML as sole EUV tool supplier, and dependence on TSMC for some advanced products [0000050863-26-000011:0023][0000050863-26-000011:0075].",
+      "chunk_id": "0000050863-26-000011:0075",
+      "selected": [
+        "lower-88049f736a36",
+        "lower-70386ee9ef57",
+        "lower-e2fe6bd9ef7b",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-88049f736a36",
+        "via": "evidenced_by",
+        "node": "Organization:tsmc"
+      }
+    },
+    {
+      "id": "q0030",
+      "sentence": "The NVIDIA excerpt covers cybersecurity risk from reliance on third-party suppliers for critical business systems and does not name TSMC or any foundry [0001045810-26-000021:0030].",
+      "chunk_id": "0001045810-26-000021:0030",
+      "selected": [
+        "lower-88049f736a36",
+        "lower-70386ee9ef57",
+        "lower-e2fe6bd9ef7b",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-e2fe6bd9ef7b",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:cybersecurity threats and security incidents"
+      }
+    },
+    {
+      "id": "q0031",
+      "sentence": "NVIDIA: In fiscal year 2026, one direct customer accounted for 22% of total revenue and another for 14%, both primarily attributable to the Compute & Networking segment [0001045810-26-000021:0036].",
+      "chunk_id": "0001045810-26-000021:0036",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-103ba85b420b",
+        "lower-3f4a443c1597",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-103ba85b420b",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+      }
+    },
+    {
+      "id": "q0031",
+      "sentence": "NVIDIA says it has had periods of getting a significant amount of revenue from a limited number of customers and that this may continue [0001045810-26-000021:0036].",
+      "chunk_id": "0001045810-26-000021:0036",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-103ba85b420b",
+        "lower-3f4a443c1597",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-103ba85b420b",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+      }
+    },
+    {
+      "id": "q0031",
+      "sentence": "It also generates a significant amount of revenue from a limited number of indirect customers, buying through OEMs, ODMs, system integrators and distributors, and it estimates some individually represent 10% or more of revenue [0001045810-26-000021:0036][0001045810-26-000021:0067].",
+      "chunk_id": "0001045810-26-000021:0036",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-103ba85b420b",
+        "lower-3f4a443c1597",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-103ba85b420b",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+      }
+    },
+    {
+      "id": "q0031",
+      "sentence": "It also generates a significant amount of revenue from a limited number of indirect customers, buying through OEMs, ODMs, system integrators and distributors, and it estimates some individually represent 10% or more of revenue [0001045810-26-000021:0036][0001045810-26-000021:0067].",
+      "chunk_id": "0001045810-26-000021:0067",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-103ba85b420b",
+        "lower-3f4a443c1597",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-5206c9bf93c6",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:concentration of revenue"
+      }
+    },
+    {
+      "id": "q0031",
+      "sentence": "In earlier years, one direct customer was 12% of revenue and two others were 11% each in fiscal 2025, and one direct customer was 13% in fiscal 2024 [0001045810-26-000021:0125][0001045810-26-000021:0067].",
+      "chunk_id": "0001045810-26-000021:0125",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-103ba85b420b",
+        "lower-3f4a443c1597",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-5206c9bf93c6",
+        "via": "evidenced_by",
+        "node": "Segment:1045810:compute & networking"
+      }
+    },
+    {
+      "id": "q0031",
+      "sentence": "In earlier years, one direct customer was 12% of revenue and two others were 11% each in fiscal 2025, and one direct customer was 13% in fiscal 2024 [0001045810-26-000021:0125][0001045810-26-000021:0067].",
+      "chunk_id": "0001045810-26-000021:0067",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-103ba85b420b",
+        "lower-3f4a443c1597",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-5206c9bf93c6",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:concentration of revenue"
+      }
+    },
+    {
+      "id": "q0031",
+      "sentence": "Most sales are on a purchase order basis, so customers can generally cancel, change or delay commitments with little notice and without penalty [0001045810-26-000021:0036].",
+      "chunk_id": "0001045810-26-000021:0036",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-103ba85b420b",
+        "lower-3f4a443c1597",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-103ba85b420b",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:commercial arrangements expose us to counterparty risks."
+      }
+    },
+    {
+      "id": "q0031",
+      "sentence": "Intel: Its three largest customers together accounted for 43% of net revenue in 2025, 45% in 2024 and 40% in 2023 [0000050863-26-000011:0083].",
+      "chunk_id": "0000050863-26-000011:0083",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-103ba85b420b",
+        "lower-3f4a443c1597",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-3f4a443c1597",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:we are subject to risks associated with our strategic transactions and investments."
+      }
+    },
+    {
+      "id": "q0031",
+      "sentence": "Losing key customers, a substantial drop in sales to them, or changes in their order timing could reduce revenue and increase volatility in results [0000050863-26-000011:0083][0000050863-26-000011:0084].",
+      "chunk_id": "0000050863-26-000011:0083",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-103ba85b420b",
+        "lower-3f4a443c1597",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-3f4a443c1597",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:we are subject to risks associated with our strategic transactions and investments."
+      }
+    },
+    {
+      "id": "q0031",
+      "sentence": "Losing key customers, a substantial drop in sales to them, or changes in their order timing could reduce revenue and increase volatility in results [0000050863-26-000011:0083][0000050863-26-000011:0084].",
+      "chunk_id": "0000050863-26-000011:0084",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-103ba85b420b",
+        "lower-3f4a443c1597",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-3f4a443c1597",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:we receive a significant portion of our revenue from a limited number of customers."
+      }
+    },
+    {
+      "id": "q0031",
+      "sentence": "It also says industry trends such as growing AI workloads and the shift of data center workloads to the public cloud have increased the purchasing power of certain customers, particularly hyperscalers, in some data center-focused businesses [0000050863-26-000011:0084].",
+      "chunk_id": "0000050863-26-000011:0084",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-103ba85b420b",
+        "lower-3f4a443c1597",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-3f4a443c1597",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:we receive a significant portion of our revenue from a limited number of customers."
+      }
+    },
+    {
+      "id": "q0031",
+      "sentence": "They say only that the success of its semi-custom SoC products in Client and Gaming depends on securing semi-custom customers and on the success of game consoles for Sony and Microsoft [0000002488-26-000018:0024].",
+      "chunk_id": "0000002488-26-000018:0024",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-103ba85b420b",
+        "lower-3f4a443c1597",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-5e4a15af3708",
+        "via": "evidenced_by",
+        "node": "Segment:2488:client and gaming"
+      }
+    },
+    {
+      "id": "q0031",
+      "sentence": "They also describe AMD's Data Center customers as primarily hyperscale data centers, OEMs, ODMs, system integrators and distributors [0000002488-26-000018:0012].",
+      "chunk_id": "0000002488-26-000018:0012",
+      "selected": [
+        "lower-5e4a15af3708",
+        "lower-103ba85b420b",
+        "lower-3f4a443c1597",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-5e4a15af3708",
+        "via": "evidenced_by",
+        "node": "Product:amd ryzen"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "NVIDIA: NVIDIA cites an ecosystem of over 7.5 million developers using CUDA and its other software tools, and says its large and growing developer base and installed base strengthen the ecosystem and raise the platform's value to customers [0001045810-26-000021:0009][0001045810-26-000021:0004][0001045810-26-000021:0005].",
+      "chunk_id": "0001045810-26-000021:0009",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-3b339463fc36",
+        "via": "evidenced_by",
+        "node": "Product:ai blueprints"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "NVIDIA: NVIDIA cites an ecosystem of over 7.5 million developers using CUDA and its other software tools, and says its large and growing developer base and installed base strengthen the ecosystem and raise the platform's value to customers [0001045810-26-000021:0009][0001045810-26-000021:0004][0001045810-26-000021:0005].",
+      "chunk_id": "0001045810-26-000021:0004",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-3b339463fc36",
+        "via": "evidenced_by",
+        "node": "Product:cuda"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "NVIDIA: NVIDIA cites an ecosystem of over 7.5 million developers using CUDA and its other software tools, and says its large and growing developer base and installed base strengthen the ecosystem and raise the platform's value to customers [0001045810-26-000021:0009][0001045810-26-000021:0004][0001045810-26-000021:0005].",
+      "chunk_id": "0001045810-26-000021:0005",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-3b339463fc36",
+        "via": "evidenced_by",
+        "node": "Product:clara"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "It says more than half of its engineers work on software [0001045810-26-000021:0009][0001045810-26-000021:0004][0001045810-26-000021:0005].",
+      "chunk_id": "0001045810-26-000021:0009",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-3b339463fc36",
+        "via": "evidenced_by",
+        "node": "Product:ai blueprints"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "It says more than half of its engineers work on software [0001045810-26-000021:0009][0001045810-26-000021:0004][0001045810-26-000021:0005].",
+      "chunk_id": "0001045810-26-000021:0004",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-3b339463fc36",
+        "via": "evidenced_by",
+        "node": "Product:cuda"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "It says more than half of its engineers work on software [0001045810-26-000021:0009][0001045810-26-000021:0004][0001045810-26-000021:0005].",
+      "chunk_id": "0001045810-26-000021:0005",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-3b339463fc36",
+        "via": "evidenced_by",
+        "node": "Product:clara"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "Its full-stack platform rests on CUDA, introduced in 2006 to open its GPUs' parallel processing to compute-intensive applications, and on hundreds of domain-specific libraries, frameworks, SDKs and APIs [0001045810-26-000021:0004][0001045810-26-000021:0005].",
+      "chunk_id": "0001045810-26-000021:0004",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-3b339463fc36",
+        "via": "evidenced_by",
+        "node": "Product:cuda"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "Its full-stack platform rests on CUDA, introduced in 2006 to open its GPUs' parallel processing to compute-intensive applications, and on hundreds of domain-specific libraries, frameworks, SDKs and APIs [0001045810-26-000021:0004][0001045810-26-000021:0005].",
+      "chunk_id": "0001045810-26-000021:0005",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-3b339463fc36",
+        "via": "evidenced_by",
+        "node": "Product:clara"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "NVIDIA lists software support and conformity to industry standard APIs among the principal competitive factors in its market, alongside performance, breadth of product offerings, access to customers, partners and distribution channels, and total system costs [0001045810-26-000021:0012].",
+      "chunk_id": "0001045810-26-000021:0012",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-f9a158f69cf1",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:competition"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "Its Data Center systems combine GPUs, CPUs and interconnects with optimized AI and HPC software stacks, plus acceleration libraries, AI models, training data sets, APIs, SDKs and application frameworks [0001045810-26-000021:0006].",
+      "chunk_id": "0001045810-26-000021:0006",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-5206c9bf93c6",
+        "via": "evidenced_by",
+        "node": "Product:geforce gpus"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "NVIDIA also sells software on top of its hardware, including NVIDIA AI Enterprise (which bundles NIM, NeMo and AI Blueprints), vGPU software, and industry stacks such as DRIVE, Omniverse and Clara [0001045810-26-000021:0009][0001045810-26-000021:0007][0001045810-26-000021:0005].",
+      "chunk_id": "0001045810-26-000021:0009",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-3b339463fc36",
+        "via": "evidenced_by",
+        "node": "Product:ai blueprints"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "NVIDIA also sells software on top of its hardware, including NVIDIA AI Enterprise (which bundles NIM, NeMo and AI Blueprints), vGPU software, and industry stacks such as DRIVE, Omniverse and Clara [0001045810-26-000021:0009][0001045810-26-000021:0007][0001045810-26-000021:0005].",
+      "chunk_id": "0001045810-26-000021:0007",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-3b339463fc36",
+        "via": "evidenced_by",
+        "node": "Product:cuda"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "NVIDIA also sells software on top of its hardware, including NVIDIA AI Enterprise (which bundles NIM, NeMo and AI Blueprints), vGPU software, and industry stacks such as DRIVE, Omniverse and Clara [0001045810-26-000021:0009][0001045810-26-000021:0007][0001045810-26-000021:0005].",
+      "chunk_id": "0001045810-26-000021:0005",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-3b339463fc36",
+        "via": "evidenced_by",
+        "node": "Product:clara"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "It further engages the open-model ecosystem and developers by releasing open AI models, running the Inception program with tens of thousands of startups, partnering with hundreds of universities, and offering NVLink Fusion so custom CPU and XPU designers can connect to its platform [0001045810-26-000021:0007][0001045810-26-000021:0009][0001045810-26-000021:0010].",
+      "chunk_id": "0001045810-26-000021:0007",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-3b339463fc36",
+        "via": "evidenced_by",
+        "node": "Product:cuda"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "It further engages the open-model ecosystem and developers by releasing open AI models, running the Inception program with tens of thousands of startups, partnering with hundreds of universities, and offering NVLink Fusion so custom CPU and XPU designers can connect to its platform [0001045810-26-000021:0007][0001045810-26-000021:0009][0001045810-26-000021:0010].",
+      "chunk_id": "0001045810-26-000021:0009",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-3b339463fc36",
+        "via": "evidenced_by",
+        "node": "Product:ai blueprints"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "It further engages the open-model ecosystem and developers by releasing open AI models, running the Inception program with tens of thousands of startups, partnering with hundreds of universities, and offering NVLink Fusion so custom CPU and XPU designers can connect to its platform [0001045810-26-000021:0007][0001045810-26-000021:0009][0001045810-26-000021:0010].",
+      "chunk_id": "0001045810-26-000021:0010",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-3b339463fc36",
+        "via": "evidenced_by",
+        "node": "Product:drive"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "Its Compute & Networking segment explicitly includes AI solutions and software [0001045810-26-000021:0123].",
+      "chunk_id": "0001045810-26-000021:0123",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-5206c9bf93c6",
+        "via": "evidenced_by",
+        "node": "Product:geforce gpus"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "AMD: AMD says product competitiveness depends on factors including software and hardware compatibility, ease of use and functionality of software design tools, completeness of software solutions, and adherence to and creation of open industry standards [0000002488-26-000018:0014].",
+      "chunk_id": "0000002488-26-000018:0014",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-f9a158f69cf1",
+        "via": "evidenced_by",
+        "node": "Organization:broadcom"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "It develops software stacks of development tools, compilers and drivers for its CPUs, APUs, GPUs and FPGAs [0000002488-26-000018:0004].",
+      "chunk_id": "0000002488-26-000018:0004",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-3b339463fc36",
+        "via": "evidenced_by",
+        "node": "Product:cpus"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "It describes a comprehensive, open AI software stack supporting diverse AI ecosystems across frameworks, large and small language models and applications, positioned as part of full-stack solutions alongside its AI-optimized CPUs, GPUs and networking [0000002488-26-000018:0004].",
+      "chunk_id": "0000002488-26-000018:0004",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-3b339463fc36",
+        "via": "evidenced_by",
+        "node": "Product:cpus"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "Intel: Intel says x86 client CPUs are the foundational PC platform, which has enabled a deep and extensive software ecosystem [0000050863-26-000011:0011].",
+      "chunk_id": "0000050863-26-000011:0011",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-f9a158f69cf1",
+        "via": "evidenced_by",
+        "node": "Organization:amazon, inc."
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "It says system-level integration of hardware and software will remain essential, and it plans to invest in heterogeneous compute, networking, memory and open standards so AI can be deployed at scale [0000050863-26-000011:0011].",
+      "chunk_id": "0000050863-26-000011:0011",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-f9a158f69cf1",
+        "via": "evidenced_by",
+        "node": "Organization:amazon, inc."
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "In its risk factors, Intel says competitors' architectures such as ARM can produce beneficial network effects as an ecosystem of customers and application developers grows, and that ARM-based products and the ARM ecosystem have seen increased development and adoption [0000050863-26-000011:0059].",
+      "chunk_id": "0000050863-26-000011:0059",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-f9a158f69cf1",
+        "via": "evidenced_by",
+        "node": "Organization:qualcomm"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "Intel defines oneAPI as an open, cross-architecture programming model allowing a single code base across multiple architectures, though the excerpt does not describe its competitive role [0000050863-26-000011:0180].",
+      "chunk_id": "0000050863-26-000011:0180",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-f9a158f69cf1",
+        "via": "evidenced_by",
+        "node": "Organization:qualcomm"
+      }
+    },
+    {
+      "id": "q0033",
+      "sentence": "Its commercial CPU offerings, including the vPro Platform, come with an enterprise-grade software stack, and it is working with partners to enable new AI software capabilities on PCs in the enterprise [0000050863-26-000011:0014].",
+      "chunk_id": "0000050863-26-000011:0014",
+      "selected": [
+        "lower-3b339463fc36",
+        "lower-cb23d1979aad",
+        "lower-f9a158f69cf1",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-cb23d1979aad",
+        "via": "evidenced_by",
+        "node": "Product:intel core ultra series 1"
+      }
+    },
+    {
+      "id": "q0034",
+      "sentence": "It says it has seen an increase in patent assertions by well-funded NPEs, including entities funded by third-party investment firms [0000050863-26-000011:0080].",
+      "chunk_id": "0000050863-26-000011:0080",
+      "selected": [
+        "lower-1d99191c6f7f",
+        "lower-70386ee9ef57",
+        "lower-a6a56bbee8da",
+        "lower-a95082d0622f"
+      ],
+      "found": {
+        "community_id": "lower-1d99191c6f7f",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:our licenses with other companies and participation in industry initiatives at times allow competitors to use some of our patent rights"
+      }
+    },
+    {
+      "id": "q0034",
+      "sentence": "It says the VLSI and R2 litigation resulted in significant adverse judgments and settlements [0000050863-26-000011:0080].",
+      "chunk_id": "0000050863-26-000011:0080",
+      "selected": [
+        "lower-1d99191c6f7f",
+        "lower-70386ee9ef57",
+        "lower-a6a56bbee8da",
+        "lower-a95082d0622f"
+      ],
+      "found": {
+        "community_id": "lower-1d99191c6f7f",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:our licenses with other companies and participation in industry initiatives at times allow competitors to use some of our patent rights"
+      }
+    },
+    {
+      "id": "q0034",
+      "sentence": "It says claims could lead it to pay damages, stop making or selling products, develop other products, or enter costly licenses [0000050863-26-000011:0080].",
+      "chunk_id": "0000050863-26-000011:0080",
+      "selected": [
+        "lower-1d99191c6f7f",
+        "lower-70386ee9ef57",
+        "lower-a6a56bbee8da",
+        "lower-a95082d0622f"
+      ],
+      "found": {
+        "community_id": "lower-1d99191c6f7f",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:our licenses with other companies and participation in industry initiatives at times allow competitors to use some of our patent rights"
+      }
+    },
+    {
+      "id": "q0034",
+      "sentence": "It adds that it may be unable to enforce certain patents against others [0000050863-26-000011:0079][0000050863-26-000011:0080].",
+      "chunk_id": "0000050863-26-000011:0079",
+      "selected": [
+        "lower-1d99191c6f7f",
+        "lower-70386ee9ef57",
+        "lower-a6a56bbee8da",
+        "lower-a95082d0622f"
+      ],
+      "found": {
+        "community_id": "lower-1d99191c6f7f",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:cyber attack attempts are increasing in number, magnitude and technical sophistication, and if successful, may expose us and the affected parties to loss or misuse of proprietary or confidential information or disruptions to our supply chain or business operations, including our manufacturing operations, and could impact our financial results"
+      }
+    },
+    {
+      "id": "q0034",
+      "sentence": "It adds that it may be unable to enforce certain patents against others [0000050863-26-000011:0079][0000050863-26-000011:0080].",
+      "chunk_id": "0000050863-26-000011:0080",
+      "selected": [
+        "lower-1d99191c6f7f",
+        "lower-70386ee9ef57",
+        "lower-a6a56bbee8da",
+        "lower-a95082d0622f"
+      ],
+      "found": {
+        "community_id": "lower-1d99191c6f7f",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:our licenses with other companies and participation in industry initiatives at times allow competitors to use some of our patent rights"
+      }
+    }
+  ]
+}

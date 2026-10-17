@@ -1,0 +1,253 @@
+{
+  "commit": "d2f3fa1",
+  "label": "tuned on dev",
+  "questions": "agent-drafted questions, dev, answerable only",
+  "rule": "per answerable class, the arm with the highest mean dev recall@10; an arm whose paired recall@10 difference against it has a 95% interval including 0 ties with it; among tied arms the lowest dev cost per question (answer side, judges excluded) wins, an exact cost tie going to the earlier arm",
+  "map": {
+    "lookup": "graph_local",
+    "local": "graph_local",
+    "multi_hop": "graph_local",
+    "global": "vector"
+  },
+  "classes": {
+    "lookup": {
+      "best": "vector",
+      "chosen": "graph_local",
+      "contenders": [
+        {
+          "arm": "vector",
+          "source": "benchmarks/runs/2026-10-05-vector-dev-96e8c69.json",
+          "recall@10": 1.0,
+          "difference_vs_best": null,
+          "cost_per_question_usd": 0.031042157073170734,
+          "tied": true
+        },
+        {
+          "arm": "graph_local",
+          "source": "benchmarks/runs/2026-10-14-graph_local-dev-375efac.json",
+          "recall@10": 0.9629629629629629,
+          "difference_vs_best": {
+            "n": 27,
+            "mean": -0.037037037037037035,
+            "low": -0.1111111111111111,
+            "high": 0.0
+          },
+          "cost_per_question_usd": 0.030369181463414635,
+          "tied": true
+        },
+        {
+          "arm": "graph_traversal",
+          "source": "benchmarks/runs/2026-10-14-graph_traversal-dev-375efac.json",
+          "recall@10": 0.9629629629629629,
+          "difference_vs_best": {
+            "n": 27,
+            "mean": -0.037037037037037035,
+            "low": -0.1111111111111111,
+            "high": 0.0
+          },
+          "cost_per_question_usd": 0.03440032536585366,
+          "tied": true
+        },
+        {
+          "arm": "graph_global",
+          "source": "benchmarks/runs/2026-10-17-graph_global-dev-6e26741.json",
+          "recall@10": 0.5555555555555556,
+          "difference_vs_best": {
+            "n": 27,
+            "mean": -0.4444444444444444,
+            "low": -0.6296296296296297,
+            "high": -0.25925925925925924
+          },
+          "cost_per_question_usd": 0.08220972400000001,
+          "tied": false
+        }
+      ]
+    },
+    "local": {
+      "best": "vector",
+      "chosen": "graph_local",
+      "contenders": [
+        {
+          "arm": "vector",
+          "source": "benchmarks/runs/2026-10-05-vector-dev-96e8c69.json",
+          "recall@10": 0.9772727272727273,
+          "difference_vs_best": null,
+          "cost_per_question_usd": 0.031042157073170734,
+          "tied": true
+        },
+        {
+          "arm": "graph_local",
+          "source": "benchmarks/runs/2026-10-14-graph_local-dev-375efac.json",
+          "recall@10": 0.9090909090909091,
+          "difference_vs_best": {
+            "n": 22,
+            "mean": -0.06818181818181818,
+            "low": -0.18181818181818182,
+            "high": 0.0
+          },
+          "cost_per_question_usd": 0.030369181463414635,
+          "tied": true
+        },
+        {
+          "arm": "graph_traversal",
+          "source": "benchmarks/runs/2026-10-14-graph_traversal-dev-375efac.json",
+          "recall@10": 0.8181818181818182,
+          "difference_vs_best": {
+            "n": 22,
+            "mean": -0.1590909090909091,
+            "low": -0.3181818181818182,
+            "high": -0.022727272727272728
+          },
+          "cost_per_question_usd": 0.03440032536585366,
+          "tied": false
+        },
+        {
+          "arm": "graph_global",
+          "source": "benchmarks/runs/2026-10-17-graph_global-dev-6e26741.json",
+          "recall@10": 0.8409090909090909,
+          "difference_vs_best": {
+            "n": 22,
+            "mean": -0.13636363636363635,
+            "low": -0.2727272727272727,
+            "high": 0.0
+          },
+          "cost_per_question_usd": 0.08220972400000001,
+          "tied": true
+        }
+      ]
+    },
+    "multi_hop": {
+      "best": "vector",
+      "chosen": "graph_local",
+      "contenders": [
+        {
+          "arm": "vector",
+          "source": "benchmarks/runs/2026-10-05-vector-dev-96e8c69.json",
+          "recall@10": 0.717391304347826,
+          "difference_vs_best": null,
+          "cost_per_question_usd": 0.031042157073170734,
+          "tied": true
+        },
+        {
+          "arm": "graph_local",
+          "source": "benchmarks/runs/2026-10-14-graph_local-dev-375efac.json",
+          "recall@10": 0.6268115942028986,
+          "difference_vs_best": {
+            "n": 23,
+            "mean": -0.09057971014492754,
+            "low": -0.2826086956521739,
+            "high": 0.10869565217391304
+          },
+          "cost_per_question_usd": 0.030369181463414635,
+          "tied": true
+        },
+        {
+          "arm": "graph_traversal",
+          "source": "benchmarks/runs/2026-10-14-graph_traversal-dev-375efac.json",
+          "recall@10": 0.7028985507246377,
+          "difference_vs_best": {
+            "n": 23,
+            "mean": -0.014492753623188408,
+            "low": -0.21739130434782608,
+            "high": 0.18115942028985507
+          },
+          "cost_per_question_usd": 0.03440032536585366,
+          "tied": true
+        },
+        {
+          "arm": "graph_global",
+          "source": "benchmarks/runs/2026-10-17-graph_global-dev-6e26741.json",
+          "recall@10": 0.4891304347826087,
+          "difference_vs_best": {
+            "n": 23,
+            "mean": -0.22826086956521738,
+            "low": -0.3949275362318841,
+            "high": -0.06884057971014493
+          },
+          "cost_per_question_usd": 0.08220972400000001,
+          "tied": false
+        }
+      ]
+    },
+    "global": {
+      "best": "vector",
+      "chosen": "vector",
+      "contenders": [
+        {
+          "arm": "vector",
+          "source": "benchmarks/runs/2026-10-05-vector-dev-96e8c69.json",
+          "recall@10": 0.8,
+          "difference_vs_best": null,
+          "cost_per_question_usd": 0.031042157073170734,
+          "tied": true
+        },
+        {
+          "arm": "graph_local",
+          "source": "benchmarks/runs/2026-10-14-graph_local-dev-375efac.json",
+          "recall@10": 0.425,
+          "difference_vs_best": {
+            "n": 10,
+            "mean": -0.375,
+            "low": -0.575,
+            "high": -0.18333333333333335
+          },
+          "cost_per_question_usd": 0.030369181463414635,
+          "tied": false
+        },
+        {
+          "arm": "graph_traversal",
+          "source": "benchmarks/runs/2026-10-14-graph_traversal-dev-375efac.json",
+          "recall@10": 0.36666666666666664,
+          "difference_vs_best": {
+            "n": 10,
+            "mean": -0.4333333333333333,
+            "low": -0.625,
+            "high": -0.2416666666666667
+          },
+          "cost_per_question_usd": 0.03440032536585366,
+          "tied": false
+        },
+        {
+          "arm": "graph_global",
+          "source": "benchmarks/runs/2026-10-16-graph_global-dev-5bb0799.json",
+          "recall@10": 0.4583333333333333,
+          "difference_vs_best": {
+            "n": 10,
+            "mean": -0.3416666666666667,
+            "low": -0.5000000000000001,
+            "high": -0.18333333333333335
+          },
+          "cost_per_question_usd": 0.08220972400000001,
+          "tied": false
+        }
+      ]
+    }
+  },
+  "inputs": [
+    {
+      "path": "benchmarks/runs/2026-10-05-vector-dev-96e8c69.json",
+      "sha256": "b6aeecc998b924e286f284921b1e7f1eb3262bd4063e8ebba7174f53edd3bb34",
+      "commit": "96e8c69"
+    },
+    {
+      "path": "benchmarks/runs/2026-10-14-graph_local-dev-375efac.json",
+      "sha256": "1e45248f0aaa8c7a2ad81b711210397c83c2e023519ca6ff84854e4b58f22c9b",
+      "commit": "375efac"
+    },
+    {
+      "path": "benchmarks/runs/2026-10-14-graph_traversal-dev-375efac.json",
+      "sha256": "ba11aca73ea858c21746489762b1d1acf2472de46d75fedd0aff9366b2999b13",
+      "commit": "375efac"
+    },
+    {
+      "path": "benchmarks/runs/2026-10-16-graph_global-dev-5bb0799.json",
+      "sha256": "9a221011a43e5ef4dc3efe15e667bdc2799fb7274ca91d28ff5b2ee9818b081e",
+      "commit": "5bb0799"
+    },
+    {
+      "path": "benchmarks/runs/2026-10-17-graph_global-dev-6e26741.json",
+      "sha256": "db093b58149d86f9049f2f391aee789664d5c129ce131f9bacee238f2e180d93",
+      "commit": "6e26741"
+    }
+  ]
+}
