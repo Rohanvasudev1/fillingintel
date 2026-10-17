@@ -26,9 +26,12 @@ from neo4j import Driver
 from neo4j.exceptions import DriverError, Neo4jError
 
 from graph.connection import DATABASE, GraphSettingsMissing, driver_from_env, read_session
-from graph.constraints import GRAPH_META_QUERY, graph_meta_problem
-from graph.load import OUTPUT_DIR as LOAD_REPORT_DIR
-from graph.load_report import latest_load_run
+from graph.constraints import (
+    GRAPH_META_QUERY,
+    GraphMetaMismatch,
+    graph_meta_problem,
+    read_load_run,
+)
 from graph.ontology import ONTOLOGY_VERSION
 from graph.schema_text import SCHEMA_TEXT_SHA256
 from ingest.voyage import API_KEY_ENV, DEFAULT_MODEL, QueryEmbedder, VoyageClient, VoyageError
@@ -69,6 +72,7 @@ from retrieve.pricing import embedding_cost
 from retrieve.query_cache import CachedBatchEmbedder, CachedQueryEmbedder, CacheError
 from retrieve.question_filter import QuestionFilter, companies_without_chunks, parse_question_filter
 from retrieve.response_cache import CachedAnswerModel
+from retrieve.run_estimate import GRAPH_LOCAL_RUN, MeasuredEstimate
 from retrieve.tracing import (
     ANCHOR_SPAN,
     EXPAND_SPAN,
@@ -161,7 +165,6 @@ class GraphLocalArm:
         clock: Callable[[], float] = time.perf_counter,
         prompt: AnswerPrompt | None = None,
         spans: SpanRecorder | None = None,
-        load_reports: Path = LOAD_REPORT_DIR,
         database: str = DATABASE,
     ):
         self._embedder = embedder
@@ -171,7 +174,7 @@ class GraphLocalArm:
         prompt = prompt if prompt is not None else load_answer_prompt()
         check_prices((model, ANSWER_MODEL))
         try:
-            provenance = graph_provenance(driver, database, load_reports)
+            provenance = graph_provenance(driver, database)
             index = anchor_index(driver, database, node_embeddings, model)
         except (*GRAPH_ERRORS, CacheError, OSError, ValueError) as exc:
             raise arm_error(self.name, exc) from exc
@@ -229,16 +232,18 @@ class GraphLocalArm:
         )
 
 
-def graph_provenance(driver: Driver, database: str, load_reports: Path) -> GraphProvenance:
-    """What the header records about the graph; raises ``ArmError`` for another ontology."""
+def graph_provenance(driver: Driver, database: str) -> GraphProvenance:
+    """What the header records about the graph, read from :GraphMeta; raises ``ArmError``
+    for another ontology or a graph that records no load run."""
     with read_session(driver, database) as session:
         rows = session.execute_read(lambda tx: [r.data() for r in tx.run(GRAPH_META_QUERY)])
-    problem = graph_meta_problem(rows, required=True)
-    if problem:
-        raise ArmError(problem)
-    load_run = latest_load_run(load_reports)
-    if load_run is None:
-        raise ArmError(f"no graph load report in {load_reports}; run python -m graph.load")
+        problem = graph_meta_problem(rows, required=True)
+        if problem:
+            raise ArmError(problem)
+        try:
+            load_run = session.execute_read(read_load_run)
+        except GraphMetaMismatch as exc:
+            raise ArmError(str(exc)) from exc
     return GraphProvenance(ontology_version=ONTOLOGY_VERSION, schema_sha256=SCHEMA_TEXT_SHA256,
                            load_run=load_run)
 
@@ -287,4 +292,5 @@ GRAPH_LOCAL = ArmSpec(
     name=GraphLocalArm.name,
     required_env=(*NEO4J_ENV, "DATABASE_URL", API_KEY_ENV, ANTHROPIC_KEY_ENV),
     open=open_graph_local_arm,
+    estimate=MeasuredEstimate(GRAPH_LOCAL_RUN),
 )

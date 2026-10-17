@@ -6,7 +6,7 @@ with the shared parser in ``retrieve.question_filter``.
 """
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from contextlib import AbstractContextManager
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -281,6 +281,30 @@ class Arm(Protocol):
 
     def run(self, question: str) -> ArmResult: ...
 
+    def retrieve(self, question: str) -> Retrieval:
+        """The retrieval ``run`` would answer from, with no answer model call."""
+        ...
+
+
+@dataclass(frozen=True)
+class EstimateQuestion:
+    """What a cost estimate reads of a selected eval record: its ID and class, never its
+    text or labels, so an estimate cannot steer a run."""
+
+    id: str
+    class_: str
+
+
+class ArmEstimator(Protocol):
+    """The estimated USD of running an arm on *questions*, before it opens.
+
+    With *retrieval_only*, only the retrieval calls are priced; otherwise retrieval,
+    answer and judge calls.  Raises ``ValueError`` when it cannot estimate.
+    """
+
+    def __call__(self, questions: Sequence[EstimateQuestion], *,
+                 retrieval_only: bool) -> float: ...
+
 
 class ArmOpener(Protocol):
     """Opens an arm on the response cache folder its model calls go through.
@@ -294,12 +318,15 @@ class ArmOpener(Protocol):
 
 @dataclass(frozen=True)
 class ArmSpec:
-    """A registered arm: the environment variables it needs and how to open it.
+    """A registered arm: the environment variables it needs, how to open it and how to
+    estimate a run's cost.
 
     ``open`` returns a context manager, so the arm owns and closes its own
-    connections.  The harness checks ``required_env`` before opening anything.
+    connections.  The harness checks ``required_env`` and prints ``estimate``
+    before opening anything.
     """
 
     name: str
     required_env: tuple[str, ...]
     open: ArmOpener
+    estimate: ArmEstimator

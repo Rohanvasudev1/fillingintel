@@ -47,7 +47,7 @@ from tests.graph_test_data import (
     member_keys,
     with_communities,
 )
-from tests.neo4j_fixtures import MARKER_LABEL, TEST_ENV_PREFIX
+from tests.neo4j_fixtures import MARKER_LABEL, TEST_ENV_PREFIX, record_test_load_run
 
 UNKNOWN_CHUNK = f"{NVDA_10K}:9999"
 
@@ -73,8 +73,9 @@ def empty_graph(unmarked):
 
 @pytest.fixture
 def valid_graph(empty_graph, graph_test_batch):
-    """The valid test graph, written through the write path."""
+    """The valid test graph, written through the write path and marked as loaded."""
     write_batch(empty_graph, graph_test_batch)
+    record_test_load_run(empty_graph)
     return empty_graph
 
 
@@ -257,6 +258,12 @@ BROKEN = {
     "missing GraphMeta": (
         "MATCH (m:GraphMeta) DELETE m", Check.GRAPH_META,
     ),
+    "no load run on GraphMeta": (
+        "MATCH (m:GraphMeta) REMOVE m.load_run", Check.GRAPH_META,
+    ),
+    "load run not a load report name": (
+        "MATCH (m:GraphMeta) SET m.load_run = 'yesterday'", Check.GRAPH_META,
+    ),
 }
 
 
@@ -302,6 +309,7 @@ def test_a_chunk_under_another_filing_fails_the_postgres_check(valid_graph, post
 def community_graph(empty_graph, graph_test_batch):
     """The valid test graph with its test communities."""
     write_batch(empty_graph, with_communities(graph_test_batch))
+    record_test_load_run(empty_graph)
     return empty_graph
 
 

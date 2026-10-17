@@ -22,6 +22,13 @@ nothing is traced.
 ``--classes global,decline,unanswerable`` limits the run to those classes; the
 header records the selection.  Without it every class runs.
 
+Before the arm opens, its spec's estimate for the selected questions is printed
+(``retrieve.run_estimate``); ``--max-cost 2.50`` refuses a run estimated above
+$2.50, opening nothing.  ``--retrieval-only`` scores retrieval alone: no answer
+or judge call is made, and the file holds retrieval metrics and latency only.
+Every answered question records ``total_ms``, the wall time of its whole arm
+call, and whether any of its calls replayed from a cache.
+
 ``dev`` is the default split.  ``test`` is scored only with ``--final``, once,
 for the final benchmark.  Results go to ``benchmarks/runs/``, which git ignores.
 """
@@ -32,6 +39,7 @@ import logging
 import os
 import sys
 import tempfile
+import time
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import replace
 from datetime import UTC, date, datetime
@@ -55,9 +63,10 @@ from eval.results import (
     results_path,
     write_results,
 )
-from eval.schema import Class
+from eval.schema import Class, EvalRecord
 from ingest.provenance import REPO_ROOT, git_state
-from retrieve.arm import Arm, ArmConfig, ArmError, ArmSpec
+from resolve.cli import cost_cap
+from retrieve.arm import Arm, ArmConfig, ArmError, ArmSpec, EstimateQuestion
 from retrieve.arms import ARMS
 from retrieve.pricing import price_table
 from retrieve.response_cache import DEFAULT_CACHE_DIR as DEFAULT_RESPONSE_CACHE
@@ -83,6 +92,9 @@ EXIT_USAGE = 2
 EXIT_RUN_ERROR = 3
 
 TRACER_NAME = "filingintel.eval"
+_MS_PER_SECOND = 1000.0
+
+Selected = list[tuple[str, EvalRecord]]  # (question set name, record), in run order
 
 logger = logging.getLogger(__name__)
 
@@ -97,6 +109,10 @@ def _parse_args(argv: list[str] | None, arm_names: Sequence[str]) -> argparse.Na
                         help="make every answer and judge call afresh, through a new empty cache")
     parser.add_argument("--classes",
                         help="run only these classes, comma-separated (e.g. global,decline)")
+    parser.add_argument("--max-cost", type=cost_cap, metavar="USD",
+                        help="refuse a run whose estimate is above this many dollars")
+    parser.add_argument("--retrieval-only", action="store_true",
+                        help="score retrieval only: no answer or judge call")
     return parser.parse_args(argv)
 
 
@@ -140,27 +156,38 @@ def env_problem(required_env: Sequence[str], forbidden_env: Sequence[str],
     return None
 
 
-def _run_arm(arm: Arm, sets: Sequence[QuestionSet], split: str, classes: tuple[Class, ...] | None,
-             spans: SpanRecorder) -> tuple[list[Outcome], list[Context]]:
-    """Run *arm* on the *split* records of every set; the arm sees only the question text.
+def select(sets: Sequence[QuestionSet], split: str, classes: tuple[Class, ...] | None) -> Selected:
+    """The *split* records of every set, or only those of *classes* when given."""
+    return [(s.name, r) for s in sets for r in s.records
+            if r.split == split and (classes is None or r.class_ in classes)]
 
-    With *classes*, only records of those classes run.
 
+def _run_arm(arm: Arm, todo: Selected, split: str, spans: SpanRecorder, *,
+             retrieval_only: bool, clock: Callable[[], float],
+             ) -> tuple[list[Outcome], list[Context]]:
+    """Run *arm* on the *todo* records; the arm sees only the question text.
+
+    Each answered question's ``total_ms`` is the wall time of its whole ``arm.run``
+    call; *retrieval_only* calls ``arm.retrieve`` instead and records no total.
     Each question is one trace, rooted in a span that holds the question and its record.
     Returns the outcomes and, for each, a context holding its root span, which the
     judges' spans take as their parent.
     """
-    todo = [(s.name, r) for s in sets for r in s.records
-            if r.split == split and (classes is None or r.class_ in classes)]
     outcomes, parents = [], []
     for done, (set_name, record) in enumerate(todo, start=1):
         metadata = {"question_id": record.id, "set": set_name, "arm": arm.name,
                     "split": split, "class": record.class_}
         attributes = question_attributes(record.question, metadata)
         with spans.span(QUESTION_SPAN, Kind.CHAIN, attributes) as span:
-            result = arm.run(record.question)
-            span.set_attributes(status_attributes(result.answer.status))
-        outcomes.append(Outcome(set_name, record, result))
+            if retrieval_only:
+                outcome = Outcome(set_name, record, arm.retrieve(record.question))
+            else:
+                start = clock()
+                result = arm.run(record.question)
+                total_ms = (clock() - start) * _MS_PER_SECOND
+                span.set_attributes(status_attributes(result.answer.status))
+                outcome = Outcome(set_name, record, result, total_ms=total_ms)
+        outcomes.append(outcome)
         parents.append(trace.set_span_in_context(span))
         if done % PROGRESS_EVERY == 0:
             logger.info("%d of %d questions", done, len(todo))
@@ -171,8 +198,8 @@ def _judge(judge: Judge, outcomes: Sequence[Outcome],
            parents: Sequence[Context]) -> list[Outcome]:
     """*outcomes* with every judge run attached; each question's judge spans go under its
     entry in *parents*."""
-    items = [JudgeInput(o.record.question, o.record.class_, o.result.answer, o.result.sources)
-             for o in outcomes]
+    items = [JudgeInput(o.record.question, o.record.class_, o.answered.answer,
+                        o.answered.sources) for o in outcomes]
     logger.info("judging %d answers, %d runs each", len(items), judge.config.runs)
     judged = judge_all(judge, items, parents=parents)
     return [replace(o, judged=j) for o, j in zip(outcomes, judged, strict=True)]
@@ -185,17 +212,21 @@ def _fresh_cache(root: Path, day: date) -> Path:
 
 
 def _score(
-    spec: ArmSpec, judges: JudgeSpec, sets: Sequence[QuestionSet], split: str,
-    classes: tuple[Class, ...] | None, cache_dir: Path, spans: SpanRecorder,
-) -> tuple[list[Outcome], ArmConfig, JudgeConfig]:
-    """The selected questions answered by the arm, then judged; raises ArmError or JudgeRunError.
+    spec: ArmSpec, judges: JudgeSpec, todo: Selected, split: str, cache_dir: Path,
+    spans: SpanRecorder, *, retrieval_only: bool, clock: Callable[[], float],
+) -> tuple[list[Outcome], ArmConfig, JudgeConfig | None]:
+    """The *todo* questions answered by the arm, then judged; raises ArmError or JudgeRunError.
 
-    The selection is every *split* question, or only those in *classes* when given.
+    With *retrieval_only* the arm only retrieves, no judge opens, and the judge config
+    is None.
     """
     with spec.open(cache_dir, spans) as arm:
         _check_priced(arm.config)
-        outcomes, parents = _run_arm(arm, sets, split, classes, spans)
+        outcomes, parents = _run_arm(arm, todo, split, spans, retrieval_only=retrieval_only,
+                                     clock=clock)
         config = arm.config
+    if retrieval_only:
+        return outcomes, config, None
     with judges.open(cache_dir, spans) as judge:
         return _judge(judge, outcomes, parents), config, judge.config
 
@@ -209,15 +240,20 @@ def _check_priced(config: ArmConfig) -> None:
 
 
 def _document(run: RunInfo, config: ArmConfig, sets: Sequence[QuestionSet],
-              judge_config: JudgeConfig, outcomes: Sequence[Outcome]) -> dict[str, Any]:
-    """The results file's content: header, cells, filter report and per-question records."""
-    return {
+              judge_config: JudgeConfig | None, outcomes: Sequence[Outcome]) -> dict[str, Any]:
+    """The results file's content: header, cells, filter report and per-question records;
+    with no judge config (a retrieval-only run), no judge usage."""
+    document = {
         "header": build_header(run, config, sets, judge_config),
-        "cells": build_cells(outcomes, run.arm, run.seed, judge_config.runs),
+        "cells": build_cells(outcomes, run.arm, run.seed,
+                             judge_config.runs if judge_config is not None else None),
         "filter_report": build_filter_report(outcomes),
         "questions": [question_record(o) for o in outcomes],
-        "judge_usage": run_judge_usage([o.judged for o in outcomes if o.judged is not None]),
     }
+    if judge_config is None:
+        return document
+    return {**document, "judge_usage": run_judge_usage(
+        [o.judged for o in outcomes if o.judged is not None])}
 
 
 def main(
@@ -231,15 +267,18 @@ def main(
     response_cache: Path = DEFAULT_RESPONSE_CACHE,
     uncached_root: Path = UNCACHED_ROOT,
     tracing: Callable[[Mapping[str, str]], TracerProvider | None] = build_provider,
+    clock: Callable[[], float] = time.perf_counter,
 ) -> int:
-    """CLI entry point.  Exit codes: 0 ok; 2 bad input; 3 the run could not finish or be
-    written (no results file).  *tracing* builds the span provider from the environment."""
+    """CLI entry point.  Exit codes: 0 ok; 2 bad input, or an estimate above --max-cost;
+    3 the run could not be estimated, finish or be written (no results file).  *tracing*
+    builds the span provider from the environment; *clock* times each question."""
     args = _parse_args(argv, list(arms))
     logging.basicConfig(level=logging.INFO)
     logging.getLogger("httpx").setLevel(logging.WARNING)
     spec = arms[args.arm]
-    problem = _usage_problem(args, [*spec.required_env, *judges.required_env],
-                             judges.forbidden_env)
+    judge_required = () if args.retrieval_only else judges.required_env
+    judge_forbidden = () if args.retrieval_only else judges.forbidden_env
+    problem = _usage_problem(args, [*spec.required_env, *judge_required], judge_forbidden)
     if problem:
         print(problem, file=sys.stderr)
         return EXIT_USAGE
@@ -247,24 +286,56 @@ def main(
         classes = parse_classes(args.classes) if args.classes is not None else None
         sets = load_question_sets(eval_dir)
         capture = text_capture(os.environ)
-        provider = tracing(os.environ)
     except (ClassSelectionError, QuestionSetError, TracingConfigError) as exc:
         print(str(exc), file=sys.stderr)
         return EXIT_USAGE
-    spans = (SpanRecorder(provider.get_tracer(TRACER_NAME), capture) if provider is not None
-             else SpanRecorder.off())
+    todo = select(sets, args.split, classes)
+    refused = _check_estimate(spec, todo, args)
+    if refused is not None:
+        return refused
     try:
-        return _execute(args, spec, judges, sets, classes, spans, runs_dir=runs_dir, today=today,
-                        response_cache=response_cache, uncached_root=uncached_root)
+        provider = tracing(os.environ)
+    except TracingConfigError as exc:
+        print(str(exc), file=sys.stderr)
+        return EXIT_USAGE
+    spans = _span_recorder(provider, capture)
+    try:
+        return _execute(args, spec, judges, sets, classes, todo, spans, runs_dir=runs_dir,
+                        today=today, response_cache=response_cache, uncached_root=uncached_root,
+                        clock=clock)
     finally:
         if provider is not None:
             provider.shutdown()  # flushes queued spans; a stopped Phoenix costs about a second
 
 
+def _span_recorder(provider: TracerProvider | None, capture: bool) -> SpanRecorder:
+    if provider is None:
+        return SpanRecorder.off()
+    return SpanRecorder(provider.get_tracer(TRACER_NAME), capture)
+
+
+def _check_estimate(spec: ArmSpec, todo: Selected, args: argparse.Namespace) -> int | None:
+    """Print the arm's estimate for *todo*; the exit code when the run must not start."""
+    questions = [EstimateQuestion(r.id, r.class_) for _, r in todo]
+    mode = "retrieval only" if args.retrieval_only else "retrieval, answers and judges"
+    try:
+        usd = spec.estimate(questions, retrieval_only=args.retrieval_only)
+    except ValueError as exc:
+        print(f"could not estimate the run, nothing was run: {exc}", file=sys.stderr)
+        return EXIT_RUN_ERROR
+    print(f"estimate: ${usd:.2f} for {len(questions)} questions ({mode}; nothing assumed "
+          "to replay from the cache)")
+    if args.max_cost is not None and usd > args.max_cost:
+        print(f"the estimate ${usd:.2f} is above --max-cost ${args.max_cost:.2f}; "
+              "nothing was run", file=sys.stderr)
+        return EXIT_USAGE
+    return None
+
+
 def _execute(args: argparse.Namespace, spec: ArmSpec, judges: JudgeSpec,
-             sets: Sequence[QuestionSet], classes: tuple[Class, ...] | None,
-             spans: SpanRecorder, *, runs_dir: Path,
-             today: date | None, response_cache: Path, uncached_root: Path) -> int:
+             sets: Sequence[QuestionSet], classes: tuple[Class, ...] | None, todo: Selected,
+             spans: SpanRecorder, *, runs_dir: Path, today: date | None,
+             response_cache: Path, uncached_root: Path, clock: Callable[[], float]) -> int:
     """Answer, judge and write the results file; returns the exit code."""
     commit = git_state()
     now = datetime.now(UTC)
@@ -275,14 +346,15 @@ def _execute(args: argparse.Namespace, spec: ArmSpec, judges: JudgeSpec,
         print(f"could not create a new response cache in {uncached_root}: {exc}", file=sys.stderr)
         return EXIT_RUN_ERROR
     try:
-        outcomes, config, judge_config = _score(spec, judges, sets, args.split, classes,
-                                                cache_dir, spans)
+        outcomes, config, judge_config = _score(spec, judges, todo, args.split, cache_dir, spans,
+                                                retrieval_only=args.retrieval_only, clock=clock)
     except (ArmError, JudgeRunError) as exc:
         print(f"run stopped, no results written: {exc}", file=sys.stderr)
         return EXIT_RUN_ERROR
 
     run = RunInfo(now.isoformat(timespec="seconds"), commit, args.arm, args.split,
-                  args.final, SEED, args.uncached, cache_dir.name, classes)
+                  args.final, SEED, args.uncached, cache_dir.name, classes,
+                  retrieval_only=args.retrieval_only)
     document = _document(run, config, sets, judge_config, outcomes)
     try:
         path = results_path(runs_dir, day, args.arm, args.split, commit)

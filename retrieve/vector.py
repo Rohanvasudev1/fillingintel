@@ -53,6 +53,7 @@ from retrieve.pricing import embedding_cost
 from retrieve.query_cache import CachedQueryEmbedder, CacheError
 from retrieve.question_filter import companies_without_chunks, parse_question_filter
 from retrieve.response_cache import CachedAnswerModel
+from retrieve.run_estimate import VECTOR_RUN, MeasuredEstimate
 from retrieve.tracing import (
     FILTER_SPAN,
     SEARCH_SPAN,
@@ -184,4 +185,5 @@ VECTOR = ArmSpec(
     name=VectorArm.name,
     required_env=(API_KEY_ENV, ANTHROPIC_KEY_ENV, "DATABASE_URL"),
     open=open_vector_arm,
+    estimate=MeasuredEstimate(VECTOR_RUN),
 )

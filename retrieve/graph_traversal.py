@@ -24,7 +24,6 @@ from neo4j import Driver
 
 from graph.connection import DATABASE
 from graph.guard import TIMEOUT_S
-from graph.load import OUTPUT_DIR as LOAD_REPORT_DIR
 from ingest.store import chunk_ids
 from ingest.voyage import API_KEY_ENV, DEFAULT_MODEL, QueryEmbedder, VoyageClient
 from retrieve.answer_model import (
@@ -78,6 +77,7 @@ from retrieve.question_filter import (
     parse_question_filter,
 )
 from retrieve.response_cache import CachedAnswerModel
+from retrieve.run_estimate import GRAPH_TRAVERSAL_RUN, MeasuredEstimate
 from retrieve.tracing import (
     FALLBACK_SPAN,
     FILTER_SPAN,
@@ -115,7 +115,6 @@ class GraphTraversalArm:
         cypher_prompt_version: str | None = None,
         cypher_timeout: float = TIMEOUT_S,
         spans: SpanRecorder | None = None,
-        load_reports: Path = LOAD_REPORT_DIR,
         database: str = DATABASE,
     ):
         self._embedder = embedder
@@ -130,7 +129,7 @@ class GraphTraversalArm:
             self._filings = corpus_filings(conn)
             chunker_version = corpus_chunker_version(conn)
             known = chunk_ids(conn)
-            provenance = graph_provenance(driver, database, load_reports)
+            provenance = graph_provenance(driver, database)
             index = anchor_index(driver, database, node_embeddings, model)
         except (*GRAPH_ERRORS, CacheError, OSError, ValueError, psycopg.Error) as exc:
             raise arm_error(self.name, exc) from exc
@@ -229,4 +228,5 @@ GRAPH_TRAVERSAL = ArmSpec(
     name=GraphTraversalArm.name,
     required_env=(*NEO4J_ENV, "DATABASE_URL", API_KEY_ENV, ANTHROPIC_KEY_ENV),
     open=open_graph_traversal_arm,
+    estimate=MeasuredEstimate(GRAPH_TRAVERSAL_RUN),
 )

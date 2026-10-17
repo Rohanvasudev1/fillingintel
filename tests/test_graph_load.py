@@ -46,6 +46,7 @@ from tests.graph_test_data import (
 from tests.neo4j_fixtures import MARKER_LABEL
 
 PROMPT = "extract/v2@34a82e2b"
+LOAD_RUN = "load-run1"
 SUPPLY_RISK = f"{NVDA_10K}:supply"
 EXPORT_RISK = f"{NVDA_10K}:export controls"
 LINK = PersistLink(SUPPLY_RISK, EXPORT_RISK, EXACT_TITLE,
@@ -129,7 +130,7 @@ def _counts(driver):
 def test_the_fixture_filings_load_and_validate_with_zero_violations(
     unmarked, rows, inputs, test_graph_chunks,
 ):
-    result = load_graph(unmarked, rows, inputs, rebuild=False, communities=None)
+    result = load_graph(unmarked, rows, inputs, rebuild=False, communities=None, load_run=LOAD_RUN)
     assert result.validation.ok and result.validation.violation_count == 0
     counts = _counts(unmarked)
     assert counts["Chunk"] == len(test_graph_chunks)
@@ -145,27 +146,50 @@ def test_the_fixture_filings_load_and_validate_with_zero_violations(
 def test_a_graph_with_data_is_refused_without_rebuild_and_replaced_with_it(
     unmarked, rows, inputs,
 ):
-    load_graph(unmarked, rows, inputs, rebuild=False, communities=None)
+    load_graph(unmarked, rows, inputs, rebuild=False, communities=None, load_run=LOAD_RUN)
     first = _counts(unmarked)
     with pytest.raises(GraphNotEmpty):
-        load_graph(unmarked, rows, inputs, rebuild=False, communities=None)
-    load_graph(unmarked, rows, inputs, rebuild=True, communities=None)
+        load_graph(unmarked, rows, inputs, rebuild=False, communities=None, load_run=LOAD_RUN)
+    load_graph(unmarked, rows, inputs, rebuild=True, communities=None, load_run=LOAD_RUN)
     assert _counts(unmarked) == first
 
 
 def test_a_rejected_rebuild_leaves_the_previous_graph(unmarked, rows, inputs):
-    result = load_graph(unmarked, rows, inputs, rebuild=False, communities=None)
+    result = load_graph(unmarked, rows, inputs, rebuild=False, communities=None, load_run=LOAD_RUN)
     before = _counts(unmarked)
     bad = Batch(nodes=(*result.built.batch.nodes, NodeRecord("Organization", {"key": "x"})),
                 edges=result.built.batch.edges)
     with pytest.raises(BatchRejected):
-        rebuild_graph(unmarked, bad)
+        rebuild_graph(unmarked, bad, load_run=LOAD_RUN)
     assert _counts(unmarked) == before
 
 
+def _load_run(driver):
+    return _run(driver, f"MATCH (m:`{GRAPH_META}`) RETURN m.load_run AS run")[0]["run"]
+
+
+def test_each_load_records_its_load_run_on_graph_meta(unmarked, rows, inputs):
+    load_graph(unmarked, rows, inputs, rebuild=False, communities=None, load_run="load-run7")
+    assert _load_run(unmarked) == "load-run7"
+    result = load_graph(unmarked, rows, inputs, rebuild=True, communities=None,
+                        load_run="load-run8")
+    assert _load_run(unmarked) == "load-run8"
+    assert result.validation.ok
+
+
+def test_a_rejected_rebuild_keeps_the_previous_load_run(unmarked, rows, inputs):
+    result = load_graph(unmarked, rows, inputs, rebuild=False, communities=None,
+                        load_run="load-run7")
+    bad = Batch(nodes=(*result.built.batch.nodes, NodeRecord("Organization", {"key": "x"})),
+                edges=result.built.batch.edges)
+    with pytest.raises(BatchRejected):
+        rebuild_graph(unmarked, bad, load_run="load-run8")
+    assert _load_run(unmarked) == "load-run7"
+
+
 def test_graph_meta_survives_a_rebuild(unmarked, rows, inputs):
-    load_graph(unmarked, rows, inputs, rebuild=False, communities=None)
-    load_graph(unmarked, rows, inputs, rebuild=True, communities=None)
+    load_graph(unmarked, rows, inputs, rebuild=False, communities=None, load_run=LOAD_RUN)
+    load_graph(unmarked, rows, inputs, rebuild=True, communities=None, load_run=LOAD_RUN)
     versions = _run(unmarked, f"MATCH (m:`{GRAPH_META}`) RETURN m.ontology_version AS v")
     assert versions == [{"v": ONTOLOGY_VERSION}]
 
@@ -181,7 +205,7 @@ def test_a_validation_that_cannot_run_after_the_write_is_reported_not_hidden(
         raise ServiceUnavailable("gone")
 
     monkeypatch.setattr(graph.load, "validate_graph", unreachable)
-    result = load_graph(unmarked, rows, inputs, rebuild=False, communities=None)
+    result = load_graph(unmarked, rows, inputs, rebuild=False, communities=None, load_run=LOAD_RUN)
     assert result.validation is None
     assert "ServiceUnavailable" in result.validation_error
     assert _counts(unmarked)["Filing"] == 2  # the write stands
@@ -199,7 +223,7 @@ def test_the_load_report_records_the_link_files_hash_and_links_by_method(
 ):
     import hashlib
 
-    result = load_graph(unmarked, rows, inputs, rebuild=False, communities=None)
+    result = load_graph(unmarked, rows, inputs, rebuild=False, communities=None, load_run=LOAD_RUN)
     report = load_report("abc123", inputs, result)
     digest = hashlib.sha256((tmp_path / "links.jsonl").read_bytes()).hexdigest()
     assert report["persistence_links"] == {"sha256": digest, "by_method": {EXACT_TITLE: 1}}
@@ -226,9 +250,9 @@ def recorded_as(unmarked):
 def test_a_rebuild_upgrades_an_older_graph_meta_and_reports_it(
     unmarked, rows, inputs, recorded_as,
 ):
-    load_graph(unmarked, rows, inputs, rebuild=False, communities=None)
+    load_graph(unmarked, rows, inputs, rebuild=False, communities=None, load_run=LOAD_RUN)
     recorded_as(ONTOLOGY_VERSION - 1)
-    result = load_graph(unmarked, rows, inputs, rebuild=True, communities=None)
+    result = load_graph(unmarked, rows, inputs, rebuild=True, communities=None, load_run=LOAD_RUN)
     assert result.upgraded_from == ONTOLOGY_VERSION - 1
     assert result.validation.ok
     assert _graph_meta(unmarked) == [{"version": ONTOLOGY_VERSION, "sha256": SCHEMA_TEXT_SHA256}]
@@ -236,7 +260,7 @@ def test_a_rebuild_upgrades_an_older_graph_meta_and_reports_it(
 
 
 def test_a_rebuild_at_the_codes_version_upgrades_nothing(unmarked, rows, inputs):
-    result = load_graph(unmarked, rows, inputs, rebuild=True, communities=None)
+    result = load_graph(unmarked, rows, inputs, rebuild=True, communities=None, load_run=LOAD_RUN)
     assert result.upgraded_from is None
     assert load_report("abc123", inputs, result)["graph_meta_upgraded_from"] is None
 
@@ -245,11 +269,11 @@ def test_a_rebuild_at_the_codes_version_upgrades_nothing(unmarked, rows, inputs)
 def test_a_newer_or_unparseable_version_is_refused_with_nothing_changed(
     unmarked, rows, inputs, recorded_as, version,
 ):
-    load_graph(unmarked, rows, inputs, rebuild=False, communities=None)
+    load_graph(unmarked, rows, inputs, rebuild=False, communities=None, load_run=LOAD_RUN)
     before = _counts(unmarked)
     recorded_as(version)
     with pytest.raises(GraphMetaMismatch):
-        load_graph(unmarked, rows, inputs, rebuild=True, communities=None)
+        load_graph(unmarked, rows, inputs, rebuild=True, communities=None, load_run=LOAD_RUN)
     assert _counts(unmarked) == before
     assert _graph_meta(unmarked) == [{"version": version, "sha256": "0" * 64}]
 
@@ -257,25 +281,25 @@ def test_a_newer_or_unparseable_version_is_refused_with_nothing_changed(
 def test_an_older_version_is_not_upgraded_without_rebuild(unmarked, rows, inputs, recorded_as):
     recorded_as(ONTOLOGY_VERSION - 1)
     with pytest.raises(GraphMetaMismatch):
-        load_graph(unmarked, rows, inputs, rebuild=False, communities=None)
+        load_graph(unmarked, rows, inputs, rebuild=False, communities=None, load_run=LOAD_RUN)
     assert _graph_meta(unmarked)[0]["version"] == ONTOLOGY_VERSION - 1
     assert not _counts(unmarked)
 
 
 def test_a_rejected_upgrade_keeps_the_older_graph_meta(unmarked, rows, inputs, recorded_as):
-    result = load_graph(unmarked, rows, inputs, rebuild=False, communities=None)
+    result = load_graph(unmarked, rows, inputs, rebuild=False, communities=None, load_run=LOAD_RUN)
     recorded_as(ONTOLOGY_VERSION - 1)
     bad = Batch(nodes=(*result.built.batch.nodes, NodeRecord("Organization", {"key": "x"})),
                 edges=result.built.batch.edges)
     with pytest.raises(BatchRejected):
-        rebuild_graph(unmarked, bad, upgrade_from=ONTOLOGY_VERSION - 1)
+        rebuild_graph(unmarked, bad, load_run=LOAD_RUN, upgrade_from=ONTOLOGY_VERSION - 1)
     assert _graph_meta(unmarked)[0]["version"] == ONTOLOGY_VERSION - 1
 
 
 def test_the_load_report_records_where_the_evidence_came_from_and_the_bodies(
     unmarked, rows, inputs,
 ):
-    result = load_graph(unmarked, rows, inputs, rebuild=False, communities=None)
+    result = load_graph(unmarked, rows, inputs, rebuild=False, communities=None, load_run=LOAD_RUN)
     report = load_report("abc123", inputs, result)
     assert report["ontology_version"] == ONTOLOGY_VERSION
     assert report["evidence_provenance"] == {"extract_prompts": [PROMPT],
@@ -289,7 +313,8 @@ def test_the_load_report_records_where_the_evidence_came_from_and_the_bodies(
 def test_an_agreement_concerning_a_filer_is_written_and_valid_under_version_4(
     unmarked, rows, inputs,
 ):
-    built = load_graph(unmarked, rows, inputs, rebuild=False, communities=None).built.batch
+    built = load_graph(unmarked, rows, inputs, rebuild=False, communities=None,
+                       load_run=LOAD_RUN).built.batch
     deal = NodeRef.of("Agreement", key="Agreement:wafer supply agreement")
     quote = evidence(SUPPLY_CHUNK, prompt=PROMPT)
     concerns = EdgeRecord("CONCERNS", deal, NodeRef.of("Company", cik="1045810"), {
@@ -299,7 +324,7 @@ def test_an_agreement_concerning_a_filer_is_written_and_valid_under_version_4(
         nodes=(*built.nodes, NodeRecord("Agreement", {"key": deal.key_dict()["key"],
                                                       "name": "wafer supply agreement"},
                                         (quote,))),
-        edges=(*built.edges, concerns)))
+        edges=(*built.edges, concerns)), load_run=LOAD_RUN)
     assert _run(unmarked, "MATCH (:Agreement)-[:CONCERNS]->(c:Company) RETURN c.cik AS cik") \
         == [{"cik": "1045810"}]
     assert validate_graph(unmarked).ok
@@ -328,7 +353,8 @@ def communities(rows, inputs):
 
 
 def test_communities_are_written_in_the_rebuild_and_validate(unmarked, rows, inputs, communities):
-    result = load_graph(unmarked, rows, inputs, rebuild=False, communities=communities)
+    result = load_graph(unmarked, rows, inputs, rebuild=False, communities=communities,
+                        load_run=LOAD_RUN)
 
     assert result.validation.ok
     found = communities.communities.communities
@@ -362,11 +388,12 @@ def _stale(communities):
 def test_communities_that_do_not_fit_are_refused_with_nothing_changed(
     unmarked, rows, inputs, communities, break_inputs,
 ):
-    load_graph(unmarked, rows, inputs, rebuild=False, communities=communities)
+    load_graph(unmarked, rows, inputs, rebuild=False, communities=communities, load_run=LOAD_RUN)
     before = _counts(unmarked)
 
     with pytest.raises(CommunityMismatch):
-        load_graph(unmarked, rows, inputs, rebuild=True, communities=break_inputs(communities))
+        load_graph(unmarked, rows, inputs, rebuild=True, communities=break_inputs(communities),
+                   load_run=LOAD_RUN)
 
     assert _counts(unmarked) == before
 
@@ -374,10 +401,11 @@ def test_communities_that_do_not_fit_are_refused_with_nothing_changed(
 def test_a_version_4_graph_is_upgraded_with_its_communities(
     unmarked, rows, inputs, communities, recorded_as,
 ):
-    load_graph(unmarked, rows, inputs, rebuild=False, communities=None)
+    load_graph(unmarked, rows, inputs, rebuild=False, communities=None, load_run=LOAD_RUN)
     recorded_as(4)
 
-    result = load_graph(unmarked, rows, inputs, rebuild=True, communities=communities)
+    result = load_graph(unmarked, rows, inputs, rebuild=True, communities=communities,
+                        load_run=LOAD_RUN)
 
     assert result.upgraded_from == 4 and result.validation.ok
     assert _graph_meta(unmarked) == [{"version": 5, "sha256": SCHEMA_TEXT_SHA256}]
@@ -387,10 +415,15 @@ def test_a_version_4_graph_is_upgraded_with_its_communities(
 def test_the_load_command_exits_2_on_communities_that_do_not_fit(monkeypatch, capsys, tmp_path):
     import graph.load
 
-    def refuse(_rebuild):
+    load_runs = []
+
+    def refuse(_rebuild, load_run):
+        load_runs.append(load_run)
         raise CommunityMismatch("reportable community lower-x has no report")
 
     monkeypatch.setattr(graph.load, "_run", refuse)
+    (tmp_path / "load-run3.json").write_text("{}")
     assert graph.load.main(["--rebuild"], out_dir=tmp_path) == 2
     assert "nothing was written" in capsys.readouterr().err
-    assert not list(tmp_path.iterdir())
+    assert [p.name for p in tmp_path.iterdir()] == ["load-run3.json"]
+    assert load_runs == ["load-run4"]  # the report it would write names the graph

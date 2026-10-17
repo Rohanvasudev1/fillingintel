@@ -52,6 +52,7 @@ from tests.graph_test_data import (
     TOP_CUSTOMER_SHARE,
     TSMC,
 )
+from tests.neo4j_fixtures import record_test_load_run
 from tests.vector_fakes import MODEL, FakeQueryEmbedder, ScriptedAnswerModel
 
 LOADED = ("nvda_10k", "nvda_10q", "amd_10k")
@@ -88,15 +89,8 @@ def chunks(nvda_10k_filing, nvda_10q_filing, amd_10k_filing):
 def graph(neo4j_driver, chunks):
     apply_constraints(neo4j_driver)
     write_batch(neo4j_driver, graph_local_batch(*chunks))
+    record_test_load_run(neo4j_driver, "load-run4")
     return neo4j_driver
-
-
-def _reports(tmp_path, *names: str):
-    directory = tmp_path / "reports"
-    directory.mkdir(exist_ok=True)
-    for name in names:
-        (directory / f"{name}.json").write_text("{}", encoding="utf-8")
-    return directory
 
 
 def _node_cache(tmp_path, similarities, texts=tuple(TEXTS.values())) -> CachedBatchEmbedder:
@@ -106,12 +100,11 @@ def _node_cache(tmp_path, similarities, texts=tuple(TEXTS.values())) -> CachedBa
 
 
 def _arm(corpus, graph, tmp_path, similarities=SIMILARITIES, *, answer_model=None,
-         node_cache=None, reports=None, **kwargs) -> GraphLocalArm:
+         node_cache=None, **kwargs) -> GraphLocalArm:
     return GraphLocalArm(
         corpus, graph, FakeQueryEmbedder(QUERY_VECTOR),
         node_cache or _node_cache(tmp_path, similarities),
-        answer_model or ScriptedAnswerModel(),
-        load_reports=reports or _reports(tmp_path, "load-run4"), **kwargs,
+        answer_model or ScriptedAnswerModel(), **kwargs,
     )
 
 
@@ -222,7 +215,8 @@ def test_the_retrieval_records_hops_and_the_anchor_linking_stage(corpus, graph, 
 
 
 def test_config_records_the_graph_the_arm_read(corpus, graph, tmp_path):
-    arm = _arm(corpus, graph, tmp_path, reports=_reports(tmp_path, "load-run3", "load-run12"))
+    record_test_load_run(graph, "load-run12")
+    arm = _arm(corpus, graph, tmp_path)
     assert arm.name == "graph_local"
     assert arm.config.graph == GraphProvenance(
         ontology_version=ONTOLOGY_VERSION, schema_sha256=SCHEMA_TEXT_SHA256, load_run="load-run12")
@@ -242,9 +236,10 @@ def test_a_node_without_a_cached_embedding_stops_the_arm(corpus, graph, tmp_path
         _arm(corpus, graph, tmp_path, node_cache=_node_cache(tmp_path, {}, texts))
 
 
-def test_no_load_report_stops_the_arm(corpus, graph, tmp_path):
-    with pytest.raises(ArmError, match="no graph load report"):
-        _arm(corpus, graph, tmp_path, reports=_reports(tmp_path))
+def test_a_graph_that_records_no_load_run_stops_the_arm(corpus, graph, tmp_path):
+    graph.execute_query("MATCH (m:GraphMeta) REMOVE m.load_run")
+    with pytest.raises(ArmError, match="records no load run"):
+        _arm(corpus, graph, tmp_path)
 
 
 def test_the_arm_records_its_retrieval_steps_as_spans(corpus, graph, tmp_path):
@@ -266,7 +261,6 @@ def test_the_arm_is_registered_with_the_settings_it_needs():
 
 def test_a_retrieval_failure_is_an_arm_error(corpus, graph, tmp_path):
     arm = GraphLocalArm(corpus, graph, FakeQueryEmbedder((0.0,) * len(QUERY_VECTOR)),
-                        _node_cache(tmp_path, SIMILARITIES), ScriptedAnswerModel(),
-                        load_reports=_reports(tmp_path, "load-run4"))
+                        _node_cache(tmp_path, SIMILARITIES), ScriptedAnswerModel())
     with pytest.raises(ArmError, match="graph_local arm failed.*zero vector"):
         arm.retrieve(UNFILTERED)

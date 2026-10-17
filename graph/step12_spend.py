@@ -5,8 +5,9 @@ reports, embeddings, map and reduce calls, and judges. The total is the sum of
 `cost_this_run_usd` over every reports run file in benchmarks/communities, as
 extract.spend sums extraction reports, plus every graph_global run file in
 benchmarks/runs: its questions' `cost_usd.total` and its `judge_usage.cost_usd`
-(ticket 07). A run file prices replies replayed from the response cache as if
-sent, and a local file not yet committed counts too; both err high. Calls made
+(ticket 07); a retrieval-only run adds nothing. A run file prices replies
+replayed from the response cache as if sent, and a local file not yet
+committed counts too; both err high. Calls made
 outside these run files, such as recording test replies and the report-text
 embeddings `retrieve.node_embed --embed` sends, are not counted; BUILD-LOG
 records them.
@@ -25,6 +26,7 @@ COMMUNITIES_DIR = REPO_ROOT / "benchmarks" / "communities"
 RUNS_DIR = REPO_ROOT / "benchmarks" / "runs"
 GLOBAL_ARM = "graph_global"
 GLOBAL_RUNS = f"*-{GLOBAL_ARM}-*.json"
+RETRIEVAL_ONLY = "retrieval_only"  # a results header's mode with no model call
 
 
 def spent_usd(communities_dir: Path = COMMUNITIES_DIR, runs_dir: Path = RUNS_DIR) -> float:
@@ -38,10 +40,12 @@ def _finite(value: object) -> bool:
 
 
 def _global_run_usd(path: Path) -> float:
-    """A graph_global run's question and judge costs; 0 for another arm's file."""
+    """A graph_global run's question and judge costs; 0 for another arm's file or a
+    retrieval-only run (Step 13), which makes no model call."""
     try:
         run = json.loads(path.read_text(encoding="utf-8"))
-        if run["header"]["arm"] != GLOBAL_ARM:
+        header = run["header"]
+        if header["arm"] != GLOBAL_ARM or header.get("mode") == RETRIEVAL_ONLY:
             return 0.0
         costs = [q["cost_usd"]["total"] for q in run["questions"]]
         costs.append(run["judge_usage"]["cost_usd"])

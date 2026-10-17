@@ -56,7 +56,14 @@ from graph.connection import (
     GraphSettingsMissing,
     driver_from_env,
 )
-from graph.constraints import GRAPH_META, GRAPH_META_QUERY, graph_meta_problem
+from graph.constraints import (
+    GRAPH_META,
+    GRAPH_META_QUERY,
+    LOAD_RUN_QUERY,
+    OTHER_NODES,
+    graph_meta_problem,
+    load_run_problem,
+)
 from graph.cypher import quoted
 from graph.ontology import (
     EDGE_TYPES,
@@ -184,6 +191,11 @@ def _edge_name(record: Record) -> str:
 def _graph_meta_findings(tx: ManagedTransaction) -> Iterator[Finding]:
     problem = graph_meta_problem([r.data() for r in tx.run(GRAPH_META_QUERY)], required=True)
     if problem:
+        yield Finding(Check.GRAPH_META, problem)
+        return
+    loaded = tx.run(f"{OTHER_NODES} RETURN n LIMIT 1").peek()
+    problem = load_run_problem([r.data() for r in tx.run(LOAD_RUN_QUERY)])
+    if loaded is not None and problem:  # a graph with data came from a load run
         yield Finding(Check.GRAPH_META, problem)
 
 

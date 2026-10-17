@@ -10,6 +10,7 @@ import json
 import re
 import subprocess
 from contextlib import nullcontext
+from dataclasses import fields
 from datetime import date
 from pathlib import Path
 from types import MappingProxyType
@@ -24,7 +25,7 @@ from eval.schema import EvalRecord, dump_records, load_records
 from retrieve.answer import write_answer
 from retrieve.answer_model import AnswerRequest, ApiResponse, parse_reply
 from retrieve.answer_prompt import SourceChunk, load_prompt
-from retrieve.arm import ArmConfig, ArmError, ArmResult, ArmSpec, RetrievedChunk
+from retrieve.arm import ArmConfig, ArmError, ArmResult, ArmSpec, Retrieval, RetrievedChunk
 from retrieve.pricing import anthropic_cost, embedding_cost
 from retrieve.question_filter import QuestionFilter, parse_question_filter
 from tests.anthropic_fixtures import load, with_text
@@ -113,9 +114,18 @@ class FakeArm:
         self._error = error
         self._filters = filters or {}  # record ID -> a filter to return instead of the parser's
         self.questions: list[str] = []
+        self.retrieved_questions: list[str] = []  # those asked for retrieval only
+
+    def retrieve(self, question: str) -> Retrieval:
+        self.retrieved_questions.append(question)
+        result = self._answered(question)
+        return Retrieval(**{f.name: getattr(result, f.name) for f in fields(Retrieval)})
 
     def run(self, question: str) -> ArmResult:
         self.questions.append(question)
+        return self._answered(question)
+
+    def _answered(self, question: str) -> ArmResult:
         if self._error is not None:
             raise self._error
         record = self._by_question[question]
@@ -138,6 +148,11 @@ class FakeArm:
             answer=write_answer(question, chunks, model, load_prompt("v1")),
             sources=tuple(chunks),
         )
+
+
+def no_cost(questions, *, retrieval_only):
+    """An arm estimate for fakes, which spend nothing."""
+    return 0.0
 
 
 JUDGE_KEY_ENV = "FAKE_JUDGE_KEY"
@@ -212,14 +227,14 @@ def _setup(eval_dir, tmp_path, error=None, filters=None, judge_error=None):
         opened.append(response_cache)
         return nullcontext(arm)
 
-    spec = ArmSpec(name="fake", required_env=(KEY_ENV,), open=open_arm)
+    spec = ArmSpec(name="fake", required_env=(KEY_ENV,), open=open_arm, estimate=no_cost)
     runs = tmp_path / "runs"
 
     def run(*argv: str) -> int:
         return main(["--arm", "fake", *argv], arms={"fake": spec},
                     judges=_judge_spec(judge, judge_opened), eval_dir=eval_dir, runs_dir=runs,
                     today=TODAY, response_cache=RESPONSE_CACHE,
-                    uncached_root=tmp_path / "uncached")
+                    uncached_root=tmp_path / "uncached", clock=lambda: 0.0)  # fakes take no time
 
     run.judge = judge
     run.judge_opened = judge_opened
@@ -399,7 +414,7 @@ def test_human_records_are_reported_in_their_own_column(eval_dir, tmp_path, env)
     records = load_records(eval_dir / "agent_drafted_set.jsonl") + [human]
     arm = FakeArm(records)
     spec = ArmSpec(name="fake", required_env=(KEY_ENV,),
-                   open=lambda _cache, _spans=None: nullcontext(arm))
+                   open=lambda _cache, _spans=None: nullcontext(arm), estimate=no_cost)
     assert main(["--arm", "fake"], arms={"fake": spec}, judges=_judge_spec(FakeJudge(records)),
                 eval_dir=eval_dir, runs_dir=runs, today=TODAY) == 0
     result = _result(runs)

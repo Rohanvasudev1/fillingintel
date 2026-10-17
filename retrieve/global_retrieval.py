@@ -125,7 +125,6 @@ class GlobalSelection:
         model: str = DEFAULT_MODEL,
         clock: Callable[[], float] = time.perf_counter,
         spans: SpanRecorder | None = None,
-        load_reports: Path = LOAD_REPORT_DIR,
         database: str = DATABASE,
     ):
         self._conn = conn
@@ -136,7 +135,7 @@ class GlobalSelection:
         self._clock = clock
         self._spans = spans if spans is not None else SpanRecorder.off()
         try:
-            self.provenance = graph_provenance(driver, database, load_reports)
+            self.provenance = graph_provenance(driver, database)
             communities = read_reported_communities(driver, level, reports, database)
             self._index = community_index(communities, report_embeddings, model)
         except (*GRAPH_ERRORS, CacheError, OSError, ValueError) as exc:
@@ -251,13 +250,15 @@ def community_index(communities: Sequence[ReportedCommunity],
 
 
 def loaded_reports_file(load_reports: Path = LOAD_REPORT_DIR,
-                        communities_dir: Path = COMMUNITIES_DIR) -> ReportsFile:
-    """The reports file the latest graph load wrote, checked by its SHA-256.
+                        communities_dir: Path = COMMUNITIES_DIR,
+                        load_run: str | None = None) -> ReportsFile:
+    """The reports file graph load *load_run* wrote (the latest load when None), checked
+    by its SHA-256.
 
     Raises ``ArmError`` when there is no load report, the load wrote no
     communities, or the file is unreadable or changed since the load.
     """
-    run = latest_load_run(load_reports)
+    run = load_run or latest_load_run(load_reports)
     if run is None:
         raise ArmError(f"no graph load report in {load_reports}; run python -m graph.load")
     try:

@@ -11,7 +11,14 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import asdict
 
-from retrieve.arm import GRAPH_STAGES, ArmResult, GlobalSearch, GraphProvenance, GraphRetrieval
+from retrieve.arm import (
+    GRAPH_STAGES,
+    ArmResult,
+    GlobalSearch,
+    GraphProvenance,
+    GraphRetrieval,
+    Retrieval,
+)
 
 DEFINITIONS = {
     "graph": (
@@ -93,8 +100,10 @@ def _question_global(search: GlobalSearch) -> dict[str, object]:
     }
 
 
-def graph_cell(results: Sequence[ArmResult]) -> dict[str, int] | None:
-    """Per-class counts for a graph arm's questions; None when no result has graph details."""
+def graph_cell(results: Sequence[Retrieval]) -> dict[str, int] | None:
+    """Per-class counts for a graph arm's questions; None when no result has graph details.
+
+    Retrieval-only results have no answers, so no not_found count."""
     graphed = [(r, r.graph) for r in results if r.graph is not None]
     if not graphed:
         return None
@@ -103,7 +112,8 @@ def graph_cell(results: Sequence[ArmResult]) -> dict[str, int] | None:
         "n": len(graphed),
         "no_anchor": sum(graph.no_anchor for _, graph in graphed),
         "empty_retrieval": sum(not r.retrieved for r, _ in graphed),
-        "not_found": sum(r.answer.status == "not_found" for r, _ in graphed),
+        **({"not_found": sum(r.answer.status == "not_found" for r, _ in graphed)}
+           if all(isinstance(r, ArmResult) for r, _ in graphed) else {}),
         **({"no_community": sum(not s.calls for s in searches),
             "no_reduce": sum(not s.reduce_called for s in searches),
             "map_calls_unusable": sum(c.outcome != "ok" for s in searches for c in s.calls),

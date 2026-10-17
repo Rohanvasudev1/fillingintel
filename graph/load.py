@@ -157,7 +157,8 @@ def _run_report(report: Path) -> tuple[tuple[str, ...], int]:
 
 def load_graph(
     driver: Driver, rows: StructuralRows, inputs: LoadInputs, *, rebuild: bool,
-    communities: CommunityInputs | None, postgres: psycopg.Connection | None = None,
+    communities: CommunityInputs | None, load_run: str,
+    postgres: psycopg.Connection | None = None,
 ) -> LoadResult:
     """Build the graph with its *communities* (None: none), write it in one transaction
     and validate it.
@@ -167,6 +168,8 @@ def load_graph(
     changes. With *rebuild*, an older :GraphMeta is upgraded in the rebuild
     transaction; the constraints are re-applied just before it (IF NOT EXISTS, so
     only a missing one is created, and it stays if the rebuild then fails).
+    *load_run*, the name of the load report the caller will write, is recorded
+    on :GraphMeta in the rebuild transaction.
     Once the write has committed nothing is raised: violations, or an error
     that stopped validation, come back in the result.
     """
@@ -176,7 +179,7 @@ def load_graph(
         nodes=(*built.batch.nodes, *records.nodes), edges=(*built.batch.edges, *records.edges))
     upgraded_from = prepare_upgrade(driver) if rebuild else None
     started = time.monotonic()
-    rebuild_graph(driver, batch, replace=rebuild, upgrade_from=upgraded_from)
+    rebuild_graph(driver, batch, load_run=load_run, replace=rebuild, upgrade_from=upgraded_from)
     written = {"built": built, "batch": batch, "communities": records,
                "write_seconds": time.monotonic() - started, "upgraded_from": upgraded_from}
     try:
@@ -194,7 +197,7 @@ class _CouldNotRun(RuntimeError):
     """The load could not start or finish; the message is safe to print."""
 
 
-def _run(rebuild: bool) -> tuple[LoadInputs, LoadResult]:
+def _run(rebuild: bool, load_run: str) -> tuple[LoadInputs, LoadResult]:
     url = os.environ.get("DATABASE_URL")
     if not url:
         raise _CouldNotRun("DATABASE_URL is not set")
@@ -212,7 +215,8 @@ def _run(rebuild: bool) -> tuple[LoadInputs, LoadResult]:
             conn.read_only = True
             driver.verify_connectivity()
             return inputs, load_graph(driver, read_structural(conn), inputs, rebuild=rebuild,
-                                      communities=communities, postgres=conn)
+                                      communities=communities, load_run=load_run,
+                                      postgres=conn)
     except (BuildError, BatchRejected, GraphMetaMismatch, ConstraintMismatch, Neo4jError,
             DriverError, psycopg.Error) as exc:
         raise _CouldNotRun(f"{type(exc).__name__}: {exc}") from exc
@@ -226,8 +230,9 @@ def main(argv: Sequence[str] | None = None, *, out_dir: Path = OUTPUT_DIR) -> in
     parser.add_argument("--rebuild", action="store_true",
                         help="replace a graph that already holds data")
     args = parser.parse_args(argv)
+    path = next_report_path(out_dir)  # its name goes on :GraphMeta in the rebuild
     try:
-        inputs, result = _run(args.rebuild)
+        inputs, result = _run(args.rebuild, path.stem)
     except GraphNotEmpty as exc:
         print(f"{exc}; nothing was written. Pass --rebuild to replace it.", file=sys.stderr)
         return EXIT_USAGE
@@ -237,7 +242,6 @@ def main(argv: Sequence[str] | None = None, *, out_dir: Path = OUTPUT_DIR) -> in
     except _CouldNotRun as exc:
         print(f"graph load could not run; nothing was written: {exc}", file=sys.stderr)
         return EXIT_RUN_ERROR
-    path = next_report_path(out_dir)
     write_json_atomic(path, load_report(git_state(), inputs, result), indent=2)
     shown = path.relative_to(REPO_ROOT) if path.is_relative_to(REPO_ROOT) else path
     if result.validation is None:

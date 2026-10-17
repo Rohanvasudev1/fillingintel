@@ -166,13 +166,6 @@ def report_cache(directory: Path, similarities: Mapping[str, float] = SIMILARITI
     return cache
 
 
-def load_reports_dir(tmp_path: Path) -> Path:
-    """A graph load report folder whose latest run is load-run5."""
-    directory = tmp_path / "load"
-    directory.mkdir(exist_ok=True)
-    (directory / "load-run5.json").write_text("{}", encoding="utf-8")
-    return directory
-
 
 def recorded(name: str) -> dict:
     """One recorded question: its map calls and reduce call, each with its request hash."""

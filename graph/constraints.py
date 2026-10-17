@@ -31,6 +31,14 @@ GRAPH_META_QUERY = (
     f"MATCH (m:{quoted(GRAPH_META)}) "
     "RETURN m.ontology_version AS ontology_version, m.schema_sha256 AS schema_sha256"
 )
+# Every node of the graph proper; :GraphMeta is bookkeeping.
+OTHER_NODES = f"MATCH (n) WHERE NOT n:{quoted(GRAPH_META)}"
+# The load report a rebuild wrote, such as "load-run6" (Step 13). graph.load records it
+# in the rebuild transaction; the graph arms read it for their results header.
+LOAD_RUN_PROPERTY = "load_run"
+LOAD_RUN_QUERY = (f"MATCH (m:{quoted(GRAPH_META)}) "
+                  f"RETURN m.{quoted(LOAD_RUN_PROPERTY)} AS load_run")
+_LOAD_RUN_NAME = re.compile(r"load-run[1-9]\d*")
 
 
 @dataclass(frozen=True, slots=True)
@@ -169,6 +177,45 @@ def _merge_graph_meta(tx: ManagedTransaction) -> None:
     # overwritten. Nothing stops two concurrent first runs from each creating
     # one; the next call then refuses on the count.
     _check_graph_meta([r.data() for r in result])
+
+
+def load_run_problem(rows: list[dict]) -> str | None:
+    """Why the rows from LOAD_RUN_QUERY name no load run, or None.
+
+    Only a graph with no :GraphMeta or several is left to graph_meta_problem().
+    """
+    if len(rows) != 1:
+        return None
+    load_run = rows[0]["load_run"]
+    if load_run is None:
+        return (f":{GRAPH_META} records no load run; rebuild the graph with "
+                "python -m graph.load --rebuild")
+    if not isinstance(load_run, str) or not _LOAD_RUN_NAME.fullmatch(load_run):
+        return f":{GRAPH_META} load run {load_run!r} is not a load report name such as load-run6"
+    return None
+
+
+def read_load_run(tx: ManagedTransaction) -> str:
+    """The load run :GraphMeta records; GraphMetaMismatch when it records none."""
+    rows = [r.data() for r in tx.run(LOAD_RUN_QUERY)]
+    if len(rows) != 1:
+        raise GraphMetaMismatch(f"found {len(rows)} :{GRAPH_META} nodes; expected one")
+    problem = load_run_problem(rows)
+    if problem:
+        raise GraphMetaMismatch(problem)
+    return rows[0]["load_run"]
+
+
+def record_load_run(tx: ManagedTransaction, load_run: str) -> None:
+    """Record *load_run* on the one :GraphMeta node, inside the caller's transaction."""
+    if not _LOAD_RUN_NAME.fullmatch(load_run):
+        raise ValueError(f"{load_run!r} is not a load report name such as load-run6")
+    record = tx.run(
+        f"MATCH (m:{quoted(GRAPH_META)}) SET m.{quoted(LOAD_RUN_PROPERTY)} = $run "
+        "RETURN count(m) AS n", run=load_run,
+    ).single(strict=True)
+    if record["n"] != 1:
+        raise GraphMetaMismatch(f"found {record['n']} :{GRAPH_META} nodes; expected one")
 
 
 def older_graph_meta_version(rows: list[dict]) -> int | None:
