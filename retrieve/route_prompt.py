@@ -26,6 +26,9 @@ KIND = "route"
 ROUTE_PROMPTS_DIR = REPO_ROOT / "prompts" / KIND
 PUBLISHED: Mapping[str, str] = MappingProxyType({
     "v1": "cbc04679a6a61c90ca51fcf700acd2c9aa02f28fea0520a046a195c8d3a085a7",
+    # v2 (2026-10-18): the dev sweep put all 10 global questions under multi_hop, so the
+    # global and multi_hop descriptions now separate a theme from particular facts.
+    "v2": "c7860cc94f40b76ecaa6581263cda8ea7c00c8a7d7ac76cfb274ece3500c2780",
 })
 PREDICTED_CLASSES = ("lookup", "local", "multi_hop", "global", "decline")
 _PARTS = re.compile(r"\A# System\n(?P<system>.*?)\n# User\n(?P<user>.*)\Z", re.DOTALL)
