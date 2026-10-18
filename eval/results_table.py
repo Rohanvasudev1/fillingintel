@@ -5,8 +5,11 @@ Offline: it reads only the files ``eval.results_inputs`` names, with no network
 or database call, and the same files give the same bytes.  Sections, in order:
 the ``test`` tables when ``test`` runs exist (ticket 05), paired differences
 against ``vector``, H1–H5 verdicts (on ``test``, else on ``dev`` labelled as
-tuning data), the router section with the dev-best map, the other measured
-numbers, and the ``dev`` tables, labelled as tuning data.
+tuning data) and H6 (on the dev router run), the router section (classifier
+runs, router accuracy, unanswerable questions, the oracle and the dev-best
+map), the other measured numbers, and the ``dev`` tables, labelled as tuning
+data.  The router rows join the per-split tables and paired differences but
+never the dev-best rule or H1–H5.
 
 Usage::
 
@@ -39,25 +42,38 @@ from eval.results_inputs import (
     CONTROL_ARM,
     DEV,
     DEV_BEST_MAP,
+    DEV_ROUTER_RUNS,
     DEV_RUNS,
     RESULTS_MD,
+    ROUTE_RUNS,
+    ROUTER_ROWS,
     TEST,
+    TEST_ROUTER_RUNS,
     TEST_RUNS,
     RunNames,
 )
 from eval.results_numbers import numbers_block
 from eval.results_paired import difference_text, paired_difference
 from eval.results_render import answerable_table, no_gold_table, paired_table
+from eval.results_router import (
+    accuracy_lines,
+    oracle_lines,
+    router_accuracy,
+    sweep_table,
+    unanswerable_lines,
+)
 from eval.results_sources import (
     InputFile,
     ResultsInputError,
     Split,
+    load_router_split,
     load_split,
     read_json,
     split_inputs,
 )
 from eval.schema import NO_GOLD_CLASSES
 from ingest.provenance import REPO_ROOT, git_state
+from retrieve.routing_maps import PRE_REGISTERED
 
 EXIT_OK, EXIT_USAGE, EXIT_COULD_NOT_RUN, EXIT_DIFFERS = 0, 2, 3, 4
 TITLE = "# FilingIntel benchmark results"
@@ -73,8 +89,16 @@ TUNING_NOTE = ("Tuning data: every choice (hop count, Cypher prompt, N, the dev-
                "was made on these questions.")
 
 
+ROUTER_NOTE = ("The router rows are not arms: the router classifies each question with "
+               "claude-haiku-5-5, declines investment advice itself and hands the rest to the "
+               "arm its routing map names. The dev-best map is tuned on dev.")
+
+
 def _split_section(name: str, split: Split, tuning: bool) -> list[str]:
+    """*split* holds the arms, then any router rows."""
     note = [TUNING_NOTE, ""] if tuning else []
+    if any(label in split for label in ROUTER_ROWS.values()):
+        note += [ROUTER_NOTE, ""]
     return [f"## `{name}` results", "", *note,
             "Answerable classes. Intervals are percentile bootstrap 95% over the cell's "
             "questions; a cell under 10 questions is directional.", "",
@@ -145,23 +169,31 @@ def _latency_cost(questions: Sequence[Mapping]) -> h.ArmLatencyCost:
     return h.ArmLatencyCost(p95, cost, len(questions))
 
 
-def _verdict_section(split_name: str, split: Split) -> list[str]:
+def _h6(dev_routers: Split) -> h.Verdict:
+    runs = dev_routers.get(ROUTER_ROWS[PRE_REGISTERED])
+    files = runs.full_files() if runs is not None else ()
+    if len(files) != 1:
+        return h.h6(None)
+    return h.h6(router_accuracy(files[0]))
+
+
+def _verdict_section(split_name: str, split: Split, dev_routers: Split) -> list[str]:
     lines = [f"## Hypotheses (read on `{split_name}`)", ""]
     if split_name == DEV:
-        lines += [f"No `test` runs yet: these verdicts read `dev`. {TUNING_NOTE} H6 reads "
-                  "the router runs (ticket 03).", ""]
-    for verdict in verdicts(split):
+        lines += [f"No `test` runs yet: these verdicts read `dev`. {TUNING_NOTE}", ""]
+    lines += ["H6 reads the pre-registered router's `dev` run, as the plan writes it.", ""]
+    for verdict in [*verdicts(split), _h6(dev_routers)]:
         lines += [f"- **{verdict.verdict}**: {verdict.rule}.",
                   *(f"  - {r}" for r in verdict.readings)]
     return [*lines, ""]
 
 
-def _router_section(dev: Split, root: Path) -> tuple[list[str], list[InputFile]]:
+def _router_section(dev: Split, dev_routers: Split, root: Path
+                    ) -> tuple[list[str], list[InputFile]]:
+    lines, inputs = _routing_lines(dev, dev_routers, root)
     choices = dev_best_choices(dev)
     computed = {c.class_: c.chosen for c in choices}
-    lines = ["## Router", "", "### Dev-best routing map (tuned on dev)", "", f"Rule: {RULE}.",
-             ""]
-    inputs = []
+    lines += ["### Dev-best routing map (tuned on dev)", "", f"Rule: {RULE}.", ""]
     if (root / DEV_BEST_MAP).exists():
         document, info = read_json(DEV_BEST_MAP, root)
         if read_map(document) != computed:
@@ -182,6 +214,42 @@ def _router_section(dev: Split, root: Path) -> tuple[list[str], list[InputFile]]
     return [*lines, "", GLOBAL_COST_NOTE, ""], inputs
 
 
+def _routing_lines(dev: Split, dev_routers: Split, root: Path
+                   ) -> tuple[list[str], list[InputFile]]:
+    """The classifier runs, router accuracy, unanswerable questions and the oracle, on dev."""
+    route_runs, inputs = [], []
+    for path in ROUTE_RUNS:
+        document, info = read_json(path, root)
+        route_runs.append((document, path))
+        inputs.append(info)
+    lines = ["## Router", "", ROUTER_NOTE, "",
+             "### Classifier on `dev` (`eval.route`, no arm run)", "",
+             "The effort sweep under `route/v1` (the most accurate effort wins, ties to the "
+             "lower), then at most one revision at that effort, driven by the sweep's confusion "
+             "matrices (in the route run files). The more accurate version is the one the "
+             "router uses. Accuracy is against agent-drafted class labels.", ""]
+    pre = dev_routers.get(ROUTER_ROWS[PRE_REGISTERED])
+    if pre is None or len(pre.full_files()) != 1:
+        return [*lines, "No router run yet.", ""], inputs
+    run = pre.full_files()[0]
+    router = run.header["router"]
+    lines += [*sweep_table(route_runs, (router["prompt"]["version"], router["effort"])), "",
+              "### Router accuracy on `dev`", "", *accuracy_lines(run),
+              "### Unanswerable questions under the router", "",
+              "Unanswerable questions are left out of accuracy: no class names them, so the "
+              "question is whether the arm they reach says the filings lack the answer.", "",
+              *unanswerable_lines(dev_routers), "",
+              "### Oracle router on `dev`", "",
+              "The oracle gives each answerable question its gold class and the pre-registered "
+              "map's arm, reading that arm's own dev run, so it costs nothing. The gap between "
+              "the oracle and the pre-registered router is misclassification, plus any "
+              "difference between the router's run of an arm and that arm's own run (an arm "
+              "whose model calls missed the cache reran them; see each run's commit and "
+              "graph load run).", "",
+              *oracle_lines(dev, dev_routers), ""]
+    return lines, inputs
+
+
 def _inputs_table(inputs: Sequence[InputFile]) -> list[str]:
     unique = list({i.path: i for i in inputs}.values())
     return ["| file | sha256 | commit |", "|---|---|---|",
@@ -190,19 +258,23 @@ def _inputs_table(inputs: Sequence[InputFile]) -> list[str]:
 
 
 def build(root: Path = REPO_ROOT, dev_runs: RunNames = DEV_RUNS,
-          test_runs: RunNames = TEST_RUNS) -> str:
+          test_runs: RunNames = TEST_RUNS, dev_router_runs: RunNames = DEV_ROUTER_RUNS,
+          test_router_runs: RunNames = TEST_ROUTER_RUNS) -> str:
     """The markdown of ``benchmarks/results.md``."""
     dev = load_split(dev_runs, root)
     test = load_split(test_runs, root) if test_runs else None
+    dev_routers = load_router_split(dev_router_runs, ROUTER_ROWS, root)
+    test_routers = load_router_split(test_router_runs, ROUTER_ROWS, root)
     body = []
     if test is not None:
-        body += _split_section(TEST, test, tuning=False)
-    body += _verdict_section(TEST if test is not None else DEV, test or dev)
-    router, router_inputs = _router_section(dev, root)
+        body += _split_section(TEST, {**test, **test_routers}, tuning=False)
+    body += _verdict_section(TEST if test is not None else DEV, test or dev, dev_routers)
+    router, router_inputs = _router_section(dev, dev_routers, root)
     numbers, number_inputs = numbers_block(root)
     body += [*router, "## Other measured numbers", "", *numbers]
-    body += _split_section(DEV, dev, tuning=True)
-    inputs = [*split_inputs(dev), *(split_inputs(test) if test else []), *router_inputs,
+    body += _split_section(DEV, {**dev, **dev_routers}, tuning=True)
+    inputs = [*split_inputs(dev), *(split_inputs(test) if test else []),
+              *split_inputs(dev_routers), *split_inputs(test_routers), *router_inputs,
               *number_inputs]
     head = [TITLE, "", GENERATED, "", QUESTIONS_NOTE, "", "### Inputs", "",
             *_inputs_table(inputs)]

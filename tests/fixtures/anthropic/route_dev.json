@@ -1,0 +1,253 @@
+{
+  "note": "real API response, recorded by scripts/capture_route_responses.py",
+  "prompt_version": "route/v2@67290827",
+  "effort": "low",
+  "calls": [
+    {
+      "id": "q0072",
+      "question": "In NVIDIA's fiscal year 2026, what share of total revenue came from its two largest direct customers?",
+      "request_sha256": "02f42da1105e161c4559ec5a0cf68ca6b7c254d7e67a9d374e0672ede5d75bf0",
+      "api_ms": 1508.0977079924196,
+      "response": {
+        "id": "msg_011CgAHxw6A49c4DatpJCHar",
+        "container": null,
+        "content": [
+          {
+            "citations": null,
+            "text": "{\"reason\": \"This asks for one reported figure (share of revenue from the two largest direct customers) for one company and one fiscal year, which a single passage in NVIDIA's 10-K typically states.\", \"predicted_class\": \"lookup\"}",
+            "type": "text"
+          }
+        ],
+        "diagnostics": null,
+        "model": "claude-haiku-5-5",
+        "role": "assistant",
+        "stop_details": null,
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "type": "message",
+        "usage": {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 1535,
+          "inference_geo": "global",
+          "input_tokens": 44,
+          "output_tokens": 79,
+          "output_tokens_details": {
+            "thinking_tokens": 0
+          },
+          "server_tool_use": null,
+          "service_tier": "standard",
+          "speed": "standard"
+        }
+      }
+    },
+    {
+      "id": "q0073",
+      "question": "By how much did NVIDIA's Data Center revenue grow in fiscal year 2025, and what drove the growth?",
+      "request_sha256": "8d360fd5ff17d72935488955139f354a653cb0d279914dac52694b04152e4215",
+      "api_ms": 1527.386166038923,
+      "response": {
+        "id": "msg_011CgAHxwNXZ17o6wtMkmRaE",
+        "container": null,
+        "content": [
+          {
+            "citations": null,
+            "text": "{\"reason\": \"The question asks for one reported figure (Data Center revenue growth for FY2025) plus a stated driver, which a single filing passage would typically state for one company and one period, so it fits lookup.\", \"predicted_class\": \"lookup\"}",
+            "type": "text"
+          }
+        ],
+        "diagnostics": null,
+        "model": "claude-haiku-5-5",
+        "role": "assistant",
+        "stop_details": null,
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "type": "message",
+        "usage": {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 1535,
+          "inference_geo": "global",
+          "input_tokens": 47,
+          "output_tokens": 82,
+          "output_tokens_details": {
+            "thinking_tokens": 0
+          },
+          "server_tool_use": null,
+          "service_tier": "standard",
+          "speed": "standard"
+        }
+      }
+    },
+    {
+      "id": "q0113",
+      "question": "How did AMD's Data Center segment and Intel's DCAI segment revenue change in fiscal 2025 versus 2024, and what drove each?",
+      "request_sha256": "d0aa6ca4f50290a61a18ed1ce736c0039c292f9dc14e74007d7713c0bb544d09",
+      "api_ms": 1024.3370829848573,
+      "response": {
+        "id": "msg_011CgAHyaZQi99KpKCEKNVry",
+        "container": null,
+        "content": [
+          {
+            "citations": null,
+            "text": "{\"reason\": \"The question asks for specific segment revenue figures for two companies across two fiscal years and the drivers of each, which requires joining particular facts from different filings and periods.\", \"predicted_class\": \"multi_hop\"}",
+            "type": "text"
+          }
+        ],
+        "diagnostics": null,
+        "model": "claude-haiku-5-5",
+        "role": "assistant",
+        "stop_details": null,
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "type": "message",
+        "usage": {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 1535,
+          "inference_geo": "global",
+          "input_tokens": 57,
+          "output_tokens": 74,
+          "output_tokens_details": {
+            "thinking_tokens": 0
+          },
+          "server_tool_use": null,
+          "service_tier": "standard",
+          "speed": "standard"
+        }
+      }
+    },
+    {
+      "id": "q0028",
+      "question": "How do NVIDIA, AMD and Intel each address the OECD Pillar Two global minimum tax in their latest 10-Ks, and has any of them quantified its impact?",
+      "request_sha256": "9f15bd1a3e9f5e95dd4f1eb2d5a814c0dd33977988895a54f215e1d067b075d2",
+      "api_ms": 1629.5891659683548,
+      "response": {
+        "id": "msg_011CgAHxFMUoJnoCUg3pqQQZ",
+        "container": null,
+        "content": [
+          {
+            "citations": null,
+            "text": "{\"reason\": \"The question asks how three companies each describe a regulatory exposure (OECD Pillar Two) across their latest 10-Ks, which is a qualitative theme, with a secondary check on whether any quantified the impact; that comparison across all three companies' filings is a theme-based portrayal rather than joining particular figures, so global fits best.\", \"predicted_class\": \"global\"}",
+            "type": "text"
+          }
+        ],
+        "diagnostics": null,
+        "model": "claude-haiku-5-5",
+        "role": "assistant",
+        "stop_details": null,
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "type": "message",
+        "usage": {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 1535,
+          "inference_geo": "global",
+          "input_tokens": 66,
+          "output_tokens": 126,
+          "output_tokens_details": {
+            "thinking_tokens": 0
+          },
+          "server_tool_use": null,
+          "service_tier": "standard",
+          "speed": "standard"
+        }
+      }
+    },
+    {
+      "id": "q0004",
+      "question": "Is AMD undervalued relative to its 2025 earnings?",
+      "request_sha256": "83f06dbcf6b6256d339cef374e29a3c80c68675053eba634458bc8aa12989ccf",
+      "api_ms": 1428.191874991171,
+      "response": {
+        "id": "msg_011CgAHwraWVTQAFTKd54jJv",
+        "container": null,
+        "content": [
+          {
+            "citations": null,
+            "text": "{\"reason\": \"The question asks whether AMD stock is undervalued, which is investment advice about valuation rather than a question about what the filings say.\", \"predicted_class\": \"decline\"}",
+            "type": "text"
+          }
+        ],
+        "diagnostics": null,
+        "model": "claude-haiku-5-5",
+        "role": "assistant",
+        "stop_details": null,
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "type": "message",
+        "usage": {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 1535
+          },
+          "cache_creation_input_tokens": 1535,
+          "cache_read_input_tokens": 0,
+          "inference_geo": "global",
+          "input_tokens": 30,
+          "output_tokens": 60,
+          "output_tokens_details": {
+            "thinking_tokens": 0
+          },
+          "server_tool_use": null,
+          "service_tier": "standard",
+          "speed": "standard"
+        }
+      }
+    },
+    {
+      "id": "q0011",
+      "question": "How much revenue did NVIDIA earn from Microsoft in fiscal year 2026?",
+      "request_sha256": "df46cc8151b510952616f93d9f1a3e18f93e0b70a07585d5d2de9898d9290c35",
+      "api_ms": 2193.361999990884,
+      "response": {
+        "id": "msg_011CgAHwyo6N3Sr54VCDjCYx",
+        "container": null,
+        "content": [
+          {
+            "citations": null,
+            "text": "{\"reason\": \"The question asks for a single reported revenue figure for one customer at one company in one fiscal year, which a single passage of NVIDIA's filing would state.\", \"predicted_class\": \"lookup\"}",
+            "type": "text"
+          }
+        ],
+        "diagnostics": null,
+        "model": "claude-haiku-5-5",
+        "role": "assistant",
+        "stop_details": null,
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "type": "message",
+        "usage": {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 1535,
+          "inference_geo": "global",
+          "input_tokens": 39,
+          "output_tokens": 69,
+          "output_tokens_details": {
+            "thinking_tokens": 0
+          },
+          "server_tool_use": null,
+          "service_tier": "standard",
+          "speed": "standard"
+        }
+      }
+    }
+  ]
+}

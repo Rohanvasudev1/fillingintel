@@ -6,7 +6,7 @@ with the shared parser in ``retrieve.question_filter``.
 """
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from contextlib import AbstractContextManager
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -17,8 +17,9 @@ from graph.ontology import Confidence
 from retrieve.answer import Answer
 from retrieve.answer_model import TokenUsage
 from retrieve.answer_prompt import AnswerPrompt, SourceChunk
-from retrieve.pricing import anthropic_cost
+from retrieve.pricing import TABLE_2026_10_05, PriceTable, anthropic_cost
 from retrieve.question_filter import QuestionFilter
+from retrieve.route_prompt import DECLINE
 
 if TYPE_CHECKING:
     from retrieve.tracing import SpanRecorder
@@ -91,14 +92,15 @@ class StageCost:
 
     @classmethod
     def anthropic(cls, ms: float, model: str, usage: TokenUsage, *,
-                  from_cache: bool) -> StageCost:
-        """A Claude call's stage, priced from the results header's price table.
+                  from_cache: bool, table: PriceTable = TABLE_2026_10_05) -> StageCost:
+        """A Claude call's stage, priced from *table*: the results header's price table
+        unless the caller names another (the router's classifier, priced 2026-10-10).
 
         Raises ``ValueError`` for a model the table has no price for.
         """
         return cls(
             ms=ms,
-            cost_usd=anthropic_cost(model, usage),
+            cost_usd=anthropic_cost(model, usage, table),
             input_tokens=(usage.input_tokens + usage.cache_read_input_tokens
                           + usage.cache_creation_input_tokens),
             output_tokens=usage.output_tokens,
@@ -203,6 +205,28 @@ class GraphRetrieval:
                 if self.cypher_attempts else None)
 
 
+DECLINED = DECLINE  # the router's "arm" for a question it declined itself
+
+
+@dataclass(frozen=True)
+class Routing:
+    """How the router handled one question (Step 13): its predicted class, why, the map,
+    the arm it chose (or ``decline``), the classifier's settings and what the call cost."""
+
+    predicted_class: str
+    reason: str
+    map_name: str
+    arm: str  # an arm name, or DECLINED
+    effort: str
+    prompt_version: str  # e.g. "route/v1@1a2b3c4d"
+    prompt_sha256: str
+    cost: StageCost  # the classifier call; ms is its API latency when it was made
+
+    @property
+    def declined(self) -> bool:
+        return self.arm == DECLINED
+
+
 @dataclass(frozen=True)
 class Retrieval:
     """What an arm's search returned for one question, before any answer is written."""
@@ -218,6 +242,7 @@ class Retrieval:
     # None for the vector arm.  For a graph arm, search_ms covers every stage after the
     # query embedding, so retrieval_ms stays comparable across arms.
     graph: GraphRetrieval | None = field(default=None, kw_only=True)
+    routing: Routing | None = field(default=None, kw_only=True)  # router runs only
 
     @property
     def retrieval_ms(self) -> float:
@@ -263,6 +288,23 @@ class GraphProvenance:
 
 
 @dataclass(frozen=True)
+class RouterConfig:
+    """What the results header records about the router (Step 13)."""
+
+    model: str
+    effort: str
+    max_tokens: int
+    prompt_version: str
+    prompt_sha256: str
+    prompt_path: str
+    map_name: str
+    map: Mapping[str, str]  # predicted class -> arm
+    map_sha256: str
+    map_file: str | None  # the dev-best map's file; None for the pre-registered map
+    arms: Mapping[str, ArmConfig]  # each arm the router opened, by name
+
+
+@dataclass(frozen=True)
 class ArmConfig:
     """What the results header records about an arm."""
 
@@ -273,6 +315,7 @@ class ArmConfig:
     answer_prompt: AnswerPrompt
     answer_max_tokens: int
     graph: GraphProvenance | None = None  # None for the vector arm
+    router: RouterConfig | None = None  # the router only
 
 
 class Arm(Protocol):
@@ -330,3 +373,5 @@ class ArmSpec:
     required_env: tuple[str, ...]
     open: ArmOpener
     estimate: ArmEstimator
+    # The router only: the spec for one routing map (``eval.run --map``).
+    with_map: Callable[[str], ArmSpec] | None = None

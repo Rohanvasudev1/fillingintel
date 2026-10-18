@@ -8,6 +8,7 @@
 
 **Parallel sessions:** one ticket at a time (user, 2026-10-16). `neo4j-test` is shared: run the full `uv run --env-file .env pytest` only when no other session is running pytest, with dev Neo4j stopped. Symlink `data/` and `.env` from the main checkout; run API commands with `env -u ANTHROPIC_BASE_URL`. One branch and PR per ticket. Step 13 spend is capped at $10 in all, counting committed spend; show the estimate before any paid call. Show the full `test` estimate to the user and get a yes before the first `--final` run.
 
+- [ ] Before any `test` call (user decision, 2026-10-18): `eval.run` refuses a run whose estimate plus committed Step 13 spend (`eval/step13_spend.py`) passes $10, and its estimate prices questions whose answers are already in the response cache at their uncached remainder (classification, judges or nothing), not as fresh calls, so the check does not refuse runs that fit. It changes no arm config, so `frozen.json` stays valid.
 - [ ] `frozen.json` matches the live config before any `test` call; nothing in it changes during this ticket.
 - [ ] `--final` runs on the 47 `test` questions: `vector`, `graph_local`, `graph_traversal` in full; `graph_global` in full on global, decline and unanswerable (14) and retrieval-only on lookup, local and multi_hop (33); the router under both maps. About $6.75; all run files committed.
 - [ ] A run that stops partway is resumed with the same commit and config. A bug found after scoring is fixed and rerun only under the spec's rule, both runs committed and footnoted.

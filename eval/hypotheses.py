@@ -7,7 +7,9 @@ above x and an interval excluding 0 (the plan's test for a difference).  A
 verdict read on fewer than 10 questions is directional, with whether the rule
 was met; "not testable" when the runs lack what the rule reads.  These labels
 extend the spec's "supported", "not supported" and "directional" so a reader sees
-which way a directional result fell.  H6 reads the router runs and comes with them (ticket 03).
+which way a directional result fell.  H6 reads the pre-registered router's dev run
+(ticket 03): the pre-registered map gives each class its own arm, so the router picks
+the gold class's arm exactly when its predicted class is the gold class.
 """
 from __future__ import annotations
 
@@ -27,6 +29,7 @@ H1_MARGIN = 0.05
 H2_MARGIN = 0.10
 H4_MARGIN = 0.10
 H5_LATENCY_FACTOR = 2.0
+H6_ACCURACY = 0.80
 PERIOD = "same_company_other_period"
 
 H1_RULE = ("H1, vector holds on lookups: on lookup, for every graph arm, the mean paired "
@@ -135,3 +138,28 @@ def h5(vector: Mapping[str, ArmLatencyCost], arms: Mapping[str, ArmLatencyCost])
         return Verdict(H5_RULE, NOT_TESTABLE, tuple(readings))
     directional = any(is_directional(a.n) for a in arms.values())
     return Verdict(H5_RULE, _verdict(met, directional), tuple(readings))
+
+
+H6_RULE = ("H6, the router is useful but imperfect: on dev, the pre-registered router picks the "
+           f"arm matching the gold class (its predicted class is the gold class) on at least "
+           f"{H6_ACCURACY:.0%} of answerable and decline questions, and declines every decline "
+           "question; read on the point estimate, against agent-drafted class labels")
+
+
+@dataclass(frozen=True)
+class RouterAccuracy:
+    correct: int  # answerable and decline questions whose predicted class is the gold class
+    n: int
+    declined: int  # decline questions the router declined
+    declines: int
+
+
+def h6(accuracy: RouterAccuracy | None) -> Verdict:
+    if accuracy is None or accuracy.n == 0:
+        return Verdict(H6_RULE, NOT_TESTABLE, ("no router run",))
+    met = (accuracy.correct / accuracy.n >= H6_ACCURACY
+           and accuracy.declined == accuracy.declines)
+    readings = (f"router accuracy {accuracy.correct} of {accuracy.n} "
+                f"({accuracy.correct / accuracy.n:.3f})",
+                f"decline questions declined: {accuracy.declined} of {accuracy.declines}")
+    return Verdict(H6_RULE, _verdict(met, is_directional(accuracy.n)), readings)

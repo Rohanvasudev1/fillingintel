@@ -15,6 +15,8 @@ from statistics import fmean
 from eval.bootstrap import RngFor, bootstrap_interval, mean_interval, percentile
 from retrieve.arm import GRAPH_STAGES, ArmResult, GraphStage, Retrieval
 
+ROUTING = "routing"  # the router's classifier call (Step 13)
+
 PERCENTILES = (("p50", 0.50), ("p95", 0.95))
 DEFINITIONS = {
     "latency_ms": (
@@ -58,6 +60,16 @@ def _stats(values: Sequence[float], stage: str, rng_for: RngFor) -> dict[str, ob
     )
 
 
+ROUTER_DEFINITIONS = {  # in a router run's header only
+    "routing": (
+        "the router's classifier call: its latency is the call's API latency when it was made "
+        "(also when replayed) and its cost is in every question's total; a question the router "
+        "declined makes no retrieval or answer call and is left out of the retrieval, embed, "
+        "search and generation latency"
+    ),
+}
+
+
 GLOBAL_DEFINITIONS = {  # in graph_global's header only
     "graph_stages": (
         "community_select and global_map latency counts the questions that ran the stage; "
@@ -79,8 +91,11 @@ def latency_cell(results: Sequence[Retrieval], rng_for: RngFor) -> dict[str, dic
     """p50 and p95 latency per stage over *results*, each with a bootstrap interval.
 
     Answered results add generation; retrieval-only ones have none.  A graph arm's
-    cell adds each graph stage, over the questions that ran it.
+    cell adds each graph stage, over the questions that ran it.  A router cell adds
+    routing over every question, and leaves the questions it declined out of the rest.
     """
+    routed = [r.routing for r in results if r.routing is not None]
+    results = [r for r in results if r.routing is None or not r.routing.declined]
     fresh = [r for r in results if not r.query_cached]
     graphs = [r.graph for r in results if r.graph is not None]
     answered = [r for r in results if isinstance(r, ArmResult)]
@@ -93,14 +108,16 @@ def latency_cell(results: Sequence[Retrieval], rng_for: RngFor) -> dict[str, dic
         **{stage: _stats([g.stages[stage].ms for g in graphs if stage in g.stages], stage,
                          rng_for)
            for stage in _stages(results)},
+        **({ROUTING: _stats([r.cost.ms for r in routed], ROUTING, rng_for)} if routed else {}),
     }
 
 
 def replayed(result: ArmResult) -> bool:
     """Whether any of the question's calls replayed from a cache: its query embedding, its
-    answer, a graph stage's call or a map call."""
+    answer, a graph stage's call, a map call or the router's classifier call."""
     graph = result.graph
     return (result.query_cached or result.answer.from_cache
+            or (result.routing is not None and result.routing.cost.from_cache)
             or (graph is not None and (
                 any(stage.from_cache for stage in graph.stages.values())
                 or (graph.global_search is not None
@@ -115,12 +132,15 @@ def total_cell(questions: Sequence[tuple[float, bool]], rng_for: RngFor) -> dict
 
 
 def question_cost(result: ArmResult) -> dict[str, float]:
-    """USD for one question, per stage and in total; a graph stage that did not run costs 0."""
+    """USD for one question, per stage and in total; a graph stage that did not run costs 0.
+    A router question adds routing."""
     stages = {}
     if result.graph is not None:
         stages = {stage: (result.graph.stages[stage].cost_usd
                           if stage in result.graph.stages else 0.0)
                   for stage in result.graph.stage_names}
+    if result.routing is not None:
+        stages[ROUTING] = result.routing.cost.cost_usd
     return {
         "embedding": result.embed_cost_usd,
         **stages,
@@ -131,19 +151,22 @@ def question_cost(result: ArmResult) -> dict[str, float]:
 
 def _per_query(results: Sequence[ArmResult]) -> dict[str, str]:
     """Each cost cell field and the question-cost stage it averages."""
-    stages = ("embedding", *_stages(results), "generation", "total")
+    routing = (ROUTING,) if any(r.routing is not None for r in results) else ()
+    stages = ("embedding", *_stages(results), *routing, "generation", "total")
     return {f"per_query_{stage}": stage for stage in stages}
 
 
 def cost_cell(results: Sequence[ArmResult], rng_for: RngFor) -> dict[str, object]:
-    """Mean USD per question per stage with bootstrap intervals, and the cell's total."""
+    """Mean USD per question per stage with bootstrap intervals, and the cell's total; a
+    stage a question did not have (another arm family's, under the router) costs it 0."""
     costs = [question_cost(r) for r in results]
     per_query = _per_query(results)
     return {
-        **{name: fmean(c[stage] for c in costs) for name, stage in per_query.items()},
+        **{name: fmean(c.get(stage, 0.0) for c in costs) for name, stage in per_query.items()},
         "total": sum(c["total"] for c in costs),
         "intervals": {
-            name: mean_interval([c[stage] for c in costs], rng_for(f"cost_usd.{name}"))
+            name: mean_interval([c.get(stage, 0.0) for c in costs],
+                                rng_for(f"cost_usd.{name}"))
             for name, stage in per_query.items()
         },
     }

@@ -42,15 +42,23 @@ Built by `uv run python -m eval.results_table` from the committed files listed b
 | `benchmarks/resolution/scoring-score1.json` | `3c6b056861a9f1f25c6d1f183c500567521c239f5cbe1e76f6b8b9740fad4be8` | `68b35fd` |
 | `benchmarks/resolution/scoring2-score1.json` | `ddc25ed65bdb53534e71b225ec0f95d43f60bfc9f1531ee99fa0fb57b6d2c7f3` | `99882ce` |
 | `benchmarks/router/dev-best-map.json` | `e7df58c6f9716bc271451c8082decbbbd7cd5c662091cf44097a1a8bc694e865` | `d2f3fa1` |
+| `benchmarks/router/route-run1.json` | `e69fe61d728421a8149176f4b5665b9564c9fe068576518c30c4608ded1c1afa` | `b506476` |
+| `benchmarks/router/route-run2.json` | `5f1b5dcaf99695ffb7b8a050606c62d9d43ef48a1a047c653a5f42831005a620` | `b506476` |
+| `benchmarks/router/route-run3.json` | `11be417b08b3525992872bb61aa29b441c9775fa0103e379dc2605b1cfc864d3` | `b506476` |
+| `benchmarks/router/route-run4.json` | `3836cd49e5ec95be57dd8f718bcc7c7e4c9e8f6d4c00acf26bf94ec7721a9ecd` | `fa43bbb` |
 | `benchmarks/runs/2026-10-05-vector-dev-96e8c69.json` | `b6aeecc998b924e286f284921b1e7f1eb3262bd4063e8ebba7174f53edd3bb34` | `96e8c69` |
 | `benchmarks/runs/2026-10-14-graph_local-dev-375efac.json` | `1e45248f0aaa8c7a2ad81b711210397c83c2e023519ca6ff84854e4b58f22c9b` | `375efac` |
 | `benchmarks/runs/2026-10-14-graph_traversal-dev-375efac.json` | `ba11aca73ea858c21746489762b1d1acf2472de46d75fedd0aff9366b2999b13` | `375efac` |
 | `benchmarks/runs/2026-10-16-graph_global-dev-5bb0799.json` | `9a221011a43e5ef4dc3efe15e667bdc2799fb7274ca91d28ff5b2ee9818b081e` | `5bb0799` |
 | `benchmarks/runs/2026-10-17-graph_global-dev-6e26741.json` | `db093b58149d86f9049f2f391aee789664d5c129ce131f9bacee238f2e180d93` | `6e26741` |
+| `benchmarks/runs/2026-10-18-router-dev_best-dev-c1b171d.json` | `256bb9a24d685a223389c3d71ed9b1c5df79d2b87103c323aab9ea59c4890ca6` | `c1b171d` |
+| `benchmarks/runs/2026-10-18-router-pre_registered-dev-c1b171d.json` | `47736847e84fc2a6b8b5ea0466591e5e1279168491f58de582e7616481b64488` | `c1b171d` |
 
 ## Hypotheses (read on `dev`)
 
-No `test` runs yet: these verdicts read `dev`. Tuning data: every choice (hop count, Cypher prompt, N, the dev-best map) was made on these questions. H6 reads the router runs (ticket 03).
+No `test` runs yet: these verdicts read `dev`. Tuning data: every choice (hop count, Cypher prompt, N, the dev-best map) was made on these questions.
+
+H6 reads the pre-registered router's `dev` run, as the plan writes it.
 
 - **not supported**: H1, vector holds on lookups: on lookup, for every graph arm, the mean paired difference (graph - vector) in recall@5 is at most 0.05.
   - graph_local - vector: mean -0.259 [-0.481, -0.037], n 27
@@ -69,8 +77,59 @@ No `test` runs yet: these verdicts read `dev`. Tuning data: every choice (hop co
   - graph_local: total_ms not recorded in these runs; cost $0.0298 against $0.0305, n 93
   - graph_traversal: total_ms not recorded in these runs; cost $0.0349 against $0.0305, n 93
   - graph_global: total_ms not recorded in these runs; cost $0.0798 against $0.0309, n 21
+- **supported**: H6, the router is useful but imperfect: on dev, the pre-registered router picks the arm matching the gold class (its predicted class is the gold class) on at least 80% of answerable and decline questions, and declines every decline question; read on the point estimate, against agent-drafted class labels.
+  - router accuracy 76 of 88 (0.864)
+  - decline questions declined: 6 of 6
 
 ## Router
+
+The router rows are not arms: the router classifies each question with claude-haiku-5-5, declines investment advice itself and hands the rest to the arm its routing map names. The dev-best map is tuned on dev.
+
+### Classifier on `dev` (`eval.route`, no arm run)
+
+The effort sweep under `route/v1` (the most accurate effort wins, ties to the lower), then at most one revision at that effort, driven by the sweep's confusion matrices (in the route run files). The more accurate version is the one the router uses. Accuracy is against agent-drafted class labels.
+
+| run | prompt | effort | accuracy [Wilson 95%] | declines declined | false declines | spent (USD) | commit | router uses |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `benchmarks/router/route-run1.json` | `route/v1@a8229c31` | low | 75 of 88 0.852 [0.763, 0.912] | 6 of 6 | 0 | 0.0064 | `b506476` |  |
+| `benchmarks/router/route-run2.json` | `route/v1@a8229c31` | medium | 72 of 88 0.818 [0.725, 0.885] | 6 of 6 | 0 | 0.0059 | `b506476` |  |
+| `benchmarks/router/route-run3.json` | `route/v1@a8229c31` | high | 71 of 88 0.807 [0.712, 0.876] | 6 of 6 | 0 | 0.0072 | `b506476` |  |
+| `benchmarks/router/route-run4.json` | `route/v2@67290827` | low | 76 of 88 0.864 [0.777, 0.920] | 6 of 6 | 0 | 0.0068 | `fa43bbb` | **yes** |
+
+### Router accuracy on `dev`
+
+Router accuracy (against agent-drafted class labels), from `benchmarks/runs/2026-10-18-router-pre_registered-dev-c1b171d.json`: 76 of 88, 0.864 [0.777, 0.920] (Wilson 95%). Answerable and decline questions count; a decline question counts only when the router declined it.
+
+| gold \ predicted | lookup | local | multi_hop | global | decline | accuracy |
+| --- | --- | --- | --- | --- | --- | --- |
+| lookup | 27 | 0 | 0 | 0 | 0 | 27 of 27 |
+| local | 6 | 13 | 3 | 0 | 0 | 13 of 22 |
+| multi_hop | 0 | 0 | 21 | 2 | 0 | 21 of 23 |
+| global | 0 | 0 | 1 | 9 | 0 | 9 of 10 |
+| decline | 0 | 0 | 0 | 0 | 6 | 6 of 6 |
+
+Decline questions declined: 6 of 6 (missed: none). False declines (a question declined that is not a decline question): none. Failed classifications: 0.
+
+### Unanswerable questions under the router
+
+Unanswerable questions are left out of accuracy: no class names them, so the question is whether the arm they reach says the filings lack the answer.
+
+| router | unanswerable n | predicted classes | answered not_found | declined |
+| --- | --- | --- | --- | --- |
+| router (pre-registered) | 5 | lookup 1.00 | 5 of 5 | 0 of 5 |
+| router (dev-best) | 5 | lookup 1.00 | 5 of 5 | 0 of 5 |
+
+### Oracle router on `dev`
+
+The oracle gives each answerable question its gold class and the pre-registered map's arm, reading that arm's own dev run, so it costs nothing. The gap between the oracle and the pre-registered router is misclassification, plus any difference between the router's run of an arm and that arm's own run (an arm whose model calls missed the cache reran them; see each run's commit and graph load run).
+
+| class | oracle arm | oracle recall@10 | router (pre-registered) recall@10 | router (dev-best) recall@10 |
+| --- | --- | --- | --- | --- |
+| lookup | vector | 1.000 | 1.000 | 0.963 |
+| local | graph_local | 0.909 | 0.886 | 0.909 |
+| multi_hop | graph_traversal | 0.703 | 0.623 | 0.670 |
+| global | graph_global | 0.458 | 0.492 | 0.767 |
+| pooled | - | 0.826 | 0.802 | 0.842 |
 
 ### Dev-best routing map (tuned on dev)
 
@@ -154,6 +213,8 @@ Precision 0.958 [0.864, 1.000], recall 0.428 [0.298, 0.572]; agent-labelled (gpt
 
 Tuning data: every choice (hop count, Cypher prompt, N, the dev-best map) was made on these questions.
 
+The router rows are not arms: the router classifies each question with claude-haiku-5-5, declines investment advice itself and hands the rest to the arm its routing map names. The dev-best map is tuned on dev.
+
 Answerable classes. Intervals are percentile bootstrap 95% over the cell's questions; a cell under 10 questions is directional.
 
 | class | arm | n | recall@5 | recall@10 | precision@10 | wrong evidence | faithfulness (uncalibrated) | answer relevancy (uncalibrated) | citation support (uncalibrated) | p50 total ms | p95 total ms | cost / question (USD) |
@@ -162,18 +223,26 @@ Answerable classes. Intervals are percentile bootstrap 95% over the cell's quest
 | lookup | graph_local | 27 | 0.630 [0.444, 0.815] | 0.963 [0.889, 1.000] | 0.096 [0.089, 0.100] | 0.074 [0.000, 0.185] | 0.971 [0.928, 1.000] | 0.855 [0.805, 0.900] | 0.931 [0.856, 0.991] | not recorded | not recorded | 0.0261 [0.0254, 0.0269] |
 | lookup | graph_traversal | 27 | 0.963 [0.889, 1.000] | 0.963 [0.889, 1.000] | 0.096 [0.089, 0.100] | 0.000 [0.000, 0.000] | 0.959 [0.904, 0.999] | 0.827 [0.757, 0.883] | 0.941 [0.849, 1.000] | not recorded | not recorded | 0.0270 [0.0234, 0.0312] |
 | lookup | graph_global | 27 | 0.370 [0.185, 0.556] | 0.556 [0.370, 0.741] | 0.056 [0.037, 0.074] | 0.000 [0.000, 0.000] (ranks only) | retrieval only | retrieval only | retrieval only | retrieval only | retrieval only | retrieval only |
+| lookup | router (pre-registered) | 27 | 0.889 [0.778, 1.000] | 1.000 [1.000, 1.000] | 0.100 [0.100, 0.100] | 0.000 [0.000, 0.000] | 0.986 [0.967, 0.998] | 0.874 [0.829, 0.912] | 0.943 [0.886, 0.988] | 17 [15, 19] (27 replayed) | 25 [21, 26] | 0.0266 [0.0260, 0.0272] |
+| lookup | router (dev-best) | 27 | 0.630 [0.444, 0.815] | 0.963 [0.889, 1.000] | 0.096 [0.089, 0.100] | 0.074 [0.000, 0.185] | 0.971 [0.928, 1.000] | 0.855 [0.804, 0.899] | 0.931 [0.853, 0.991] | 86 [82, 88] (27 replayed) | 101 [92, 128] | 0.0262 [0.0254, 0.0270] |
 | local | vector | 22 | 0.932 [0.864, 1.000] | 0.977 [0.932, 1.000] | 0.118 [0.105, 0.136] | 0.000 [0.000, 0.000] | 0.984 [0.966, 0.996] | 0.744 [0.703, 0.783] | 0.973 [0.951, 0.992] | not recorded | not recorded | 0.0334 [0.0319, 0.0349] |
 | local | graph_local | 22 | 0.727 [0.545, 0.886] | 0.909 [0.795, 1.000] | 0.109 [0.091, 0.127] | 0.045 [0.000, 0.136] | 0.992 [0.985, 0.997] | 0.732 [0.694, 0.768] | 0.986 [0.976, 0.995] | not recorded | not recorded | 0.0318 [0.0304, 0.0331] |
 | local | graph_traversal | 22 | 0.795 [0.636, 0.932] | 0.818 [0.659, 0.955] | 0.100 [0.077, 0.123] | 0.000 [0.000, 0.000] | 0.966 [0.930, 0.992] | 0.730 [0.678, 0.778] | 0.975 [0.954, 0.993] | not recorded | not recorded | 0.0389 [0.0351, 0.0422] |
 | local | graph_global | 22 | 0.682 [0.500, 0.864] | 0.841 [0.682, 0.977] | 0.100 [0.077, 0.123] | 0.000 [0.000, 0.000] (ranks only) | retrieval only | retrieval only | retrieval only | retrieval only | retrieval only | retrieval only |
+| local | router (pre-registered) | 22 | 0.795 [0.636, 0.932] | 0.886 [0.750, 1.000] | 0.109 [0.086, 0.132] | 0.045 [0.000, 0.136] | 0.979 [0.957, 0.996] | 0.731 [0.693, 0.769] | 0.980 [0.960, 0.995] | 110 [91, 176] (22 replayed) | 12,105 [256, 12,827] | 0.0333 [0.0312, 0.0354] |
+| local | router (dev-best) | 22 | 0.727 [0.545, 0.886] | 0.909 [0.795, 1.000] | 0.109 [0.091, 0.127] | 0.045 [0.000, 0.136] | 0.992 [0.986, 0.997] | 0.732 [0.695, 0.768] | 0.986 [0.976, 0.995] | 125 [97, 170] (22 replayed) | 261 [187, 498] | 0.0319 [0.0305, 0.0332] |
 | multi_hop | vector | 23 | 0.616 [0.457, 0.775] | 0.717 [0.543, 0.870] | 0.157 [0.117, 0.196] | 0.130 [0.000, 0.261] | 0.944 [0.905, 0.977] | 0.786 [0.746, 0.822] | 0.975 [0.957, 0.991] | not recorded | not recorded | 0.0322 [0.0309, 0.0337] |
 | multi_hop | graph_local | 23 | 0.486 [0.326, 0.652] | 0.627 [0.489, 0.761] | 0.139 [0.109, 0.170] | 0.130 [0.000, 0.261] | 0.844 [0.744, 0.927] | 0.761 [0.721, 0.798] | 0.946 [0.877, 0.989] | not recorded | not recorded | 0.0317 [0.0304, 0.0331] |
 | multi_hop | graph_traversal | 23 | 0.569 [0.431, 0.703] | 0.703 [0.551, 0.848] | 0.157 [0.122, 0.191] | 0.043 [0.000, 0.130] | 0.936 [0.858, 0.986] | 0.769 [0.727, 0.811] | 0.973 [0.944, 0.995] | not recorded | not recorded | 0.0346 [0.0300, 0.0395] |
 | multi_hop | graph_global | 23 | 0.348 [0.196, 0.507] | 0.489 [0.341, 0.641] | 0.109 [0.074, 0.143] | 0.174 [0.043, 0.348] (ranks only) | retrieval only | retrieval only | retrieval only | retrieval only | retrieval only | retrieval only |
+| multi_hop | router (pre-registered) | 23 | 0.536 [0.391, 0.674] | 0.623 [0.471, 0.768] | 0.139 [0.104, 0.170] | 0.043 [0.000, 0.130] | 0.919 [0.844, 0.975] | 0.735 [0.674, 0.789] | 0.979 [0.955, 0.997] | 9,517 [7,639, 10,526] (23 replayed) | 16,351 [11,773, 16,511] | 0.0383 [0.0305, 0.0480] |
+| multi_hop | router (dev-best) | 23 | 0.514 [0.362, 0.667] | 0.670 [0.522, 0.804] | 0.152 [0.117, 0.187] | 0.130 [0.000, 0.261] | 0.878 [0.808, 0.939] | 0.768 [0.727, 0.807] | 0.975 [0.958, 0.990] | 98 [89, 107] (23 replayed) | 123 [110, 126] | 0.0318 [0.0304, 0.0334] |
 | global | vector | 10 | 0.592 [0.383, 0.800] | 0.800 [0.633, 0.950] | 0.260 [0.210, 0.310] | 0.200 [0.000, 0.500] | 0.787 [0.686, 0.890] | 0.781 [0.747, 0.817] | 0.974 [0.928, 1.000] | not recorded | not recorded | 0.0354 [0.0330, 0.0378] |
 | global | graph_local | 10 | 0.283 [0.108, 0.492] | 0.425 [0.208, 0.650] | 0.140 [0.070, 0.210] | 0.300 [0.000, 0.600] | 0.805 [0.628, 0.932] | 0.714 [0.639, 0.777] | 0.970 [0.927, 1.000] | not recorded | not recorded | 0.0356 [0.0328, 0.0385] |
 | global | graph_traversal | 10 | 0.208 [0.083, 0.342] | 0.367 [0.175, 0.575] | 0.120 [0.060, 0.180] | 0.300 [0.000, 0.600] | 0.839 [0.705, 0.938] | 0.560 [0.400, 0.693] | 0.931 [0.853, 1.000] | not recorded | not recorded | 0.0439 [0.0381, 0.0490] |
 | global | graph_global | 10 | 0.333 [0.200, 0.475] | 0.458 [0.300, 0.617] | 0.150 [0.100, 0.200] | 0.200 [0.000, 0.500] | 0.818 [0.668, 0.936] | 0.694 [0.602, 0.777] | 0.931 [0.885, 0.970] | not recorded | not recorded | 0.0822 [0.0682, 0.0948] |
+| global | router (pre-registered) | 10 | 0.367 [0.250, 0.483] | 0.492 [0.367, 0.633] | 0.160 [0.120, 0.200] | 0.200 [0.000, 0.500] | 0.818 [0.674, 0.937] | 0.667 [0.566, 0.764] | 0.936 [0.889, 0.975] | 45 [36, 271] (10 replayed) | 11,921 [47, 21,270] | 0.0788 [0.0662, 0.0906] |
+| global | router (dev-best) | 10 | 0.592 [0.367, 0.800] | 0.767 [0.550, 0.950] | 0.250 [0.180, 0.310] | 0.200 [0.000, 0.500] | 0.779 [0.678, 0.876] | 0.756 [0.680, 0.816] | 0.974 [0.928, 1.000] | 27 [23, 132] (10 replayed) | 1,392 [34, 2,342] | 0.0351 [0.0330, 0.0375] |
 
 Decline and unanswerable questions: whether the answer declined or said the filings lack the evidence.
 
@@ -183,10 +252,14 @@ Decline and unanswerable questions: whether the answer declined or said the fili
 | decline | graph_local | 6 (directional) | 1.000 [1.000, 1.000] | not recorded | not recorded | 0.0249 [0.0236, 0.0261] |
 | decline | graph_traversal | 6 (directional) | 1.000 [1.000, 1.000] | not recorded | not recorded | 0.0446 [0.0344, 0.0528] |
 | decline | graph_global | 6 (directional) | 1.000 [1.000, 1.000] | not recorded | not recorded | 0.0854 [0.0780, 0.0904] |
+| decline | router (pre-registered) | 6 (directional) | 1.000 [1.000, 1.000] | 0 [0, 3] (6 replayed) | 4 [0, 6] | 0.0002 [0.0001, 0.0002] |
+| decline | router (dev-best) | 6 (directional) | 1.000 [1.000, 1.000] | 0 [0, 3] (6 replayed) | 5 [0, 6] | 0.0002 [0.0001, 0.0002] |
 | unanswerable | vector | 5 (directional) | 1.000 [1.000, 1.000] | not recorded | not recorded | 0.0283 [0.0273, 0.0294] |
 | unanswerable | graph_local | 5 (directional) | 1.000 [1.000, 1.000] | not recorded | not recorded | 0.0269 [0.0259, 0.0279] |
 | unanswerable | graph_traversal | 5 (directional) | 1.000 [1.000, 1.000] | not recorded | not recorded | 0.0323 [0.0238, 0.0382] |
 | unanswerable | graph_global | 5 (directional) | 1.000 [1.000, 1.000] | not recorded | not recorded | 0.0681 [0.0613, 0.0753] |
+| unanswerable | router (pre-registered) | 5 (directional) | 1.000 [1.000, 1.000] | 31 [25, 1,996] (5 replayed) | 1,603 [30, 1,996] | 0.0284 [0.0273, 0.0294] |
+| unanswerable | router (dev-best) | 5 (directional) | 1.000 [1.000, 1.000] | 345 [212, 6,261] (5 replayed) | 5,090 [326, 6,261] | 0.0269 [0.0259, 0.0279] |
 
 ### `dev` paired differences against `vector`
 
@@ -293,3 +366,77 @@ On the questions both runs hold, as `eval.compare` computes them; a difference c
 | graph_global | pooled | wrong evidence | 82 | 0.012 [-0.024, 0.049] | no | - |
 | graph_global | decline | decline correct | 6 | 0.000 [0.000, 0.000] | no | directional, uncalibrated |
 | graph_global | unanswerable | not found correct | 5 | 0.000 [0.000, 0.000] | no | directional, uncalibrated |
+| router (pre-registered) | lookup | recall@5 | 27 | 0.000 [0.000, 0.000] | no | - |
+| router (pre-registered) | lookup | recall@10 | 27 | 0.000 [0.000, 0.000] | no | - |
+| router (pre-registered) | lookup | precision@10 | 27 | 0.000 [0.000, 0.000] | no | - |
+| router (pre-registered) | lookup | wrong evidence | 27 | 0.000 [0.000, 0.000] | no | - |
+| router (pre-registered) | lookup | faithfulness | 27 | 0.000 [0.000, 0.000] | no | uncalibrated |
+| router (pre-registered) | lookup | answer relevancy | 27 | 0.000 [0.000, 0.000] | no | uncalibrated |
+| router (pre-registered) | lookup | citation support | 27 | 0.000 [0.000, 0.000] | no | uncalibrated |
+| router (pre-registered) | local | recall@5 | 22 | -0.136 [-0.273, 0.000] | no | - |
+| router (pre-registered) | local | recall@10 | 22 | -0.091 [-0.227, 0.000] | no | - |
+| router (pre-registered) | local | precision@10 | 22 | -0.009 [-0.023, 0.000] | no | - |
+| router (pre-registered) | local | wrong evidence | 22 | 0.045 [0.000, 0.136] | no | - |
+| router (pre-registered) | local | faithfulness | 22 | -0.006 [-0.018, 0.004] | no | uncalibrated |
+| router (pre-registered) | local | answer relevancy | 22 | -0.013 [-0.036, 0.009] | no | uncalibrated |
+| router (pre-registered) | local | citation support | 22 | 0.007 [-0.005, 0.022] | no | uncalibrated |
+| router (pre-registered) | multi_hop | recall@5 | 23 | -0.080 [-0.297, 0.130] | no | - |
+| router (pre-registered) | multi_hop | recall@10 | 23 | -0.094 [-0.297, 0.116] | no | - |
+| router (pre-registered) | multi_hop | precision@10 | 23 | -0.017 [-0.061, 0.026] | no | - |
+| router (pre-registered) | multi_hop | wrong evidence | 23 | -0.087 [-0.217, 0.000] | no | - |
+| router (pre-registered) | multi_hop | faithfulness | 23 | -0.025 [-0.086, 0.033] | no | uncalibrated |
+| router (pre-registered) | multi_hop | answer relevancy | 23 | -0.051 [-0.113, 0.004] | no | uncalibrated |
+| router (pre-registered) | multi_hop | citation support | 23 | 0.004 [-0.027, 0.033] | no | uncalibrated |
+| router (pre-registered) | global | recall@5 | 10 | -0.225 [-0.492, 0.033] | no | - |
+| router (pre-registered) | global | recall@10 | 10 | -0.308 [-0.483, -0.133] | yes | - |
+| router (pre-registered) | global | precision@10 | 10 | -0.100 [-0.150, -0.050] | yes | - |
+| router (pre-registered) | global | wrong evidence | 10 | 0.000 [0.000, 0.000] | no | - |
+| router (pre-registered) | global | faithfulness | 10 | 0.031 [-0.115, 0.170] | no | uncalibrated |
+| router (pre-registered) | global | answer relevancy | 10 | -0.115 [-0.191, -0.046] | yes | uncalibrated |
+| router (pre-registered) | global | citation support | 10 | -0.038 [-0.080, -0.006] | yes | uncalibrated |
+| router (pre-registered) | pooled | recall@5 | 82 | -0.086 [-0.168, -0.011] | yes | - |
+| router (pre-registered) | pooled | recall@10 | 82 | -0.088 [-0.162, -0.018] | yes | - |
+| router (pre-registered) | pooled | precision@10 | 82 | -0.020 [-0.035, -0.004] | yes | - |
+| router (pre-registered) | pooled | wrong evidence | 82 | -0.012 [-0.049, 0.024] | no | - |
+| router (pre-registered) | pooled | faithfulness | 82 | -0.005 [-0.029, 0.019] | no | uncalibrated |
+| router (pre-registered) | pooled | answer relevancy | 82 | -0.032 [-0.054, -0.011] | yes | uncalibrated |
+| router (pre-registered) | pooled | citation support | 82 | -0.001 [-0.013, 0.009] | no | uncalibrated |
+| router (pre-registered) | decline | decline correct | 6 | 0.000 [0.000, 0.000] | no | directional, uncalibrated |
+| router (pre-registered) | unanswerable | not found correct | 5 | 0.000 [0.000, 0.000] | no | directional, uncalibrated |
+| router (dev-best) | lookup | recall@5 | 27 | -0.259 [-0.481, -0.037] | yes | - |
+| router (dev-best) | lookup | recall@10 | 27 | -0.037 [-0.111, 0.000] | no | - |
+| router (dev-best) | lookup | precision@10 | 27 | -0.004 [-0.011, 0.000] | no | - |
+| router (dev-best) | lookup | wrong evidence | 27 | 0.074 [0.000, 0.185] | no | - |
+| router (dev-best) | lookup | faithfulness | 27 | -0.015 [-0.045, 0.005] | no | uncalibrated |
+| router (dev-best) | lookup | answer relevancy | 27 | -0.020 [-0.042, -0.001] | yes | uncalibrated |
+| router (dev-best) | lookup | citation support | 27 | -0.012 [-0.074, 0.049] | no | uncalibrated |
+| router (dev-best) | local | recall@5 | 22 | -0.205 [-0.386, -0.045] | yes | - |
+| router (dev-best) | local | recall@10 | 22 | -0.068 [-0.182, 0.000] | no | - |
+| router (dev-best) | local | precision@10 | 22 | -0.009 [-0.023, 0.000] | no | - |
+| router (dev-best) | local | wrong evidence | 22 | 0.045 [0.000, 0.136] | no | - |
+| router (dev-best) | local | faithfulness | 22 | 0.008 [-0.005, 0.025] | no | uncalibrated |
+| router (dev-best) | local | answer relevancy | 22 | -0.012 [-0.042, 0.018] | no | uncalibrated |
+| router (dev-best) | local | citation support | 22 | 0.014 [-0.002, 0.032] | no | uncalibrated |
+| router (dev-best) | multi_hop | recall@5 | 23 | -0.101 [-0.312, 0.094] | no | - |
+| router (dev-best) | multi_hop | recall@10 | 23 | -0.047 [-0.232, 0.141] | no | - |
+| router (dev-best) | multi_hop | precision@10 | 23 | -0.004 [-0.048, 0.039] | no | - |
+| router (dev-best) | multi_hop | wrong evidence | 23 | 0.000 [-0.174, 0.174] | no | - |
+| router (dev-best) | multi_hop | faithfulness | 23 | -0.066 [-0.127, -0.013] | yes | uncalibrated |
+| router (dev-best) | multi_hop | answer relevancy | 23 | -0.017 [-0.051, 0.016] | no | uncalibrated |
+| router (dev-best) | multi_hop | citation support | 23 | 0.000 [-0.024, 0.025] | no | uncalibrated |
+| router (dev-best) | global | recall@5 | 10 | 0.000 [0.000, 0.000] | no | - |
+| router (dev-best) | global | recall@10 | 10 | -0.033 [-0.100, 0.000] | no | - |
+| router (dev-best) | global | precision@10 | 10 | -0.010 [-0.030, 0.000] | no | - |
+| router (dev-best) | global | wrong evidence | 10 | 0.000 [0.000, 0.000] | no | - |
+| router (dev-best) | global | faithfulness | 10 | -0.008 [-0.023, 0.000] | no | uncalibrated |
+| router (dev-best) | global | answer relevancy | 10 | -0.025 [-0.075, 0.000] | no | uncalibrated |
+| router (dev-best) | global | citation support | 10 | 0.000 [0.000, 0.000] | no | uncalibrated |
+| router (dev-best) | pooled | recall@5 | 82 | -0.169 [-0.272, -0.065] | yes | - |
+| router (dev-best) | pooled | recall@10 | 82 | -0.048 [-0.112, 0.014] | no | - |
+| router (dev-best) | pooled | precision@10 | 82 | -0.006 [-0.018, 0.007] | no | - |
+| router (dev-best) | pooled | wrong evidence | 82 | 0.037 [-0.024, 0.098] | no | - |
+| router (dev-best) | pooled | faithfulness | 82 | -0.022 [-0.044, -0.004] | yes | uncalibrated |
+| router (dev-best) | pooled | answer relevancy | 82 | -0.018 [-0.033, -0.003] | yes | uncalibrated |
+| router (dev-best) | pooled | citation support | 82 | -0.000 [-0.023, 0.022] | no | uncalibrated |
+| router (dev-best) | decline | decline correct | 6 | 0.000 [0.000, 0.000] | no | directional, uncalibrated |
+| router (dev-best) | unanswerable | not found correct | 5 | 0.000 [0.000, 0.000] | no | directional, uncalibrated |

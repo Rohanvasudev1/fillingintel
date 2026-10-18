@@ -1,0 +1,61 @@
+{
+  "label": "frozen before the test split is scored; eval.run --final refuses any arm, router setting or map that differs",
+  "commit": "cb82929",
+  "created_at": "2026-10-18T20:22:48+00:00",
+  "router": {
+    "model": "claude-haiku-5-5",
+    "effort": "low",
+    "prompt_version": "route/v2@67290827",
+    "prompt_sha256": "6729082793fdfc0402e4beabf464c7e04e1bac67fe269ec3fd900f3013749d9b"
+  },
+  "maps": {
+    "pre_registered": {
+      "arms": {
+        "lookup": "vector",
+        "local": "graph_local",
+        "multi_hop": "graph_traversal",
+        "global": "graph_global"
+      },
+      "sha256": "d0a3a561485439d109dbf556b83941807f6e2b49130d87b8247a9c63135493f9",
+      "file": null
+    },
+    "dev_best": {
+      "arms": {
+        "lookup": "graph_local",
+        "local": "graph_local",
+        "multi_hop": "graph_local",
+        "global": "vector"
+      },
+      "sha256": "72613677be0d50d606c2c5c264aec5046a896c723d9c6c016f864dbf6c451d30",
+      "file": "benchmarks/router/dev-best-map.json"
+    }
+  },
+  "arms": {
+    "vector": {
+      "config_sha256": "da5852766eb01d47bd34868be65be899ffaadb46bc4610f676c2aab602da177e",
+      "prompt_versions": [
+        "answer/v1@dd19391c"
+      ]
+    },
+    "graph_local": {
+      "config_sha256": "98b0c4241253f072b1bfd7e13577f826fa637bffce7047b9640af95a28c545ef",
+      "prompt_versions": [
+        "answer/v1@dd19391c"
+      ]
+    },
+    "graph_traversal": {
+      "config_sha256": "bd83b2695c13e0599ecc1bf784447732f31e731fce5d7442881e13cee3c2ec68",
+      "prompt_versions": [
+        "answer/v1@dd19391c",
+        "cypher/v1@793ac624"
+      ]
+    },
+    "graph_global": {
+      "config_sha256": "94155eefc00cad04979fa704970bfcfed35a7ee7b1674596d487c54cedeaa0c0",
+      "prompt_versions": [
+        "global_map/v1@dd20df63",
+        "global_reduce/v1@a5415ee1"
+      ]
+    }
+  }
+}

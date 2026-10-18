@@ -29,8 +29,16 @@ or judge call is made, and the file holds retrieval metrics and latency only.
 Every answered question records ``total_ms``, the wall time of its whole arm
 call, and whether any of its calls replayed from a cache.
 
+The router (Step 13) runs as ``--arm router --map pre_registered`` or
+``--map dev_best``; ``--map`` is refused for an arm, and its file name carries
+the map: ``{date}-router-{map}-{split}-{commit}.json``.
+
 ``dev`` is the default split.  ``test`` is scored only with ``--final``, once,
-for the final benchmark.  Results go to ``benchmarks/runs/``, which git ignores.
+for the final benchmark, and only when ``benchmarks/router/frozen.json``
+(``eval.freeze``) matches the arm opened, or the router and every arm it
+opens; the check runs when the arm opens (the router opens every arm its map
+names first) and again before judging.  Results
+go to ``benchmarks/runs/``, which git ignores.
 """
 from __future__ import annotations
 
@@ -50,6 +58,7 @@ from opentelemetry import trace
 from opentelemetry.context import Context
 
 from eval.filter_report import build_filter_report
+from eval.freeze import FROZEN_FILE, FreezeError, config_problem, read_frozen
 from eval.judging.report import run_judge_usage
 from eval.judging.runner import JUDGES, JudgeRunError, JudgeSpec, judge_all
 from eval.judging.scoring import Judge, JudgeConfig, JudgeInput
@@ -70,6 +79,8 @@ from retrieve.arm import Arm, ArmConfig, ArmError, ArmSpec, EstimateQuestion
 from retrieve.arms import ARMS
 from retrieve.pricing import price_table
 from retrieve.response_cache import DEFAULT_CACHE_DIR as DEFAULT_RESPONSE_CACHE
+from retrieve.router import Router
+from retrieve.routing_maps import MAP_NAMES
 from retrieve.tracing import (
     QUESTION_SPAN,
     Kind,
@@ -113,6 +124,8 @@ def _parse_args(argv: list[str] | None, arm_names: Sequence[str]) -> argparse.Na
                         help="refuse a run whose estimate is above this many dollars")
     parser.add_argument("--retrieval-only", action="store_true",
                         help="score retrieval only: no answer or judge call")
+    parser.add_argument("--map", choices=MAP_NAMES,
+                        help="the router's routing map (with --arm router only)")
     return parser.parse_args(argv)
 
 
@@ -140,6 +153,30 @@ def _usage_problem(args: argparse.Namespace, required_env: Sequence[str],
     if args.final and args.split != "test":
         return "--final applies only to --split test"
     return env_problem(required_env, forbidden_env, "eval.run ...")
+
+
+def resolve_spec(spec: ArmSpec, map_name: str | None) -> ArmSpec:
+    """The spec to run: the router's spec for *map_name*, or the arm's own; ``ValueError``
+    when ``--map`` is given to an arm or missing for the router."""
+    if spec.with_map is None:
+        if map_name is not None:
+            raise ValueError("--map applies only to --arm router")
+        return spec
+    if map_name is None:
+        raise ValueError(f"--arm {spec.name} needs --map ({' or '.join(MAP_NAMES)})")
+    return spec.with_map(map_name)
+
+
+class FrozenMismatch(RuntimeError):
+    """A --final run's arm or router differs from the frozen record; safe to print."""
+
+
+def _check_frozen(frozen: Mapping[str, object] | None, name: str, config: ArmConfig) -> None:
+    if frozen is None:
+        return
+    problem = config_problem(frozen, name, config)
+    if problem is not None:
+        raise FrozenMismatch(f"{problem}; nothing was written")
 
 
 def env_problem(required_env: Sequence[str], forbidden_env: Sequence[str],
@@ -214,17 +251,24 @@ def _fresh_cache(root: Path, day: date) -> Path:
 def _score(
     spec: ArmSpec, judges: JudgeSpec, todo: Selected, split: str, cache_dir: Path,
     spans: SpanRecorder, *, retrieval_only: bool, clock: Callable[[], float],
+    frozen: Mapping[str, object] | None = None,
 ) -> tuple[list[Outcome], ArmConfig, JudgeConfig | None]:
-    """The *todo* questions answered by the arm, then judged; raises ArmError or JudgeRunError.
+    """The *todo* questions answered by the arm, then judged; raises ArmError,
+    JudgeRunError or, against a *frozen* record, FrozenMismatch.
 
     With *retrieval_only* the arm only retrieves, no judge opens, and the judge config
-    is None.
+    is None.  The config is checked against *frozen* when the arm opens (the router
+    first opens every arm its map names) and again before judging.
     """
     with spec.open(cache_dir, spans) as arm:
         _check_priced(arm.config)
+        if frozen is not None and isinstance(arm, Router):
+            arm.open_mapped()  # every inner arm is checked before the first question
+        _check_frozen(frozen, spec.name, arm.config)
         outcomes, parents = _run_arm(arm, todo, split, spans, retrieval_only=retrieval_only,
                                      clock=clock)
         config = arm.config
+    _check_frozen(frozen, spec.name, config)
     if retrieval_only:
         return outcomes, config, None
     with judges.open(cache_dir, spans) as judge:
@@ -268,14 +312,20 @@ def main(
     uncached_root: Path = UNCACHED_ROOT,
     tracing: Callable[[Mapping[str, str]], TracerProvider | None] = build_provider,
     clock: Callable[[], float] = time.perf_counter,
+    frozen_file: Path = FROZEN_FILE,
 ) -> int:
-    """CLI entry point.  Exit codes: 0 ok; 2 bad input, or an estimate above --max-cost;
-    3 the run could not be estimated, finish or be written (no results file).  *tracing*
-    builds the span provider from the environment; *clock* times each question."""
+    """CLI entry point.  Exit codes: 0 ok; 2 bad input, an estimate above --max-cost, or a
+    --final run without a matching frozen record; 3 the run could not be estimated, finish
+    or be written (no results file).  *tracing* builds the span provider from the
+    environment; *clock* times each question."""
     args = _parse_args(argv, list(arms))
     logging.basicConfig(level=logging.INFO)
     logging.getLogger("httpx").setLevel(logging.WARNING)
-    spec = arms[args.arm]
+    try:
+        spec = resolve_spec(arms[args.arm], args.map)
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return EXIT_USAGE
     judge_required = () if args.retrieval_only else judges.required_env
     judge_forbidden = () if args.retrieval_only else judges.forbidden_env
     problem = _usage_problem(args, [*spec.required_env, *judge_required], judge_forbidden)
@@ -286,7 +336,8 @@ def main(
         classes = parse_classes(args.classes) if args.classes is not None else None
         sets = load_question_sets(eval_dir)
         capture = text_capture(os.environ)
-    except (ClassSelectionError, QuestionSetError, TracingConfigError) as exc:
+        frozen = read_frozen(frozen_file) if args.final else None
+    except (ClassSelectionError, QuestionSetError, TracingConfigError, FreezeError) as exc:
         print(str(exc), file=sys.stderr)
         return EXIT_USAGE
     todo = select(sets, args.split, classes)
@@ -302,7 +353,7 @@ def main(
     try:
         return _execute(args, spec, judges, sets, classes, todo, spans, runs_dir=runs_dir,
                         today=today, response_cache=response_cache, uncached_root=uncached_root,
-                        clock=clock)
+                        clock=clock, frozen=frozen)
     finally:
         if provider is not None:
             provider.shutdown()  # flushes queued spans; a stopped Phoenix costs about a second
@@ -335,7 +386,8 @@ def _check_estimate(spec: ArmSpec, todo: Selected, args: argparse.Namespace) -> 
 def _execute(args: argparse.Namespace, spec: ArmSpec, judges: JudgeSpec,
              sets: Sequence[QuestionSet], classes: tuple[Class, ...] | None, todo: Selected,
              spans: SpanRecorder, *, runs_dir: Path, today: date | None,
-             response_cache: Path, uncached_root: Path, clock: Callable[[], float]) -> int:
+             response_cache: Path, uncached_root: Path, clock: Callable[[], float],
+             frozen: Mapping[str, object] | None = None) -> int:
     """Answer, judge and write the results file; returns the exit code."""
     commit = git_state()
     now = datetime.now(UTC)
@@ -347,7 +399,11 @@ def _execute(args: argparse.Namespace, spec: ArmSpec, judges: JudgeSpec,
         return EXIT_RUN_ERROR
     try:
         outcomes, config, judge_config = _score(spec, judges, todo, args.split, cache_dir, spans,
-                                                retrieval_only=args.retrieval_only, clock=clock)
+                                                retrieval_only=args.retrieval_only, clock=clock,
+                                                frozen=frozen)
+    except FrozenMismatch as exc:
+        print(f"--final refused: {exc}", file=sys.stderr)
+        return EXIT_USAGE
     except (ArmError, JudgeRunError) as exc:
         print(f"run stopped, no results written: {exc}", file=sys.stderr)
         return EXIT_RUN_ERROR
@@ -357,7 +413,8 @@ def _execute(args: argparse.Namespace, spec: ArmSpec, judges: JudgeSpec,
                   retrieval_only=args.retrieval_only)
     document = _document(run, config, sets, judge_config, outcomes)
     try:
-        path = results_path(runs_dir, day, args.arm, args.split, commit)
+        label = args.arm if args.map is None else f"{args.arm}-{args.map}"
+        path = results_path(runs_dir, day, label, args.split, commit)
         write_results(document, path)
     except OSError as exc:
         print(f"could not write results to {runs_dir}: {exc}", file=sys.stderr)

@@ -156,5 +156,20 @@ def load_split(names: RunNames, root: Path = REPO_ROOT) -> dict[str, ArmRuns]:
     return split
 
 
+def load_router_split(names: RunNames, labels: Mapping[str, str],
+                      root: Path = REPO_ROOT) -> dict[str, ArmRuns]:
+    """The router's runs keyed by their row label; a file that is not a router run under
+    its routing map is refused."""
+    split = {}
+    for map_name, files in names.items():
+        runs = tuple(load_run(n, root) for n in files)
+        wrong = [r.input.path for r in runs
+                 if r.arm != "router" or r.header.get("routing_map") != map_name]
+        if wrong:
+            raise ResultsInputError(f"{', '.join(wrong)} is not a router run under {map_name}")
+        split[labels[map_name]] = ArmRuns(labels[map_name], runs)
+    return split
+
+
 def split_inputs(split: Split) -> list[InputFile]:
     return [f.input for runs in split.values() for f in runs.files]
