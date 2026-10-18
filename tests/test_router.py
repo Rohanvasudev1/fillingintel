@@ -15,7 +15,7 @@ from eval.operational import latency_cell, question_cost
 from ingest.provenance import REPO_ROOT
 from retrieve.answer import DECLINE_TEXT
 from retrieve.arm import ArmError
-from retrieve.route_classifier import RouteClassifier
+from retrieve.route_classifier import ROUTE_EFFORT, ROUTE_PROMPT_VERSION, RouteClassifier
 from retrieve.route_prompt import load_route_prompt
 from retrieve.router import Router, open_router
 from retrieve.routing_maps import (
@@ -32,16 +32,15 @@ from retrieve.tracing import (
     ROUTE_SPAN,
     SpanRecorder,
 )
-from tests.router_fakes import ScriptedRouteModel, StandInArms, class_reply
+from tests.router_fakes import (
+    QUESTIONS,
+    RecordedRouteModel,
+    ScriptedRouteModel,
+    StandInArms,
+    class_reply,
+)
 
 DEV_BEST_FILE = REPO_ROOT / "benchmarks" / "router" / "dev-best-map.json"
-QUESTIONS = {  # invented questions, one per predicted class
-    "lookup": "What was AMD's diluted earnings per share in fiscal 2024?",
-    "local": "How does Intel describe the risks of its foundry customer commitments?",
-    "multi_hop": "How did NVIDIA's and AMD's R&D spending change between their last two 10-Ks?",
-    "global": "What themes about AI demand recur across all three companies' filings?",
-    "decline": "Should I sell my Intel shares before the next earnings report?",
-}
 PRE = {"lookup": "vector", "local": "graph_local", "multi_hop": "graph_traversal",
        "global": "graph_global"}
 
@@ -217,3 +216,16 @@ def test_spans_hold_the_route_and_the_classifier_without_prompt_text():
     assert classifier.attributes["openinference.span.kind"] == "LLM"
     assert classifier.attributes["llm.model_name"] == "claude-haiku-5-5"
     assert not any(k.startswith("llm.input_messages") for k in classifier.attributes)
+
+
+def test_recorded_haiku_replies_route_each_invented_question_to_its_arm():
+    model = RecordedRouteModel("invented")
+    prompt = load_route_prompt(ROUTE_PROMPT_VERSION)
+    assert (model.prompt_version, model.effort) == (prompt.prompt_version, ROUTE_EFFORT)
+    arms = StandInArms()
+    classifier = RouteClassifier(model, prompt, ROUTE_EFFORT)
+    with Router(classifier, load_map(PRE_REGISTERED), arms.specs, REPO_ROOT) as router:
+        routed = {c: router.run(q).routing for c, q in QUESTIONS.items()}
+    assert {c: r.predicted_class for c, r in routed.items()} == {c: c for c in QUESTIONS}
+    assert {c: r.arm for c, r in routed.items()} == {**PRE, "decline": "decline"}
+    assert all(r.reason and r.cost.cost_usd > 0 for r in routed.values())

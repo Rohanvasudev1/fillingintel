@@ -1,0 +1,212 @@
+{
+  "note": "real API response, recorded by scripts/capture_route_responses.py",
+  "prompt_version": "route/v2@67290827",
+  "effort": "low",
+  "calls": [
+    {
+      "id": null,
+      "question": "What was AMD's diluted earnings per share in fiscal 2024?",
+      "request_sha256": "ba468e19325cb4675abd60b22c5ccd74d7ffe133cda88be5e8c73275fd61f45d",
+      "api_ms": 1187.7720829797909,
+      "response": {
+        "id": "msg_011CgAJ3GULiic1ZJALMiJes",
+        "container": null,
+        "content": [
+          {
+            "citations": null,
+            "text": "{\"reason\": \"This asks for a single reported figure (AMD's diluted EPS for fiscal 2024) that a single passage of one filing states, so it is a lookup.\", \"predicted_class\": \"lookup\"}",
+            "type": "text"
+          }
+        ],
+        "diagnostics": null,
+        "model": "claude-haiku-5-5",
+        "role": "assistant",
+        "stop_details": null,
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "type": "message",
+        "usage": {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 1535,
+          "inference_geo": "global",
+          "input_tokens": 32,
+          "output_tokens": 71,
+          "output_tokens_details": {
+            "thinking_tokens": 0
+          },
+          "server_tool_use": null,
+          "service_tier": "standard",
+          "speed": "standard"
+        }
+      }
+    },
+    {
+      "id": null,
+      "question": "How does Intel describe the risks of its foundry customer commitments?",
+      "request_sha256": "0f23448537dbe633b6c9ea760aab347002ee24c54fe34b5391b920ce06fc44aa",
+      "api_ms": 1226.4935830025934,
+      "response": {
+        "id": "msg_011CgAJ3M2vuiQr82SU5mHrf",
+        "container": null,
+        "content": [
+          {
+            "citations": null,
+            "text": "{\"reason\": \"The question asks how one company (Intel) describes one risk theme, which requires gathering several related passages from its filings on foundry customer commitments, their conditions and effects. This fits local rather than a single-fact lookup.\", \"predicted_class\": \"local\"}",
+            "type": "text"
+          }
+        ],
+        "diagnostics": null,
+        "model": "claude-haiku-5-5",
+        "role": "assistant",
+        "stop_details": null,
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "type": "message",
+        "usage": {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 1535,
+          "inference_geo": "global",
+          "input_tokens": 30,
+          "output_tokens": 88,
+          "output_tokens_details": {
+            "thinking_tokens": 0
+          },
+          "server_tool_use": null,
+          "service_tier": "standard",
+          "speed": "standard"
+        }
+      }
+    },
+    {
+      "id": null,
+      "question": "How did NVIDIA's and AMD's R&D spending change between their last two 10-Ks?",
+      "request_sha256": "485376ddd5fe0db6a135d0a720f070dbbe0dea3c0cb18ee77911060f263a1d3e",
+      "api_ms": 1215.67183296429,
+      "response": {
+        "id": "msg_011CgAJ3SKv4WR7MhBCkQxQ9",
+        "container": null,
+        "content": [
+          {
+            "citations": null,
+            "text": "{\"reason\": \"The question asks for specific R&D expense figures for two named companies compared across two fiscal years, requiring joining numbers from different filings and periods, which is multi_hop.\", \"predicted_class\": \"multi_hop\"}",
+            "type": "text"
+          }
+        ],
+        "diagnostics": null,
+        "model": "claude-haiku-5-5",
+        "role": "assistant",
+        "stop_details": null,
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "type": "message",
+        "usage": {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 1535,
+          "inference_geo": "global",
+          "input_tokens": 40,
+          "output_tokens": 77,
+          "output_tokens_details": {
+            "thinking_tokens": 0
+          },
+          "server_tool_use": null,
+          "service_tier": "standard",
+          "speed": "standard"
+        }
+      }
+    },
+    {
+      "id": null,
+      "question": "What themes about AI demand recur across all three companies' filings?",
+      "request_sha256": "aaa646cb9f49970980b4cb991adc3421481285062f4b47e9a42cd0ab91a44a70",
+      "api_ms": 1126.4665839844383,
+      "response": {
+        "id": "msg_011CgAJ3XXCgqC8r1jhzUVTo",
+        "container": null,
+        "content": [
+          {
+            "citations": null,
+            "text": "{\"reason\": \"The question asks which qualitative themes about AI demand recur across the three companies' latest filings, which is a thematic cross-company comparison rather than specific figures or events to join.\", \"predicted_class\": \"global\"}",
+            "type": "text"
+          }
+        ],
+        "diagnostics": null,
+        "model": "claude-haiku-5-5",
+        "role": "assistant",
+        "stop_details": null,
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "type": "message",
+        "usage": {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 1535,
+          "inference_geo": "global",
+          "input_tokens": 28,
+          "output_tokens": 74,
+          "output_tokens_details": {
+            "thinking_tokens": 0
+          },
+          "server_tool_use": null,
+          "service_tier": "standard",
+          "speed": "standard"
+        }
+      }
+    },
+    {
+      "id": null,
+      "question": "Should I sell my Intel shares before the next earnings report?",
+      "request_sha256": "e75af7af8e7fa96df3f608a056552605f3766cd387df089cfcde4942cce92d74",
+      "api_ms": 1222.19583299011,
+      "response": {
+        "id": "msg_011CgAJ3cPuYKW5ucQJCukv4",
+        "container": null,
+        "content": [
+          {
+            "citations": null,
+            "text": "{\"reason\": \"The question asks whether to sell Intel shares before an earnings report, which is investment advice about buying, holding or selling, so it is declined.\", \"predicted_class\": \"decline\"}",
+            "type": "text"
+          }
+        ],
+        "diagnostics": null,
+        "model": "claude-haiku-5-5",
+        "role": "assistant",
+        "stop_details": null,
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "type": "message",
+        "usage": {
+          "cache_creation": {
+            "ephemeral_1h_input_tokens": 0,
+            "ephemeral_5m_input_tokens": 0
+          },
+          "cache_creation_input_tokens": 0,
+          "cache_read_input_tokens": 1535,
+          "inference_geo": "global",
+          "input_tokens": 28,
+          "output_tokens": 64,
+          "output_tokens_details": {
+            "thinking_tokens": 0
+          },
+          "server_tool_use": null,
+          "service_tier": "standard",
+          "speed": "standard"
+        }
+      }
+    }
+  ]
+}

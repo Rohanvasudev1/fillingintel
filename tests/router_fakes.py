@@ -23,6 +23,16 @@ from tests.anthropic_fixtures import load, with_text
 CHUNK = "0001045810-26-000021:0067"  # a real NVIDIA FY2026 10-K chunk
 NO_FILTER = QuestionFilter((), (), (), None)
 ARM_NAMES = ("vector", "graph_local", "graph_traversal", "graph_global")
+QUESTIONS = {  # invented questions, one per predicted class; never eval questions
+    "lookup": "What was AMD's diluted earnings per share in fiscal 2024?",
+    "local": "How does Intel describe the risks of its foundry customer commitments?",
+    "multi_hop": "How did NVIDIA's and AMD's R&D spending change between their last two 10-Ks?",
+    "global": "What themes about AI demand recur across all three companies' filings?",
+    "decline": "Should I sell my Intel shares before the next earnings report?",
+}
+# The dev records tests.test_eval_run uses, whose recorded classifier replies test eval.route.
+DEV_IDS = ("q0072", "q0073", "q0113", "q0028", "q0004", "q0011")
+FIXTURES = Path(__file__).parent / "fixtures" / "anthropic"
 
 
 def class_reply(predicted_class: str, reason: str = "Scripted.") -> dict:
@@ -96,3 +106,21 @@ class StandInArms:
     @property
     def specs(self) -> dict[str, ArmSpec]:
         return {n: self.spec(n) for n in self.arms}
+
+
+class RecordedRouteModel:
+    """Replays ``route_{name}.json`` by request hash; an unrecorded request fails, so a
+    request built differently from the recorded one fails the test."""
+
+    def __init__(self, name: str):
+        fixture = json.loads((FIXTURES / f"route_{name}.json").read_text(encoding="utf-8"))
+        self.prompt_version = fixture["prompt_version"]
+        self.effort = fixture["effort"]
+        self.calls = fixture["calls"]
+        self._bodies = {c["request_sha256"]: (c["response"], c["api_ms"]) for c in self.calls}
+        self.requests: list[RouteRequest] = []
+
+    def complete(self, request: RouteRequest) -> ApiResponse:
+        self.requests.append(request)
+        body, api_ms = self._bodies[request.cache_key()]
+        return ApiResponse(body, api_ms=api_ms, from_cache=True)

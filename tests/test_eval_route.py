@@ -12,7 +12,8 @@ import pytest
 from eval.route import EXIT_USAGE, main
 from eval.schema import load_records
 from retrieve.answer_model import AnswerModelError
-from tests.router_fakes import ScriptedRouteModel, class_reply
+from retrieve.route_classifier import ROUTE_PROMPT_VERSION
+from tests.router_fakes import RecordedRouteModel, ScriptedRouteModel, class_reply
 from tests.test_eval_run import eval_dir  # noqa: F401 (fixture)
 
 PREDICTED = {"q0072": "lookup", "q0073": "local", "q0113": "multi_hop", "q0028": "global",
@@ -45,7 +46,7 @@ def test_a_run_writes_accuracy_confusion_false_declines_and_the_unanswerable_sha
     assert route("--effort", "medium") == 0
     report = route.report()
     assert report["split"] == "dev" and report["effort"] == "medium"
-    assert report["prompt"]["version"].startswith("route/v1@")
+    assert report["prompt"]["version"].startswith(f"route/{ROUTE_PROMPT_VERSION}@")
     metrics = report["metrics"]
     assert metrics["label"] == "against agent-drafted class labels"
     assert (metrics["accuracy"]["n"], metrics["accuracy"]["correct"]) == (5, 4)  # q0073 wrong
@@ -107,3 +108,17 @@ def test_a_failed_api_call_stops_the_run(eval_dir, tmp_path):  # noqa: F811
 
     route.model.complete = fail
     assert route() == 3 and not route.out.exists()
+
+
+def test_recorded_haiku_replies_give_the_dev_sample_its_accuracy(eval_dir, tmp_path):  # noqa: F811
+    route = Route(eval_dir, tmp_path)
+    route.model = RecordedRouteModel("dev")
+    assert route("--effort", route.model.effort, "--prompt",
+                 route.model.prompt_version.split("/")[1].split("@")[0]) == 0
+    report = route.report()
+    assert report["prompt"]["version"] == route.model.prompt_version
+    metrics = report["metrics"]
+    assert (metrics["accuracy"]["n"], metrics["accuracy"]["correct"]) == (5, 5)
+    assert metrics["declines"]["declined"] == 1 and metrics["false_declines"] == []
+    assert metrics["unanswerable"] == {"n": 1, "share": {"lookup": 1.0}}
+    assert all(q["reason"] for q in report["questions"])

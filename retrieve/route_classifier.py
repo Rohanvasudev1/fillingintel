@@ -31,8 +31,10 @@ from retrieve.tracing import (
 )
 
 ROUTE_MODEL = "claude-haiku-5-5"
-ROUTE_EFFORT: Effort = "low"  # placeholder until the dev sweep chooses it
-ROUTE_PROMPT_VERSION = "v1"
+# Chosen on dev (benchmarks/router/route-run1..4.json): route/v1 scored 75, 72 and 71 of 88
+# at low, medium and high, so low; route/v2 at low scored 76 of 88, so v2.
+ROUTE_EFFORT: Effort = "low"
+ROUTE_PROMPT_VERSION = "v2"
 ROUTE_MAX_TOKENS = 16_000  # thinking plus the reply, as for the other Haiku calls
 ROUTE_PRICES = TABLE_2026_10_10  # Haiku 5.5 at its up-to-100K-token prices
 EFFORT_CHOICES: tuple[Effort, ...] = ("low", "medium", "high")  # the dev sweep, in order
