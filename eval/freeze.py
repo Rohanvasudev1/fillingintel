@@ -53,7 +53,10 @@ def arm_config_sha256(config: ArmConfig) -> str:
 
 def prompt_versions(config: ArmConfig) -> list[str]:
     """Every prompt version an arm's config names, sorted."""
-    found = {f"answer/{config.answer_prompt.version}@{config.answer_prompt.sha256[:HASH_CHARS]}"}
+    answer = config.answer_prompt
+    # graph_global's answer prompt is its reduce prompt, whose version is already full.
+    found = {answer.version if "/" in answer.version
+             else f"answer/{answer.version}@{answer.sha256[:HASH_CHARS]}"}
     graph = config.graph
     if graph is not None:
         if graph.cypher_prompt_version is not None:

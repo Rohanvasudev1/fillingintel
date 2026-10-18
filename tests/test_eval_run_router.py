@@ -189,3 +189,14 @@ def test_final_refuses_a_drifted_inner_arm_before_any_question_is_answered(harne
                    "--final") == EXIT_USAGE
     assert "graph_global differs from the frozen record" in capsys.readouterr().err
     assert harness.arm.questions == [] and harness.model.requests == []
+
+
+def test_prompt_versions_keep_a_full_version_string_as_it_is():
+    from dataclasses import replace
+
+    from eval.freeze import prompt_versions
+    config = FakeArm([]).config
+    answer = config.answer_prompt
+    assert prompt_versions(config) == [f"answer/v1@{answer.sha256[:8]}"]
+    reduce = replace(answer, version="global_reduce/v1@a5415ee1")
+    assert prompt_versions(replace(config, answer_prompt=reduce)) == ["global_reduce/v1@a5415ee1"]
