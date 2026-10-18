@@ -84,6 +84,10 @@ jobs:
       - name: Run tests
         run: uv run pytest
 
+      # benchmarks/results.md must match a fresh build from the committed run files (Step 13).
+      - name: Results table matches the committed runs
+        run: uv run python -m eval.results_table --check
+
   # The quality gate (Step 6, ADR-0003): the vector arm's real search over the
   # committed snapshot, offline. It needs only the Postgres service; no API keys.
   quality-gate:

@@ -55,14 +55,22 @@ def graph_env(graph, monkeypatch, tmp_path):
 
 
 def _question(qid: str, selected: list[str], kept: list[tuple[str, list[str]]],
-              dropped: list[tuple[str, list[str]]] = ()) -> dict:
+              dropped: list[tuple[str, list[str]]] = (),
+              points: dict[str, list[tuple[list[str], bool]]] | None = None) -> dict:
+    """*points*: per community, its map points' citations and whether each reached reduce."""
+    def point(citations: list[str], in_reduce: bool) -> dict:
+        return {"text": "p", "score": 80, "citations": citations, "kept": True,
+                "in_reduce": in_reduce}
+
     return {
         "id": qid,
         "answer": {"kept": [{"text": t, "citations": c} for t, c in kept],
                    "dropped": [{"text": t, "citations": c, "reason": "not_retrieved"}
                                for t, c in dropped]},
-        "graph": {"global_search": {"map_calls": [{"community_id": c, "rank": i}
-                                                  for i, c in enumerate(selected, 1)]}},
+        "graph": {"global_search": {"map_calls": [
+            {"community_id": c, "rank": i,
+             "points": [point(*p) for p in (points or {}).get(c, [])]}
+            for i, c in enumerate(selected, 1)]}},
     }
 
 
@@ -154,7 +162,7 @@ def test_a_missing_run_file_is_a_bad_argument(graph_env, tmp_path):
 
 
 def test_a_graph_rebuilt_since_the_run_cannot_be_checked(graph_env, tmp_path, capsys):
-    (graph_env / "load-run8.json").write_text("{}")
+    (graph_env / "load-run8.json").write_text('{"counts": {"nodes": 1}}')
     run = _run_file(tmp_path, _question("q1", ["top-a"], kept=[("Wafers.", [SUPPLY_CHUNK])]))
     assert _main(run, graph_env, tmp_path) == EXIT_RUN_ERROR
     assert "load-run8" in capsys.readouterr().err
@@ -165,3 +173,47 @@ def test_a_selected_community_the_graph_lacks_cannot_be_checked(graph_env, tmp_p
     run = _run_file(tmp_path, _question("q1", ["lower-gone"], kept=[("Wafers.", [SUPPLY_CHUNK])]))
     assert _main(run, graph_env, tmp_path) == EXIT_RUN_ERROR
     assert "lower-gone" in capsys.readouterr().err
+
+
+def test_a_later_load_of_the_same_build_checks_the_run(graph_env, tmp_path):
+    """A rebuild whose load report differs only in commit and write time (Step 13 ticket 01
+    rebuilt the Step 12 graph to record its load run) is the graph the run read."""
+    (graph_env / f"{LOAD_RUN}.json").write_text(
+        '{"commit": "aaa1111", "write_seconds": 45.4, "counts": {"nodes": 1}}')
+    (graph_env / "load-run8.json").write_text(
+        '{"commit": "bbb2222", "write_seconds": 59.7, "counts": {"nodes": 1}}')
+    run = _run_file(tmp_path, _question("q1", ["top-a"], kept=[("Wafers.", [SUPPLY_CHUNK])]))
+    assert _main(run, graph_env, tmp_path) == EXIT_OK
+    report = _report(tmp_path)
+    assert (report["load_run"], report["latest_load_run"]) == (LOAD_RUN, "load-run8")
+
+
+def test_the_strict_count_traces_through_the_citing_map_points_community(graph_env, tmp_path):
+    # lower-supply holds the chunk, but only lower-blackwell's point cited it for reduce.
+    run = _run_file(tmp_path, _question(
+        "q0030", ["lower-blackwell", "lower-supply"],
+        kept=[("TSMC makes the wafers.", [SUPPLY_CHUNK]),
+              ("Blackwell drives revenue.", [K_BLACKWELL_CHUNK])],
+        points={"lower-blackwell": [([SUPPLY_CHUNK, K_BLACKWELL_CHUNK], True)],
+                "lower-supply": [([SUPPLY_CHUNK], False)]}))
+    assert _main(run, graph_env, tmp_path) == EXIT_OK  # the gate is the existing count
+    report = _report(tmp_path)
+    assert report["breaks"] == 0
+    strict = report["strict"]
+    assert (strict["citations"], strict["breaks"]) == (2, 1)
+    broken = [t for t in strict["traces"] if t["found"] is None]
+    assert [(b["chunk_id"], b["citing_communities"]) for b in broken] == [
+        (SUPPLY_CHUNK, ["lower-blackwell"])]
+    held = next(t for t in strict["traces"] if t["chunk_id"] == K_BLACKWELL_CHUNK)
+    assert held["found"]["community_id"] == "lower-blackwell"
+
+
+def test_the_strict_count_passes_through_the_right_communitys_point(graph_env, tmp_path):
+    run = _run_file(tmp_path, _question(
+        "q0030", ["lower-blackwell", "lower-supply"],
+        kept=[("TSMC makes the wafers.", [SUPPLY_CHUNK])],
+        points={"lower-supply": [([SUPPLY_CHUNK], True)]}))
+    assert _main(run, graph_env, tmp_path) == EXIT_OK
+    strict = _report(tmp_path)["strict"]
+    assert strict["breaks"] == 0
+    assert strict["traces"][0]["found"]["community_id"] == "lower-supply"
