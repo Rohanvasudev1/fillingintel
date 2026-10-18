@@ -56,6 +56,9 @@ Ask before: adding a dependency, changing a schema, changing the eval harness or
 - graph_global provenance (offline; reads NEO4J_*; writes benchmarks/graph/global-provenance-run{N}.json): uv run --env-file .env python -m graph.global_provenance <run file>. Exit 0 no breaks, 2 bad arguments or not a graph_global run, 3 could not run (including a graph rebuilt since the run, or a selected community it lacks), 4 breaks.
 - `eval.compare --allow-answer-prompts` compares runs whose answer prompts differ (graph_global against vector) and labels the output; without it they are refused.
 - `eval.run` prints each run's estimate before opening the arm; `--max-cost <usd>` refuses above it (exit 2, nothing opened). `--retrieval-only` makes no answer or judge call and writes retrieval metrics and latency only (header `mode`); it works with `--classes` and `--final`.
+- Router classifier alone (network; dev only; writes benchmarks/router/route-run{N}.json): `env -u ANTHROPIC_BASE_URL uv run --env-file .env python -m eval.route --effort low --prompt v2` prints its estimate (cached requests free) and refuses above `--max-cost` (default $1) or past the Step 13 cap counting committed spend (`eval/step13_spend.py`). Exit 0 written, 2 refused, 3 could not run.
+- Router runs: `env -u ANTHROPIC_BASE_URL uv run --env-file .env python -m eval.run --arm router --map pre_registered|dev_best`; `--map` is refused for an arm. A cache-only check: dummy `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` and `VOYAGE_API_KEY` make any cache miss fail instead of spending.
+- Freeze before `test` (needs the databases and keys set, sends nothing; refuses a dirty tree; writes benchmarks/router/frozen.json once): uv run --env-file .env python -m eval.freeze. `eval.run --final` refuses without a matching record.
 - (add when they exist: eval-fast, eval-full)
 
 ## Agent skills

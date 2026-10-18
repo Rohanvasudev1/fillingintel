@@ -25,6 +25,16 @@ DEV_RUNS: RunNames = {
                      "2026-10-17-graph_global-dev-6e26741.json"),
 }
 TEST_RUNS: RunNames = {}
+# The router's runs per split, keyed by routing map (Step 13 ticket 03); their rows are
+# labelled ROUTER_ROWS[map] and never join the dev-best rule or H1-H5.
+ROUTER_ROWS = {"pre_registered": "router (pre-registered)", "dev_best": "router (dev-best)"}
+DEV_ROUTER_RUNS: RunNames = {
+    "pre_registered": ("2026-10-18-router-pre_registered-dev-c1b171d.json",),
+    "dev_best": ("2026-10-18-router-dev_best-dev-c1b171d.json",),
+}
+TEST_ROUTER_RUNS: RunNames = {}
+# eval.route's classifier runs: the effort sweep under route/v1, then route/v2.
+ROUTE_RUNS = tuple(f"benchmarks/router/route-run{n}.json" for n in (1, 2, 3, 4))
 
 # Reports for the "numbers most projects don't publish" block, by repo-relative path.
 CYPHER_VALIDITY = ("benchmarks/graph/cypher-validity-run1.json",

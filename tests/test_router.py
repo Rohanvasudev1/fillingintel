@@ -229,3 +229,19 @@ def test_recorded_haiku_replies_route_each_invented_question_to_its_arm():
     assert {c: r.predicted_class for c, r in routed.items()} == {c: c for c in QUESTIONS}
     assert {c: r.arm for c, r in routed.items()} == {**PRE, "decline": "decline"}
     assert all(r.reason and r.cost.cost_usd > 0 for r in routed.values())
+
+
+def test_the_estimate_prices_classification_and_each_gold_class_by_its_mapped_arm():
+    from retrieve.arm import EstimateQuestion
+    from retrieve.route_classifier import estimate_classification_usd
+    from retrieve.router import RouterEstimate
+
+    arms = StandInArms()
+    questions = [EstimateQuestion("q1", "lookup"), EstimateQuestion("q2", "decline"),
+                 EstimateQuestion("q3", "unanswerable"), EstimateQuestion("q4", "global")]
+    usd = RouterEstimate(PRE_REGISTERED, arms.specs)(questions, retrieval_only=False)
+    classification = estimate_classification_usd(load_route_prompt(ROUTE_PROMPT_VERSION), 4)
+    assert usd == pytest.approx(classification + 0.01 * 3)  # lookup, global, unanswerable
+    with pytest.raises(ValueError, match="dev-best map"):
+        RouterEstimate(DEV_BEST, arms.specs, REPO_ROOT / "missing.json")(
+            questions, retrieval_only=False)

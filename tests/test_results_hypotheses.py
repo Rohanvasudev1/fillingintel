@@ -69,3 +69,14 @@ def test_h5_needs_double_the_p95_and_a_higher_cost_for_every_graph_arm():
     missing = h5({"graph_local": ArmLatencyCost(None, 0.030, 40)}, {"graph_local": slow})
     assert missing.verdict == NOT_TESTABLE
     assert any("total_ms" in r for r in missing.readings)
+
+
+def test_h6_needs_80_percent_accuracy_and_every_decline_declined():
+    from eval.hypotheses import RouterAccuracy, h6
+    assert h6(RouterAccuracy(correct=80, n=100, declined=6, declines=6)).verdict == SUPPORTED
+    assert h6(RouterAccuracy(correct=79, n=100, declined=6, declines=6)).verdict == NOT_SUPPORTED
+    assert h6(RouterAccuracy(correct=95, n=100, declined=5, declines=6)).verdict == NOT_SUPPORTED
+    assert h6(RouterAccuracy(correct=8, n=9, declined=1, declines=1)).verdict == DIRECTIONAL_MET
+    assert h6(None).verdict == NOT_TESTABLE
+    readings = h6(RouterAccuracy(correct=76, n=88, declined=6, declines=6)).readings
+    assert any("76 of 88" in r for r in readings) and any("6 of 6" in r for r in readings)
