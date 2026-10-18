@@ -17,6 +17,7 @@ from types import MappingProxyType
 
 import pytest
 
+from eval.freeze import frozen_document, write_frozen
 from eval.judging.openai_backend import OpenAIUsage
 from eval.judging.runner import JUDGES, JudgeRunError, JudgeSpec
 from eval.judging.scoring import JudgeConfig, JudgeInput, RunScores, metrics_for
@@ -28,6 +29,7 @@ from retrieve.answer_prompt import SourceChunk, load_prompt
 from retrieve.arm import ArmConfig, ArmError, ArmResult, ArmSpec, Retrieval, RetrievedChunk
 from retrieve.pricing import anthropic_cost, embedding_cost
 from retrieve.question_filter import QuestionFilter, parse_question_filter
+from retrieve.route_prompt import load_route_prompt
 from tests.anthropic_fixtures import load, with_text
 from tests.corpus_filings import corpus_filings
 
@@ -234,10 +236,12 @@ def _setup(eval_dir, tmp_path, error=None, filters=None, judge_error=None):
         return main(["--arm", "fake", *argv], arms={"fake": spec},
                     judges=_judge_spec(judge, judge_opened), eval_dir=eval_dir, runs_dir=runs,
                     today=TODAY, response_cache=RESPONSE_CACHE,
-                    uncached_root=tmp_path / "uncached", clock=lambda: 0.0)  # fakes take no time
+                    uncached_root=tmp_path / "uncached", clock=lambda: 0.0,  # fakes take no time
+                    frozen_file=tmp_path / "frozen.json")
 
     run.judge = judge
     run.judge_opened = judge_opened
+    run.arm = arm
     return arm, opened, runs, run
 
 
@@ -262,8 +266,16 @@ def test_test_split_is_refused_without_final(eval_dir, tmp_path, env, capsys):
     assert opened == [] and not runs.exists()
 
 
+def freeze_fake(path: Path, config) -> None:
+    """A frozen record pinning the fake arm's *config*, so ``--final`` may run."""
+    write_frozen(frozen_document(commit="abc1234", router_prompt=load_route_prompt("v1"),
+                                 router_effort="low", maps=[],
+                                 arm_configs={"fake": config}), path)
+
+
 def test_final_scores_the_test_split(eval_dir, tmp_path, env):
     _, _, runs, run = _setup(eval_dir, tmp_path)
+    freeze_fake(tmp_path / "frozen.json", run.arm.config)
     assert run("--split", "test", "--final") == 0
     result = _result(runs)
     assert [q["id"] for q in result["questions"]] == [TEST_ID]

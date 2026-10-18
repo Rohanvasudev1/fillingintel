@@ -30,6 +30,7 @@ from eval import (
     filter_report,
     graph_report,
     operational,
+    router_report,
     wrong_evidence,
 )
 from eval.bootstrap import RngFor, interval_rng, is_directional, mean_interval
@@ -207,6 +208,8 @@ def _retrieval_record(outcome: Outcome) -> dict[str, object]:
         ),
         **({"graph": graph_report.question_graph(result.graph)}
            if result.graph is not None else {}),
+        **({"routing": router_report.question_routing(result.routing)}
+           if result.routing is not None else {}),
     }
 
 
@@ -216,7 +219,7 @@ _FULL_RECORD_ORDER = (
     "filter_matches_labels", "filter_excluded_gold", "retrieved", "companies_without_chunks",
     "retrieval_ms", "embed_ms", "search_ms", "query_cached", "generation_ms", "total_ms",
     "replayed", "embed_tokens", "cost_usd", "metrics", "wrong_evidence", "answer", "judged",
-    "graph",
+    "graph", "routing",
 )
 
 
@@ -260,6 +263,7 @@ def build_header(
         "created_at": run.created_at,
         "commit": run.commit,
         "arm": run.arm,
+        **({"routing_map": config.router.map_name} if config.router is not None else {}),
         "split": run.split,
         "final": run.final,
         "mode": "retrieval_only" if run.retrieval_only else "full",
@@ -277,6 +281,8 @@ def build_header(
         "chunker_version": config.chunker_version,
         **({"graph": graph_report.header_graph(config.graph)} if config.graph is not None
            else {}),
+        **({"router": router_report.router_header(config.router)}
+           if config.router is not None else {}),
         "question_sets": [
             {
                 "name": s.name,
@@ -312,7 +318,10 @@ def _answering(config: ArmConfig, models: Mapping[str, str],
 
 def _graph_definitions(config: ArmConfig) -> dict[str, str]:
     """A graph arm's definitions; graph_global's stages and map-reduce replace the entity
-    arms' stage text."""
+    arms' stage text.  A router run takes those of the arms it opened, and its own."""
+    if config.router is not None:
+        return (router_report.inner_graph_definitions(config.router.arms)
+                | router_report.DEFINITIONS)
     if config.graph is None:
         return {}
     if config.graph.global_search is not None:

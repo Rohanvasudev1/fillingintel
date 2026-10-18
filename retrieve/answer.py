@@ -117,3 +117,12 @@ def not_found_without_call() -> Answer:
                   citation_check=check, model="", message_id="", stop_reason=None,
                   refusal_category=None, usage=TokenUsage(0, 0), cost_usd=0.0,
                   generation_ms=0.0, from_cache=False)
+
+
+def declined_without_call() -> Answer:
+    """``declined`` with no model call: the router declined the question itself."""
+    check = enforce_citations("", ())
+    return Answer(status="declined", text=_shown_text("declined", check), raw_text="",
+                  citation_check=check, model="", message_id="", stop_reason=None,
+                  refusal_category=None, usage=TokenUsage(0, 0), cost_usd=0.0,
+                  generation_ms=0.0, from_cache=False)

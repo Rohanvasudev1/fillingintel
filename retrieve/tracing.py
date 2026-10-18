@@ -40,7 +40,14 @@ from opentelemetry.util.types import AttributeValue
 from ingest.voyage import QUERY_INPUT, Embedding
 from retrieve.answer import Answer
 from retrieve.answer_model import TokenUsage
-from retrieve.arm import Anchor, CypherAttempt, FallbackReason, MapCall, RetrievedChunk
+from retrieve.arm import (
+    Anchor,
+    CypherAttempt,
+    FallbackReason,
+    MapCall,
+    RetrievedChunk,
+    StageCost,
+)
 from retrieve.question_filter import QuestionFilter
 
 if TYPE_CHECKING:
@@ -69,6 +76,10 @@ FALLBACK_SPAN = "fallback"
 COMMUNITY_SELECT_SPAN = "community_select"
 GLOBAL_MAP_SPAN = "global_map"
 GLOBAL_REDUCE_SPAN = "global_reduce"
+# The router (Step 13): a route span holding the classifier call; the inner arm's spans
+# nest under the question span as before.
+ROUTE_SPAN = "route"
+ROUTE_CLASSIFIER_SPAN = "route_classification"
 
 COST_ATTR = "filingintel.cost_usd"  # Phoenix ignores llm.cost.*, and has no Voyage price
 CACHE_HIT_ATTR = "filingintel.cache_hit"
@@ -84,6 +95,9 @@ MAP_OUTCOME_ATTR = "filingintel.map.outcome"
 MAP_KEPT_ATTR = "filingintel.map.points_kept"
 MAP_DROPPED_ATTR = "filingintel.map.points_dropped"
 REDUCE_POINTS_ATTR = "filingintel.reduce.points"
+PREDICTED_CLASS_ATTR = "filingintel.route.predicted_class"
+ROUTE_ARM_ATTR = "filingintel.route.arm"
+ROUTE_MAP_ATTR = "filingintel.route.map"
 
 Kind = OpenInferenceSpanKindValues
 Attributes = Mapping[str, AttributeValue]
@@ -389,3 +403,28 @@ def map_call_attributes(call: MapCall, model: str, usage: TokenUsage,
 def reduce_points_attributes(points: int) -> dict[str, AttributeValue]:
     """How many map points the reduce call read."""
     return {REDUCE_POINTS_ATTR: points}
+
+
+def classifier_attributes(predicted_class: str, cost: StageCost, usage: TokenUsage,
+                          messages: tuple[str, str, str] | None) -> dict[str, AttributeValue]:
+    """The router's classifier call: its class, cost and, unless replayed, tokens.
+
+    *messages* is (system, user, assistant reply) when text capture is on.
+    """
+    attributes: dict[str, AttributeValue] = {
+        PREDICTED_CLASS_ATTR: predicted_class,
+        CACHE_HIT_ATTR: cost.from_cache,
+        COST_ATTR: cost.cost_usd,
+    }
+    if not cost.from_cache:
+        attributes.update(token_count_attributes(usage))
+    if messages is not None:
+        attributes.update(message_attributes(*messages))
+    return attributes
+
+
+def route_attributes(predicted_class: str, arm: str, routing_map: str
+                     ) -> dict[str, AttributeValue]:
+    """The route span: the predicted class, the arm chosen (or decline) and the map."""
+    return {PREDICTED_CLASS_ATTR: predicted_class, ROUTE_ARM_ATTR: arm,
+            ROUTE_MAP_ATTR: routing_map}

@@ -27,6 +27,7 @@ from tests.test_eval_run import (
     _judge_spec,
     env,  # noqa: F401 (fixture)
     eval_dir,  # noqa: F401 (fixture)
+    freeze_fake,
 )
 
 ARM_MS = {"q0072": 1000.0, "q0073": 3000.0, "q0113": 200.0}  # others 100
@@ -89,7 +90,8 @@ class Harness:
         return main(["--arm", "fake", *argv], arms={"fake": spec},
                     judges=_judge_spec(self.judge, self.judge_opened), eval_dir=self._eval_dir,
                     runs_dir=self.runs, today=TODAY, response_cache=RESPONSE_CACHE,
-                    uncached_root=self._tmp / "uncached", clock=self._clock)
+                    uncached_root=self._tmp / "uncached", clock=self._clock,
+                    frozen_file=self._tmp / "frozen.json")
 
     def result(self) -> dict:
         (path,) = self.runs.glob("*.json")
@@ -239,7 +241,8 @@ def test_retrieval_only_runs_with_classes(harness):
     assert result["header"]["classes"] == ["lookup"]
 
 
-def test_retrieval_only_runs_on_test_with_final(harness):
+def test_retrieval_only_runs_on_test_with_final(harness, tmp_path):
+    freeze_fake(tmp_path / "frozen.json", harness.arm.config)
     assert harness("--retrieval-only", "--split", "test", "--final") == 0
     result = harness.result()
     assert [q["id"] for q in result["questions"]] == [TEST_ID]
