@@ -47,7 +47,6 @@ ASSUMED_QUESTION_TOKENS = 100
 ASSUMED_OUTPUT_TOKENS = 3_000
 
 PredictedClass = Literal["lookup", "local", "multi_hop", "global", "decline"]
-DECLINE: PredictedClass = "decline"
 _STOPPED = {"max_tokens": "cut off at max_tokens", "refusal": "refused"}
 
 

@@ -30,9 +30,12 @@ PUBLISHED: Mapping[str, str] = MappingProxyType({
     # global and multi_hop descriptions now separate a theme from particular facts.
     "v2": "c7860cc94f40b76ecaa6581263cda8ea7c00c8a7d7ac76cfb274ece3500c2780",
 })
-PREDICTED_CLASSES = ("lookup", "local", "multi_hop", "global", "decline")
+# The router's classes: the four answerable ones it routes, then the one it declines itself.
+ROUTED_CLASSES = ("lookup", "local", "multi_hop", "global")
+DECLINE = "decline"
+PREDICTED_CLASSES = (*ROUTED_CLASSES, DECLINE)
+HASH_CHARS = 8
 _PARTS = re.compile(r"\A# System\n(?P<system>.*?)\n# User\n(?P<user>.*)\Z", re.DOTALL)
-_HASH_CHARS = 8
 _SCHEMA: dict[str, object] = {
     "type": "object",
     "additionalProperties": False,
@@ -60,7 +63,7 @@ class RoutePrompt:
     @property
     def prompt_version(self) -> str:
         """The version the run header records, such as ``route/v1@0123abcd``."""
-        return f"{KIND}/{self.version}@{self.sha256[:_HASH_CHARS]}"
+        return f"{KIND}/{self.version}@{self.sha256[:HASH_CHARS]}"
 
 
 def route_output_schema() -> dict[str, object]:

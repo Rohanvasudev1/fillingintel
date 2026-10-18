@@ -73,6 +73,7 @@ from eval.results_sources import (
 )
 from eval.schema import NO_GOLD_CLASSES
 from ingest.provenance import REPO_ROOT, git_state
+from retrieve.routing_maps import PRE_REGISTERED
 
 EXIT_OK, EXIT_USAGE, EXIT_COULD_NOT_RUN, EXIT_DIFFERS = 0, 2, 3, 4
 TITLE = "# FilingIntel benchmark results"
@@ -169,7 +170,7 @@ def _latency_cost(questions: Sequence[Mapping]) -> h.ArmLatencyCost:
 
 
 def _h6(dev_routers: Split) -> h.Verdict:
-    runs = dev_routers.get(ROUTER_ROWS["pre_registered"])
+    runs = dev_routers.get(ROUTER_ROWS[PRE_REGISTERED])
     files = runs.full_files() if runs is not None else ()
     if len(files) != 1:
         return h.h6(None)
@@ -224,10 +225,10 @@ def _routing_lines(dev: Split, dev_routers: Split, root: Path
     lines = ["## Router", "", ROUTER_NOTE, "",
              "### Classifier on `dev` (`eval.route`, no arm run)", "",
              "The effort sweep under `route/v1` (the most accurate effort wins, ties to the "
-             "lower), then one revision, `route/v2`, at that effort, driven by the confusion "
-             "matrix (every global question went to multi_hop). The more accurate version is "
-             "the one the router uses. Accuracy is against agent-drafted class labels.", ""]
-    pre = dev_routers.get(ROUTER_ROWS["pre_registered"])
+             "lower), then at most one revision at that effort, driven by the sweep's confusion "
+             "matrices (in the route run files). The more accurate version is the one the "
+             "router uses. Accuracy is against agent-drafted class labels.", ""]
+    pre = dev_routers.get(ROUTER_ROWS[PRE_REGISTERED])
     if pre is None or len(pre.full_files()) != 1:
         return [*lines, "No router run yet.", ""], inputs
     run = pre.full_files()[0]
@@ -241,8 +242,10 @@ def _routing_lines(dev: Split, dev_routers: Split, root: Path
               "### Oracle router on `dev`", "",
               "The oracle gives each answerable question its gold class and the pre-registered "
               "map's arm, reading that arm's own dev run, so it costs nothing. The gap between "
-              "the oracle and the pre-registered router is misclassification; the gap between "
-              "the oracle and the arms is the map's choice.", "",
+              "the oracle and the pre-registered router is misclassification, plus any "
+              "difference between the router's run of an arm and that arm's own run (an arm "
+              "whose model calls missed the cache reran them; see each run's commit and "
+              "graph load run).", "",
               *oracle_lines(dev, dev_routers), ""]
     return lines, inputs
 

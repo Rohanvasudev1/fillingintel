@@ -36,7 +36,8 @@ the map: ``{date}-router-{map}-{split}-{commit}.json``.
 ``dev`` is the default split.  ``test`` is scored only with ``--final``, once,
 for the final benchmark, and only when ``benchmarks/router/frozen.json``
 (``eval.freeze``) matches the arm opened, or the router and every arm it
-opens; the check runs when the arm opens and again before judging.  Results
+opens; the check runs when the arm opens (the router opens every arm its map
+names first) and again before judging.  Results
 go to ``benchmarks/runs/``, which git ignores.
 """
 from __future__ import annotations
@@ -78,6 +79,7 @@ from retrieve.arm import Arm, ArmConfig, ArmError, ArmSpec, EstimateQuestion
 from retrieve.arms import ARMS
 from retrieve.pricing import price_table
 from retrieve.response_cache import DEFAULT_CACHE_DIR as DEFAULT_RESPONSE_CACHE
+from retrieve.router import Router
 from retrieve.routing_maps import MAP_NAMES
 from retrieve.tracing import (
     QUESTION_SPAN,
@@ -255,11 +257,13 @@ def _score(
     JudgeRunError or, against a *frozen* record, FrozenMismatch.
 
     With *retrieval_only* the arm only retrieves, no judge opens, and the judge config
-    is None.  The config is checked against *frozen* when the arm opens and again
-    before judging, since the router opens its arms as questions reach them.
+    is None.  The config is checked against *frozen* when the arm opens (the router
+    first opens every arm its map names) and again before judging.
     """
     with spec.open(cache_dir, spans) as arm:
         _check_priced(arm.config)
+        if frozen is not None and isinstance(arm, Router):
+            arm.open_mapped()  # every inner arm is checked before the first question
         _check_frozen(frozen, spec.name, arm.config)
         outcomes, parents = _run_arm(arm, todo, split, spans, retrieval_only=retrieval_only,
                                      clock=clock)

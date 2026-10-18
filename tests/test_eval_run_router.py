@@ -56,7 +56,8 @@ class RouterHarness:
             @contextmanager
             def open_router(cache, spans=None):
                 classifier = RouteClassifier(self.model, load_route_prompt("v1"), "low", spans)
-                with Router(classifier, load_map(map_name), arm_specs, cache, spans) as router:
+                routing_map = load_map(map_name, ARM_NAMES)
+                with Router(classifier, routing_map, arm_specs, cache, spans) as router:
                     yield router
 
             return ArmSpec(name="router", required_env=(KEY_ENV,), open=open_router,
@@ -106,7 +107,7 @@ def test_a_router_run_names_its_map_and_records_each_routing(harness):
     assert router["prompt"]["version"] == load_route_prompt("v1").prompt_version
     assert router["map"]["name"] == PRE_REGISTERED and router["map"]["arms"]["global"] == \
         "graph_global"
-    assert router["map"]["sha256"] == load_map(PRE_REGISTERED).sha256
+    assert router["map"]["sha256"] == load_map(PRE_REGISTERED, ARM_NAMES).sha256
     assert router["prices"]["date"] == "2026-10-10"
     # every arm the router opened, with its own provenance as its own run records it
     assert set(router["arms"]) == {"vector", "graph_traversal", "graph_global"}
@@ -136,7 +137,8 @@ def _freeze(harness: RouterHarness, **changes) -> None:
     configs = {n: harness.arm.config for n in ARM_NAMES}
     document = frozen_document(
         commit="abc1234", router_prompt=load_route_prompt("v1"), router_effort="low",
-        maps=[load_map(PRE_REGISTERED), load_map(DEV_BEST)], arm_configs=configs)
+        maps=[load_map(PRE_REGISTERED, ARM_NAMES), load_map(DEV_BEST, ARM_NAMES)],
+        arm_configs=configs)
     write_frozen({**document, **changes}, harness.frozen)
 
 
@@ -176,3 +178,14 @@ def test_final_is_refused_when_the_router_differs_from_the_frozen_record(harness
 def test_the_frozen_record_pins_each_arm_by_its_config():
     arm = FakeArm([])
     assert arm_config_sha256(arm.config) == arm_config_sha256(FakeArm([]).config)
+
+
+def test_final_refuses_a_drifted_inner_arm_before_any_question_is_answered(harness, capsys):
+    _freeze(harness)
+    frozen = json.loads(harness.frozen.read_text())
+    frozen["arms"]["graph_global"]["config_sha256"] = "0" * 64
+    harness.frozen.write_text(json.dumps(frozen))
+    assert harness("--arm", "router", "--map", PRE_REGISTERED, "--split", "test",
+                   "--final") == EXIT_USAGE
+    assert "graph_global differs from the frozen record" in capsys.readouterr().err
+    assert harness.arm.questions == [] and harness.model.requests == []

@@ -17,12 +17,11 @@ from pathlib import Path
 from types import MappingProxyType
 
 from ingest.provenance import REPO_ROOT
+from retrieve.route_prompt import ROUTED_CLASSES
 
 PRE_REGISTERED = "pre_registered"
 DEV_BEST = "dev_best"
 MAP_NAMES = (PRE_REGISTERED, DEV_BEST)
-ROUTED_CLASSES = ("lookup", "local", "multi_hop", "global")
-KNOWN_ARMS = ("vector", "graph_local", "graph_traversal", "graph_global")
 DEV_BEST_FILE = REPO_ROOT / "benchmarks" / "router" / "dev-best-map.json"
 H6_MAP: Mapping[str, str] = MappingProxyType({
     "lookup": "vector",
@@ -48,10 +47,14 @@ class RoutingMap:
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
-def load_map(name: str, dev_best_file: Path = DEV_BEST_FILE,
-             known_arms: Collection[str] = KNOWN_ARMS) -> RoutingMap:
-    """The routing map *name*; ``RoutingMapError`` when it cannot be used."""
+def load_map(name: str, known_arms: Collection[str],
+             dev_best_file: Path = DEV_BEST_FILE) -> RoutingMap:
+    """The routing map *name*, whose arms must be among *known_arms* (the registry's);
+    ``RoutingMapError`` when it cannot be used."""
     if name == PRE_REGISTERED:
+        unknown = sorted(set(H6_MAP.values()) - set(known_arms))
+        if unknown:
+            raise RoutingMapError(f"the pre-registered map names unregistered arms {unknown}")
         return RoutingMap(PRE_REGISTERED, H6_MAP, None)
     if name != DEV_BEST:
         raise RoutingMapError(f"unknown routing map {name!r}; choose from {', '.join(MAP_NAMES)}")

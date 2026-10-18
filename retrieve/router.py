@@ -59,11 +59,10 @@ from retrieve.route_classifier import (
     RouteError,
     estimate_classification_usd,
 )
-from retrieve.route_prompt import RoutePromptError, load_route_prompt
+from retrieve.route_prompt import ROUTED_CLASSES, RoutePromptError, load_route_prompt
 from retrieve.routing_maps import (
     DEV_BEST_FILE,
     MAP_NAMES,
-    ROUTED_CLASSES,
     RoutingMap,
     RoutingMapError,
     load_map,
@@ -131,6 +130,12 @@ class Router:
                 arms=MappingProxyType(inner)),
         )
 
+    def open_mapped(self) -> None:
+        """Open every arm the map names now, so the config names them all before any
+        question runs (``eval.run --final`` checks each against the frozen record)."""
+        for name in dict.fromkeys(self._map.arms.values()):
+            self._arm(name)
+
     def run(self, question: str) -> ArmResult:
         routing = self._route(question)
         if routing.declined:
@@ -181,7 +186,7 @@ def open_router(map_name: str, *, arms: Mapping[str, ArmSpec],
     @contextmanager
     def opener(response_cache: Path, spans: SpanRecorder | None = None) -> Iterator[Router]:
         try:
-            routing_map = load_map(map_name, dev_best_file)
+            routing_map = load_map(map_name, arms, dev_best_file)
             prompt = load_route_prompt(prompt_version)
         except (RoutingMapError, RoutePromptError) as exc:
             raise ArmError(f"{ROUTER_NAME}: {exc}") from exc
@@ -206,7 +211,7 @@ class RouterEstimate:
 
     def __call__(self, questions: Sequence[EstimateQuestion], *, retrieval_only: bool) -> float:
         try:
-            routing_map = load_map(self.map_name, self.dev_best_file)
+            routing_map = load_map(self.map_name, self.arms, self.dev_best_file)
             prompt = load_route_prompt(ROUTE_PROMPT_VERSION)
         except (RoutingMapError, RoutePromptError) as exc:
             raise ValueError(str(exc)) from exc

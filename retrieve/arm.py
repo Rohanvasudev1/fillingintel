@@ -19,6 +19,7 @@ from retrieve.answer_model import TokenUsage
 from retrieve.answer_prompt import AnswerPrompt, SourceChunk
 from retrieve.pricing import TABLE_2026_10_05, PriceTable, anthropic_cost
 from retrieve.question_filter import QuestionFilter
+from retrieve.route_prompt import DECLINE
 
 if TYPE_CHECKING:
     from retrieve.tracing import SpanRecorder
@@ -204,7 +205,7 @@ class GraphRetrieval:
                 if self.cypher_attempts else None)
 
 
-DECLINED = "decline"  # the router's "arm" for a question it declined itself
+DECLINED = DECLINE  # the router's "arm" for a question it declined itself
 
 
 @dataclass(frozen=True)

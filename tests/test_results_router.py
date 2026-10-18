@@ -91,3 +91,9 @@ def test_the_sweep_table_marks_the_run_the_router_uses():
                          (run("route/v2@bb", "low", 76), "r4.json")], ("route/v2@bb", "low"))
     assert lines[2].endswith("|  |") and lines[3].endswith("| **yes** |")
     assert "75 of 88" in lines[2]
+
+
+def test_router_rows_are_keyed_by_the_routing_map_names():
+    from eval.results_inputs import DEV_ROUTER_RUNS, ROUTER_ROWS
+    from retrieve.routing_maps import MAP_NAMES
+    assert tuple(ROUTER_ROWS) == MAP_NAMES and set(DEV_ROUTER_RUNS) <= set(MAP_NAMES)

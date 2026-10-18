@@ -15,12 +15,12 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from extract.review_round import wilson
+from retrieve.route_prompt import DECLINE, PREDICTED_CLASSES
 
 LABEL = "against agent-drafted class labels"
-DECLINE = "decline"
 UNANSWERABLE = "unanswerable"
 ERROR = "error"  # the confusion matrix's column for a failed classification
-SCORED_CLASSES = ("lookup", "local", "multi_hop", "global", DECLINE)
+SCORED_CLASSES = PREDICTED_CLASSES  # the gold classes accuracy is read over
 PREDICTED_ORDER = (*SCORED_CLASSES, ERROR)
 
 

@@ -33,6 +33,7 @@ from retrieve.tracing import (
     SpanRecorder,
 )
 from tests.router_fakes import (
+    ARM_NAMES,
     QUESTIONS,
     RecordedRouteModel,
     ScriptedRouteModel,
@@ -50,7 +51,7 @@ def _router(arms: StandInArms, map_name: str = PRE_REGISTERED, bodies=None, span
     bodies = bodies or {q: class_reply(c) for c, q in QUESTIONS.items()}
     model = ScriptedRouteModel(bodies, from_cache=from_cache)
     classifier = RouteClassifier(model, load_route_prompt("v1"), "medium", spans)
-    routing_map = load_map(map_name, DEV_BEST_FILE)
+    routing_map = load_map(map_name, ARM_NAMES, DEV_BEST_FILE)
     return Router(classifier, routing_map, arms.specs, tmp_path or REPO_ROOT, spans), model
 
 
@@ -74,14 +75,14 @@ def test_the_dev_best_map_is_read_from_its_file():
     with router:
         for predicted in ("lookup", "global"):
             assert router.run(QUESTIONS[predicted]).routing.arm == document["map"][predicted]
-    routing_map = load_map(DEV_BEST, DEV_BEST_FILE)
+    routing_map = load_map(DEV_BEST, ARM_NAMES, DEV_BEST_FILE)
     assert routing_map.file == "benchmarks/router/dev-best-map.json"
-    assert routing_map.sha256 != load_map(PRE_REGISTERED, DEV_BEST_FILE).sha256
+    assert routing_map.sha256 != load_map(PRE_REGISTERED, ARM_NAMES, DEV_BEST_FILE).sha256
 
 
 def test_a_missing_dev_best_file_refuses_at_open(tmp_path):
     with pytest.raises(RoutingMapError, match="dev-best map"):
-        load_map(DEV_BEST, tmp_path / "missing.json")
+        load_map(DEV_BEST, ARM_NAMES, tmp_path / "missing.json")
     opener = open_router(DEV_BEST, arms=StandInArms().specs, dev_best_file=tmp_path / "x.json")
     with pytest.raises(ArmError, match="dev-best map"), opener(tmp_path):
         pass
@@ -96,7 +97,7 @@ def test_a_malformed_dev_best_file_is_refused(tmp_path, document):
     path = tmp_path / "map.json"
     path.write_text(json.dumps(document), encoding="utf-8")
     with pytest.raises(RoutingMapError):
-        load_map(DEV_BEST, path)
+        load_map(DEV_BEST, ARM_NAMES, path)
 
 
 def test_decline_returns_the_fixed_sentence_with_no_retrieval_and_no_arm():
@@ -224,7 +225,7 @@ def test_recorded_haiku_replies_route_each_invented_question_to_its_arm():
     assert (model.prompt_version, model.effort) == (prompt.prompt_version, ROUTE_EFFORT)
     arms = StandInArms()
     classifier = RouteClassifier(model, prompt, ROUTE_EFFORT)
-    with Router(classifier, load_map(PRE_REGISTERED), arms.specs, REPO_ROOT) as router:
+    with Router(classifier, load_map(PRE_REGISTERED, ARM_NAMES), arms.specs, REPO_ROOT) as router:
         routed = {c: router.run(q).routing for c, q in QUESTIONS.items()}
     assert {c: r.predicted_class for c, r in routed.items()} == {c: c for c in QUESTIONS}
     assert {c: r.arm for c, r in routed.items()} == {**PRE, "decline": "decline"}
@@ -245,3 +246,8 @@ def test_the_estimate_prices_classification_and_each_gold_class_by_its_mapped_ar
     with pytest.raises(ValueError, match="dev-best map"):
         RouterEstimate(DEV_BEST, arms.specs, REPO_ROOT / "missing.json")(
             questions, retrieval_only=False)
+
+
+def test_a_map_naming_an_unregistered_arm_is_refused():
+    with pytest.raises(RoutingMapError, match="unregistered"):
+        load_map(PRE_REGISTERED, ("vector",))

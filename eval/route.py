@@ -33,7 +33,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
-from eval.question_sets import EVAL_DIR, QuestionSetError, load_question_sets
+from eval.question_sets import EVAL_DIR, QuestionSet, QuestionSetError, load_question_sets
 from eval.route_metrics import LABEL, Classified, route_metrics
 from eval.schema import EvalRecord
 from eval.step13_spend import ROUTER_DIR, STEP_13_CAP_USD, spent_usd
@@ -194,7 +194,8 @@ def _classify_one(classifier: RouteClassifier, record: EvalRecord) -> _Row:
         return _Row(record, None, str(exc))
 
 
-def _report(args: argparse.Namespace, prompt: RoutePrompt, sets, rows: Sequence[_Row],
+def _report(args: argparse.Namespace, prompt: RoutePrompt, sets: Sequence[QuestionSet],
+            rows: Sequence[_Row],
             estimate: float, spent_now: float) -> dict[str, object]:
     classified = [Classified(r.record.id, r.record.class_,
                              r.found.predicted_class if r.found else None) for r in rows]

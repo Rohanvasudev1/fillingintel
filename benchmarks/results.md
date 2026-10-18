@@ -87,7 +87,7 @@ The router rows are not arms: the router classifies each question with claude-ha
 
 ### Classifier on `dev` (`eval.route`, no arm run)
 
-The effort sweep under `route/v1` (the most accurate effort wins, ties to the lower), then one revision, `route/v2`, at that effort, driven by the confusion matrix (every global question went to multi_hop). The more accurate version is the one the router uses. Accuracy is against agent-drafted class labels.
+The effort sweep under `route/v1` (the most accurate effort wins, ties to the lower), then at most one revision at that effort, driven by the sweep's confusion matrices (in the route run files). The more accurate version is the one the router uses. Accuracy is against agent-drafted class labels.
 
 | run | prompt | effort | accuracy [Wilson 95%] | declines declined | false declines | spent (USD) | commit | router uses |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -121,7 +121,7 @@ Unanswerable questions are left out of accuracy: no class names them, so the que
 
 ### Oracle router on `dev`
 
-The oracle gives each answerable question its gold class and the pre-registered map's arm, reading that arm's own dev run, so it costs nothing. The gap between the oracle and the pre-registered router is misclassification; the gap between the oracle and the arms is the map's choice.
+The oracle gives each answerable question its gold class and the pre-registered map's arm, reading that arm's own dev run, so it costs nothing. The gap between the oracle and the pre-registered router is misclassification, plus any difference between the router's run of an arm and that arm's own run (an arm whose model calls missed the cache reran them; see each run's commit and graph load run).
 
 | class | oracle arm | oracle recall@10 | router (pre-registered) recall@10 | router (dev-best) recall@10 |
 | --- | --- | --- | --- | --- |

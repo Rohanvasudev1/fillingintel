@@ -19,7 +19,7 @@ made no model call.
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
 
 from ingest.provenance import REPO_ROOT
@@ -44,7 +44,7 @@ def spent_usd(router_dir: Path = ROUTER_DIR, runs_dir: Path = RUNS_DIR,
     return total + sum(_read(p, _fixture_usd) for p in sorted(fixtures_dir.glob(ROUTE_FIXTURES)))
 
 
-def _read(path: Path, cost) -> float:
+def _read(path: Path, cost: Callable[[Mapping], float]) -> float:
     try:
         return cost(json.loads(path.read_text(encoding="utf-8")))
     except (OSError, UnicodeDecodeError, ValueError, KeyError, TypeError) as exc:

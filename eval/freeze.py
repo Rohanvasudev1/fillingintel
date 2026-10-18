@@ -32,7 +32,7 @@ from retrieve.arm import ArmConfig, ArmError, ArmSpec
 from retrieve.arms import BASE_ARMS
 from retrieve.response_cache import DEFAULT_CACHE_DIR
 from retrieve.route_classifier import ROUTE_EFFORT, ROUTE_MODEL, ROUTE_PROMPT_VERSION
-from retrieve.route_prompt import RoutePrompt, RoutePromptError, load_route_prompt
+from retrieve.route_prompt import HASH_CHARS, RoutePrompt, RoutePromptError, load_route_prompt
 from retrieve.routing_maps import MAP_NAMES, RoutingMap, RoutingMapError, load_map
 
 FROZEN_FILE = REPO_ROOT / "benchmarks" / "router" / "frozen.json"
@@ -53,7 +53,7 @@ def arm_config_sha256(config: ArmConfig) -> str:
 
 def prompt_versions(config: ArmConfig) -> list[str]:
     """Every prompt version an arm's config names, sorted."""
-    found = {f"answer/{config.answer_prompt.version}@{config.answer_prompt.sha256[:8]}"}
+    found = {f"answer/{config.answer_prompt.version}@{config.answer_prompt.sha256[:HASH_CHARS]}"}
     graph = config.graph
     if graph is not None:
         if graph.cypher_prompt_version is not None:
@@ -154,7 +154,7 @@ def main(argv: Sequence[str] | None = None, *, path: Path = FROZEN_FILE) -> int:
         print(f"{path.name} already exists; the record is written once", file=sys.stderr)
         return EXIT_USAGE
     try:
-        maps = [load_map(name) for name in MAP_NAMES]
+        maps = [load_map(name, BASE_ARMS) for name in MAP_NAMES]
         prompt = load_route_prompt(ROUTE_PROMPT_VERSION)
         configs = _configs(BASE_ARMS.values(), DEFAULT_CACHE_DIR)
         write_frozen(frozen_document(commit=commit, router_prompt=prompt,
