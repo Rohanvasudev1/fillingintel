@@ -2545,6 +2545,37 @@ Both are harness changes the user approved on 2026-10-15 (Step 12 grilling). Bra
 **Next session starts with**
 1. `/implement` on `.scratch/step-13/issues/04-judge-calibration-and-corruption-test.md` (the user scores 30 answers, about an hour).
 
+## 2026-10-18: Step 13 ticket 04, judge calibration tools and the corruption test (scoring pending)
+
+Branch `claude/judge-calibration-corruption-test-f6143c`. The calibration tools and the corruption test are built, and the corruption test has run. The user's scoring has not happened yet. The PR waits for it, as the ticket says.
+
+- **Draw** (`eval/calibration/draw.py`, `benchmarks/calibration/draw.json`, written once, seed 20261016). It holds 24 answerable answers with at least one kept sentence and 6 decline or unanswerable answers, from the four arms' own dev runs, one answer per question. Answers are taken round-robin over the 13 arm-and-class strata, so every stratum gets one before any gets two. Global ends up with 8 of the 24, because four arms answer it.
+- **Claims** (`eval/calibration/claims.py`, `prompts/claims/v1.md` pinned as `claims/v1@2fc9ef54`; claude-sonnet-5-5 at effort high). The split produced 425 claims over the 24 answers (2 to 37 per answer). It cost $0.2454 against a $0.4372 estimate. The plan had guessed about $0.10, which assumed short replies. A spot check of the claims found them atomic, with the sentence's own figures and periods.
+- **`eval.calibrate`** (user only). It shows each answer, every retrieved chunk and the claims. The user labels each claim and gives a reason for each "not supported", may add claims the split missed, answers a citation verdict per sentence, and rates relevancy on a written rubric. Decline and not-found answers get a yes or no. The judge's scores are hidden until the entry is saved. An answer under 15 s is offered one more look. A sitting resumes where the last one stopped, and `--rescore 10` repeats ten answers later. Expect about 1.5–2 hours, not 1, because of the claim count.
+- **Report** (`eval.calibration.report`, offline). It implements the statistics of the RESEARCH-PLAN amendment. The judge's per-sentence citation verdicts are recovered by rebuilding its requests against the response cache, and all 24 × 3 replay. Each judged column's label carries its own n (at most 24), not 30. Decline and not-found have no pass rule.
+- **Corruption test** (`eval.corrupt`, seed 20261018; 30 answers disjoint by question from the calibration draw). Committed as `benchmarks/calibration/corruption-run1.json`, run from `8ed7350+dirty` (the run started before the commit; the code under it is unchanged since apart from review fixes to other modules). It made 101 copies, and 19 corruptions were skipped (6 with no number with a unit, 12 with no corpus period, 1 with no uncited chunk). Catches, faithfulness then citation support, labelled "corruption test, not calibration":
+  - changed number: 23 of 24, then 24 of 24;
+  - swapped period: 16 of 18, then 18 of 18;
+  - wrong citation: 0 of 29 (a control, since faithfulness reads no citations), then 29 of 29;
+  - added sentence: 29 of 30, then 30 of 30.
+  The run recorded $0.7471 against a $0.6319 estimate. The recorded figure errs high: it counts a whole judge run as fresh if any one of its calls was.
+- **Harness change, for the user's approval.** `RagasJudges` and `open_judges` take an optional `metrics` limit, with the default unchanged. `retrieve.answer.read_status` is now public. These are the only changes outside `eval/calibration/`, `eval/calibrate.py`, `eval/corrupt.py` and the results table.
+- **results.md.** Each judged column now carries its calibration label. A column that fails calibration leaves the tables and the paired differences, and H4 becomes "not testable" if relevancy fails. Calibration and the catch rates go in the measured-numbers block. Until a report exists, everything stays "uncalibrated".
+- **Review** (`mattpocock-skills:code-review`). Fixed:
+  - the re-score guard's proper-subset test;
+  - silent `None` for missing verdicts (now logged; a corrupt cache file raises);
+  - the reviewer name normalised in one place;
+  - shared constants moved into `eval/calibration/scores.py`, and one rule for a chunk that does not resolve;
+  - per-column n in labels;
+  - H4 under a failed relevancy;
+  - relevancy MAE in the re-score.
+  Left as is: entries stay plain dicts (the scores file is JSON Lines read by one report), and `_NoCalls` is repeated in two modules.
+- **Spend.** Claims $0.25 and corruption $0.75 recorded. Step 13 is at $2.13 of $10 (`eval/step13_spend.py`, which now counts both files).
+
+**Next session starts with**
+1. The user scores: `uv run python -m eval.calibrate --reviewer "Rohan Vasudev"`, then `uv run python -m eval.calibration.report --reviewer "Rohan Vasudev"` and `uv run python -m eval.results_table`, committing the scores, the report and results.md to this PR. Check the pace log in the report.
+2. The 10-answer re-score about a week later (`--rescore 10`), in a later PR.
+
 ---
 
 ## Findings worth telling

@@ -11,7 +11,10 @@ Counted:
   judge requests are replayed too; a retrieval-only run adds its fresh
   embeddings only;
 - the recorded router test replies (``tests/fixtures/anthropic/route_*.json``),
-  in full.
+  in full;
+- calibration (ticket 04): each line of ``benchmarks/calibration/claims.jsonl``
+  (its ``spent_usd``, the claims call when it was not replayed) and every
+  ``corruption-run{N}.json`` (its ``spent_usd``).
 
 A local file not yet committed counts too, which errs high.  Tickets 01 and 02
 made no model call.
@@ -22,6 +25,7 @@ import json
 from collections.abc import Callable, Mapping
 from pathlib import Path
 
+from eval.calibration.scores import CALIBRATION_DIR, CLAIMS_FILE
 from ingest.provenance import REPO_ROOT
 from retrieve.answer_model import parse_reply
 from retrieve.pricing import anthropic_cost
@@ -31,17 +35,33 @@ STEP_13_CAP_USD = 10.0
 ROUTER_DIR = REPO_ROOT / "benchmarks" / "router"
 RUNS_DIR = REPO_ROOT / "benchmarks" / "runs"
 FIXTURES_DIR = REPO_ROOT / "tests" / "fixtures" / "anthropic"
+CORRUPTION_RUNS = "corruption-run*.json"
 ROUTE_RUNS = "route-run*.json"
 ROUTE_FIXTURES = "route_*.json"
 
 
 def spent_usd(router_dir: Path = ROUTER_DIR, runs_dir: Path = RUNS_DIR,
-              fixtures_dir: Path = FIXTURES_DIR) -> float:
+              fixtures_dir: Path = FIXTURES_DIR,
+              calibration_dir: Path = CALIBRATION_DIR) -> float:
     """What Step 13's committed files cost; ValueError naming a file it cannot read."""
-    total = sum(_read(p, lambda d: float(d["spent_usd"]))
-                for p in sorted(router_dir.glob(ROUTE_RUNS)))
+    total = sum(_read(p, _spent) for p in sorted(router_dir.glob(ROUTE_RUNS)))
     total += sum(_read(p, _run_usd) for p in sorted(runs_dir.glob("*.json")))
-    return total + sum(_read(p, _fixture_usd) for p in sorted(fixtures_dir.glob(ROUTE_FIXTURES)))
+    total += sum(_read(p, _fixture_usd) for p in sorted(fixtures_dir.glob(ROUTE_FIXTURES)))
+    total += sum(_read(p, _spent) for p in sorted(calibration_dir.glob(CORRUPTION_RUNS)))
+    claims = calibration_dir / CLAIMS_FILE
+    return total + (_claims_usd(claims) if claims.exists() else 0.0)
+
+
+def _spent(document: Mapping) -> float:
+    return float(document["spent_usd"])
+
+
+def _claims_usd(path: Path) -> float:
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+        return sum(float(json.loads(line)["spent_usd"]) for line in lines if line.strip())
+    except (OSError, UnicodeDecodeError, ValueError, KeyError, TypeError) as exc:
+        raise ValueError(f"cannot read {path.name}: {type(exc).__name__}: {exc}") from exc
 
 
 def _read(path: Path, cost: Callable[[Mapping], float]) -> float:

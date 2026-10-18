@@ -85,10 +85,15 @@ def judged_labels(split: Split) -> str:
     return labels.pop()
 
 
-def answerable_table(split: Split) -> list[str]:
-    label = judged_labels(split)
+def answerable_table(split: Split, labels: Mapping[str, str | None] | None = None
+                     ) -> list[str]:
+    """*labels* maps each judged metric to its column label, or None to leave it out
+    (failed calibration); by default every column carries the run files' label."""
+    if labels is None:
+        labels = dict.fromkeys(JUDGED, judged_labels(split))
+    shown = [m for m in JUDGED if labels.get(m) is not None]
     head = ["class", "arm", "n", *RETRIEVAL, "wrong evidence",
-            *(f"{m.replace('_', ' ')} ({label})" for m in JUDGED),
+            *(f"{m.replace('_', ' ')} ({labels[m]})" for m in shown),
             "p50 total ms", "p95 total ms", "cost / question (USD)"]
     lines = [_row(head), _row(["---"] * len(head))]
     for class_ in GATED_CLASSES:
@@ -97,16 +102,16 @@ def answerable_table(split: Split) -> list[str]:
             if source is None:
                 continue
             cell, mode = source.cell(class_), source.mode
-            judged = ([RETRIEVAL_ONLY_TEXT] * len(JUDGED) if mode == RETRIEVAL_ONLY
-                      else [_judged(cell, m) for m in JUDGED])
+            judged = ([RETRIEVAL_ONLY_TEXT] * len(shown) if mode == RETRIEVAL_ONLY
+                      else [_judged(cell, m) for m in shown])
             lines.append(_row([class_, arm, _n(cell), *(_metric(cell, m) for m in RETRIEVAL),
                                _wrong(cell, mode), *judged, *_total(cell, mode),
                                _cost(cell, mode)]))
     return lines
 
 
-def no_gold_table(split: Split) -> list[str]:
-    label = judged_labels(split)
+def no_gold_table(split: Split, label: str | None = None) -> list[str]:
+    label = label if label is not None else judged_labels(split)
     head = ["class", "arm", "n", f"correct ({label})", "p50 total ms", "p95 total ms",
             "cost / question (USD)"]
     lines = [_row(head), _row(["---"] * len(head))]
@@ -125,10 +130,12 @@ def _row(cells: Sequence[str]) -> str:
     return "| " + " | ".join(cells) + " |"
 
 
-def paired_rows(split: Split) -> list[tuple[str, str, PairedDifference]]:
+def paired_rows(split: Split, dropped: Sequence[str] = ()
+                ) -> list[tuple[str, str, PairedDifference]]:
     """``(arm, file, difference)`` for every graph arm against vector, by arm then class:
     each class from the arm's source file for it, pooled from a file holding every
-    answerable class (a full one first)."""
+    answerable class (a full one first).  Judged metrics in *dropped* are left out."""
+    left_out = {f"judged.metrics.{m}.mean" for m in dropped}
     control = split[CONTROL_ARM]
     rows = []
     for arm, runs in split.items():
@@ -143,7 +150,8 @@ def paired_rows(split: Split) -> list[tuple[str, str, PairedDifference]]:
             metrics = PAIRED_NO_GOLD.get(class_, None)
             wanted = (metrics,) if metrics else PAIRED_METRICS
             found = {d.metric: d for d in paired(base, source).differences if d.class_ == class_}
-            rows += [(arm, source.input.path, found[m]) for m in wanted if m in found]
+            rows += [(arm, source.input.path, found[m]) for m in wanted
+                     if m in found and m not in left_out]
     return rows
 
 
@@ -153,11 +161,11 @@ def _pooled_source(files: Sequence[RunFile]) -> RunFile | None:
     return holding[0] if holding else None
 
 
-def paired_table(split: Split) -> list[str]:
+def paired_table(split: Split, dropped: Sequence[str] = ()) -> list[str]:
     head = ["arm", "class", "metric", "n", "difference (arm - vector) [95%]", "counts",
             "note"]
     lines = [_row(head), _row(["---"] * len(head))]
-    for arm, _, d in paired_rows(split):
+    for arm, _, d in paired_rows(split, dropped):
         notes = [n for n in ("directional" if d.directional else None, d.label,
                              f"{d.unpaired} unpaired" if d.unpaired else None) if n]
         lines.append(_row([arm, d.class_, METRIC_NAMES.get(d.metric, d.metric), str(d.n),

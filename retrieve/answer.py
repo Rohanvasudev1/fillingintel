@@ -60,7 +60,7 @@ class Answer:
     from_cache: bool
 
 
-def _read_status(text: str) -> tuple[AnswerStatus, str]:
+def read_status(text: str) -> tuple[AnswerStatus, str]:
     """The status line's value and the text after it; ``no_status`` if it is missing."""
     match = _STATUS_LINE.match(text)
     if match is None:
@@ -92,7 +92,7 @@ def read_answer(response: ApiResponse, allowed: Collection[str]) -> Answer:
     The reply must carry the status line; graph_global's reduce reply does too.
     """
     reply = parse_reply(response.body)
-    status, body = ("refused", "") if reply.stop_reason == "refusal" else _read_status(reply.text)
+    status, body = ("refused", "") if reply.stop_reason == "refusal" else read_status(reply.text)
     check = enforce_citations(body, allowed)
     return Answer(
         status=status,

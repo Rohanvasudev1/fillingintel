@@ -122,11 +122,14 @@ class Judge(Protocol):
 class RagasJudges:
     """The real judges: the configured OpenAI model through the response cache, Voyage for
     relevancy.  With *spans*, each metric is an EVALUATOR span under whichever span is
-    current, holding one LLM span per judge call."""
+    current, holding one LLM span per judge call.  *metrics*, when given, limits each
+    question to those of its metrics (the corruption test scores two)."""
 
     def __init__(self, backend: AnswerModel, embedder: QueryEmbedder,
-                 config: JudgeConfig | None = None, spans: SpanRecorder | None = None):
+                 config: JudgeConfig | None = None, spans: SpanRecorder | None = None,
+                 metrics: tuple[str, ...] | None = None):
         self._backend = backend
+        self._metrics = metrics
         self._embedder = embedder
         self.config = config if config is not None else JudgeConfig()
         self._spans = spans if spans is not None else SpanRecorder.off()
@@ -140,6 +143,8 @@ class RagasJudges:
         errors: dict[str, str] = {}
         verdicts: dict[str, tuple[bool, ...]] = {}
         for name in metrics_for(item.class_):
+            if self._metrics is not None and name not in self._metrics:
+                continue
             with self._spans.span(name, Kind.EVALUATOR, evaluator_attributes(name, run)) as span:
                 try:
                     scored = scorers[name]()

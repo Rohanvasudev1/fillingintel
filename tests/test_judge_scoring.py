@@ -208,3 +208,12 @@ def test_a_failed_verdict_metric_keeps_no_verdicts():
     scores = _judges(ScriptedBackend(replies)).judge(_item(), run=1)
     assert scores.scores["citation_support"] is None
     assert "citation_support" not in scores.verdicts
+
+
+def test_judges_can_be_limited_to_some_metrics():
+    """The corruption test scores faithfulness and citation support only (Step 13 ticket 04)."""
+    backend = ScriptedBackend(_replies())
+    judges = RagasJudges(backend, FixedEmbedder({}), metrics=("faithfulness", "citation_support"))
+    scores = judges.judge(_item(), 1)
+    assert set(scores.scores) == {"faithfulness", "citation_support"}
+    assert "AnswerRelevanceOutput" not in {schema_title(r) for r in backend.requests}

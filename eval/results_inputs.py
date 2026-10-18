@@ -51,3 +51,6 @@ GLOBAL_PROVENANCE = "benchmarks/graph/global-provenance-run2.json"
 GLOBAL_HANDOFF = "benchmarks/graph/global-handoff-run1.json"
 DEV_BEST_MAP = "benchmarks/router/dev-best-map.json"
 RESULTS_MD = "benchmarks/results.md"
+# Judge calibration (ticket 04): the report of the user's scores and the corruption test.
+CALIBRATION_REPORT = "benchmarks/calibration/report.json"
+CORRUPTION_RUN = "benchmarks/calibration/corruption-run1.json"

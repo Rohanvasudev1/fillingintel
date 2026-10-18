@@ -2,12 +2,13 @@
 
 Built by `uv run python -m eval.results_table` from the committed files listed below; CI rebuilds it and fails on any difference. Do not edit by hand.
 
-**Every number here is on agent-drafted questions**: 140 questions agents wrote with their gold chunks, not reviewed by a human (`eval/agent_drafted_set.jsonl`). Judged columns come from gpt-6-luna and are uncalibrated until judge calibration (Step 13 ticket 04).
+**Every number here is on agent-drafted questions**: 140 questions agents wrote with their gold chunks, not reviewed by a human (`eval/agent_drafted_set.jsonl`). Judged columns come from gpt-6-luna; each column's header says whether it passed calibration against the user's own scores (see Judge calibration).
 
 ### Inputs
 
 | file | sha256 | commit |
 |---|---|---|
+| `benchmarks/calibration/corruption-run1.json` | `941f0a2ee7b85fb08e49435047822104d4af51003b9566f949411e7753f5ac1b` | `8ed7350+dirty` |
 | `benchmarks/extraction/0000002488-24-000056-run2.json` | `e6de780b8a651149f62ea76d02d53138ab75480d9c45240ecd64c966355ac7ed` | `67662a2` |
 | `benchmarks/extraction/0000002488-24-000123-run2.json` | `27b3ff029c87dfe6fef53ebad7fd4273942f94d38b6a5454d4e462fc2aef6772` | `67662a2` |
 | `benchmarks/extraction/0000002488-24-000163-run2.json` | `64eb62dbe97388afcb744ea068d83fbee9a7e9cf348844400522fa4195d20b4d` | `67662a2` |
@@ -208,6 +209,21 @@ Precision 0.958 [0.864, 1.000], recall 0.428 [0.298, 0.572]; agent-labelled (gpt
 | multi_hop | 23 | 0.348 | 0.489 | 0.471 | 0.543 |
 | global | 10 | 0.333 | 0.458 | 0.400 | 0.525 |
 | pooled | 82 | 0.443 | 0.602 | 0.583 | 0.637 |
+
+### Judge calibration
+
+Calibration: not scored yet (`python -m eval.calibrate`, the user only). Until then every judged column is uncalibrated.
+
+Corruption test, not calibration: `benchmarks/calibration/corruption-run1.json` at `8ed7350+dirty`. Four known errors planted in 30 dev answers outside the calibration draw. A faithfulness catch is a lower mean score than the uncorrupted answer's; a citation-support catch is a not-supported majority on the changed sentence.
+
+| error | copies | skipped | faithfulness caught [Wilson 95%] | faithfulness before -> after | citation support caught [Wilson 95%] | already not supported |
+|---|---|---|---|---|---|---|
+| changed number | 24 | 6 | 23 of 24 (0.958 [0.798, 0.993]) | 0.929 -> 0.767 | 24 of 24 (1.000 [0.862, 1.000]) | 1 |
+| swapped period | 18 | 12 | 16 of 18 (0.889 [0.672, 0.969]) | 0.905 -> 0.750 | 18 of 18 (1.000 [0.824, 1.000]) | 2 |
+| wrong citation | 29 | 1 | 0 of 29 (0.000 [0.000, 0.117]) | 0.920 -> 0.920 | 29 of 29 (1.000 [0.883, 1.000]) | 2 |
+| added sentence | 30 | 0 | 29 of 30 (0.967 [0.833, 0.994]) | 0.922 -> 0.753 | 30 of 30 (1.000 [0.886, 1.000]) | 0 |
+
+Faithfulness reads the answer without its citations, so a wrong citation cannot lower it: that row is a control.
 
 ## `dev` results
 

@@ -122,10 +122,11 @@ class _GuardedJudges:
 
 @contextmanager
 def open_judges(response_cache: Path, config: JudgeConfig | None = None,
-                spans: SpanRecorder | None = None) -> Iterator[Judge]:
+                spans: SpanRecorder | None = None,
+                metrics: tuple[str, ...] | None = None) -> Iterator[Judge]:
     """The OpenAI judge model and Voyage, each behind its disk cache.  *config* picks the
     judge model and effort; the default is the configured judge.  *spans* records judge
-    spans; with none, nothing is recorded."""
+    spans; with none, nothing is recorded.  *metrics* limits the metrics judged."""
     with ExitStack() as stack:
         try:
             backend = stack.enter_context(OpenAIResponsesModel.from_env())
@@ -133,7 +134,8 @@ def open_judges(response_cache: Path, config: JudgeConfig | None = None,
         except (AnswerModelError, VoyageError) as exc:
             raise JudgeRunError(f"cannot start the judges: {exc}") from exc
         yield _GuardedJudges(RagasJudges(CachedAnswerModel(backend, response_cache),
-                                           CachedQueryEmbedder(voyage), config, spans))
+                                           CachedQueryEmbedder(voyage), config, spans,
+                                           metrics))
 
 
 def _open_configured_judges(response_cache: Path,
