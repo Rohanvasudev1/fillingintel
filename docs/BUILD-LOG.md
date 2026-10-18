@@ -2540,9 +2540,10 @@ Both are harness changes the user approved on 2026-10-15 (Step 12 grilling). Bra
 - **Verify.** `uv run ruff check .` clean. New tests seen failing first: the classifier (prompt pin, request, unusable replies), the router through `Arm.run` with stand-in arms (dispatch per map, decline, routing record, stage, spans, errors, lazy open, dev-best file), `eval.route` metrics, `eval.run` `--map` and `--final` (including a drifted inner arm refused before any question), H6 near its threshold, and the router section on constructed records; recorded Haiku replies for 5 invented and 6 dev questions. Full `uv run --env-file .env pytest`: 2780 passed, 1 skipped. `results_table --check` matches under two hash seeds.
 - **Spend.** Route runs $0.026, recorded replies about $0.0004, pre-registered router run about $1.11 (graph_traversal's Cypher, answers and judges; routing replayed), dev-best $0 (cache only, run with dummy keys). Step 13: $1.14 of $10 (`eval/step13_spend.py`).
 
+- **User decisions (2026-10-18).** route/v2 stays frozen with its third multi_hop example. The Step 13 cap check in `eval.run`, with estimates that credit cached answers, goes into ticket 05 before any `test` call.
+
 **Next session starts with**
-1. The user's view on route/v2's third multi_hop example and on a Step 13 cap check in `eval.run`.
-2. `/implement` on `.scratch/step-13/issues/04-judge-calibration-and-corruption-test.md`.
+1. `/implement` on `.scratch/step-13/issues/04-judge-calibration-and-corruption-test.md` (the user scores 30 answers, about an hour).
 
 ---
 
