@@ -1,0 +1,2324 @@
+{
+  "commit": "4579da0",
+  "label": "agent-drafted questions",
+  "run_file": "2026-10-19-graph_global-test-f761581.json",
+  "run_sha256": "e2705f8ae741a7c46dc868aa730f5dea070fbce7a658f645be47184db28f59e2",
+  "load_run": "load-run6",
+  "latest_load_run": "load-run6",
+  "citations": 82,
+  "breaks": 0,
+  "strict": {
+    "rule": "a kept citation passes only through a community whose kept map point in the reduce input cites the chunk; reported beside the gate, not a gate",
+    "citations": 82,
+    "breaks": 0,
+    "traces": [
+      {
+        "id": "q0014",
+        "chunk_id": "0001045810-26-000021:0016",
+        "citing_communities": [
+          "lower-dd0efe881d6f"
+        ],
+        "found": {
+          "community_id": "lower-dd0efe881d6f",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:compliance with governmental regulations could increase costs and affect results"
+        }
+      },
+      {
+        "id": "q0014",
+        "chunk_id": "0001045810-26-000021:0016",
+        "citing_communities": [
+          "lower-dd0efe881d6f"
+        ],
+        "found": {
+          "community_id": "lower-dd0efe881d6f",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:compliance with governmental regulations could increase costs and affect results"
+        }
+      },
+      {
+        "id": "q0015",
+        "chunk_id": "0000002488-25-000012:0005",
+        "citing_communities": [
+          "lower-3625e203ffbe"
+        ],
+        "found": {
+          "community_id": "lower-3625e203ffbe",
+          "via": "evidenced_by",
+          "node": "Organization:zt systems"
+        }
+      },
+      {
+        "id": "q0015",
+        "chunk_id": "0000002488-26-000018:0006",
+        "citing_communities": [
+          "lower-3625e203ffbe"
+        ],
+        "found": {
+          "community_id": "lower-3625e203ffbe",
+          "via": "evidenced_by",
+          "node": "Agreement:product purchase agreement with openai"
+        }
+      },
+      {
+        "id": "q0015",
+        "chunk_id": "0000002488-26-000018:0072",
+        "citing_communities": [
+          "lower-3625e203ffbe"
+        ],
+        "found": {
+          "community_id": "lower-3625e203ffbe",
+          "via": "evidenced_by",
+          "node": "Agreement:acquisition of zt systems"
+        }
+      },
+      {
+        "id": "q0015",
+        "chunk_id": "0000002488-26-000018:0072",
+        "citing_communities": [
+          "lower-3625e203ffbe"
+        ],
+        "found": {
+          "community_id": "lower-3625e203ffbe",
+          "via": "evidenced_by",
+          "node": "Agreement:acquisition of zt systems"
+        }
+      },
+      {
+        "id": "q0016",
+        "chunk_id": "0000002488-25-000047:0009",
+        "citing_communities": [
+          "lower-3b9761ebebb1"
+        ],
+        "found": {
+          "community_id": "lower-3b9761ebebb1",
+          "via": "evidenced_by",
+          "node": "Product:adaptive soc products"
+        }
+      },
+      {
+        "id": "q0016",
+        "chunk_id": "0000002488-25-000047:0009",
+        "citing_communities": [
+          "lower-3b9761ebebb1"
+        ],
+        "found": {
+          "community_id": "lower-3b9761ebebb1",
+          "via": "evidenced_by",
+          "node": "Product:adaptive soc products"
+        }
+      },
+      {
+        "id": "q0017",
+        "chunk_id": "0000002488-24-000056:0065",
+        "citing_communities": [
+          "lower-2329dda817bc"
+        ],
+        "found": {
+          "community_id": "lower-2329dda817bc",
+          "via": "evidenced_by",
+          "node": "0000002488-24-000056:our inability to continue to attract and retain qualified personnel may hinder our business"
+        }
+      },
+      {
+        "id": "q0017",
+        "chunk_id": "0000002488-24-000056:0065",
+        "citing_communities": [
+          "lower-2329dda817bc"
+        ],
+        "found": {
+          "community_id": "lower-2329dda817bc",
+          "via": "evidenced_by",
+          "node": "0000002488-24-000056:our inability to continue to attract and retain qualified personnel may hinder our business"
+        }
+      },
+      {
+        "id": "q0020",
+        "chunk_id": "0000050863-26-000011:0011",
+        "citing_communities": [
+          "lower-90f16cb61339"
+        ],
+        "found": {
+          "community_id": "lower-90f16cb61339",
+          "via": "evidenced_by",
+          "node": "Organization:apple"
+        }
+      },
+      {
+        "id": "q0020",
+        "chunk_id": "0000050863-26-000011:0015",
+        "citing_communities": [
+          "lower-90f16cb61339"
+        ],
+        "found": {
+          "community_id": "lower-90f16cb61339",
+          "via": "evidenced_by",
+          "node": "Product:intel core ultra"
+        }
+      },
+      {
+        "id": "q0020",
+        "chunk_id": "0000050863-26-000011:0015",
+        "citing_communities": [
+          "lower-90f16cb61339"
+        ],
+        "found": {
+          "community_id": "lower-90f16cb61339",
+          "via": "evidenced_by",
+          "node": "Product:intel core ultra"
+        }
+      },
+      {
+        "id": "q0020",
+        "chunk_id": "0000050863-26-000011:0011",
+        "citing_communities": [
+          "lower-90f16cb61339"
+        ],
+        "found": {
+          "community_id": "lower-90f16cb61339",
+          "via": "evidenced_by",
+          "node": "Organization:apple"
+        }
+      },
+      {
+        "id": "q0020",
+        "chunk_id": "0000050863-26-000011:0011",
+        "citing_communities": [
+          "lower-90f16cb61339"
+        ],
+        "found": {
+          "community_id": "lower-90f16cb61339",
+          "via": "evidenced_by",
+          "node": "Organization:apple"
+        }
+      },
+      {
+        "id": "q0020",
+        "chunk_id": "0000050863-26-000011:0035",
+        "citing_communities": [
+          "lower-90f16cb61339"
+        ],
+        "found": {
+          "community_id": "lower-90f16cb61339",
+          "via": "evidenced_by",
+          "node": "Segment:50863:ccg"
+        }
+      },
+      {
+        "id": "q0021",
+        "chunk_id": "0001045810-26-000021:0046",
+        "citing_communities": [
+          "lower-301b260ee3ae"
+        ],
+        "found": {
+          "community_id": "lower-301b260ee3ae",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:chinese government restrictions on gaming and oversight of digital platform companies"
+        }
+      },
+      {
+        "id": "q0021",
+        "chunk_id": "0001045810-25-000023:0024",
+        "citing_communities": [
+          "lower-cfac871fdedb"
+        ],
+        "found": {
+          "community_id": "lower-cfac871fdedb",
+          "via": "evidenced_by",
+          "node": "0001045810-25-000023:challenges in estimating demand could become more pronounced or volatile in the future on both a global and regional basis"
+        }
+      },
+      {
+        "id": "q0021",
+        "chunk_id": "0001045810-25-000023:0023",
+        "citing_communities": [
+          "lower-cfac871fdedb"
+        ],
+        "found": {
+          "community_id": "lower-cfac871fdedb",
+          "via": "evidenced_by",
+          "node": "0001045810-25-000023:challenges in estimating demand could become more pronounced or volatile in the future on both a global and regional basis"
+        }
+      },
+      {
+        "id": "q0021",
+        "chunk_id": "0001045810-24-000264:0059",
+        "citing_communities": [
+          "lower-301b260ee3ae"
+        ],
+        "found": {
+          "community_id": "lower-301b260ee3ae",
+          "via": "evidenced_by",
+          "node": "0001045810-24-000264:excessive or shifting export controls increase the risk of investing in u.s. advanced semiconductor products"
+        }
+      },
+      {
+        "id": "q0021",
+        "chunk_id": "0001045810-25-000116:0051",
+        "citing_communities": [
+          "lower-301b260ee3ae"
+        ],
+        "found": {
+          "community_id": "lower-301b260ee3ae",
+          "via": "evidenced_by",
+          "node": "Regulation:action plan"
+        }
+      },
+      {
+        "id": "q0021",
+        "chunk_id": "0000050863-25-000009:0058",
+        "citing_communities": [
+          "lower-b552717824f1"
+        ],
+        "found": {
+          "community_id": "lower-b552717824f1",
+          "via": "evidenced_by",
+          "node": "0000050863-25-000009:changes in global trade and technology supply chains"
+        }
+      },
+      {
+        "id": "q0021",
+        "chunk_id": "0000050863-25-000009:0059",
+        "citing_communities": [
+          "lower-b552717824f1"
+        ],
+        "found": {
+          "community_id": "lower-b552717824f1",
+          "via": "evidenced_by",
+          "node": "0000050863-25-000009:geopolitical and security issues"
+        }
+      },
+      {
+        "id": "q0021",
+        "chunk_id": "0000050863-25-000009:0059",
+        "citing_communities": [
+          "lower-b552717824f1"
+        ],
+        "found": {
+          "community_id": "lower-b552717824f1",
+          "via": "evidenced_by",
+          "node": "0000050863-25-000009:geopolitical and security issues"
+        }
+      },
+      {
+        "id": "q0021",
+        "chunk_id": "0000050863-25-000009:0058",
+        "citing_communities": [
+          "lower-b552717824f1"
+        ],
+        "found": {
+          "community_id": "lower-b552717824f1",
+          "via": "evidenced_by",
+          "node": "0000050863-25-000009:changes in global trade and technology supply chains"
+        }
+      },
+      {
+        "id": "q0021",
+        "chunk_id": "0000050863-26-000011:0072",
+        "citing_communities": [
+          "lower-b552717824f1"
+        ],
+        "found": {
+          "community_id": "lower-b552717824f1",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:macroeconomic conditions and geopolitical tensions and conflicts, including changes to trade policies and regulations, present significant risks to us in many jurisdictions"
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000002488-25-000012:0034",
+        "citing_communities": [
+          "lower-70386ee9ef57",
+          "lower-41758a480a2d"
+        ],
+        "found": {
+          "community_id": "lower-70386ee9ef57",
+          "via": "evidenced_by",
+          "node": "0000002488-25-000012:our products may be subject to security vulnerabilities that could have a material adverse effect on us."
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000002488-26-000018:0033",
+        "citing_communities": [
+          "lower-70386ee9ef57"
+        ],
+        "found": {
+          "community_id": "lower-70386ee9ef57",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:our products may be subject to security vulnerabilities that could have a material adverse effect on us."
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000002488-25-000012:0034",
+        "citing_communities": [
+          "lower-70386ee9ef57",
+          "lower-41758a480a2d"
+        ],
+        "found": {
+          "community_id": "lower-70386ee9ef57",
+          "via": "evidenced_by",
+          "node": "0000002488-25-000012:our products may be subject to security vulnerabilities that could have a material adverse effect on us."
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000002488-25-000166:0054",
+        "citing_communities": [
+          "lower-70386ee9ef57",
+          "lower-41758a480a2d"
+        ],
+        "found": {
+          "community_id": "lower-70386ee9ef57",
+          "via": "evidenced_by",
+          "node": "0000002488-25-000166:failure to achieve expected manufacturing yields for our products could negatively impact our results of operations."
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000002488-25-000108:0056",
+        "citing_communities": [
+          "lower-70386ee9ef57"
+        ],
+        "found": {
+          "community_id": "lower-70386ee9ef57",
+          "via": "evidenced_by",
+          "node": "0000002488-25-000108:our revenue from our semi-custom soc products is dependent upon our semi-custom soc products being incorporated into customers\u2019 products and the success of those products"
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000002488-25-000166:0054",
+        "citing_communities": [
+          "lower-70386ee9ef57",
+          "lower-41758a480a2d"
+        ],
+        "found": {
+          "community_id": "lower-70386ee9ef57",
+          "via": "evidenced_by",
+          "node": "0000002488-25-000166:failure to achieve expected manufacturing yields for our products could negatively impact our results of operations."
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000002488-25-000012:0034",
+        "citing_communities": [
+          "lower-70386ee9ef57",
+          "lower-41758a480a2d"
+        ],
+        "found": {
+          "community_id": "lower-70386ee9ef57",
+          "via": "evidenced_by",
+          "node": "0000002488-25-000012:our products may be subject to security vulnerabilities that could have a material adverse effect on us."
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000002488-25-000166:0054",
+        "citing_communities": [
+          "lower-70386ee9ef57",
+          "lower-41758a480a2d"
+        ],
+        "found": {
+          "community_id": "lower-70386ee9ef57",
+          "via": "evidenced_by",
+          "node": "0000002488-25-000166:failure to achieve expected manufacturing yields for our products could negatively impact our results of operations."
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000002488-25-000012:0034",
+        "citing_communities": [
+          "lower-70386ee9ef57",
+          "lower-41758a480a2d"
+        ],
+        "found": {
+          "community_id": "lower-70386ee9ef57",
+          "via": "evidenced_by",
+          "node": "0000002488-25-000012:our products may be subject to security vulnerabilities that could have a material adverse effect on us."
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000002488-25-000166:0054",
+        "citing_communities": [
+          "lower-70386ee9ef57",
+          "lower-41758a480a2d"
+        ],
+        "found": {
+          "community_id": "lower-70386ee9ef57",
+          "via": "evidenced_by",
+          "node": "0000002488-25-000166:failure to achieve expected manufacturing yields for our products could negatively impact our results of operations."
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000002488-25-000012:0020",
+        "citing_communities": [
+          "lower-41758a480a2d"
+        ],
+        "found": {
+          "community_id": "lower-41758a480a2d",
+          "via": "evidenced_by",
+          "node": "0000002488-25-000012:costs related to defective products could have a material adverse effect on us"
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000050863-26-000011:0077",
+        "citing_communities": [
+          "lower-3e417445d79c"
+        ],
+        "found": {
+          "community_id": "lower-3e417445d79c",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:we are subject to the risks of product defects, errata or other product issues"
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000050863-26-000011:0077",
+        "citing_communities": [
+          "lower-3e417445d79c"
+        ],
+        "found": {
+          "community_id": "lower-3e417445d79c",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:we are subject to the risks of product defects, errata or other product issues"
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000050863-26-000011:0077",
+        "citing_communities": [
+          "lower-3e417445d79c"
+        ],
+        "found": {
+          "community_id": "lower-3e417445d79c",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:we are subject to the risks of product defects, errata or other product issues"
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000050863-26-000011:0077",
+        "citing_communities": [
+          "lower-3e417445d79c"
+        ],
+        "found": {
+          "community_id": "lower-3e417445d79c",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:we are subject to the risks of product defects, errata or other product issues"
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000050863-26-000011:0077",
+        "citing_communities": [
+          "lower-3e417445d79c"
+        ],
+        "found": {
+          "community_id": "lower-3e417445d79c",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:we are subject to the risks of product defects, errata or other product issues"
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000050863-25-000009:0063",
+        "citing_communities": [
+          "lower-3e417445d79c"
+        ],
+        "found": {
+          "community_id": "lower-3e417445d79c",
+          "via": "evidenced_by",
+          "node": "0000050863-25-000009:costs from defects, errata, or other product issues could include%3a"
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000050863-26-000011:0078",
+        "citing_communities": [
+          "lower-3e417445d79c"
+        ],
+        "found": {
+          "community_id": "lower-3e417445d79c",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:security vulnerabilities and/or mitigation techniques can result in adverse performance or power effects, reboots, system instability or unavailability"
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000050863-26-000011:0078",
+        "citing_communities": [
+          "lower-3e417445d79c"
+        ],
+        "found": {
+          "community_id": "lower-3e417445d79c",
+          "via": "evidenced_by",
+          "node": "0000050863-26-000011:security vulnerabilities and/or mitigation techniques can result in adverse performance or power effects, reboots, system instability or unavailability"
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000002488-25-000012:0034",
+        "citing_communities": [
+          "lower-70386ee9ef57",
+          "lower-41758a480a2d"
+        ],
+        "found": {
+          "community_id": "lower-70386ee9ef57",
+          "via": "evidenced_by",
+          "node": "0000002488-25-000012:our products may be subject to security vulnerabilities that could have a material adverse effect on us."
+        }
+      },
+      {
+        "id": "q0027",
+        "chunk_id": "0000002488-26-000018:0033",
+        "citing_communities": [
+          "lower-70386ee9ef57"
+        ],
+        "found": {
+          "community_id": "lower-70386ee9ef57",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:our products may be subject to security vulnerabilities that could have a material adverse effect on us."
+        }
+      },
+      {
+        "id": "q0029",
+        "chunk_id": "0001045810-26-000021:0047",
+        "citing_communities": [
+          "lower-fce36540eb64"
+        ],
+        "found": {
+          "community_id": "lower-fce36540eb64",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:actions to adequately protect our ip rights could result in substantial costs to us and our ability to compete could be harmed if we are unsuccessful or if we are prohibited from making or selling our products"
+        }
+      },
+      {
+        "id": "q0029",
+        "chunk_id": "0001045810-26-000021:0047",
+        "citing_communities": [
+          "lower-fce36540eb64"
+        ],
+        "found": {
+          "community_id": "lower-fce36540eb64",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:actions to adequately protect our ip rights could result in substantial costs to us and our ability to compete could be harmed if we are unsuccessful or if we are prohibited from making or selling our products"
+        }
+      },
+      {
+        "id": "q0029",
+        "chunk_id": "0001045810-26-000021:0040",
+        "citing_communities": [
+          "lower-b7be50cc8599"
+        ],
+        "found": {
+          "community_id": "lower-b7be50cc8599",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:government actions, trade restrictions and export controls"
+        }
+      },
+      {
+        "id": "q0029",
+        "chunk_id": "0001045810-26-000021:0039",
+        "citing_communities": [
+          "lower-b7be50cc8599"
+        ],
+        "found": {
+          "community_id": "lower-b7be50cc8599",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:changes to the laws, rules and regulations to which we are subject, or changes to their interpretation and enforcement, could lead to materially greater compliance and other costs, and/or further restrictions on our ability to manufacture and supply our products and operate our business"
+        }
+      },
+      {
+        "id": "q0029",
+        "chunk_id": "0001045810-26-000021:0039",
+        "citing_communities": [
+          "lower-b7be50cc8599"
+        ],
+        "found": {
+          "community_id": "lower-b7be50cc8599",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:changes to the laws, rules and regulations to which we are subject, or changes to their interpretation and enforcement, could lead to materially greater compliance and other costs, and/or further restrictions on our ability to manufacture and supply our products and operate our business"
+        }
+      },
+      {
+        "id": "q0029",
+        "chunk_id": "0001045810-26-000021:0047",
+        "citing_communities": [
+          "lower-fce36540eb64"
+        ],
+        "found": {
+          "community_id": "lower-fce36540eb64",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:actions to adequately protect our ip rights could result in substantial costs to us and our ability to compete could be harmed if we are unsuccessful or if we are prohibited from making or selling our products"
+        }
+      },
+      {
+        "id": "q0029",
+        "chunk_id": "0001045810-26-000021:0047",
+        "citing_communities": [
+          "lower-fce36540eb64"
+        ],
+        "found": {
+          "community_id": "lower-fce36540eb64",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:actions to adequately protect our ip rights could result in substantial costs to us and our ability to compete could be harmed if we are unsuccessful or if we are prohibited from making or selling our products"
+        }
+      },
+      {
+        "id": "q0029",
+        "chunk_id": "0001045810-26-000021:0039",
+        "citing_communities": [
+          "lower-b7be50cc8599"
+        ],
+        "found": {
+          "community_id": "lower-b7be50cc8599",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:changes to the laws, rules and regulations to which we are subject, or changes to their interpretation and enforcement, could lead to materially greater compliance and other costs, and/or further restrictions on our ability to manufacture and supply our products and operate our business"
+        }
+      },
+      {
+        "id": "q0029",
+        "chunk_id": "0001045810-26-000021:0048",
+        "citing_communities": [
+          "lower-fce36540eb64"
+        ],
+        "found": {
+          "community_id": "lower-fce36540eb64",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:actions to adequately protect our ip rights could result in substantial costs to us and our ability to compete could be harmed if we are unsuccessful or if we are prohibited from making or selling our products"
+        }
+      },
+      {
+        "id": "q0029",
+        "chunk_id": "0000002488-26-000018:0058",
+        "citing_communities": [
+          "lower-b7be50cc8599"
+        ],
+        "found": {
+          "community_id": "lower-b7be50cc8599",
+          "via": "evidenced_by",
+          "node": "Regulation:foreign corrupt practices act"
+        }
+      },
+      {
+        "id": "q0029",
+        "chunk_id": "0000002488-26-000018:0058",
+        "citing_communities": [
+          "lower-b7be50cc8599"
+        ],
+        "found": {
+          "community_id": "lower-b7be50cc8599",
+          "via": "evidenced_by",
+          "node": "Regulation:foreign corrupt practices act"
+        }
+      },
+      {
+        "id": "q0032",
+        "chunk_id": "0000002488-26-000018:0076",
+        "citing_communities": [
+          "lower-5e4a15af3708"
+        ],
+        "found": {
+          "community_id": "lower-5e4a15af3708",
+          "via": "evidenced_by",
+          "node": "MarketPlatform:2488:client"
+        }
+      },
+      {
+        "id": "q0032",
+        "chunk_id": "0000002488-26-000018:0076",
+        "citing_communities": [
+          "lower-5e4a15af3708"
+        ],
+        "found": {
+          "community_id": "lower-5e4a15af3708",
+          "via": "evidenced_by",
+          "node": "MarketPlatform:2488:client"
+        }
+      },
+      {
+        "id": "q0032",
+        "chunk_id": "0000002488-26-000018:0035",
+        "citing_communities": [
+          "lower-5e4a15af3708"
+        ],
+        "found": {
+          "community_id": "lower-5e4a15af3708",
+          "via": "evidenced_by",
+          "node": "Product:amd instincttm mi308"
+        }
+      },
+      {
+        "id": "q0032",
+        "chunk_id": "0000002488-26-000018:0024",
+        "citing_communities": [
+          "lower-5e4a15af3708"
+        ],
+        "found": {
+          "community_id": "lower-5e4a15af3708",
+          "via": "evidenced_by",
+          "node": "Segment:2488:client and gaming"
+        }
+      },
+      {
+        "id": "q0032",
+        "chunk_id": "0001045810-26-000021:0023",
+        "citing_communities": [
+          "lower-088f36d7da83"
+        ],
+        "found": {
+          "community_id": "lower-088f36d7da83",
+          "via": "evidenced_by",
+          "node": "MarketPlatform:1045810:gaming"
+        }
+      },
+      {
+        "id": "q0032",
+        "chunk_id": "0001045810-26-000021:0063",
+        "citing_communities": [
+          "lower-088f36d7da83"
+        ],
+        "found": {
+          "community_id": "lower-088f36d7da83",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:supply constraints to gaming"
+        }
+      },
+      {
+        "id": "q0032",
+        "chunk_id": "0001045810-26-000021:0063",
+        "citing_communities": [
+          "lower-088f36d7da83"
+        ],
+        "found": {
+          "community_id": "lower-088f36d7da83",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:supply constraints to gaming"
+        }
+      },
+      {
+        "id": "q0032",
+        "chunk_id": "0001045810-26-000021:0063",
+        "citing_communities": [
+          "lower-088f36d7da83"
+        ],
+        "found": {
+          "community_id": "lower-088f36d7da83",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:supply constraints to gaming"
+        }
+      },
+      {
+        "id": "q0032",
+        "chunk_id": "0001045810-26-000021:0045",
+        "citing_communities": [
+          "lower-088f36d7da83"
+        ],
+        "found": {
+          "community_id": "lower-088f36d7da83",
+          "via": "evidenced_by",
+          "node": "MarketPlatform:1045810:data center"
+        }
+      },
+      {
+        "id": "q0035",
+        "chunk_id": "0001045810-26-000021:0022",
+        "citing_communities": [
+          "lower-fab7808d77d3"
+        ],
+        "found": {
+          "community_id": "lower-fab7808d77d3",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:long manufacturing lead times and uncertain supply and capacity availability, combined with a failure to estimate customer demand accurately, has led and could lead to mismatches between supply and demand"
+        }
+      },
+      {
+        "id": "q0035",
+        "chunk_id": "0001045810-26-000021:0021",
+        "citing_communities": [
+          "lower-fab7808d77d3"
+        ],
+        "found": {
+          "community_id": "lower-fab7808d77d3",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:competition could adversely impact our market share and financial results"
+        }
+      },
+      {
+        "id": "q0035",
+        "chunk_id": "0001045810-26-000021:0023",
+        "citing_communities": [
+          "lower-fab7808d77d3"
+        ],
+        "found": {
+          "community_id": "lower-fab7808d77d3",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:long manufacturing lead times and uncertain supply and capacity availability, combined with a failure to estimate customer demand accurately, has led and could lead to mismatches between supply and demand"
+        }
+      },
+      {
+        "id": "q0035",
+        "chunk_id": "0001045810-26-000021:0022",
+        "citing_communities": [
+          "lower-fab7808d77d3"
+        ],
+        "found": {
+          "community_id": "lower-fab7808d77d3",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:long manufacturing lead times and uncertain supply and capacity availability, combined with a failure to estimate customer demand accurately, has led and could lead to mismatches between supply and demand"
+        }
+      },
+      {
+        "id": "q0035",
+        "chunk_id": "0001045810-26-000021:0022",
+        "citing_communities": [
+          "lower-fab7808d77d3"
+        ],
+        "found": {
+          "community_id": "lower-fab7808d77d3",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:long manufacturing lead times and uncertain supply and capacity availability, combined with a failure to estimate customer demand accurately, has led and could lead to mismatches between supply and demand"
+        }
+      },
+      {
+        "id": "q0035",
+        "chunk_id": "0001045810-26-000021:0022",
+        "citing_communities": [
+          "lower-fab7808d77d3"
+        ],
+        "found": {
+          "community_id": "lower-fab7808d77d3",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:long manufacturing lead times and uncertain supply and capacity availability, combined with a failure to estimate customer demand accurately, has led and could lead to mismatches between supply and demand"
+        }
+      },
+      {
+        "id": "q0035",
+        "chunk_id": "0001045810-26-000021:0023",
+        "citing_communities": [
+          "lower-fab7808d77d3"
+        ],
+        "found": {
+          "community_id": "lower-fab7808d77d3",
+          "via": "evidenced_by",
+          "node": "0001045810-26-000021:long manufacturing lead times and uncertain supply and capacity availability, combined with a failure to estimate customer demand accurately, has led and could lead to mismatches between supply and demand"
+        }
+      },
+      {
+        "id": "q0035",
+        "chunk_id": "0001045810-26-000021:0061",
+        "citing_communities": [
+          "lower-cfac871fdedb"
+        ],
+        "found": {
+          "community_id": "lower-cfac871fdedb",
+          "via": "evidenced_by",
+          "node": "Product:blackwell"
+        }
+      },
+      {
+        "id": "q0035",
+        "chunk_id": "0000002488-26-000018:0031",
+        "citing_communities": [
+          "lower-70386ee9ef57"
+        ],
+        "found": {
+          "community_id": "lower-70386ee9ef57",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:failure to achieve expected manufacturing yields for our products could negatively impact our results of operations."
+        }
+      },
+      {
+        "id": "q0035",
+        "chunk_id": "0000002488-26-000018:0030",
+        "citing_communities": [
+          "lower-70386ee9ef57"
+        ],
+        "found": {
+          "community_id": "lower-70386ee9ef57",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:if essential equipment, materials, substrates or manufacturing processes are not available to manufacture our products, we could be materially adversely affected."
+        }
+      },
+      {
+        "id": "q0035",
+        "chunk_id": "0000002488-26-000018:0031",
+        "citing_communities": [
+          "lower-70386ee9ef57"
+        ],
+        "found": {
+          "community_id": "lower-70386ee9ef57",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:failure to achieve expected manufacturing yields for our products could negatively impact our results of operations."
+        }
+      },
+      {
+        "id": "q0035",
+        "chunk_id": "0000002488-26-000018:0030",
+        "citing_communities": [
+          "lower-70386ee9ef57"
+        ],
+        "found": {
+          "community_id": "lower-70386ee9ef57",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:if essential equipment, materials, substrates or manufacturing processes are not available to manufacture our products, we could be materially adversely affected."
+        }
+      },
+      {
+        "id": "q0035",
+        "chunk_id": "0000002488-26-000018:0035",
+        "citing_communities": [
+          "lower-5e4a15af3708"
+        ],
+        "found": {
+          "community_id": "lower-5e4a15af3708",
+          "via": "evidenced_by",
+          "node": "Product:amd instincttm mi308"
+        }
+      },
+      {
+        "id": "q0035",
+        "chunk_id": "0000002488-26-000018:0035",
+        "citing_communities": [
+          "lower-5e4a15af3708"
+        ],
+        "found": {
+          "community_id": "lower-5e4a15af3708",
+          "via": "evidenced_by",
+          "node": "Product:amd instincttm mi308"
+        }
+      },
+      {
+        "id": "q0035",
+        "chunk_id": "0000002488-26-000018:0031",
+        "citing_communities": [
+          "lower-70386ee9ef57"
+        ],
+        "found": {
+          "community_id": "lower-70386ee9ef57",
+          "via": "evidenced_by",
+          "node": "0000002488-26-000018:failure to achieve expected manufacturing yields for our products could negatively impact our results of operations."
+        }
+      }
+    ]
+  },
+  "traces": [
+    {
+      "id": "q0014",
+      "sentence": "They only list him as NVIDIA's President and Chief Executive Officer, age 63, as of February 20, 2026 [0001045810-26-000021:0016].",
+      "chunk_id": "0001045810-26-000021:0016",
+      "selected": [
+        "lower-103ba85b420b",
+        "lower-dd0efe881d6f",
+        "lower-a6a56bbee8da",
+        "lower-3dfa1c412b89"
+      ],
+      "found": {
+        "community_id": "lower-dd0efe881d6f",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:compliance with governmental regulations could increase costs and affect results"
+      }
+    },
+    {
+      "id": "q0014",
+      "sentence": "NVIDIA's FY2026 10-K says compensation and benefits are designed to reward performance and align employee interests with shareholders through equity participation, but it gives no amount for Huang [0001045810-26-000021:0016].",
+      "chunk_id": "0001045810-26-000021:0016",
+      "selected": [
+        "lower-103ba85b420b",
+        "lower-dd0efe881d6f",
+        "lower-a6a56bbee8da",
+        "lower-3dfa1c412b89"
+      ],
+      "found": {
+        "community_id": "lower-dd0efe881d6f",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:compliance with governmental regulations could increase costs and affect results"
+      }
+    },
+    {
+      "id": "q0015",
+      "sentence": "They say only that demand for MI300X GPUs was very strong among large hyperscaler customers, OEMs and ODMs in 2024 [0000002488-25-000012:0005].",
+      "chunk_id": "0000002488-25-000012:0005",
+      "selected": [
+        "lower-3b9761ebebb1",
+        "lower-3625e203ffbe",
+        "lower-1f4aabd0dbe6",
+        "lower-36933821ad5a"
+      ],
+      "found": {
+        "community_id": "lower-3b9761ebebb1",
+        "via": "evidenced_by",
+        "node": "Product:ai accelerators"
+      }
+    },
+    {
+      "id": "q0015",
+      "sentence": "AMD's FY2025 filings describe the Instinct family (MI200, MI300, MI325 and MI350 series) and the MI350X and MI450 products without giving per-unit pricing, and the OpenAI agreement is stated in gigawatts of GPUs rather than price [0000002488-26-000018:0006][0000002488-26-000018:0072].",
+      "chunk_id": "0000002488-26-000018:0006",
+      "selected": [
+        "lower-3b9761ebebb1",
+        "lower-3625e203ffbe",
+        "lower-1f4aabd0dbe6",
+        "lower-36933821ad5a"
+      ],
+      "found": {
+        "community_id": "lower-3625e203ffbe",
+        "via": "evidenced_by",
+        "node": "Agreement:product purchase agreement with openai"
+      }
+    },
+    {
+      "id": "q0015",
+      "sentence": "AMD's FY2025 filings describe the Instinct family (MI200, MI300, MI325 and MI350 series) and the MI350X and MI450 products without giving per-unit pricing, and the OpenAI agreement is stated in gigawatts of GPUs rather than price [0000002488-26-000018:0006][0000002488-26-000018:0072].",
+      "chunk_id": "0000002488-26-000018:0072",
+      "selected": [
+        "lower-3b9761ebebb1",
+        "lower-3625e203ffbe",
+        "lower-1f4aabd0dbe6",
+        "lower-36933821ad5a"
+      ],
+      "found": {
+        "community_id": "lower-3625e203ffbe",
+        "via": "evidenced_by",
+        "node": "Agreement:acquisition of zt systems"
+      }
+    },
+    {
+      "id": "q0015",
+      "sentence": "The only dollar figures tied to Instinct products are about $800 million of inventory and related charges on MI308 in Q2 fiscal 2025, of which about $360 million was reversed in Q4, and these are not per-unit selling prices [0000002488-26-000018:0072].",
+      "chunk_id": "0000002488-26-000018:0072",
+      "selected": [
+        "lower-3b9761ebebb1",
+        "lower-3625e203ffbe",
+        "lower-1f4aabd0dbe6",
+        "lower-36933821ad5a"
+      ],
+      "found": {
+        "community_id": "lower-3625e203ffbe",
+        "via": "evidenced_by",
+        "node": "Agreement:acquisition of zt systems"
+      }
+    },
+    {
+      "id": "q0016",
+      "sentence": "The latest first-quarter figures they give are for FY2025-Q1 (three months ended March 29, 2025), when total net revenue was $7,438 million, compared with $5,473 million for the three months ended March 30, 2024 [0000002488-25-000047:0009].",
+      "chunk_id": "0000002488-25-000047:0009",
+      "selected": [
+        "lower-3b9761ebebb1",
+        "lower-5d8b541f89da",
+        "lower-8075a84b7594",
+        "lower-36f1c3baa6b3"
+      ],
+      "found": {
+        "community_id": "lower-3b9761ebebb1",
+        "via": "evidenced_by",
+        "node": "Product:adaptive soc products"
+      }
+    },
+    {
+      "id": "q0016",
+      "sentence": "By segment, AMD's FY2025-Q1 net revenue was Data Center $3,674 million, Client $2,294 million, Gaming $647 million and Embedded $823 million [0000002488-25-000047:0009].",
+      "chunk_id": "0000002488-25-000047:0009",
+      "selected": [
+        "lower-3b9761ebebb1",
+        "lower-5d8b541f89da",
+        "lower-8075a84b7594",
+        "lower-36f1c3baa6b3"
+      ],
+      "found": {
+        "community_id": "lower-3b9761ebebb1",
+        "via": "evidenced_by",
+        "node": "Product:adaptive soc products"
+      }
+    },
+    {
+      "id": "q0017",
+      "sentence": "The AMD 10-Q excerpts for FY2024-Q1 say only that competition for highly skilled employees, especially in AI and machine learning, is intense, and that failing to retain qualified personnel could hinder product development [0000002488-24-000056:0065].",
+      "chunk_id": "0000002488-24-000056:0065",
+      "selected": [
+        "lower-5893816c4711",
+        "lower-6e077160dd0d",
+        "lower-36f1c3baa6b3",
+        "lower-2329dda817bc"
+      ],
+      "found": {
+        "community_id": "lower-2329dda817bc",
+        "via": "evidenced_by",
+        "node": "0000002488-24-000056:our inability to continue to attract and retain qualified personnel may hinder our business"
+      }
+    },
+    {
+      "id": "q0017",
+      "sentence": "AMD also says it uses share-based incentive awards to help attract, retain and motivate employees, and that stock price volatility and any future restructuring plans could affect its ability to retain key employees [0000002488-24-000056:0065].",
+      "chunk_id": "0000002488-24-000056:0065",
+      "selected": [
+        "lower-5893816c4711",
+        "lower-6e077160dd0d",
+        "lower-36f1c3baa6b3",
+        "lower-2329dda817bc"
+      ],
+      "found": {
+        "community_id": "lower-2329dda817bc",
+        "via": "evidenced_by",
+        "node": "0000002488-24-000056:our inability to continue to attract and retain qualified personnel may hinder our business"
+      }
+    },
+    {
+      "id": "q0020",
+      "sentence": "The FY2025 10-K gives no figure for Intel's share of the data center CPU market in 2025, and says only that competition in that market remained intense [0000050863-26-000011:0011].",
+      "chunk_id": "0000050863-26-000011:0011",
+      "selected": [
+        "lower-90f16cb61339",
+        "lower-a95082d0622f",
+        "lower-cb23d1979aad",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-90f16cb61339",
+        "via": "evidenced_by",
+        "node": "Organization:apple"
+      }
+    },
+    {
+      "id": "q0020",
+      "sentence": "Intel describes the Xeon installed base as a significant portion of global server infrastructure but gives no percentage share [0000050863-26-000011:0015].",
+      "chunk_id": "0000050863-26-000011:0015",
+      "selected": [
+        "lower-90f16cb61339",
+        "lower-a95082d0622f",
+        "lower-cb23d1979aad",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-90f16cb61339",
+        "via": "evidenced_by",
+        "node": "Product:intel core ultra"
+      }
+    },
+    {
+      "id": "q0020",
+      "sentence": "Xeon Scalable 3rd, 4th and 5th Gen on Intel 7 made up a majority of DCAI product sales by revenue in 2025 [0000050863-26-000011:0015].",
+      "chunk_id": "0000050863-26-000011:0015",
+      "selected": [
+        "lower-90f16cb61339",
+        "lower-a95082d0622f",
+        "lower-cb23d1979aad",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-90f16cb61339",
+        "via": "evidenced_by",
+        "node": "Product:intel core ultra"
+      }
+    },
+    {
+      "id": "q0020",
+      "sentence": "Intel names AMD as a DCAI competitor across CPUs, GPUs and accelerators, and also names NVIDIA, hyperscaler custom silicon and ARM- and RISC-V-based entrants [0000050863-26-000011:0011].",
+      "chunk_id": "0000050863-26-000011:0011",
+      "selected": [
+        "lower-90f16cb61339",
+        "lower-a95082d0622f",
+        "lower-cb23d1979aad",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-90f16cb61339",
+        "via": "evidenced_by",
+        "node": "Organization:apple"
+      }
+    },
+    {
+      "id": "q0020",
+      "sentence": "Intel says organizations prioritized GPU systems from certain competitors for compute-heavy generative AI workloads, often at the expense of CPU investment [0000050863-26-000011:0011].",
+      "chunk_id": "0000050863-26-000011:0011",
+      "selected": [
+        "lower-90f16cb61339",
+        "lower-a95082d0622f",
+        "lower-cb23d1979aad",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-90f16cb61339",
+        "via": "evidenced_by",
+        "node": "Organization:apple"
+      }
+    },
+    {
+      "id": "q0020",
+      "sentence": "DCAI revenue was $16,919 million in 2025, against $16,125 million in 2024, and DCAI operating margin was 20% in 2025, though these are segment financials and not a market share measure [0000050863-26-000011:0035].",
+      "chunk_id": "0000050863-26-000011:0035",
+      "selected": [
+        "lower-90f16cb61339",
+        "lower-a95082d0622f",
+        "lower-cb23d1979aad",
+        "lower-3e417445d79c"
+      ],
+      "found": {
+        "community_id": "lower-90f16cb61339",
+        "via": "evidenced_by",
+        "node": "Segment:50863:ccg"
+      }
+    },
+    {
+      "id": "q0021",
+      "sentence": "It says any new restrictions that hurt its supply of components, parts or services from those places would negatively impact its business and financial results [0001045810-26-000021:0046].",
+      "chunk_id": "0001045810-26-000021:0046",
+      "selected": [
+        "lower-301b260ee3ae",
+        "lower-b552717824f1",
+        "lower-c837a974e3de",
+        "lower-cfac871fdedb"
+      ],
+      "found": {
+        "community_id": "lower-301b260ee3ae",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:chinese government restrictions on gaming and oversight of digital platform companies"
+      }
+    },
+    {
+      "id": "q0021",
+      "sentence": "It says these regions make up a significant portion of NVIDIA's revenue and host suppliers, contract manufacturers and assembly partners critical to its supply continuity [0001045810-25-000023:0024][0001045810-25-000023:0023].",
+      "chunk_id": "0001045810-25-000023:0024",
+      "selected": [
+        "lower-301b260ee3ae",
+        "lower-b552717824f1",
+        "lower-c837a974e3de",
+        "lower-cfac871fdedb"
+      ],
+      "found": {
+        "community_id": "lower-cfac871fdedb",
+        "via": "evidenced_by",
+        "node": "0001045810-25-000023:challenges in estimating demand could become more pronounced or volatile in the future on both a global and regional basis"
+      }
+    },
+    {
+      "id": "q0021",
+      "sentence": "It says these regions make up a significant portion of NVIDIA's revenue and host suppliers, contract manufacturers and assembly partners critical to its supply continuity [0001045810-25-000023:0024][0001045810-25-000023:0023].",
+      "chunk_id": "0001045810-25-000023:0023",
+      "selected": [
+        "lower-301b260ee3ae",
+        "lower-b552717824f1",
+        "lower-c837a974e3de",
+        "lower-cfac871fdedb"
+      ],
+      "found": {
+        "community_id": "lower-cfac871fdedb",
+        "via": "evidenced_by",
+        "node": "0001045810-25-000023:challenges in estimating demand could become more pronounced or volatile in the future on both a global and regional basis"
+      }
+    },
+    {
+      "id": "q0021",
+      "sentence": "The points also note that earlier NVIDIA filings named Taiwan alone, and that Taiwan and South Korea together appear from the FY2026 Q1 10-Q onward [0001045810-24-000264:0059][0001045810-25-000116:0051].",
+      "chunk_id": "0001045810-24-000264:0059",
+      "selected": [
+        "lower-301b260ee3ae",
+        "lower-b552717824f1",
+        "lower-c837a974e3de",
+        "lower-cfac871fdedb"
+      ],
+      "found": {
+        "community_id": "lower-301b260ee3ae",
+        "via": "evidenced_by",
+        "node": "0001045810-24-000264:excessive or shifting export controls increase the risk of investing in u.s. advanced semiconductor products"
+      }
+    },
+    {
+      "id": "q0021",
+      "sentence": "The points also note that earlier NVIDIA filings named Taiwan alone, and that Taiwan and South Korea together appear from the FY2026 Q1 10-Q onward [0001045810-24-000264:0059][0001045810-25-000116:0051].",
+      "chunk_id": "0001045810-25-000116:0051",
+      "selected": [
+        "lower-301b260ee3ae",
+        "lower-b552717824f1",
+        "lower-c837a974e3de",
+        "lower-cfac871fdedb"
+      ],
+      "found": {
+        "community_id": "lower-301b260ee3ae",
+        "via": "evidenced_by",
+        "node": "Regulation:action plan"
+      }
+    },
+    {
+      "id": "q0021",
+      "sentence": "It says many of its products, and all of its more advanced products, depend on Taiwan suppliers for critical components, including various compute die, that cannot be easily or quickly replaced [0000050863-25-000009:0058][0000050863-25-000009:0059].",
+      "chunk_id": "0000050863-25-000009:0058",
+      "selected": [
+        "lower-301b260ee3ae",
+        "lower-b552717824f1",
+        "lower-c837a974e3de",
+        "lower-cfac871fdedb"
+      ],
+      "found": {
+        "community_id": "lower-b552717824f1",
+        "via": "evidenced_by",
+        "node": "0000050863-25-000009:changes in global trade and technology supply chains"
+      }
+    },
+    {
+      "id": "q0021",
+      "sentence": "It says many of its products, and all of its more advanced products, depend on Taiwan suppliers for critical components, including various compute die, that cannot be easily or quickly replaced [0000050863-25-000009:0058][0000050863-25-000009:0059].",
+      "chunk_id": "0000050863-25-000009:0059",
+      "selected": [
+        "lower-301b260ee3ae",
+        "lower-b552717824f1",
+        "lower-c837a974e3de",
+        "lower-cfac871fdedb"
+      ],
+      "found": {
+        "community_id": "lower-b552717824f1",
+        "via": "evidenced_by",
+        "node": "0000050863-25-000009:geopolitical and security issues"
+      }
+    },
+    {
+      "id": "q0021",
+      "sentence": "A disruption affecting Taiwan could significantly and adversely affect its ability to obtain critical components and supply customers [0000050863-25-000009:0059][0000050863-25-000009:0058].",
+      "chunk_id": "0000050863-25-000009:0059",
+      "selected": [
+        "lower-301b260ee3ae",
+        "lower-b552717824f1",
+        "lower-c837a974e3de",
+        "lower-cfac871fdedb"
+      ],
+      "found": {
+        "community_id": "lower-b552717824f1",
+        "via": "evidenced_by",
+        "node": "0000050863-25-000009:geopolitical and security issues"
+      }
+    },
+    {
+      "id": "q0021",
+      "sentence": "A disruption affecting Taiwan could significantly and adversely affect its ability to obtain critical components and supply customers [0000050863-25-000009:0059][0000050863-25-000009:0058].",
+      "chunk_id": "0000050863-25-000009:0058",
+      "selected": [
+        "lower-301b260ee3ae",
+        "lower-b552717824f1",
+        "lower-c837a974e3de",
+        "lower-cfac871fdedb"
+      ],
+      "found": {
+        "community_id": "lower-b552717824f1",
+        "via": "evidenced_by",
+        "node": "0000050863-25-000009:changes in global trade and technology supply chains"
+      }
+    },
+    {
+      "id": "q0021",
+      "sentence": "It does not restate the Taiwan supplier dependence language [0000050863-26-000011:0072].",
+      "chunk_id": "0000050863-26-000011:0072",
+      "selected": [
+        "lower-301b260ee3ae",
+        "lower-b552717824f1",
+        "lower-c837a974e3de",
+        "lower-cfac871fdedb"
+      ],
+      "found": {
+        "community_id": "lower-b552717824f1",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:macroeconomic conditions and geopolitical tensions and conflicts, including changes to trade policies and regulations, present significant risks to us in many jurisdictions"
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "AMD: AMD says its products are complex and have been, and may in the future be, subject to security vulnerabilities that could cause loss, corruption, theft or misuse of confidential data or system performance issues [0000002488-25-000012:0034][0000002488-26-000018:0033].",
+      "chunk_id": "0000002488-25-000012:0034",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-70386ee9ef57",
+        "via": "evidenced_by",
+        "node": "0000002488-25-000012:our products may be subject to security vulnerabilities that could have a material adverse effect on us."
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "AMD: AMD says its products are complex and have been, and may in the future be, subject to security vulnerabilities that could cause loss, corruption, theft or misuse of confidential data or system performance issues [0000002488-25-000012:0034][0000002488-26-000018:0033].",
+      "chunk_id": "0000002488-26-000018:0033",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-70386ee9ef57",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:our products may be subject to security vulnerabilities that could have a material adverse effect on us."
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "It says its efforts to prevent and address vulnerabilities may decrease performance, be only partially effective or not succeed at all [0000002488-25-000012:0034][0000002488-25-000166:0054].",
+      "chunk_id": "0000002488-25-000012:0034",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-70386ee9ef57",
+        "via": "evidenced_by",
+        "node": "0000002488-25-000012:our products may be subject to security vulnerabilities that could have a material adverse effect on us."
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "It says its efforts to prevent and address vulnerabilities may decrease performance, be only partially effective or not succeed at all [0000002488-25-000012:0034][0000002488-25-000166:0054].",
+      "chunk_id": "0000002488-25-000166:0054",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-70386ee9ef57",
+        "via": "evidenced_by",
+        "node": "0000002488-25-000166:failure to achieve expected manufacturing yields for our products could negatively impact our results of operations."
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "AMD says it may depend on vendors to create mitigations to their technology that it incorporates, and they may delay or decline to do so [0000002488-25-000108:0056][0000002488-25-000166:0054].",
+      "chunk_id": "0000002488-25-000108:0056",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-70386ee9ef57",
+        "via": "evidenced_by",
+        "node": "0000002488-25-000108:our revenue from our semi-custom soc products is dependent upon our semi-custom soc products being incorporated into customers\u2019 products and the success of those products"
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "AMD says it may depend on vendors to create mitigations to their technology that it incorporates, and they may delay or decline to do so [0000002488-25-000108:0056][0000002488-25-000166:0054].",
+      "chunk_id": "0000002488-25-000166:0054",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-70386ee9ef57",
+        "via": "evidenced_by",
+        "node": "0000002488-25-000166:failure to achieve expected manufacturing yields for our products could negatively impact our results of operations."
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "It also depends on customers and end users to deploy its mitigations, and they may delay, decline or modify the implementation [0000002488-25-000012:0034][0000002488-25-000166:0054].",
+      "chunk_id": "0000002488-25-000012:0034",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-70386ee9ef57",
+        "via": "evidenced_by",
+        "node": "0000002488-25-000012:our products may be subject to security vulnerabilities that could have a material adverse effect on us."
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "It also depends on customers and end users to deploy its mitigations, and they may delay, decline or modify the implementation [0000002488-25-000012:0034][0000002488-25-000166:0054].",
+      "chunk_id": "0000002488-25-000166:0054",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-70386ee9ef57",
+        "via": "evidenced_by",
+        "node": "0000002488-25-000166:failure to achieve expected manufacturing yields for our products could negatively impact our results of operations."
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "AMD adds that customers may stop purchasing, reduce or delay purchases, or use competing products, that it has been and may be subject to claims and litigation, and that actual or perceived vulnerabilities could bring adverse publicity and brand and reputation damage that could materially harm its business or results [0000002488-25-000012:0034][0000002488-25-000166:0054].",
+      "chunk_id": "0000002488-25-000012:0034",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-70386ee9ef57",
+        "via": "evidenced_by",
+        "node": "0000002488-25-000012:our products may be subject to security vulnerabilities that could have a material adverse effect on us."
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "AMD adds that customers may stop purchasing, reduce or delay purchases, or use competing products, that it has been and may be subject to claims and litigation, and that actual or perceived vulnerabilities could bring adverse publicity and brand and reputation damage that could materially harm its business or results [0000002488-25-000012:0034][0000002488-25-000166:0054].",
+      "chunk_id": "0000002488-25-000166:0054",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-70386ee9ef57",
+        "via": "evidenced_by",
+        "node": "0000002488-25-000166:failure to achieve expected manufacturing yields for our products could negatively impact our results of operations."
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "AMD also lists security vulnerabilities among its principal operational and technology risks in its 10-K summary [0000002488-25-000012:0020].",
+      "chunk_id": "0000002488-25-000012:0020",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-41758a480a2d",
+        "via": "evidenced_by",
+        "node": "0000002488-25-000012:costs related to defective products could have a material adverse effect on us"
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "Intel: In its FY2025 10-K, Intel says it or third parties regularly find security vulnerabilities in its processors and other products, including side-channel types such as Spectre and Meltdown [0000050863-26-000011:0077].",
+      "chunk_id": "0000050863-26-000011:0077",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-3e417445d79c",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:we are subject to the risks of product defects, errata or other product issues"
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "It says its security and manageability features cannot make products absolutely secure and are themselves subject to vulnerabilities [0000050863-26-000011:0077].",
+      "chunk_id": "0000050863-26-000011:0077",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-3e417445d79c",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:we are subject to the risks of product defects, errata or other product issues"
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "On limits to fixing them, Intel says mitigations such as software and firmware updates are not always available on time or at all, and do not always work as intended [0000050863-26-000011:0077].",
+      "chunk_id": "0000050863-26-000011:0077",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-3e417445d79c",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:we are subject to the risks of product defects, errata or other product issues"
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "It often depends on third parties (vendors, customers, end users) to develop or deploy them, and prioritization decisions can delay, limit or prevent a mitigation [0000050863-26-000011:0077].",
+      "chunk_id": "0000050863-26-000011:0077",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-3e417445d79c",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:we are subject to the risks of product defects, errata or other product issues"
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "Export restrictions may impede its ability to provide updates or patches to customers in certain geographies or on sanctions lists, potentially leaving systems unpatched, and sanctions lists may include third parties it needs for coordinated vulnerability disclosure [0000050863-26-000011:0077].",
+      "chunk_id": "0000050863-26-000011:0077",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-3e417445d79c",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:we are subject to the risks of product defects, errata or other product issues"
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "The same language appears in the FY2024 10-K [0000050863-25-000009:0063].",
+      "chunk_id": "0000050863-25-000009:0063",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-3e417445d79c",
+        "via": "evidenced_by",
+        "node": "0000050863-25-000009:costs from defects, errata, or other product issues could include%3a"
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "Intel says vulnerabilities or their mitigations can cause reboots, system instability, data loss or corruption, adverse performance effects, and customers limiting how they use its products [0000050863-26-000011:0078].",
+      "chunk_id": "0000050863-26-000011:0078",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-3e417445d79c",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:security vulnerabilities and/or mitigation techniques can result in adverse performance or power effects, reboots, system instability or unavailability"
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "It cites significant costs for updates and mitigations, inventory write-downs, litigation, regulatory inquiries, damages and product replacements, and says the effects may be greater if competing products are not susceptible or mitigate more effectively [0000050863-26-000011:0078].",
+      "chunk_id": "0000050863-26-000011:0078",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-3e417445d79c",
+        "via": "evidenced_by",
+        "node": "0000050863-26-000011:security vulnerabilities and/or mitigation techniques can result in adverse performance or power effects, reboots, system instability or unavailability"
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "NVIDIA: The points contain no description of how NVIDIA treats product security vulnerabilities, so nothing can be said for NVIDIA [0000002488-25-000012:0034][0000002488-26-000018:0033].",
+      "chunk_id": "0000002488-25-000012:0034",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-70386ee9ef57",
+        "via": "evidenced_by",
+        "node": "0000002488-25-000012:our products may be subject to security vulnerabilities that could have a material adverse effect on us."
+      }
+    },
+    {
+      "id": "q0027",
+      "sentence": "NVIDIA: The points contain no description of how NVIDIA treats product security vulnerabilities, so nothing can be said for NVIDIA [0000002488-25-000012:0034][0000002488-26-000018:0033].",
+      "chunk_id": "0000002488-26-000018:0033",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-3e417445d79c",
+        "lower-c837a974e3de",
+        "lower-41758a480a2d"
+      ],
+      "found": {
+        "community_id": "lower-70386ee9ef57",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:our products may be subject to security vulnerabilities that could have a material adverse effect on us."
+      }
+    },
+    {
+      "id": "q0029",
+      "sentence": "Controversy over AI solutions, such as unintended consequences, copyright or publicity infringement, or impacts on human rights, privacy or employment, or failure to implement effective responsible-AI policies, could cause brand or reputational harm, competitive harm or legal liability [0001045810-26-000021:0047].",
+      "chunk_id": "0001045810-26-000021:0047",
+      "selected": [
+        "lower-fce36540eb64",
+        "lower-c17000ce1902",
+        "lower-b7be50cc8599",
+        "lower-a6a56bbee8da"
+      ],
+      "found": {
+        "community_id": "lower-fce36540eb64",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:actions to adequately protect our ip rights could result in substantial costs to us and our ability to compete could be harmed if we are unsuccessful or if we are prohibited from making or selling our products"
+      }
+    },
+    {
+      "id": "q0029",
+      "sentence": "Failing to address responsible-AI concerns and regulations, by NVIDIA or others, could undermine public confidence in AI, slow adoption of AI in its products and services, or cause reputational or financial harm [0001045810-26-000021:0047].",
+      "chunk_id": "0001045810-26-000021:0047",
+      "selected": [
+        "lower-fce36540eb64",
+        "lower-c17000ce1902",
+        "lower-b7be50cc8599",
+        "lower-a6a56bbee8da"
+      ],
+      "found": {
+        "community_id": "lower-fce36540eb64",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:actions to adequately protect our ip rights could result in substantial costs to us and our ability to compete could be harmed if we are unsuccessful or if we are prohibited from making or selling our products"
+      }
+    },
+    {
+      "id": "q0029",
+      "sentence": "Concerns about third-party misuse of AI have resulted in, and could lead to, unilateral or multilateral restrictions on products used to train and deploy LLMs and other AI applications, and such restrictions have limited downstream customers' ability to acquire and use systems with its products [0001045810-26-000021:0040].",
+      "chunk_id": "0001045810-26-000021:0040",
+      "selected": [
+        "lower-fce36540eb64",
+        "lower-c17000ce1902",
+        "lower-b7be50cc8599",
+        "lower-a6a56bbee8da"
+      ],
+      "found": {
+        "community_id": "lower-b7be50cc8599",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:government actions, trade restrictions and export controls"
+      }
+    },
+    {
+      "id": "q0029",
+      "sentence": "Several U.S. states have enacted or are considering AI rules, including new state laws effective January 1, 2026, that may raise compliance costs [0001045810-26-000021:0039].",
+      "chunk_id": "0001045810-26-000021:0039",
+      "selected": [
+        "lower-fce36540eb64",
+        "lower-c17000ce1902",
+        "lower-b7be50cc8599",
+        "lower-a6a56bbee8da"
+      ],
+      "found": {
+        "community_id": "lower-b7be50cc8599",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:changes to the laws, rules and regulations to which we are subject, or changes to their interpretation and enforcement, could lead to materially greater compliance and other costs, and/or further restrictions on our ability to manufacture and supply our products and operate our business"
+      }
+    },
+    {
+      "id": "q0029",
+      "sentence": "It adds that such restrictions could increase costs for it and its customers, delay or halt deployment of new systems, and reduce new entrants and customers [0001045810-26-000021:0039].",
+      "chunk_id": "0001045810-26-000021:0039",
+      "selected": [
+        "lower-fce36540eb64",
+        "lower-c17000ce1902",
+        "lower-b7be50cc8599",
+        "lower-a6a56bbee8da"
+      ],
+      "found": {
+        "community_id": "lower-b7be50cc8599",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:changes to the laws, rules and regulations to which we are subject, or changes to their interpretation and enforcement, could lead to materially greater compliance and other costs, and/or further restrictions on our ability to manufacture and supply our products and operate our business"
+      }
+    },
+    {
+      "id": "q0029",
+      "sentence": "Regulation could also raise R&D costs and add reporting or transparency requirements, and AI-related regulatory changes could disproportionately disadvantage it [0001045810-26-000021:0047].",
+      "chunk_id": "0001045810-26-000021:0047",
+      "selected": [
+        "lower-fce36540eb64",
+        "lower-c17000ce1902",
+        "lower-b7be50cc8599",
+        "lower-a6a56bbee8da"
+      ],
+      "found": {
+        "community_id": "lower-fce36540eb64",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:actions to adequately protect our ip rights could result in substantial costs to us and our ability to compete could be harmed if we are unsuccessful or if we are prohibited from making or selling our products"
+      }
+    },
+    {
+      "id": "q0029",
+      "sentence": "As an example, regulation adopted in response to the European Union Code of Practice for General Purpose Artificial Intelligence could require it to notify the European Commission about details of some of its Trustworthy AI processes tied to its risk framework [0001045810-26-000021:0047].",
+      "chunk_id": "0001045810-26-000021:0047",
+      "selected": [
+        "lower-fce36540eb64",
+        "lower-c17000ce1902",
+        "lower-b7be50cc8599",
+        "lower-a6a56bbee8da"
+      ],
+      "found": {
+        "community_id": "lower-fce36540eb64",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:actions to adequately protect our ip rights could result in substantial costs to us and our ability to compete could be harmed if we are unsuccessful or if we are prohibited from making or selling our products"
+      }
+    },
+    {
+      "id": "q0029",
+      "sentence": "It calls these requests expensive and burdensome and says they could harm its relationships with customers, suppliers and partners [0001045810-26-000021:0039].",
+      "chunk_id": "0001045810-26-000021:0039",
+      "selected": [
+        "lower-fce36540eb64",
+        "lower-c17000ce1902",
+        "lower-b7be50cc8599",
+        "lower-a6a56bbee8da"
+      ],
+      "found": {
+        "community_id": "lower-b7be50cc8599",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:changes to the laws, rules and regulations to which we are subject, or changes to their interpretation and enforcement, could lead to materially greater compliance and other costs, and/or further restrictions on our ability to manufacture and supply our products and operate our business"
+      }
+    },
+    {
+      "id": "q0029",
+      "sentence": "It further says concerns about its privacy practices, including use of personal data in AI, could damage its reputation and operating results even if unfounded [0001045810-26-000021:0048].",
+      "chunk_id": "0001045810-26-000021:0048",
+      "selected": [
+        "lower-fce36540eb64",
+        "lower-c17000ce1902",
+        "lower-b7be50cc8599",
+        "lower-a6a56bbee8da"
+      ],
+      "found": {
+        "community_id": "lower-fce36540eb64",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:actions to adequately protect our ip rights could result in substantial costs to us and our ability to compete could be harmed if we are unsuccessful or if we are prohibited from making or selling our products"
+      }
+    },
+    {
+      "id": "q0029",
+      "sentence": "It does not mention responsible use or regulation of AI [0000002488-26-000018:0058].",
+      "chunk_id": "0000002488-26-000018:0058",
+      "selected": [
+        "lower-fce36540eb64",
+        "lower-c17000ce1902",
+        "lower-b7be50cc8599",
+        "lower-a6a56bbee8da"
+      ],
+      "found": {
+        "community_id": "lower-b7be50cc8599",
+        "via": "evidenced_by",
+        "node": "Regulation:foreign corrupt practices act"
+      }
+    },
+    {
+      "id": "q0029",
+      "sentence": "For Intel, the points provide no excerpt, so they state nothing about its AI-related risks [0000002488-26-000018:0058].",
+      "chunk_id": "0000002488-26-000018:0058",
+      "selected": [
+        "lower-fce36540eb64",
+        "lower-c17000ce1902",
+        "lower-b7be50cc8599",
+        "lower-a6a56bbee8da"
+      ],
+      "found": {
+        "community_id": "lower-b7be50cc8599",
+        "via": "evidenced_by",
+        "node": "Regulation:foreign corrupt practices act"
+      }
+    },
+    {
+      "id": "q0032",
+      "sentence": "AMD says its operating results tend to vary seasonally, with net revenue historically higher in the second half of the year than in the first half, although market conditions and product transitions could affect this trend [0000002488-26-000018:0076].",
+      "chunk_id": "0000002488-26-000018:0076",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-088f36d7da83",
+        "lower-5e4a15af3708",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-5e4a15af3708",
+        "via": "evidenced_by",
+        "node": "MarketPlatform:2488:client"
+      }
+    },
+    {
+      "id": "q0032",
+      "sentence": "Total net revenue was $34,639 million in 2025 versus $25,785 million in 2024 [0000002488-26-000018:0076].",
+      "chunk_id": "0000002488-26-000018:0076",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-088f36d7da83",
+        "lower-5e4a15af3708",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-5e4a15af3708",
+        "via": "evidenced_by",
+        "node": "MarketPlatform:2488:client"
+      }
+    },
+    {
+      "id": "q0032",
+      "sentence": "In April 2025 the U.S. government imposed a license requirement on exports of AMD Instinct MI308 products to China, and AMD took approximately $800 million in inventory and related charges in Q2 2025, which is not described as a seasonal break [0000002488-26-000018:0035].",
+      "chunk_id": "0000002488-26-000018:0035",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-088f36d7da83",
+        "lower-5e4a15af3708",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-5e4a15af3708",
+        "via": "evidenced_by",
+        "node": "Product:amd instincttm mi308"
+      }
+    },
+    {
+      "id": "q0032",
+      "sentence": "AMD's risk factors also point to non-seasonal demand swings, such as data center buildout delays, AI PC adoption and embedded customers drawing down inventory [0000002488-26-000018:0024].",
+      "chunk_id": "0000002488-26-000018:0024",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-088f36d7da83",
+        "lower-5e4a15af3708",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-5e4a15af3708",
+        "via": "evidenced_by",
+        "node": "Segment:2488:client and gaming"
+      }
+    },
+    {
+      "id": "q0032",
+      "sentence": "They stress demand-estimation challenges, supply constraints and product transitions, and Gaming is expected to face supply constraints as a headwind in the first quarter of fiscal 2027 and beyond [0001045810-26-000021:0023][0001045810-26-000021:0063].",
+      "chunk_id": "0001045810-26-000021:0023",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-088f36d7da83",
+        "lower-5e4a15af3708",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-088f36d7da83",
+        "via": "evidenced_by",
+        "node": "MarketPlatform:1045810:gaming"
+      }
+    },
+    {
+      "id": "q0032",
+      "sentence": "They stress demand-estimation challenges, supply constraints and product transitions, and Gaming is expected to face supply constraints as a headwind in the first quarter of fiscal 2027 and beyond [0001045810-26-000021:0023][0001045810-26-000021:0063].",
+      "chunk_id": "0001045810-26-000021:0063",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-088f36d7da83",
+        "lower-5e4a15af3708",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-088f36d7da83",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:supply constraints to gaming"
+      }
+    },
+    {
+      "id": "q0032",
+      "sentence": "NVIDIA reported FY2026 revenue of $215.9 billion, up 65% from a year earlier, driven by accelerated computing, AI and Blackwell demand [0001045810-26-000021:0063].",
+      "chunk_id": "0001045810-26-000021:0063",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-088f36d7da83",
+        "lower-5e4a15af3708",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-088f36d7da83",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:supply constraints to gaming"
+      }
+    },
+    {
+      "id": "q0032",
+      "sentence": "This was a break driven by product transition and export controls, not a seasonal pattern [0001045810-26-000021:0063][0001045810-26-000021:0045].",
+      "chunk_id": "0001045810-26-000021:0063",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-088f36d7da83",
+        "lower-5e4a15af3708",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-088f36d7da83",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:supply constraints to gaming"
+      }
+    },
+    {
+      "id": "q0032",
+      "sentence": "This was a break driven by product transition and export controls, not a seasonal pattern [0001045810-26-000021:0063][0001045810-26-000021:0045].",
+      "chunk_id": "0001045810-26-000021:0045",
+      "selected": [
+        "lower-70386ee9ef57",
+        "lower-088f36d7da83",
+        "lower-5e4a15af3708",
+        "lower-5206c9bf93c6"
+      ],
+      "found": {
+        "community_id": "lower-088f36d7da83",
+        "via": "evidenced_by",
+        "node": "MarketPlatform:1045810:data center"
+      }
+    },
+    {
+      "id": "q0035",
+      "sentence": "NVIDIA: To secure future supply and capacity, NVIDIA says it has paid premiums, provided deposits, and entered into long-term supply agreements and capacity commitments, which have increased its product costs [0001045810-26-000021:0022][0001045810-26-000021:0021].",
+      "chunk_id": "0001045810-26-000021:0022",
+      "selected": [
+        "lower-fab7808d77d3",
+        "lower-70386ee9ef57",
+        "lower-cfac871fdedb",
+        "lower-5e4a15af3708"
+      ],
+      "found": {
+        "community_id": "lower-fab7808d77d3",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:long manufacturing lead times and uncertain supply and capacity availability, combined with a failure to estimate customer demand accurately, has led and could lead to mismatches between supply and demand"
+      }
+    },
+    {
+      "id": "q0035",
+      "sentence": "NVIDIA: To secure future supply and capacity, NVIDIA says it has paid premiums, provided deposits, and entered into long-term supply agreements and capacity commitments, which have increased its product costs [0001045810-26-000021:0022][0001045810-26-000021:0021].",
+      "chunk_id": "0001045810-26-000021:0021",
+      "selected": [
+        "lower-fab7808d77d3",
+        "lower-70386ee9ef57",
+        "lower-cfac871fdedb",
+        "lower-5e4a15af3708"
+      ],
+      "found": {
+        "community_id": "lower-fab7808d77d3",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:competition could adversely impact our market share and financial results"
+      }
+    },
+    {
+      "id": "q0035",
+      "sentence": "It also describes prepaid manufacturing and capacity agreements covering current and future products [0001045810-26-000021:0023].",
+      "chunk_id": "0001045810-26-000021:0023",
+      "selected": [
+        "lower-fab7808d77d3",
+        "lower-70386ee9ef57",
+        "lower-cfac871fdedb",
+        "lower-5e4a15af3708"
+      ],
+      "found": {
+        "community_id": "lower-fab7808d77d3",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:long manufacturing lead times and uncertain supply and capacity availability, combined with a failure to estimate customer demand accurately, has led and could lead to mismatches between supply and demand"
+      }
+    },
+    {
+      "id": "q0035",
+      "sentence": "Its purchase obligations and prepaids have grown and are expected to become a greater portion of total supply [0001045810-26-000021:0022].",
+      "chunk_id": "0001045810-26-000021:0022",
+      "selected": [
+        "lower-fab7808d77d3",
+        "lower-70386ee9ef57",
+        "lower-cfac871fdedb",
+        "lower-5e4a15af3708"
+      ],
+      "found": {
+        "community_id": "lower-fab7808d77d3",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:long manufacturing lead times and uncertain supply and capacity availability, combined with a failure to estimate customer demand accurately, has led and could lead to mismatches between supply and demand"
+      }
+    },
+    {
+      "id": "q0035",
+      "sentence": "The risk is amplified by non-cancellable, non-returnable purchase orders placed in advance of historical lead times [0001045810-26-000021:0022].",
+      "chunk_id": "0001045810-26-000021:0022",
+      "selected": [
+        "lower-fab7808d77d3",
+        "lower-70386ee9ef57",
+        "lower-cfac871fdedb",
+        "lower-5e4a15af3708"
+      ],
+      "found": {
+        "community_id": "lower-fab7808d77d3",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:long manufacturing lead times and uncertain supply and capacity availability, combined with a failure to estimate customer demand accurately, has led and could lead to mismatches between supply and demand"
+      }
+    },
+    {
+      "id": "q0035",
+      "sentence": "It has had to write down inventory, incur cancellation penalties, record impairments and reduce average selling prices, and may have to do so again, all of which can hurt gross margins [0001045810-26-000021:0022].",
+      "chunk_id": "0001045810-26-000021:0022",
+      "selected": [
+        "lower-fab7808d77d3",
+        "lower-70386ee9ef57",
+        "lower-cfac871fdedb",
+        "lower-5e4a15af3708"
+      ],
+      "found": {
+        "community_id": "lower-fab7808d77d3",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:long manufacturing lead times and uncertain supply and capacity availability, combined with a failure to estimate customer demand accurately, has led and could lead to mismatches between supply and demand"
+      }
+    },
+    {
+      "id": "q0035",
+      "sentence": "It says it has incurred, and may again incur, inventory provisions or impairments if inventory or supply or capacity commitments exceed demand [0001045810-26-000021:0023].",
+      "chunk_id": "0001045810-26-000021:0023",
+      "selected": [
+        "lower-fab7808d77d3",
+        "lower-70386ee9ef57",
+        "lower-cfac871fdedb",
+        "lower-5e4a15af3708"
+      ],
+      "found": {
+        "community_id": "lower-fab7808d77d3",
+        "via": "evidenced_by",
+        "node": "0001045810-26-000021:long manufacturing lead times and uncertain supply and capacity availability, combined with a failure to estimate customer demand accurately, has led and could lead to mismatches between supply and demand"
+      }
+    },
+    {
+      "id": "q0035",
+      "sentence": "As a concrete example, after the April 2025 USG license requirement for H20 exports to China, NVIDIA incurred a $4.5 billion charge in Q1 FY2026 for H20 excess inventory and purchase obligations as demand diminished [0001045810-26-000021:0061].",
+      "chunk_id": "0001045810-26-000021:0061",
+      "selected": [
+        "lower-fab7808d77d3",
+        "lower-70386ee9ef57",
+        "lower-cfac871fdedb",
+        "lower-5e4a15af3708"
+      ],
+      "found": {
+        "community_id": "lower-cfac871fdedb",
+        "via": "evidenced_by",
+        "node": "Product:blackwell"
+      }
+    },
+    {
+      "id": "q0035",
+      "sentence": "AMD: AMD describes long-term purchase commitments and prepayment arrangements with some suppliers [0000002488-26-000018:0031].",
+      "chunk_id": "0000002488-26-000018:0031",
+      "selected": [
+        "lower-fab7808d77d3",
+        "lower-70386ee9ef57",
+        "lower-cfac871fdedb",
+        "lower-5e4a15af3708"
+      ],
+      "found": {
+        "community_id": "lower-70386ee9ef57",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:failure to achieve expected manufacturing yields for our products could negatively impact our results of operations."
+      }
+    },
+    {
+      "id": "q0035",
+      "sentence": "It also has a wafer supply agreement with GF that provides a minimum annual capacity allocation and sets pricing through 2026 [0000002488-26-000018:0030].",
+      "chunk_id": "0000002488-26-000018:0030",
+      "selected": [
+        "lower-fab7808d77d3",
+        "lower-70386ee9ef57",
+        "lower-cfac871fdedb",
+        "lower-5e4a15af3708"
+      ],
+      "found": {
+        "community_id": "lower-70386ee9ef57",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:if essential equipment, materials, substrates or manufacturing processes are not available to manufacture our products, we could be materially adversely affected."
+      }
+    },
+    {
+      "id": "q0035",
+      "sentence": "If demand falls short, AMD says that overestimating demand, or customers cancelling orders or buying from competitors, could leave it with excess inventory and higher production costs, particularly because of the prepayment arrangements [0000002488-26-000018:0031].",
+      "chunk_id": "0000002488-26-000018:0031",
+      "selected": [
+        "lower-fab7808d77d3",
+        "lower-70386ee9ef57",
+        "lower-cfac871fdedb",
+        "lower-5e4a15af3708"
+      ],
+      "found": {
+        "community_id": "lower-70386ee9ef57",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:failure to achieve expected manufacturing yields for our products could negatively impact our results of operations."
+      }
+    },
+    {
+      "id": "q0035",
+      "sentence": "If its actual wafer requirements fall below the annual wafer purchase target under the GF agreement, it could have excess inventory or higher inventory unit costs, which may hurt gross margin and results of operations [0000002488-26-000018:0030].",
+      "chunk_id": "0000002488-26-000018:0030",
+      "selected": [
+        "lower-fab7808d77d3",
+        "lower-70386ee9ef57",
+        "lower-cfac871fdedb",
+        "lower-5e4a15af3708"
+      ],
+      "found": {
+        "community_id": "lower-70386ee9ef57",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:if essential equipment, materials, substrates or manufacturing processes are not available to manufacture our products, we could be materially adversely affected."
+      }
+    },
+    {
+      "id": "q0035",
+      "sentence": "More generally, misjudged demand or cancelled or deferred orders can lead to excess or obsolete inventory, inventory write-downs and lower gross margins [0000002488-26-000018:0035].",
+      "chunk_id": "0000002488-26-000018:0035",
+      "selected": [
+        "lower-fab7808d77d3",
+        "lower-70386ee9ef57",
+        "lower-cfac871fdedb",
+        "lower-5e4a15af3708"
+      ],
+      "found": {
+        "community_id": "lower-5e4a15af3708",
+        "via": "evidenced_by",
+        "node": "Product:amd instincttm mi308"
+      }
+    },
+    {
+      "id": "q0035",
+      "sentence": "AMD notes that it generally has no long-term supply arrangements with customers or minimum purchase requirements, and that customers may generally cancel standard-product orders more than 30 days before shipment without significant fees [0000002488-26-000018:0035].",
+      "chunk_id": "0000002488-26-000018:0035",
+      "selected": [
+        "lower-fab7808d77d3",
+        "lower-70386ee9ef57",
+        "lower-cfac871fdedb",
+        "lower-5e4a15af3708"
+      ],
+      "found": {
+        "community_id": "lower-5e4a15af3708",
+        "via": "evidenced_by",
+        "node": "Product:amd instincttm mi308"
+      }
+    },
+    {
+      "id": "q0035",
+      "sentence": "Intel: The points state nothing about Intel's long-term supply commitments or what happens to them if demand falls short [0000002488-26-000018:0031].",
+      "chunk_id": "0000002488-26-000018:0031",
+      "selected": [
+        "lower-fab7808d77d3",
+        "lower-70386ee9ef57",
+        "lower-cfac871fdedb",
+        "lower-5e4a15af3708"
+      ],
+      "found": {
+        "community_id": "lower-70386ee9ef57",
+        "via": "evidenced_by",
+        "node": "0000002488-26-000018:failure to achieve expected manufacturing yields for our products could negatively impact our results of operations."
+      }
+    }
+  ]
+}
