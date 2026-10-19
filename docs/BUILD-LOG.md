@@ -2608,7 +2608,7 @@ Branch `claude/step-13-test-run-closing-605634`. The held-out `test` split (47 a
 **Step 13 stop condition.** The results table is committed and regenerated in CI, and every cell is explained above, including where graph and the router lose. Met.
 
 **Next session starts with**
-1. Step 13b (agentic arms) grilling, or Step 14 (interface and README) if the user prefers to write up first. The README's interpretation reads this entry.
+1. Step 14 (interface, then README): `/grill-with-docs`. Step 13b (agentic arms) is skipped for now (user decision, 2026-10-19). The README's interpretation reads this entry.
 2. Judge calibration whenever the user has time (OPEN-DECISIONS).
 
 ---

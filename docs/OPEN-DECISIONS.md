@@ -45,6 +45,7 @@ Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstra
 - Ablations not run in Step 12 or 13: Haiku 5.5 for map calls; a cheap model rating reports (GraphRAG's dynamic community selection) instead of embedding rank.
 
 ## Step 13b — agentic arms
+- Skipped for now (user decision, 2026-10-19): Step 14 comes next. Reopen after the write-up if agentic arms are still wanted.
 - Set the tool-call cap before the benchmark run.
 - Whether to use LangGraph for the agentic loops (not adopted in Step 13). If used: set `recursion_limit` explicitly (the installed default is 10,007) and count tool calls in state.
 
