@@ -384,14 +384,24 @@ def _check_estimate(spec: ArmSpec, todo: Selected, args: argparse.Namespace, *,
     except (ValueError, FreezeError) as exc:
         print(f"could not estimate the run, nothing was run: {exc}", file=sys.stderr)
         return EXIT_RUN_ERROR
-    credited = sum(bool(q.answered_by) or q.routed for q in questions)
-    print(f"estimate: ${usd:.2f} for {len(questions)} questions ({mode}; {credited} with "
-          "work credited as replayed from committed runs)")
+    print(f"estimate: ${usd:.2f} for {len(questions)} questions ({mode}; "
+          f"{_replay_note(questions)})")
     if args.max_cost is not None and usd > args.max_cost:
         print(f"the estimate ${usd:.2f} is above --max-cost ${args.max_cost:.2f}; "
               "nothing was run", file=sys.stderr)
         return EXIT_USAGE
     return _check_step13_cap(args, usd, step13_spent)
+
+
+def _replay_note(questions: Sequence[EstimateQuestion]) -> str:
+    """Which arms' answers and how many classifications the estimate counted as replayed;
+    only the ones this arm, or the router's arms, read lower the estimate."""
+    arms = sorted({a for q in questions for a in q.answered_by})
+    counts = [f"{a} {sum(a in q.answered_by for q in questions)}" for a in arms]
+    routed = sum(q.routed for q in questions)
+    parts = [*(["answers replayed from committed runs: " + ", ".join(counts)] if counts else []),
+             *([f"classifications replayed: {routed}"] if routed else [])]
+    return "; ".join(parts) or "nothing replays from committed runs"
 
 
 def _replays(args: argparse.Namespace, runs_dir: Path, frozen_file: Path,
