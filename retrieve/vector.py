@@ -185,5 +185,5 @@ VECTOR = ArmSpec(
     name=VectorArm.name,
     required_env=(API_KEY_ENV, ANTHROPIC_KEY_ENV, "DATABASE_URL"),
     open=open_vector_arm,
-    estimate=MeasuredEstimate(VECTOR_RUN),
+    estimate=MeasuredEstimate(VECTOR_RUN, arm="vector"),
 )

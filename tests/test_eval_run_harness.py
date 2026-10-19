@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from eval.run import EXIT_USAGE, main
+from eval.run import EXIT_RUN_ERROR, EXIT_USAGE, main
 from eval.schema import load_records
 from retrieve.arm import ArmSpec, EstimateQuestion
 from tests.test_eval_run import (
@@ -79,6 +79,7 @@ class Harness:
         self._eval_dir, self._tmp = directory, tmp_path
         self._clock = Clock()
         self._timed = TimedArm(self.arm, self._clock, {r.question: r.id for r in records})
+        self.spent: float | Exception = 0.0  # committed Step 13 spend, or its read error
 
     def _open(self, response_cache, spans=None):
         self.opened.append(response_cache)
@@ -91,7 +92,12 @@ class Harness:
                     judges=_judge_spec(self.judge, self.judge_opened), eval_dir=self._eval_dir,
                     runs_dir=self.runs, today=TODAY, response_cache=RESPONSE_CACHE,
                     uncached_root=self._tmp / "uncached", clock=self._clock,
-                    frozen_file=self._tmp / "frozen.json")
+                    frozen_file=self._tmp / "frozen.json", step13_spent=self._spent)
+
+    def _spent(self) -> float:
+        if isinstance(self.spent, Exception):
+            raise self.spent
+        return self.spent
 
     def result(self) -> dict:
         (path,) = self.runs.glob("*.json")
@@ -176,6 +182,54 @@ def test_a_max_cost_that_is_not_an_amount_is_refused(harness, value):
         harness("--max-cost", value)
     assert exc.value.code == EXIT_USAGE
     assert harness.opened == []
+
+
+# ── the Step 13 cap ─────────────────────────────────────────────────────────────
+
+@pytest.fixture
+def final(eval_dir, tmp_path, env):  # noqa: F811
+    harness = Harness(eval_dir, tmp_path, usd=1.00)
+    freeze_fake(tmp_path / "frozen.json", harness.arm.config)
+    return harness
+
+
+def test_a_test_run_whose_estimate_and_step_13_spend_pass_the_cap_is_refused(final, capsys):
+    final.spent = 9.50
+    assert final("--split", "test", "--final") == EXIT_USAGE
+    err = capsys.readouterr().err
+    assert "$1.00" in err and "$9.50" in err and "$10.00" in err
+    assert final.opened == [] and not final.runs.exists()
+
+
+def test_a_test_run_that_fits_under_the_cap_runs(final):
+    final.spent = 9.00
+    assert final("--split", "test", "--final") == 0
+
+
+def test_a_dev_run_of_an_arm_is_not_step_13_spend(final):
+    final.spent = 100.0
+    assert final() == 0
+
+
+def test_an_unreadable_step_13_spend_stops_the_run(final, capsys):
+    final.spent = ValueError("cannot read route-run9.json")
+    assert final("--split", "test", "--final") == EXIT_RUN_ERROR
+    assert "route-run9.json" in capsys.readouterr().err and final.opened == []
+
+
+def test_a_question_a_committed_run_answered_under_the_frozen_config_is_estimated_as_replayed(
+        final):
+    assert final("--split", "test", "--final") == 0
+    assert final("--split", "test", "--final") == 0
+    first, second = final.estimate.calls
+    assert [q.answered_by for q in first[0]] == [frozenset()]
+    assert [(q.id, q.answered_by) for q in second[0]] == [(TEST_ID, frozenset({"fake"}))]
+
+
+def test_an_uncached_run_credits_no_replay(final):
+    assert final("--split", "test", "--final") == 0
+    assert final("--split", "test", "--final", "--uncached") == 0
+    assert [q.answered_by for q in final.estimate.calls[1][0]] == [frozenset()]
 
 
 # ── --retrieval-only ───────────────────────────────────────────────────────────

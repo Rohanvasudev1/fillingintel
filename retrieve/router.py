@@ -201,9 +201,10 @@ def open_router(map_name: str, *, arms: Mapping[str, ArmSpec],
 
 @dataclass(frozen=True)
 class RouterEstimate:
-    """Classification for every question, plus each question priced by the arm its gold
-    class maps to (a decline question costs no answer; an unanswerable one the dearest
-    arm's price), with nothing assumed to replay, as the arms' own estimates do."""
+    """Classification for every question whose classification would not replay, plus
+    each question priced by the arm its gold class maps to (a decline question costs no
+    answer; an unanswerable one the dearest arm's price), which credits the answers that
+    would replay, as the arms' own estimates do."""
 
     map_name: str
     arms: Mapping[str, ArmSpec]
@@ -215,7 +216,7 @@ class RouterEstimate:
             prompt = load_route_prompt(ROUTE_PROMPT_VERSION)
         except (RoutingMapError, RoutePromptError) as exc:
             raise ValueError(str(exc)) from exc
-        total = estimate_classification_usd(prompt, len(questions))
+        total = estimate_classification_usd(prompt, sum(not q.routed for q in questions))
         for arm in dict.fromkeys(routing_map.arms.values()):
             mine = [q for q in questions if routing_map.arms.get(q.class_) == arm]
             if mine:

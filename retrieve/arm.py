@@ -332,10 +332,14 @@ class Arm(Protocol):
 @dataclass(frozen=True)
 class EstimateQuestion:
     """What a cost estimate reads of a selected eval record: its ID and class, never its
-    text or labels, so an estimate cannot steer a run."""
+    text or labels, so an estimate cannot steer a run.  *answered_by* names the arms
+    whose answer to it (with its judges) would replay from the response cache, and
+    *routed* says the router's classification of it would (``eval.replays``)."""
 
     id: str
     class_: str
+    answered_by: frozenset[str] = frozenset()
+    routed: bool = False
 
 
 class ArmEstimator(Protocol):
