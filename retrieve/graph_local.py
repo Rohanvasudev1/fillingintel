@@ -292,5 +292,5 @@ GRAPH_LOCAL = ArmSpec(
     name=GraphLocalArm.name,
     required_env=(*NEO4J_ENV, "DATABASE_URL", API_KEY_ENV, ANTHROPIC_KEY_ENV),
     open=open_graph_local_arm,
-    estimate=MeasuredEstimate(GRAPH_LOCAL_RUN, arm="graph_local"),
+    estimate=MeasuredEstimate(GRAPH_LOCAL_RUN, arm=GraphLocalArm.name),
 )

@@ -308,5 +308,5 @@ GRAPH_GLOBAL = ArmSpec(
     required_env=(*NEO4J_ENV, "DATABASE_URL", API_KEY_ENV, ANTHROPIC_KEY_ENV),
     open=open_graph_global_arm,
     estimate=MeasuredEstimate(GRAPH_GLOBAL_RUN, answer_stages=GLOBAL_ANSWER_STAGES,
-                               arm="graph_global"),
+                               arm=ARM_NAME),
 )

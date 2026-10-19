@@ -228,5 +228,5 @@ GRAPH_TRAVERSAL = ArmSpec(
     name=GraphTraversalArm.name,
     required_env=(*NEO4J_ENV, "DATABASE_URL", API_KEY_ENV, ANTHROPIC_KEY_ENV),
     open=open_graph_traversal_arm,
-    estimate=MeasuredEstimate(GRAPH_TRAVERSAL_RUN, arm="graph_traversal"),
+    estimate=MeasuredEstimate(GRAPH_TRAVERSAL_RUN, arm=GraphTraversalArm.name),
 )

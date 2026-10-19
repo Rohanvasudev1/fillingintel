@@ -43,6 +43,7 @@ from eval.schema import Class, EvalRecord
 from retrieve.arm import ArmConfig, ArmResult, Retrieval, RetrievedChunk
 from retrieve.pricing import price_table
 
+JUDGE_KEY = "judge"  # the judge's entry in a run header's models and efforts
 CLASS_ORDER = get_args(Class)
 NO_GOLD_NOTE = "no gold chunks; retrieval metrics do not apply"
 MODE_DEFINITIONS = {
@@ -256,7 +257,7 @@ def build_header(
     A retrieval-only run has no *judge*: its header has no answer prompt, prices or
     judge entries, since it makes no answer or judge call.
     """
-    judge_model = {"judge": judge.model} if judge is not None else {}
+    judge_model = {JUDGE_KEY: judge.model} if judge is not None else {}
     models = {**config.models, **judge_model}
     return {
         "label": question_sets[0].label,
@@ -274,7 +275,7 @@ def build_header(
                       "confidence": bootstrap.CONFIDENCE},
         "models": models,
         "efforts": {**config.efforts,
-                    **({"judge": judge.effort} if judge is not None else {})},
+                    **({JUDGE_KEY: judge.effort} if judge is not None else {})},
         **(_answering(config, models, judge) if judge is not None else {}),
         "k": config.k,
         "metric_ks": list(METRIC_KS),

@@ -146,7 +146,7 @@ def provenance(root: Path = REPO_ROOT) -> Block:
                      f"through the community of the kept map point that cited it. Agent-drafted "
                      f"questions; {_source(info)}.")
         inputs.append(info)
-    return [line for text in lines for line in (text, "")][:-1], inputs
+    return "\n\n".join(lines).split("\n"), inputs
 
 
 def handoff(root: Path = REPO_ROOT) -> Block:

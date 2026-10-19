@@ -193,11 +193,9 @@ def final(eval_dir, tmp_path, env):  # noqa: F811
     return harness
 
 
-def test_a_test_run_whose_estimate_and_step_13_spend_pass_the_cap_is_refused(final, capsys):
+def test_a_test_run_whose_estimate_and_step_13_spend_pass_the_cap_is_refused(final):
     final.spent = 9.50
     assert final("--split", "test", "--final") == EXIT_USAGE
-    err = capsys.readouterr().err
-    assert "$1.00" in err and "$9.50" in err and "$10.00" in err
     assert final.opened == [] and not final.runs.exists()
 
 

@@ -11,7 +11,10 @@ from pathlib import Path
 import pytest
 
 from eval.freeze import read_frozen
+from eval.judging.openai_judge import JUDGE_EFFORT, JUDGE_MODEL
 from eval.replays import known_replays
+from eval.results import JUDGE_KEY
+from eval.router_report import PROVENANCE_KEYS, arm_provenance
 from retrieve.arm import EstimateQuestion
 from retrieve.run_estimate import GRAPH_LOCAL_RUN, MeasuredEstimate
 
@@ -30,8 +33,8 @@ def _arm_run(arm: str, questions: list[dict], **header) -> dict:
     """A run file of *arm* whose header holds the frozen provenance, as eval.run writes it."""
     router = _router_run()["header"]
     provenance = router["router"]["arms"][arm]
-    models = {**provenance["models"], "judge": "gpt-6-luna"}
-    efforts = {**provenance["efforts"], "judge": "medium"}
+    models = {**provenance["models"], JUDGE_KEY: JUDGE_MODEL}
+    efforts = {**provenance["efforts"], JUDGE_KEY: JUDGE_EFFORT}
     return {"header": {"arm": arm, "split": "test", "mode": "full",
                        "response_cache": {"uncached": False, "dir": CACHE},
                        "judging": router["judging"],
@@ -91,6 +94,13 @@ def test_a_classification_under_another_router_prompt_is_not_replayed(tmp_path):
         q["routing"]["prompt_sha256"] = "0" * 64
     _write(tmp_path, "r.json", run)
     assert known_replays(tmp_path, FROZEN, CACHE).routed == frozenset()
+
+
+def test_the_provenance_keys_are_the_ones_arm_provenance_writes():
+    from tests.test_eval_run import _ALL, FakeArm
+
+    config = FakeArm(list(_ALL.values())).config
+    assert tuple(arm_provenance(config)) == PROVENANCE_KEYS
 
 
 def test_an_unreadable_run_file_is_named(tmp_path):

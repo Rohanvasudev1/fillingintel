@@ -216,8 +216,9 @@ def _verdict_section(split_name: str, split: Split, dev_routers: Split,
 def _router_section(dev: Split, dev_routers: Split, root: Path,
                     test: Split | None = None, test_routers: Split | None = None,
                     ) -> tuple[list[str], list[InputFile]]:
+    """The router section; *test* and *test_routers* add the test split when both exist."""
     lines, inputs = _routing_lines(dev, dev_routers, root)
-    if test is not None and test_routers:
+    if test is not None and test_routers is not None and test_routers:
         lines += _split_routing_lines(TEST, test, test_routers)
     choices = dev_best_choices(dev)
     computed = {c.class_: c.chosen for c in choices}

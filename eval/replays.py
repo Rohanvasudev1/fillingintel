@@ -26,12 +26,11 @@ from pathlib import Path
 
 from eval.freeze import provenance_sha256
 from eval.judging.openai_judge import JUDGE_EFFORT, JUDGE_MAX_OUTPUT_TOKENS, JUDGE_MODEL
+from eval.results import JUDGE_KEY
 from eval.router_report import PROVENANCE_KEYS
 from retrieve.router import ROUTER_NAME
 
-ROUTER = ROUTER_NAME
 FULL = "full"
-JUDGE = "judge"  # the judge's entry in a run header's models and efforts
 
 
 @dataclass(frozen=True)
@@ -57,7 +56,7 @@ def known_replays(runs_dir: Path, frozen: Mapping[str, object], cache_name: str)
             header = document["header"]
             if not _same_cache(header, cache_name):
                 continue
-            if header["arm"] == ROUTER:
+            if header["arm"] == ROUTER_NAME:
                 if header["router"]["model"] == frozen["router"]["model"]:
                     routed |= _routed(document["questions"], frozen["router"])
             elif (header.get("mode", FULL) == FULL and _pinned_judge(header["judging"])
@@ -83,11 +82,14 @@ def _pinned_judge(judging: Mapping) -> bool:
 def _frozen_arm(header: Mapping, frozen: Mapping[str, object]) -> bool:
     """The header's arm provenance, its judge entries set aside, matches the frozen hash."""
     pinned = frozen["arms"].get(header["arm"])
-    provenance = {key: header.get(key) for key in PROVENANCE_KEYS}
-    for key in ("models", "efforts"):
-        provenance[key] = {k: v for k, v in provenance[key].items() if k != JUDGE}
+    provenance = {key: _without_judge(header.get(key)) if key in ("models", "efforts")
+                  else header.get(key) for key in PROVENANCE_KEYS}
     return isinstance(pinned, dict) and pinned.get("config_sha256") == provenance_sha256(
         provenance)
+
+
+def _without_judge(settings: Mapping[str, str]) -> dict[str, str]:
+    return {k: v for k, v in settings.items() if k != JUDGE_KEY}
 
 
 def _routed(questions: list[Mapping], router: Mapping) -> set[str]:
