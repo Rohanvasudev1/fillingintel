@@ -16,7 +16,7 @@ Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstra
 ## After Step 13 — router and benchmark
 - Path context for graph arms: rendered paths in a new answer prompt, path-level citations and the path precision metric (ADR-0007 leaves them out of Step 11; kept out of Step 13 at its grilling, since adding them now would tune the graph arms after their loss).
 - Extending the quality gate to graph arms: a Neo4j snapshot in CI and a Cypher validity floor.
-- Full judge calibration (about 60–100 answers, claims split by the user) if the n = 30 check is too loose to read.
+- Judge calibration deferred (user decision, 2026-10-19): the user did not score the 30 drawn answers, so every judged number stays "uncalibrated". To run it later, nothing needs building: `uv run python -m eval.calibrate --reviewer "<name>"` (about 1.5–2 hours for 425 claims), then `python -m eval.calibration.report` and `python -m eval.results_table`. Options when reopened: score all 30; score fewer and report them as directional (a research-plan amendment); or a later, larger calibration (about 60–100 answers).
 
 ## After Step 8
 - Haiku 5.5 against Sonnet 5.5 extraction quality is not compared: Step 9 switched the extractor to Haiku for cost (2026-10-10) and round 3 judges Haiku with prompt v2 only. A comparison would need a Sonnet run under v2 and its own review round.

@@ -43,7 +43,8 @@ def test_spend_sums_fresh_calls_only(tmp_path):
     fixtures = tmp_path / "fixtures"
     fixtures.mkdir()
     expected = 0.05 + (0.0005 + 0.001 + 0.02 + 0.01) + (0.02 + 0.01)
-    assert spent_usd(router_dir, tmp_path / "runs", fixtures) == pytest.approx(expected)
+    assert spent_usd(router_dir, tmp_path / "runs", fixtures,
+                     tmp_path / "calibration") == pytest.approx(expected)
 
 
 def test_an_unreadable_file_is_named(tmp_path):
@@ -51,4 +52,18 @@ def test_an_unreadable_file_is_named(tmp_path):
     router_dir.mkdir()
     (router_dir / "route-run1.json").write_text("{")
     with pytest.raises(ValueError, match="route-run1.json"):
-        spent_usd(router_dir, tmp_path / "runs", tmp_path)
+        spent_usd(router_dir, tmp_path / "runs", tmp_path, tmp_path)
+
+
+def test_spend_counts_claims_and_corruption_runs(tmp_path):
+    """Ticket 04: each claims line's fresh cost and each corruption run's spent_usd."""
+    router_dir = tmp_path / "router"
+    router_dir.mkdir()
+    calibration = tmp_path / "calibration"
+    calibration.mkdir()
+    (calibration / "claims.jsonl").write_text(
+        json.dumps({"key": "a", "spent_usd": 0.004}) + "\n"
+        + json.dumps({"key": "b", "spent_usd": 0.0}) + "\n")
+    (calibration / "corruption-run1.json").write_text(json.dumps({"spent_usd": 0.5}))
+    total = spent_usd(router_dir, tmp_path / "runs", tmp_path, calibration)
+    assert total == pytest.approx(0.504)

@@ -1,0 +1,265 @@
+{
+  "label": "agent-drafted questions, dev; drawn for calibration",
+  "seed": 20261016,
+  "sources": {
+    "vector": {
+      "file": "2026-10-05-vector-dev-96e8c69.json",
+      "sha256": "b6aeecc998b924e286f284921b1e7f1eb3262bd4063e8ebba7174f53edd3bb34"
+    },
+    "graph_local": {
+      "file": "2026-10-14-graph_local-dev-375efac.json",
+      "sha256": "1e45248f0aaa8c7a2ad81b711210397c83c2e023519ca6ff84854e4b58f22c9b"
+    },
+    "graph_traversal": {
+      "file": "2026-10-14-graph_traversal-dev-375efac.json",
+      "sha256": "ba11aca73ea858c21746489762b1d1acf2472de46d75fedd0aff9366b2999b13"
+    },
+    "graph_global": {
+      "file": "2026-10-16-graph_global-dev-5bb0799.json",
+      "sha256": "9a221011a43e5ef4dc3efe15e667bdc2799fb7274ca91d28ff5b2ee9818b081e"
+    }
+  },
+  "entries": [
+    {
+      "key": "graph_traversal:q0073",
+      "arm": "graph_traversal",
+      "run_file": "2026-10-14-graph_traversal-dev-375efac.json",
+      "question_id": "q0073",
+      "class": "lookup",
+      "kind": "answer"
+    },
+    {
+      "key": "vector:q0031",
+      "arm": "vector",
+      "run_file": "2026-10-05-vector-dev-96e8c69.json",
+      "question_id": "q0031",
+      "class": "global",
+      "kind": "answer"
+    },
+    {
+      "key": "vector:q0128",
+      "arm": "vector",
+      "run_file": "2026-10-05-vector-dev-96e8c69.json",
+      "question_id": "q0128",
+      "class": "multi_hop",
+      "kind": "answer"
+    },
+    {
+      "key": "graph_traversal:q0023",
+      "arm": "graph_traversal",
+      "run_file": "2026-10-14-graph_traversal-dev-375efac.json",
+      "question_id": "q0023",
+      "class": "global",
+      "kind": "answer"
+    },
+    {
+      "key": "graph_global:q0026",
+      "arm": "graph_global",
+      "run_file": "2026-10-16-graph_global-dev-5bb0799.json",
+      "question_id": "q0026",
+      "class": "global",
+      "kind": "answer"
+    },
+    {
+      "key": "graph_local:q0025",
+      "arm": "graph_local",
+      "run_file": "2026-10-14-graph_local-dev-375efac.json",
+      "question_id": "q0025",
+      "class": "global",
+      "kind": "answer"
+    },
+    {
+      "key": "graph_local:q0105",
+      "arm": "graph_local",
+      "run_file": "2026-10-14-graph_local-dev-375efac.json",
+      "question_id": "q0105",
+      "class": "lookup",
+      "kind": "answer"
+    },
+    {
+      "key": "graph_local:q0134",
+      "arm": "graph_local",
+      "run_file": "2026-10-14-graph_local-dev-375efac.json",
+      "question_id": "q0134",
+      "class": "multi_hop",
+      "kind": "answer"
+    },
+    {
+      "key": "graph_traversal:q0046",
+      "arm": "graph_traversal",
+      "run_file": "2026-10-14-graph_traversal-dev-375efac.json",
+      "question_id": "q0046",
+      "class": "local",
+      "kind": "answer"
+    },
+    {
+      "key": "vector:q0068",
+      "arm": "vector",
+      "run_file": "2026-10-05-vector-dev-96e8c69.json",
+      "question_id": "q0068",
+      "class": "local",
+      "kind": "answer"
+    },
+    {
+      "key": "graph_traversal:q0140",
+      "arm": "graph_traversal",
+      "run_file": "2026-10-14-graph_traversal-dev-375efac.json",
+      "question_id": "q0140",
+      "class": "multi_hop",
+      "kind": "answer"
+    },
+    {
+      "key": "vector:q0083",
+      "arm": "vector",
+      "run_file": "2026-10-05-vector-dev-96e8c69.json",
+      "question_id": "q0083",
+      "class": "lookup",
+      "kind": "answer"
+    },
+    {
+      "key": "graph_local:q0065",
+      "arm": "graph_local",
+      "run_file": "2026-10-14-graph_local-dev-375efac.json",
+      "question_id": "q0065",
+      "class": "local",
+      "kind": "answer"
+    },
+    {
+      "key": "graph_traversal:q0080",
+      "arm": "graph_traversal",
+      "run_file": "2026-10-14-graph_traversal-dev-375efac.json",
+      "question_id": "q0080",
+      "class": "lookup",
+      "kind": "answer"
+    },
+    {
+      "key": "vector:q0028",
+      "arm": "vector",
+      "run_file": "2026-10-05-vector-dev-96e8c69.json",
+      "question_id": "q0028",
+      "class": "global",
+      "kind": "answer"
+    },
+    {
+      "key": "vector:q0131",
+      "arm": "vector",
+      "run_file": "2026-10-05-vector-dev-96e8c69.json",
+      "question_id": "q0131",
+      "class": "multi_hop",
+      "kind": "answer"
+    },
+    {
+      "key": "graph_traversal:q0033",
+      "arm": "graph_traversal",
+      "run_file": "2026-10-14-graph_traversal-dev-375efac.json",
+      "question_id": "q0033",
+      "class": "global",
+      "kind": "answer"
+    },
+    {
+      "key": "graph_global:q0024",
+      "arm": "graph_global",
+      "run_file": "2026-10-16-graph_global-dev-5bb0799.json",
+      "question_id": "q0024",
+      "class": "global",
+      "kind": "answer"
+    },
+    {
+      "key": "graph_local:q0022",
+      "arm": "graph_local",
+      "run_file": "2026-10-14-graph_local-dev-375efac.json",
+      "question_id": "q0022",
+      "class": "global",
+      "kind": "answer"
+    },
+    {
+      "key": "graph_local:q0102",
+      "arm": "graph_local",
+      "run_file": "2026-10-14-graph_local-dev-375efac.json",
+      "question_id": "q0102",
+      "class": "lookup",
+      "kind": "answer"
+    },
+    {
+      "key": "graph_local:q0120",
+      "arm": "graph_local",
+      "run_file": "2026-10-14-graph_local-dev-375efac.json",
+      "question_id": "q0120",
+      "class": "multi_hop",
+      "kind": "answer"
+    },
+    {
+      "key": "graph_traversal:q0063",
+      "arm": "graph_traversal",
+      "run_file": "2026-10-14-graph_traversal-dev-375efac.json",
+      "question_id": "q0063",
+      "class": "local",
+      "kind": "answer"
+    },
+    {
+      "key": "vector:q0051",
+      "arm": "vector",
+      "run_file": "2026-10-05-vector-dev-96e8c69.json",
+      "question_id": "q0051",
+      "class": "local",
+      "kind": "answer"
+    },
+    {
+      "key": "graph_traversal:q0115",
+      "arm": "graph_traversal",
+      "run_file": "2026-10-14-graph_traversal-dev-375efac.json",
+      "question_id": "q0115",
+      "class": "multi_hop",
+      "kind": "answer"
+    },
+    {
+      "key": "graph_global:q0008",
+      "arm": "graph_global",
+      "run_file": "2026-10-16-graph_global-dev-5bb0799.json",
+      "question_id": "q0008",
+      "class": "decline",
+      "kind": "behaviour"
+    },
+    {
+      "key": "graph_local:q0011",
+      "arm": "graph_local",
+      "run_file": "2026-10-14-graph_local-dev-375efac.json",
+      "question_id": "q0011",
+      "class": "unanswerable",
+      "kind": "behaviour"
+    },
+    {
+      "key": "graph_traversal:q0012",
+      "arm": "graph_traversal",
+      "run_file": "2026-10-14-graph_traversal-dev-375efac.json",
+      "question_id": "q0012",
+      "class": "unanswerable",
+      "kind": "behaviour"
+    },
+    {
+      "key": "graph_traversal:q0006",
+      "arm": "graph_traversal",
+      "run_file": "2026-10-14-graph_traversal-dev-375efac.json",
+      "question_id": "q0006",
+      "class": "decline",
+      "kind": "behaviour"
+    },
+    {
+      "key": "graph_global:q0019",
+      "arm": "graph_global",
+      "run_file": "2026-10-16-graph_global-dev-5bb0799.json",
+      "question_id": "q0019",
+      "class": "unanswerable",
+      "kind": "behaviour"
+    },
+    {
+      "key": "vector:q0018",
+      "arm": "vector",
+      "run_file": "2026-10-05-vector-dev-96e8c69.json",
+      "question_id": "q0018",
+      "class": "unanswerable",
+      "kind": "behaviour"
+    }
+  ],
+  "commit": "4e3df6f+dirty"
+}

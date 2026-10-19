@@ -38,8 +38,16 @@ from eval.dev_best import (
     read_map,
     write_map,
 )
+from eval.results_calibration import (
+    Calibration,
+    calibration_block,
+    dropped_metrics,
+    read_calibration,
+)
 from eval.results_inputs import (
+    CALIBRATION_REPORT,
     CONTROL_ARM,
+    CORRUPTION_RUN,
     DEV,
     DEV_BEST_MAP,
     DEV_ROUTER_RUNS,
@@ -54,7 +62,7 @@ from eval.results_inputs import (
 )
 from eval.results_numbers import numbers_block
 from eval.results_paired import difference_text, paired_difference
-from eval.results_render import answerable_table, no_gold_table, paired_table
+from eval.results_render import answerable_table, judged_labels, no_gold_table, paired_table
 from eval.results_router import (
     accuracy_lines,
     oracle_lines,
@@ -81,8 +89,9 @@ GENERATED = ("Built by `uv run python -m eval.results_table` from the committed 
              "below; CI rebuilds it and fails on any difference. Do not edit by hand.")
 QUESTIONS_NOTE = ("**Every number here is on agent-drafted questions**: 140 questions agents "
                   "wrote with their gold chunks, not reviewed by a human "
-                  "(`eval/agent_drafted_set.jsonl`). Judged columns come from gpt-6-luna and "
-                  "are uncalibrated until judge calibration (Step 13 ticket 04).")
+                  "(`eval/agent_drafted_set.jsonl`). Judged columns come from gpt-6-luna; each "
+                  "column's header says whether it passed calibration against the user's own "
+                  "scores (see Judge calibration).")
 GLOBAL_COST_NOTE = ("graph_global's dev cost per question comes from its full run, which answered "
                     "only global questions; its other classes were scored retrieval only.")
 TUNING_NOTE = ("Tuning data: every choice (hop count, Cypher prompt, N, the dev-best map) "
@@ -94,26 +103,33 @@ ROUTER_NOTE = ("The router rows are not arms: the router classifies each questio
                "arm its routing map names. The dev-best map is tuned on dev.")
 
 
-def _split_section(name: str, split: Split, tuning: bool) -> list[str]:
+def _split_section(name: str, split: Split, tuning: bool, calibration: Calibration
+                   ) -> list[str]:
     """*split* holds the arms, then any router rows."""
     note = [TUNING_NOTE, ""] if tuning else []
+    fallback = judged_labels(split)
+    labels = calibration.column_labels(fallback)
+    dropped = dropped_metrics(labels)
+    note += [*calibration.failed_notes(), ""] if dropped else []
     if any(label in split for label in ROUTER_ROWS.values()):
         note += [ROUTER_NOTE, ""]
     return [f"## `{name}` results", "", *note,
             "Answerable classes. Intervals are percentile bootstrap 95% over the cell's "
             "questions; a cell under 10 questions is directional.", "",
-            *answerable_table(split), "",
+            *answerable_table(split, labels), "",
             "Decline and unanswerable questions: whether the answer declined or said the "
             "filings lack the evidence.", "",
-            *no_gold_table(split), "",
+            *no_gold_table(split, calibration.no_gold_label(fallback)), "",
             f"### `{name}` paired differences against `vector`", "",
             "On the questions both runs hold, as `eval.compare` computes them; a difference "
             "counts only when its interval excludes 0. graph_global's judged differences "
             "compare whole pipelines (its reduce prompt is not `answer/v1`).", "",
-            *paired_table(split), ""]
+            *paired_table(split, dropped), ""]
 
 
-def verdicts(split: Split) -> list[h.Verdict]:
+def verdicts(split: Split, dropped: Sequence[str] = ()) -> list[h.Verdict]:
+    """H1-H5; a hypothesis read on a judged metric in *dropped* (failed calibration) is
+    not testable."""
     graph_arms = [a for a in split if a != CONTROL_ARM]
     control = split[CONTROL_ARM]
 
@@ -129,10 +145,17 @@ def verdicts(split: Split) -> list[h.Verdict]:
         h.h2(diff("graph_traversal", "multi_hop", "metrics.recall@10")
              if "graph_traversal" in split else None),
         h.h3({arm: _wrong_relations(split, arm) for arm in split}),
-        h.h4(diff("graph_global", "global", "judged.metrics.answer_relevancy.mean")
-             if "graph_global" in split else None),
+        _h4(split, diff, dropped),
         _h5(split, graph_arms),
     ]
+
+
+def _h4(split: Split, diff, dropped: Sequence[str]) -> h.Verdict:
+    if "answer_relevancy" in dropped:
+        return h.Verdict(h.H4_RULE, h.NOT_TESTABLE,
+                         ("answer relevancy failed calibration, so it is not read",))
+    return h.h4(diff("graph_global", "global", "judged.metrics.answer_relevancy.mean")
+                if "graph_global" in split else None)
 
 
 def _wrong_relations(split: Split, arm: str) -> list[list[str]]:
@@ -177,12 +200,14 @@ def _h6(dev_routers: Split) -> h.Verdict:
     return h.h6(router_accuracy(files[0]))
 
 
-def _verdict_section(split_name: str, split: Split, dev_routers: Split) -> list[str]:
+def _verdict_section(split_name: str, split: Split, dev_routers: Split,
+                     calibration: Calibration) -> list[str]:
     lines = [f"## Hypotheses (read on `{split_name}`)", ""]
     if split_name == DEV:
         lines += [f"No `test` runs yet: these verdicts read `dev`. {TUNING_NOTE}", ""]
     lines += ["H6 reads the pre-registered router's `dev` run, as the plan writes it.", ""]
-    for verdict in [*verdicts(split), _h6(dev_routers)]:
+    dropped = dropped_metrics(calibration.column_labels(judged_labels(split)))
+    for verdict in [*verdicts(split, dropped), _h6(dev_routers)]:
         lines += [f"- **{verdict.verdict}**: {verdict.rule}.",
                   *(f"  - {r}" for r in verdict.readings)]
     return [*lines, ""]
@@ -259,23 +284,29 @@ def _inputs_table(inputs: Sequence[InputFile]) -> list[str]:
 
 def build(root: Path = REPO_ROOT, dev_runs: RunNames = DEV_RUNS,
           test_runs: RunNames = TEST_RUNS, dev_router_runs: RunNames = DEV_ROUTER_RUNS,
-          test_router_runs: RunNames = TEST_ROUTER_RUNS) -> str:
-    """The markdown of ``benchmarks/results.md``."""
+          test_router_runs: RunNames = TEST_ROUTER_RUNS,
+          calibration: tuple[str, str] = (CALIBRATION_REPORT, CORRUPTION_RUN)) -> str:
+    """The markdown of ``benchmarks/results.md``; *calibration* names the calibration
+    report and the corruption run, each read only once it exists."""
+    judge_check = read_calibration(*calibration, root)
     dev = load_split(dev_runs, root)
     test = load_split(test_runs, root) if test_runs else None
     dev_routers = load_router_split(dev_router_runs, ROUTER_ROWS, root)
     test_routers = load_router_split(test_router_runs, ROUTER_ROWS, root)
     body = []
     if test is not None:
-        body += _split_section(TEST, {**test, **test_routers}, tuning=False)
-    body += _verdict_section(TEST if test is not None else DEV, test or dev, dev_routers)
+        body += _split_section(TEST, {**test, **test_routers}, tuning=False,
+                               calibration=judge_check)
+    body += _verdict_section(TEST if test is not None else DEV, test or dev, dev_routers,
+                             judge_check)
     router, router_inputs = _router_section(dev, dev_routers, root)
     numbers, number_inputs = numbers_block(root)
-    body += [*router, "## Other measured numbers", "", *numbers]
-    body += _split_section(DEV, {**dev, **dev_routers}, tuning=True)
+    body += [*router, "## Other measured numbers", "", *numbers,
+             "### Judge calibration", "", *calibration_block(judge_check)]
+    body += _split_section(DEV, {**dev, **dev_routers}, tuning=True, calibration=judge_check)
     inputs = [*split_inputs(dev), *(split_inputs(test) if test else []),
               *split_inputs(dev_routers), *split_inputs(test_routers), *router_inputs,
-              *number_inputs]
+              *number_inputs, *judge_check.inputs]
     head = [TITLE, "", GENERATED, "", QUESTIONS_NOTE, "", "### Inputs", "",
             *_inputs_table(inputs)]
     return "\n".join([*head, *body]).rstrip("\n") + "\n"
