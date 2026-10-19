@@ -16,6 +16,9 @@ Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstra
 ## After Step 13 — router and benchmark
 - Path context for graph arms: rendered paths in a new answer prompt, path-level citations and the path precision metric (ADR-0007 leaves them out of Step 11; kept out of Step 13 at its grilling, since adding them now would tune the graph arms after their loss).
 - Extending the quality gate to graph arms: a Neo4j snapshot in CI and a Cypher validity floor.
+- graph_local's dev–`test` gap on local questions (recall@10 0.909 on dev, 0.500 on `test`, n 13). The arm stays as frozen; a look at which local questions it misses would be a dev-only ablation, never a change to the `test` rows.
+- Replay credit in pre-run estimates reads `benchmarks/runs/`, which is gitignored, so an uncommitted local run there counts as committed (as `eval/step13_spend.py` already does). Fine while every file there is force-added; a later step that keeps local runs should name its inputs instead of globbing.
+- Router latency on `test` is replay time, since both router runs replayed every arm answer. An end-to-end router latency needs an `--uncached` router run (about $6 at `test` prices) or a sample of it.
 - Judge calibration deferred (user decision, 2026-10-19): the user did not score the 30 drawn answers, so every judged number stays "uncalibrated". To run it later, nothing needs building: `uv run python -m eval.calibrate --reviewer "<name>"` (about 1.5–2 hours for 425 claims), then `python -m eval.calibration.report` and `python -m eval.results_table`. Options when reopened: score all 30; score fewer and report them as directional (a research-plan amendment); or a later, larger calibration (about 60–100 answers).
 
 ## After Step 8

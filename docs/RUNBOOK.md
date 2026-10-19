@@ -265,6 +265,14 @@ Then run the full matrix: four arms (`vector`, `graph_local`, `graph_traversal`,
 
 **Stop condition:** the results table is committed and you can explain every cell in it, including the ones where graph loses.
 
+#### Step 13 — outcome (met 2026-10-19)
+
+Built as five tickets (spec: `.scratch/step-13/spec.md`): harness additions (PR #58), the results table and dev-best map (PR #59), the router and freeze (PR #61), judge calibration tools and the corruption test (PR #62; calibration itself deferred by the user), and the `test` run (this ticket).
+- **`test`, once.** All seven `--final` runs at `f761581` against `benchmarks/router/frozen.json`: vector, graph_local and graph_traversal on all 47 questions; graph_global in full on global, decline and unanswerable (14) and retrieval-only on the other 33; the router under both maps. $6.31; Step 13 closed at $8.44 of $10.
+- **Pooled answerable recall@10 on `test`** (n 38, agent-drafted questions): vector 0.923, router (dev-best) 0.711, graph_traversal 0.697, router (pre-registered) 0.654, graph_local 0.614, graph_global 0.439 (retrieval only outside global). Every graph arm and both routers lose to vector with paired intervals excluding 0.
+- **Hypotheses on `test`:** H1 supported, H2 and H4 directional with the rule not met, H3 and H5 not supported; H6 supported on dev (76 of 88). Router accuracy on `test` 38 of 42.
+- `benchmarks/results.md` is built by `python -m eval.results_table` and checked in CI. BUILD-LOG (2026-10-19) explains every cell. Judged columns stay "uncalibrated".
+
 ---
 
 ## Phase D — making it legible
