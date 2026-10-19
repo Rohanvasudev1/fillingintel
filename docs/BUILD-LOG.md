@@ -2559,7 +2559,7 @@ Branch `claude/judge-calibration-corruption-test-f6143c`. The calibration tools 
   - wrong citation: 0 of 29 (a control, since faithfulness reads no citations), then 29 of 29;
   - added sentence: 29 of 30, then 30 of 30.
   The run recorded $0.7471 against a $0.6319 estimate. The recorded figure errs high: it counts a whole judge run as fresh if any one of its calls was.
-- **Harness change, for the user's approval.** `RagasJudges` and `open_judges` take an optional `metrics` limit, with the default unchanged. `retrieve.answer.read_status` is now public. These are the only changes outside `eval/calibration/`, `eval/calibrate.py`, `eval/corrupt.py` and the results table.
+- **Harness change, approved by the user (2026-10-19).** `RagasJudges` and `open_judges` take an optional `metrics` limit, with the default unchanged. `retrieve.answer.read_status` is now public. These are the only changes outside `eval/calibration/`, `eval/calibrate.py`, `eval/corrupt.py` and the results table.
 - **results.md.** Each judged column now carries its calibration label. A column that fails calibration leaves the tables and the paired differences, and H4 becomes "not testable" if relevancy fails. Calibration and the catch rates go in the measured-numbers block. Until a report exists, everything stays "uncalibrated".
 - **Review** (`mattpocock-skills:code-review`). Fixed:
   - the re-score guard's proper-subset test;
