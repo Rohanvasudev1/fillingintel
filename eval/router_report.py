@@ -31,6 +31,11 @@ DEFINITIONS = {
 }
 
 
+# The run header fields arm_provenance fills, in a plain arm's own run header.
+PROVENANCE_KEYS: tuple[str, ...] = ("models", "efforts", "answer_prompt", "answer_max_tokens",
+                                    "k", "chunker_version", "graph")
+
+
 def arm_provenance(config: ArmConfig) -> dict[str, object]:
     """An arm's settings and what it read, as its own run header records them."""
     return {

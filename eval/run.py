@@ -63,6 +63,7 @@ from eval.judging.report import run_judge_usage
 from eval.judging.runner import JUDGES, JudgeRunError, JudgeSpec, judge_all
 from eval.judging.scoring import Judge, JudgeConfig, JudgeInput
 from eval.question_sets import EVAL_DIR, QuestionSet, QuestionSetError, load_question_sets
+from eval.replays import NO_REPLAYS, Replays, known_replays
 from eval.results import (
     Outcome,
     RunInfo,
@@ -73,13 +74,14 @@ from eval.results import (
     write_results,
 )
 from eval.schema import Class, EvalRecord
+from eval.step13_spend import STEP_13_CAP_USD, spent_usd
 from ingest.provenance import REPO_ROOT, git_state
 from resolve.cli import cost_cap
 from retrieve.arm import Arm, ArmConfig, ArmError, ArmSpec, EstimateQuestion
 from retrieve.arms import ARMS
 from retrieve.pricing import price_table
 from retrieve.response_cache import DEFAULT_CACHE_DIR as DEFAULT_RESPONSE_CACHE
-from retrieve.router import Router
+from retrieve.router import ROUTER_NAME, Router
 from retrieve.routing_maps import MAP_NAMES
 from retrieve.tracing import (
     QUESTION_SPAN,
@@ -313,11 +315,13 @@ def main(
     tracing: Callable[[Mapping[str, str]], TracerProvider | None] = build_provider,
     clock: Callable[[], float] = time.perf_counter,
     frozen_file: Path = FROZEN_FILE,
+    step13_spent: Callable[[], float] = spent_usd,
 ) -> int:
     """CLI entry point.  Exit codes: 0 ok; 2 bad input, an estimate above --max-cost, or a
     --final run without a matching frozen record; 3 the run could not be estimated, finish
     or be written (no results file).  *tracing* builds the span provider from the
-    environment; *clock* times each question."""
+    environment; *clock* times each question; *step13_spent* sums committed Step 13
+    spend for the cap check."""
     args = _parse_args(argv, list(arms))
     logging.basicConfig(level=logging.INFO)
     logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -341,7 +345,8 @@ def main(
         print(str(exc), file=sys.stderr)
         return EXIT_USAGE
     todo = select(sets, args.split, classes)
-    refused = _check_estimate(spec, todo, args)
+    refused = _check_estimate(spec, todo, args, runs_dir=runs_dir, frozen_file=frozen_file,
+                              response_cache=response_cache, step13_spent=step13_spent)
     if refused is not None:
         return refused
     try:
@@ -365,20 +370,64 @@ def _span_recorder(provider: TracerProvider | None, capture: bool) -> SpanRecord
     return SpanRecorder(provider.get_tracer(TRACER_NAME), capture)
 
 
-def _check_estimate(spec: ArmSpec, todo: Selected, args: argparse.Namespace) -> int | None:
-    """Print the arm's estimate for *todo*; the exit code when the run must not start."""
-    questions = [EstimateQuestion(r.id, r.class_) for _, r in todo]
+def _check_estimate(spec: ArmSpec, todo: Selected, args: argparse.Namespace, *,
+                    runs_dir: Path, frozen_file: Path, response_cache: Path,
+                    step13_spent: Callable[[], float]) -> int | None:
+    """Print the arm's estimate for *todo*, crediting work the response cache would
+    replay; the exit code when the run must not start."""
     mode = "retrieval only" if args.retrieval_only else "retrieval, answers and judges"
     try:
+        replays = _replays(args, runs_dir, frozen_file, response_cache)
+        questions = [EstimateQuestion(r.id, r.class_, replays.answered_by(r.id),
+                                      r.id in replays.routed) for _, r in todo]
         usd = spec.estimate(questions, retrieval_only=args.retrieval_only)
-    except ValueError as exc:
+    except (ValueError, FreezeError) as exc:
         print(f"could not estimate the run, nothing was run: {exc}", file=sys.stderr)
         return EXIT_RUN_ERROR
-    print(f"estimate: ${usd:.2f} for {len(questions)} questions ({mode}; nothing assumed "
-          "to replay from the cache)")
+    print(f"estimate: ${usd:.2f} for {len(questions)} questions ({mode}; "
+          f"{_replay_note(questions)})")
     if args.max_cost is not None and usd > args.max_cost:
         print(f"the estimate ${usd:.2f} is above --max-cost ${args.max_cost:.2f}; "
               "nothing was run", file=sys.stderr)
+        return EXIT_USAGE
+    return _check_step13_cap(args, usd, step13_spent)
+
+
+def _replay_note(questions: Sequence[EstimateQuestion]) -> str:
+    """Which arms' answers and how many classifications the estimate counted as replayed;
+    only the ones this arm, or the router's arms, read lower the estimate."""
+    arms = sorted({a for q in questions for a in q.answered_by})
+    counts = [f"{a} {sum(a in q.answered_by for q in questions)}" for a in arms]
+    routed = sum(q.routed for q in questions)
+    parts = [*(["answers replayed from committed runs: " + ", ".join(counts)] if counts else []),
+             *([f"classifications replayed: {routed}"] if routed else [])]
+    return "; ".join(parts) or "nothing replays from committed runs"
+
+
+def _replays(args: argparse.Namespace, runs_dir: Path, frozen_file: Path,
+             response_cache: Path) -> Replays:
+    """Committed work this run would replay; none for an uncached run or before the
+    freeze, since replays are matched against the frozen configs."""
+    if args.uncached or not frozen_file.exists():
+        return NO_REPLAYS
+    return known_replays(runs_dir, read_frozen(frozen_file), response_cache.name)
+
+
+def _check_step13_cap(args: argparse.Namespace, usd: float,
+                      step13_spent: Callable[[], float]) -> int | None:
+    """Refuse a run Step 13 pays for (a router run or any test run) whose estimate plus
+    committed Step 13 spend passes the cap."""
+    if args.arm != ROUTER_NAME and args.split != "test":
+        return None
+    try:
+        spent = step13_spent()
+    except ValueError as exc:
+        print(f"could not sum Step 13 spend, nothing was run: {exc}", file=sys.stderr)
+        return EXIT_RUN_ERROR
+    print(f"Step 13: ${spent:.2f} spent + ${usd:.2f} estimated, cap ${STEP_13_CAP_USD:.2f}")
+    if spent + usd > STEP_13_CAP_USD:
+        print(f"the estimate ${usd:.2f} plus Step 13's ${spent:.2f} spent passes its "
+              f"${STEP_13_CAP_USD:.2f} cap; nothing was run", file=sys.stderr)
         return EXIT_USAGE
     return None
 

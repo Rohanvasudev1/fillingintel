@@ -213,9 +213,13 @@ def _verdict_section(split_name: str, split: Split, dev_routers: Split,
     return [*lines, ""]
 
 
-def _router_section(dev: Split, dev_routers: Split, root: Path
+def _router_section(dev: Split, dev_routers: Split, root: Path,
+                    test: Split | None = None, test_routers: Split | None = None,
                     ) -> tuple[list[str], list[InputFile]]:
+    """The router section; *test* and *test_routers* add the test split when both exist."""
     lines, inputs = _routing_lines(dev, dev_routers, root)
+    if test is not None and test_routers is not None and test_routers:
+        lines += _split_routing_lines(TEST, test, test_routers)
     choices = dev_best_choices(dev)
     computed = {c.class_: c.chosen for c in choices}
     lines += ["### Dev-best routing map (tuned on dev)", "", f"Rule: {RULE}.", ""]
@@ -259,20 +263,28 @@ def _routing_lines(dev: Split, dev_routers: Split, root: Path
     run = pre.full_files()[0]
     router = run.header["router"]
     lines += [*sweep_table(route_runs, (router["prompt"]["version"], router["effort"])), "",
-              "### Router accuracy on `dev`", "", *accuracy_lines(run),
-              "### Unanswerable questions under the router", "",
-              "Unanswerable questions are left out of accuracy: no class names them, so the "
-              "question is whether the arm they reach says the filings lack the answer.", "",
-              *unanswerable_lines(dev_routers), "",
-              "### Oracle router on `dev`", "",
-              "The oracle gives each answerable question its gold class and the pre-registered "
-              "map's arm, reading that arm's own dev run, so it costs nothing. The gap between "
-              "the oracle and the pre-registered router is misclassification, plus any "
-              "difference between the router's run of an arm and that arm's own run (an arm "
-              "whose model calls missed the cache reran them; see each run's commit and "
-              "graph load run).", "",
-              *oracle_lines(dev, dev_routers), ""]
+              *_split_routing_lines(DEV, dev, dev_routers)]
     return lines, inputs
+
+
+def _split_routing_lines(split: str, arms: Split, routers: Split) -> list[str]:
+    """Router accuracy, unanswerable questions and the oracle on one split."""
+    pre = routers.get(ROUTER_ROWS[PRE_REGISTERED])
+    if pre is None or len(pre.full_files()) != 1:
+        return [f"No pre-registered router run on `{split}`.", ""]
+    return [f"### Router accuracy on `{split}`", "", *accuracy_lines(pre.full_files()[0]),
+            f"### Unanswerable questions under the router on `{split}`", "",
+            "Unanswerable questions are left out of accuracy: no class names them, so the "
+            "question is whether the arm they reach says the filings lack the answer.", "",
+            *unanswerable_lines(routers), "",
+            f"### Oracle router on `{split}`", "",
+            "The oracle gives each answerable question its gold class and the pre-registered "
+            "map's arm, reading that arm's own run on the same split, so it costs nothing. The "
+            "gap between the oracle and the pre-registered router is misclassification, plus "
+            "any difference between the router's run of an arm and that arm's own run (an arm "
+            "whose model calls missed the cache reran them; see each run's commit and graph "
+            "load run).", "",
+            *oracle_lines(arms, routers), ""]
 
 
 def _inputs_table(inputs: Sequence[InputFile]) -> list[str]:
@@ -299,7 +311,7 @@ def build(root: Path = REPO_ROOT, dev_runs: RunNames = DEV_RUNS,
                                calibration=judge_check)
     body += _verdict_section(TEST if test is not None else DEV, test or dev, dev_routers,
                              judge_check)
-    router, router_inputs = _router_section(dev, dev_routers, root)
+    router, router_inputs = _router_section(dev, dev_routers, root, test, test_routers)
     numbers, number_inputs = numbers_block(root)
     body += [*router, "## Other measured numbers", "", *numbers,
              "### Judge calibration", "", *calibration_block(judge_check)]

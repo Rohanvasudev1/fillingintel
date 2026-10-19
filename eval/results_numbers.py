@@ -135,13 +135,18 @@ def persistence(root: Path = REPO_ROOT) -> Block:
 
 
 def provenance(root: Path = REPO_ROOT) -> Block:
-    report, info = read_json(GLOBAL_PROVENANCE, root)
-    strict = report["strict"]
-    return ([f"`graph_global` dev run `{report['run_file']}`: {report['citations']} kept "
-             f"citations, {report['breaks']} breaks through any selected community (the gate); "
-             f"{strict['breaks']} breaks when each citation must trace through the community "
-             f"of the kept map point that cited it. Agent-drafted questions; {_source(info)}."],
-            [info])
+    lines, inputs = [], []
+    for path in GLOBAL_PROVENANCE:
+        report, info = read_json(path, root)
+        strict = report["strict"]
+        split = "test" if "-test-" in report["run_file"] else "dev"
+        lines.append(f"`graph_global` {split} run `{report['run_file']}`: {report['citations']} "
+                     f"kept citations, {report['breaks']} breaks through any selected community "
+                     f"(the gate); {strict['breaks']} breaks when each citation must trace "
+                     f"through the community of the kept map point that cited it. Agent-drafted "
+                     f"questions; {_source(info)}.")
+        inputs.append(info)
+    return "\n\n".join(lines).split("\n"), inputs
 
 
 def handoff(root: Path = REPO_ROOT) -> Block:

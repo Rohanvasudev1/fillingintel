@@ -248,6 +248,19 @@ def test_the_estimate_prices_classification_and_each_gold_class_by_its_mapped_ar
             questions, retrieval_only=False)
 
 
+def test_the_estimate_leaves_out_classifications_that_replay():
+    from retrieve.arm import EstimateQuestion
+    from retrieve.route_classifier import estimate_classification_usd
+    from retrieve.router import RouterEstimate
+
+    arms = StandInArms()
+    questions = [EstimateQuestion("q1", "lookup", routed=True),
+                 EstimateQuestion("q2", "global", routed=False)]
+    usd = RouterEstimate(PRE_REGISTERED, arms.specs)(questions, retrieval_only=False)
+    classification = estimate_classification_usd(load_route_prompt(ROUTE_PROMPT_VERSION), 1)
+    assert usd == pytest.approx(classification + 0.01 * 2)
+
+
 def test_a_map_naming_an_unregistered_arm_is_refused():
     with pytest.raises(RoutingMapError, match="unregistered"):
         load_map(PRE_REGISTERED, ("vector",))

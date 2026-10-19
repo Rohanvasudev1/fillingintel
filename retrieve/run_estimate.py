@@ -5,17 +5,19 @@ above it.  Each arm is priced from its own committed ``dev`` results file: a
 question that file scored costs what it cost there (its question total plus its
 judge calls); any other question costs its class's mean in the file, or the
 file's most expensive question when the file has no question of its class.
-Retrieval-only runs drop the answer stages and the judges.  The sum is
-multiplied by ``MARGIN``, and nothing is assumed to replay from the cache, so the
+Retrieval-only runs drop the answer stages and the judges.  A question whose
+answer this arm would replay (``EstimateQuestion.answered_by``, from a committed
+run under the frozen config) costs nothing: its query embedding, graph calls,
+answer and judges all replay.  The sum is multiplied by ``MARGIN``, so the
 estimate runs high: Step 12's token-count estimate came out 2.2 times the spend.
-The estimate reads only the question's ID and class.
+The estimate reads only the question's ID, class and replay flags.
 """
 from __future__ import annotations
 
 import json
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from statistics import fmean
 
@@ -44,12 +46,13 @@ class _Measured:
 
 @dataclass(frozen=True)
 class MeasuredEstimate:
-    """Prices a run from *run_file*'s per-question costs; *answer_stages* are the cost
-    entries a retrieval-only run does not spend."""
+    """Prices arm *arm*'s run from *run_file*'s per-question costs; *answer_stages* are
+    the cost entries a retrieval-only run does not spend."""
 
     run_file: Path
     answer_stages: tuple[str, ...] = ANSWER_STAGES
     margin: float = MARGIN
+    arm: str = field(kw_only=True)
 
     def __call__(self, questions: Sequence[EstimateQuestion], *, retrieval_only: bool) -> float:
         costs = {qid: (m.class_, m.retrieval_usd if retrieval_only else m.full_usd)
@@ -61,6 +64,8 @@ class MeasuredEstimate:
         highest = max(usd for _, usd in costs.values())
 
         def priced(question: EstimateQuestion) -> float:
+            if self.arm in question.answered_by:
+                return 0.0
             if question.id in costs:
                 return costs[question.id][1]
             return unseen.get(question.class_, highest)

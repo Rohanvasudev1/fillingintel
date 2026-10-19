@@ -10,7 +10,7 @@ import sys
 import pytest
 
 from eval.compare import compare_paired
-from eval.results_inputs import DEV_RUNS, RESULTS_MD
+from eval.results_inputs import DEV_ROUTER_RUNS, DEV_RUNS, RESULTS_MD
 from eval.results_table import EXIT_DIFFERS, EXIT_OK, build, main
 from ingest.provenance import REPO_ROOT
 
@@ -78,12 +78,19 @@ def test_paired_differences_equal_eval_compares(text):
     assert "directional" in decline
 
 
-def test_hypothesis_verdicts_print_their_rules_and_readings(text):
+def test_hypothesis_verdicts_print_their_rules_and_readings():
+    text = build(test_runs={}, test_router_runs={})  # the verdicts on dev
     section = text.split("## Hypotheses")[1].split("## Router")[0]
     for name in ("H1", "H2", "H3", "H4", "H5"):
         assert f": {name}, " in section
     assert "graph_global - vector: mean -0.088 [-0.160, -0.027], n 10" in section  # H4
     assert "**not testable**: H5" in section  # no total_ms before Step 13
+
+
+def test_the_committed_verdicts_read_test(text):
+    section = text.split("## Hypotheses (read on `test`)")[1].split("\n## Router\n")[0]
+    assert "graph_global - vector: mean +0.004 [-0.087, +0.096], n 5" in section  # H4
+    assert "**not supported**: H5" in section  # total_ms exists on test
 
 
 def test_the_router_section_holds_the_dev_best_map(text):
@@ -93,9 +100,34 @@ def test_the_router_section_holds_the_dev_best_map(text):
 
 
 def test_test_runs_go_on_top(tmp_path):
-    text = build(test_runs=DEV_RUNS)
+    text = build(test_runs=DEV_RUNS, test_router_runs=DEV_ROUTER_RUNS)
     assert text.index("## `test` results") < text.index("## Hypotheses (read on `test`)")
     assert text.index("## Hypotheses") < text.index("## `dev` results")
+
+
+def test_test_router_runs_add_accuracy_unanswerable_and_oracle_on_test():
+    text = build(test_runs=DEV_RUNS, test_router_runs=DEV_ROUTER_RUNS)
+    router = text.split("\n## Router\n")[1].split("## Other measured")[0]
+    dev_accuracy = router.split("### Router accuracy on `dev`")[1].split("###")[0]
+    test_accuracy = router.split("### Router accuracy on `test`")[1].split("###")[0]
+    assert test_accuracy == dev_accuracy  # the same file in both roles
+    assert "76 of 88" in test_accuracy
+    test_oracle = router.split("### Oracle router on `test`")[1].split("###")[0]
+    assert test_oracle == router.split("### Oracle router on `dev`")[1].split("###")[0]
+    assert "### Unanswerable questions under the router on `test`" in router
+
+
+def test_without_test_router_runs_the_router_section_reads_dev_only():
+    text = build(test_runs={}, test_router_runs={})
+    assert "on `test`" not in text.split("\n## Router\n")[1].split("## Other measured")[0]
+
+
+def test_the_provenance_block_lists_the_dev_and_test_runs(text):
+    block = text.split("### graph_global provenance")[1].split("###")[0]
+    assert "dev run `2026-10-16-graph_global-dev-5bb0799.json`: 163 kept citations, 0 breaks" \
+        in block
+    assert "test run `2026-10-19-graph_global-test-f761581.json`: 82 kept citations, 0 breaks" \
+        in block
 
 
 def test_check_exits_0_on_a_match_and_4_on_a_one_character_difference(tmp_path, capsys):

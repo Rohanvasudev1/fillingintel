@@ -47,7 +47,12 @@ class FreezeError(ValueError):
 
 
 def arm_config_sha256(config: ArmConfig) -> str:
-    canonical = json.dumps(arm_provenance(config), sort_keys=True, ensure_ascii=False)
+    return provenance_sha256(arm_provenance(config))
+
+
+def provenance_sha256(provenance: Mapping[str, object]) -> str:
+    """The config hash of an arm's provenance as its run header records it."""
+    canonical = json.dumps(provenance, sort_keys=True, ensure_ascii=False)
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 

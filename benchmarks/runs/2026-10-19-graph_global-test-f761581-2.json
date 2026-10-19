@@ -1,0 +1,3909 @@
+{
+  "header": {
+    "label": "agent-drafted questions",
+    "created_at": "2026-10-19T16:27:00+00:00",
+    "commit": "f761581",
+    "arm": "graph_global",
+    "split": "test",
+    "final": true,
+    "mode": "retrieval_only",
+    "classes": [
+      "lookup",
+      "local",
+      "multi_hop"
+    ],
+    "seed": 20261005,
+    "response_cache": {
+      "uncached": false,
+      "dir": "responses"
+    },
+    "bootstrap": {
+      "resamples": 10000,
+      "confidence": 0.95
+    },
+    "models": {
+      "embedding": "voyage-4-large",
+      "map": "claude-sonnet-5-5",
+      "reduce": "claude-sonnet-5-5"
+    },
+    "efforts": {
+      "map": "high",
+      "reduce": "high"
+    },
+    "k": 24,
+    "metric_ks": [
+      5,
+      10
+    ],
+    "chunker_version": "1",
+    "graph": {
+      "ontology_version": 5,
+      "schema_sha256": "b7d200a4148695d7f9cf9df57f39f792fbc1ebfcfa9b3f413bf958bce981e648",
+      "load_run": "load-run6",
+      "cypher_prompt": null,
+      "global_search": {
+        "n": 4,
+        "level": "lower",
+        "chunks_per_community": 6,
+        "reduce_budget_tokens": 8000,
+        "map_workers": 4,
+        "map_prompt_version": "global_map/v1@dd20df63",
+        "map_prompt_sha256": "dd20df63fe14d6a4c2a1abcf7c6258a8ba9156b7121c847d6c2c871914ff29d6",
+        "reduce_prompt_version": "global_reduce/v1@a5415ee1",
+        "reduce_prompt_sha256": "a5415ee122d5b853a3b1cc8a350f05c59ffde5e196882f4055ee6fecde7d6076",
+        "report_prompt_versions": [
+          "report/v2@3062cfff"
+        ],
+        "communities_file": "communities-run1.json",
+        "reports_file": "reports-run2.jsonl"
+      }
+    },
+    "question_sets": [
+      {
+        "name": "agent_drafted",
+        "label": "agent-drafted questions",
+        "path": "agent_drafted_set.jsonl",
+        "sha256": "cd536eea22d571cfcf257e94bfac25a425f7b044660f60a553da913626322c31",
+        "records_in_split": 47
+      }
+    ],
+    "metric_definitions": {
+      "recall@k": "gold chunks in the top k / gold chunks",
+      "precision@k": "gold chunks in the top k / k, even when fewer than k come back",
+      "wrong_evidence": "questions where a hard negative ranks above at least one gold chunk in the retrieved list (a gold chunk not retrieved ranks below all), or is cited anywhere in the raw answer / questions with hard negatives; by_relation counts a question under each hard-negative label that triggered, over the questions with a negative of that label; share_of_wrong is the share of wrong questions that label triggered (H3)",
+      "exact_match": "share of questions whose filter companies and periods both equal the labels",
+      "companies_match": "share of questions whose filter companies equal the tickers label",
+      "periods_match": "share of questions whose filter periods equal the fiscal_periods label",
+      "filter_excluded_gold": "gold chunks whose filing the filter excluded, summed over questions",
+      "structural_citation_validity": "cited chunk IDs that were among the retrieved chunks / cited chunk IDs, counted over every sentence of the raw answer, kept or dropped; null when nothing was cited",
+      "dropped_share": "sentences dropped by citation enforcement / sentences in the raw answers",
+      "status": "the answer's status line: answered, declined, not_found; no_status if the line was missing; refused if the API refused",
+      "truncated": "answers whose stop_reason is max_tokens",
+      "latency_ms": "p50 and p95 per stage, by linear interpolation between the closest ranks; embed and retrieval (embed plus search) count only questions whose query embedding was made in this run; generation is each answer call's API latency when it was made, also for an answer replayed from the cache",
+      "total_ms": "the wall time of each question's whole arm call, p50 and p95 by linear interpolation over every question in the cell; replayed counts the questions with any call replayed from a cache (query embedding, answer, Cypher or map call), whose total is shorter than a fresh run's, and each such question record says replayed",
+      "cost_usd": "from the token counts each API reported and the header's dated price table; Voyage at list price, before any free allowance",
+      "interval": "percentile bootstrap 95% interval over 10000 resamples of the cell's questions, with replacement; each interval's generator is seeded by the header's seed and the interval's set, arm, class and metric; for a ratio, resamples with a zero denominator are left out and 'resamples' counts the rest",
+      "directional": "the cell has fewer than 10 questions in the scored split (research plan)",
+      "judged": "scored by an LLM judge, uncalibrated: no judge has been checked against hand scores yet; each metric runs 3 times as independent calls; a question's score is the mean of its runs that produced a value and its spread the highest run minus the lowest; a cell's mean is over its questions' scores, run_means is the cell mean within each run, spread is the highest run mean minus the lowest, and the interval resamples the questions' scores; a run with no value (skipped, undefined, or an unusable judge reply, which 'errors' counts) is left out",
+      "faithfulness": "Ragas faithfulness: statements in the kept sentences (citation markers removed) that the judge infers from the retrieved chunks / statements; skipped when no sentence was kept; no value when the judge finds no statements",
+      "answer_relevancy": "Ragas answer relevancy: mean cosine similarity (Voyage query embeddings) between the question and 3 questions the judge writes from the shown answer (citation markers removed), 0 if the judge calls every one noncommittal; skipped for an empty answer",
+      "citation_support": "kept sentences whose cited chunks, together, support every claim in them, per the judge / kept sentences; skipped when no sentence was kept",
+      "judged_cost_usd": "what judging cost (OpenAI judge calls plus Voyage embeddings for answer relevancy), over all runs; an evaluation cost, kept out of the operational cost_usd, which is what answering a question costs",
+      "judge_usage": "judge tokens over all runs as OpenAI reported them, replayed calls included: input_tokens includes cached_input_tokens and cache_write_tokens; output_tokens includes reasoning_tokens, which are shown separately and billed as output",
+      "decline_correct": "decline records: 1 if the judge finds the answer declined to advise",
+      "not_found_correct": "unanswerable records: 1 if the judge finds the answer said the filings lack the evidence without stating or guessing the fact",
+      "graph": "graph arms only: no_anchor counts questions that linked no anchor, empty_retrieval those whose retrieval held no chunk, not_found those answered not_found",
+      "cypher_validity": "graph_traversal only, per question: first_pass_valid when the first query passed the guard and ran without error in the timeout; valid_after_repair when the first or its one repair did; non_empty when one returned chunks; fallback when the question fell back to graph_local; null with no query",
+      "global_search": "graph_global only: map points are dropped when they cite no chunk, cite a chunk their call was not shown, or have no score from 0 to 100; the reduce call reads the kept points above 0 by score, then community rank, within reduce_budget_tokens (cl100k_base); with none, the answer is not_found and no reduce call is made, counted as no_reduce; map_calls_unusable counts map replies cut off, refused or off the schema, which give their community no points; no_community counts questions with no community selected; the reduce call writes the answer, so its cost and latency are generation's",
+      "graph_stages": "community_select and global_map latency counts the questions that ran the stage; global_map's is the map step's wall time, its tokens and cost summed over the map calls; their cost is a mean over every question, a stage that did not run costing 0; search covers every stage after the query embedding; the reduce call writes the answer, so its latency and cost are generation's",
+      "mode": "full: retrieval, answers and judges; retrieval_only: retrieval alone, with no answer or judge call, so cells hold retrieval metrics, retrieval latency and the wrong-evidence rate from ranks alone (nothing is cited), and no answer, judged, cost or total_ms fields"
+    }
+  },
+  "cells": {
+    "agent_drafted": {
+      "graph_global": {
+        "lookup": {
+          "n": 13,
+          "directional": false,
+          "metrics": {
+            "recall@5": 0.3076923076923077,
+            "precision@5": 0.06153846153846154,
+            "recall@10": 0.3076923076923077,
+            "precision@10": 0.03076923076923077
+          },
+          "intervals": {
+            "recall@5": {
+              "low": 0.07692307692307693,
+              "high": 0.5384615384615384,
+              "resamples": 10000
+            },
+            "precision@5": {
+              "low": 0.015384615384615385,
+              "high": 0.1076923076923077,
+              "resamples": 10000
+            },
+            "recall@10": {
+              "low": 0.07692307692307693,
+              "high": 0.5384615384615384,
+              "resamples": 10000
+            },
+            "precision@10": {
+              "low": 0.007692307692307693,
+              "high": 0.05384615384615385,
+              "resamples": 10000
+            }
+          },
+          "wrong_evidence": {
+            "n": 13,
+            "wrong": 0,
+            "rate": 0.0,
+            "interval": {
+              "low": 0.0,
+              "high": 0.0,
+              "resamples": 10000
+            },
+            "by_relation": {
+              "same_company_other_period": {
+                "n": 13,
+                "wrong": 0,
+                "rate": 0.0,
+                "interval": {
+                  "low": 0.0,
+                  "high": 0.0,
+                  "resamples": 10000
+                },
+                "share_of_wrong": null,
+                "share_of_wrong_interval": null
+              },
+              "peer_company": {
+                "n": 2,
+                "wrong": 0,
+                "rate": 0.0,
+                "interval": {
+                  "low": 0.0,
+                  "high": 0.0,
+                  "resamples": 10000
+                },
+                "share_of_wrong": null,
+                "share_of_wrong_interval": null
+              }
+            }
+          },
+          "latency_ms": {
+            "retrieval": {
+              "n": 0,
+              "p50": null,
+              "p95": null,
+              "intervals": {
+                "p50": null,
+                "p95": null
+              }
+            },
+            "embed": {
+              "n": 0,
+              "p50": null,
+              "p95": null,
+              "intervals": {
+                "p50": null,
+                "p95": null
+              }
+            },
+            "search": {
+              "n": 13,
+              "p50": 4.747541970573366,
+              "p95": 8.758858183864502,
+              "intervals": {
+                "p50": {
+                  "low": 3.4527500392869115,
+                  "high": 7.295541989151388,
+                  "resamples": 10000
+                },
+                "p95": {
+                  "low": 6.597608374431722,
+                  "high": 9.372707980219275,
+                  "resamples": 10000
+                }
+              }
+            }
+          }
+        },
+        "local": {
+          "n": 13,
+          "directional": false,
+          "metrics": {
+            "recall@5": 0.4230769230769231,
+            "precision@5": 0.09230769230769233,
+            "recall@10": 0.6538461538461539,
+            "precision@10": 0.07692307692307693
+          },
+          "intervals": {
+            "recall@5": {
+              "low": 0.19230769230769232,
+              "high": 0.6923076923076923,
+              "resamples": 10000
+            },
+            "precision@5": {
+              "low": 0.04615384615384616,
+              "high": 0.15384615384615385,
+              "resamples": 10000
+            },
+            "recall@10": {
+              "low": 0.4230769230769231,
+              "high": 0.8461538461538461,
+              "resamples": 10000
+            },
+            "precision@10": {
+              "low": 0.05384615384615385,
+              "high": 0.1,
+              "resamples": 10000
+            }
+          },
+          "wrong_evidence": {
+            "n": 13,
+            "wrong": 1,
+            "rate": 0.07692307692307693,
+            "interval": {
+              "low": 0.0,
+              "high": 0.23076923076923078,
+              "resamples": 10000
+            },
+            "by_relation": {
+              "same_company_other_period": {
+                "n": 11,
+                "wrong": 0,
+                "rate": 0.0,
+                "interval": {
+                  "low": 0.0,
+                  "high": 0.0,
+                  "resamples": 10000
+                },
+                "share_of_wrong": 0.0,
+                "share_of_wrong_interval": {
+                  "low": 0.0,
+                  "high": 0.0,
+                  "resamples": 6410
+                }
+              },
+              "same_company_same_filing": {
+                "n": 1,
+                "wrong": 1,
+                "rate": 1.0,
+                "interval": {
+                  "low": 1.0,
+                  "high": 1.0,
+                  "resamples": 10000
+                },
+                "share_of_wrong": 1.0,
+                "share_of_wrong_interval": {
+                  "low": 1.0,
+                  "high": 1.0,
+                  "resamples": 6484
+                }
+              },
+              "peer_company": {
+                "n": 1,
+                "wrong": 0,
+                "rate": 0.0,
+                "interval": {
+                  "low": 0.0,
+                  "high": 0.0,
+                  "resamples": 10000
+                },
+                "share_of_wrong": 0.0,
+                "share_of_wrong_interval": {
+                  "low": 0.0,
+                  "high": 0.0,
+                  "resamples": 6509
+                }
+              }
+            }
+          },
+          "latency_ms": {
+            "retrieval": {
+              "n": 0,
+              "p50": null,
+              "p95": null,
+              "intervals": {
+                "p50": null,
+                "p95": null
+              }
+            },
+            "embed": {
+              "n": 0,
+              "p50": null,
+              "p95": null,
+              "intervals": {
+                "p50": null,
+                "p95": null
+              }
+            },
+            "search": {
+              "n": 13,
+              "p50": 5.091041966807097,
+              "p95": 58.45729998545709,
+              "intervals": {
+                "p50": {
+                  "low": 4.178125003818423,
+                  "high": 6.405332998838276,
+                  "resamples": 10000
+                },
+                "p95": {
+                  "low": 6.36935842921957,
+                  "high": 109.65612495783716,
+                  "resamples": 10000
+                }
+              }
+            }
+          }
+        },
+        "multi_hop": {
+          "n": 7,
+          "directional": true,
+          "metrics": {
+            "recall@5": 0.35714285714285715,
+            "precision@5": 0.14285714285714285,
+            "recall@10": 0.35714285714285715,
+            "precision@10": 0.07142857142857142
+          },
+          "intervals": {
+            "recall@5": {
+              "low": 0.07142857142857142,
+              "high": 0.7142857142857143,
+              "resamples": 10000
+            },
+            "precision@5": {
+              "low": 0.028571428571428574,
+              "high": 0.2857142857142857,
+              "resamples": 10000
+            },
+            "recall@10": {
+              "low": 0.07142857142857142,
+              "high": 0.7142857142857143,
+              "resamples": 10000
+            },
+            "precision@10": {
+              "low": 0.014285714285714287,
+              "high": 0.14285714285714285,
+              "resamples": 10000
+            }
+          },
+          "wrong_evidence": {
+            "n": 7,
+            "wrong": 1,
+            "rate": 0.14285714285714285,
+            "interval": {
+              "low": 0.0,
+              "high": 0.42857142857142855,
+              "resamples": 10000
+            },
+            "by_relation": {
+              "same_company_other_period": {
+                "n": 5,
+                "wrong": 0,
+                "rate": 0.0,
+                "interval": {
+                  "low": 0.0,
+                  "high": 0.0,
+                  "resamples": 10000
+                },
+                "share_of_wrong": 0.0,
+                "share_of_wrong_interval": {
+                  "low": 0.0,
+                  "high": 0.0,
+                  "resamples": 6648
+                }
+              },
+              "same_company_same_filing": {
+                "n": 1,
+                "wrong": 1,
+                "rate": 1.0,
+                "interval": {
+                  "low": 1.0,
+                  "high": 1.0,
+                  "resamples": 10000
+                },
+                "share_of_wrong": 1.0,
+                "share_of_wrong_interval": {
+                  "low": 1.0,
+                  "high": 1.0,
+                  "resamples": 6658
+                }
+              },
+              "peer_company": {
+                "n": 1,
+                "wrong": 0,
+                "rate": 0.0,
+                "interval": {
+                  "low": 0.0,
+                  "high": 0.0,
+                  "resamples": 10000
+                },
+                "share_of_wrong": 0.0,
+                "share_of_wrong_interval": {
+                  "low": 0.0,
+                  "high": 0.0,
+                  "resamples": 6602
+                }
+              }
+            }
+          },
+          "latency_ms": {
+            "retrieval": {
+              "n": 0,
+              "p50": null,
+              "p95": null,
+              "intervals": {
+                "p50": null,
+                "p95": null
+              }
+            },
+            "embed": {
+              "n": 0,
+              "p50": null,
+              "p95": null,
+              "intervals": {
+                "p50": null,
+                "p95": null
+              }
+            },
+            "search": {
+              "n": 7,
+              "p50": 6.734416994731873,
+              "p95": 20.387512701563526,
+              "intervals": {
+                "p50": {
+                  "low": 3.0184999923221767,
+                  "high": 10.310459008906037,
+                  "resamples": 10000
+                },
+                "p95": {
+                  "low": 6.734416994731873,
+                  "high": 24.70624999841675,
+                  "resamples": 10000
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "filter_report": {
+    "agent_drafted": {
+      "n": 33,
+      "exact_match": 0.8484848484848485,
+      "companies_match": 1.0,
+      "periods_match": 0.8484848484848485,
+      "filter_excluded_gold": 1,
+      "questions_with_excluded_gold": [
+        "q0116"
+      ]
+    }
+  },
+  "questions": [
+    {
+      "id": "q0036",
+      "question_set": "agent_drafted",
+      "class": "local",
+      "question": "What did China's antitrust regulators preliminarily find about NVIDIA's Mellanox acquisition commitments, according to NVIDIA's FY2026 10-K, and what consequences does NVIDIA say it could face?",
+      "gold_chunk_ids": [
+        "0001045810-26-000021:0041"
+      ],
+      "filter": {
+        "companies": [
+          "NVDA"
+        ],
+        "periods": [
+          "FY2026"
+        ],
+        "forms": [
+          "10-K"
+        ],
+        "accession_nos": [
+          "0001045810-26-000021"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0001045810-26-000021:0041",
+          "score": 0.6062663793564015
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0039",
+          "score": 0.5325296877377677
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0038",
+          "score": 0.46388369368120685
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0040",
+          "score": 0.4407870365596487
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0005",
+          "score": 0.4318252083942675
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0102",
+          "score": 0.4440481132340618
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0020",
+          "score": 0.40885444932309145
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0070",
+          "score": 0.3749182671211111
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0062",
+          "score": 0.5458972726188738
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0042",
+          "score": 0.5488262503639697
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0014",
+          "score": 0.548793592833328
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0061",
+          "score": 0.5334053953531706
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0015",
+          "score": 0.4964062573667831
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 110.85120897041634,
+      "embed_ms": 1.1950840125791728,
+      "search_ms": 109.65612495783716,
+      "query_cached": true,
+      "embed_tokens": 43,
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "recall@10": 1.0,
+        "precision@10": 0.1
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0039",
+      "question_set": "agent_drafted",
+      "class": "local",
+      "question": "How does NVIDIA describe the steps it has taken to secure supply and the risks those supply commitments create, in its FY2026 10-K risk factors?",
+      "gold_chunk_ids": [
+        "0001045810-26-000021:0022"
+      ],
+      "filter": {
+        "companies": [
+          "NVDA"
+        ],
+        "periods": [
+          "FY2026"
+        ],
+        "forms": [
+          "10-K"
+        ],
+        "accession_nos": [
+          "0001045810-26-000021"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0001045810-26-000021:0061",
+          "score": 0.5344323952665233
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0067",
+          "score": 0.43443235241885647
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0007",
+          "score": 0.4281391714686944
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0005",
+          "score": 0.42366448852400396
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0063",
+          "score": 0.40716113980164326
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0068",
+          "score": 0.3997828721805996
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0030",
+          "score": 0.3268560669763081
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0023",
+          "score": 0.6351722668162667
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0022",
+          "score": 0.607701809361849
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0025",
+          "score": 0.5651664215524709
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0021",
+          "score": 0.5571898055914125
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0024",
+          "score": 0.5272594847458449
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0026",
+          "score": 0.5302753606520703
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0041",
+          "score": 0.5138685243843382
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0042",
+          "score": 0.4893931302609127
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0019",
+          "score": 0.4872624125260836
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 8.70525004575029,
+      "embed_ms": 0.9932920220308006,
+      "search_ms": 7.71195802371949,
+      "query_cached": true,
+      "embed_tokens": 33,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 1.0,
+        "precision@10": 0.1
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0040",
+      "question_set": "agent_drafted",
+      "class": "local",
+      "question": "Who does NVIDIA name as its competitors in its FY2026 10-K, and what does it consider the principal competitive factors in its market?",
+      "gold_chunk_ids": [
+        "0001045810-26-000021:0012",
+        "0001045810-26-000021:0013"
+      ],
+      "filter": {
+        "companies": [
+          "NVDA"
+        ],
+        "periods": [
+          "FY2026"
+        ],
+        "forms": [
+          "10-K"
+        ],
+        "accession_nos": [
+          "0001045810-26-000021"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0001045810-26-000021:0030",
+          "score": 0.24511621921561888
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0008",
+          "score": 0.5570693182071843
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0067",
+          "score": 0.552073797212765
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0063",
+          "score": 0.5365737036974821
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0125",
+          "score": 0.5250987723528616
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0006",
+          "score": 0.5197614717625704
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0023",
+          "score": 0.5123038291931152
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0012",
+          "score": 0.6510312557220459
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0052",
+          "score": 0.3811171423723023
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0062",
+          "score": 0.4684197408586406
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 5.495707970112562,
+      "embed_ms": 1.1823750101029873,
+      "search_ms": 4.313332960009575,
+      "query_cached": true,
+      "embed_tokens": 31,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 0.5,
+        "precision@10": 0.1
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0042",
+      "question_set": "agent_drafted",
+      "class": "local",
+      "question": "What does NVIDIA say drove its revenue growth in fiscal year 2026, and what external constraints and product-transition challenges does it highlight in its FY2026 MD&A?",
+      "gold_chunk_ids": [
+        "0001045810-26-000021:0061"
+      ],
+      "filter": {
+        "companies": [
+          "NVDA"
+        ],
+        "periods": [
+          "FY2026"
+        ],
+        "forms": [],
+        "accession_nos": [
+          "0001045810-25-000116",
+          "0001045810-25-000209",
+          "0001045810-25-000230",
+          "0001045810-26-000021"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0001045810-25-000116:0031",
+          "score": 0.6356710195541382
+        },
+        {
+          "chunk_id": "0001045810-25-000209:0036",
+          "score": 0.6285856366157532
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0063",
+          "score": 0.6257921903381165
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0067",
+          "score": 0.5975322847010676
+        },
+        {
+          "chunk_id": "0001045810-25-000116:0033",
+          "score": 0.596784007165914
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0037",
+          "score": 0.5769997239112854
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0036",
+          "score": 0.4497625171855144
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0028",
+          "score": 0.4203774333000183
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0038",
+          "score": 0.377837210893631
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0033",
+          "score": 0.3637872338294983
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0034",
+          "score": 0.34215355939130676
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0031",
+          "score": 0.3288211226463318
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0062",
+          "score": 0.5484881026280141
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0036",
+          "score": 0.5464620049550578
+        },
+        {
+          "chunk_id": "0001045810-25-000209:0035",
+          "score": 0.5448841614986709
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0024",
+          "score": 0.5931927561759949
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0023",
+          "score": 0.5753788948059082
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0025",
+          "score": 0.44381926451497833
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0022",
+          "score": 0.433230272916591
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0021",
+          "score": 0.4283390385902508
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 5.6823749910108745,
+      "embed_ms": 1.1195000261068344,
+      "search_ms": 4.56287496490404,
+      "query_cached": true,
+      "embed_tokens": 37,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 0.0,
+        "precision@10": 0.0
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0047",
+      "question_set": "agent_drafted",
+      "class": "local",
+      "question": "Who does AMD identify as its main competitors in each of its segments in its FY2025 10-K?",
+      "gold_chunk_ids": [
+        "0000002488-26-000018:0014"
+      ],
+      "filter": {
+        "companies": [
+          "AMD"
+        ],
+        "periods": [
+          "FY2025"
+        ],
+        "forms": [
+          "10-K"
+        ],
+        "accession_nos": [
+          "0000002488-26-000018"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0000002488-26-000018:0014",
+          "score": 0.6986477583243778
+        },
+        {
+          "chunk_id": "0000002488-26-000018:0024",
+          "score": 0.6032653327864055
+        },
+        {
+          "chunk_id": "0000002488-26-000018:0023",
+          "score": 0.6306017825186787
+        },
+        {
+          "chunk_id": "0000002488-26-000018:0032",
+          "score": 0.42151857678647586
+        },
+        {
+          "chunk_id": "0000002488-26-000018:0028",
+          "score": 0.32143801663434723
+        },
+        {
+          "chunk_id": "0000002488-26-000018:0015",
+          "score": 0.5189411066700385
+        },
+        {
+          "chunk_id": "0000002488-26-000018:0016",
+          "score": 0.5060907602310181
+        },
+        {
+          "chunk_id": "0000002488-26-000018:0029",
+          "score": 0.497665792842759
+        },
+        {
+          "chunk_id": "0000002488-26-000018:0030",
+          "score": 0.43038789720499226
+        },
+        {
+          "chunk_id": "0000002488-26-000018:0031",
+          "score": 0.4286117468609538
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 3.933875006623566,
+      "embed_ms": 0.5117499968037009,
+      "search_ms": 3.4221250098198652,
+      "query_cached": true,
+      "embed_tokens": 24,
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "recall@10": 1.0,
+        "precision@10": 0.1
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0056",
+      "question_set": "agent_drafted",
+      "class": "local",
+      "question": "How was Intel's sale of a majority stake in Altera structured, and how did it affect Intel's FY2025 financial statements?",
+      "gold_chunk_ids": [
+        "0000050863-26-000011:0031"
+      ],
+      "filter": {
+        "companies": [
+          "INTC"
+        ],
+        "periods": [
+          "FY2025"
+        ],
+        "forms": [],
+        "accession_nos": [
+          "0000050863-25-000074",
+          "0000050863-25-000109",
+          "0000050863-25-000179",
+          "0000050863-26-000011"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0000050863-26-000011:0031",
+          "score": 0.6906634980835628
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0026",
+          "score": 0.6442478895187378
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0145",
+          "score": 0.6441092319358357
+        },
+        {
+          "chunk_id": "0000050863-25-000179:0048",
+          "score": 0.6373254656791687
+        },
+        {
+          "chunk_id": "0000050863-25-000179:0031",
+          "score": 0.6300181934242906
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0146",
+          "score": 0.6178624033927917
+        },
+        {
+          "chunk_id": "0000050863-25-000179:0049",
+          "score": 0.5363643722099852
+        },
+        {
+          "chunk_id": "0000050863-25-000179:0011",
+          "score": 0.5276892499738494
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0030",
+          "score": 0.5041160583496094
+        },
+        {
+          "chunk_id": "0000050863-25-000179:0025",
+          "score": 0.49441981282352376
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0187",
+          "score": 0.3450312408786278
+        },
+        {
+          "chunk_id": "0000050863-25-000074:0044",
+          "score": 0.3720857501029968
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 24.97979096369818,
+      "embed_ms": 0.6550409598276019,
+      "search_ms": 24.324750003870577,
+      "query_cached": true,
+      "embed_tokens": 28,
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "recall@10": 1.0,
+        "precision@10": 0.1
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0058",
+      "question_set": "agent_drafted",
+      "class": "local",
+      "question": "What did Intel's 2024 Restructuring Plan involve, and when did Intel expect it to be substantially completed, per the FY2024 10-K?",
+      "gold_chunk_ids": [
+        "0000050863-25-000009:0021",
+        "0000050863-25-000009:0039"
+      ],
+      "filter": {
+        "companies": [
+          "INTC"
+        ],
+        "periods": [
+          "FY2024"
+        ],
+        "forms": [
+          "10-K"
+        ],
+        "accession_nos": [
+          "0000050863-25-000009"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0000050863-25-000009:0069",
+          "score": 0.5095457749746645
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0067",
+          "score": 0.32783569810326507
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0068",
+          "score": 0.253847219623212
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0021",
+          "score": 0.7149870268981228
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0162",
+          "score": 0.5679444751673351
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0050",
+          "score": 0.49636661941408355
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0029",
+          "score": 0.49022540333574205
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0108",
+          "score": 0.4864641113834549
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0117",
+          "score": 0.48232549218243603
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0014",
+          "score": 0.4703243637471666
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0031",
+          "score": 0.41422714249381065
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0013",
+          "score": 0.37652625897683856
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0039",
+          "score": 0.7043967910522457
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0123",
+          "score": 0.6731447783881209
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0155",
+          "score": 0.4993937313195387
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0161",
+          "score": 0.4773184006973268
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 6.374959019012749,
+      "embed_ms": 1.283917052205652,
+      "search_ms": 5.091041966807097,
+      "query_cached": true,
+      "embed_tokens": 37,
+      "metrics": {
+        "recall@5": 0.5,
+        "precision@5": 0.2,
+        "recall@10": 0.5,
+        "precision@10": 0.1
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0060",
+      "question_set": "agent_drafted",
+      "class": "local",
+      "question": "What did Intel's FY2024 10-K say about its policy on dividends and stock repurchases, and what constrains its ability to return cash to stockholders?",
+      "gold_chunk_ids": [
+        "0000050863-25-000009:0010"
+      ],
+      "filter": {
+        "companies": [
+          "INTC"
+        ],
+        "periods": [
+          "FY2024"
+        ],
+        "forms": [
+          "10-K"
+        ],
+        "accession_nos": [
+          "0000050863-25-000009"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0000050863-25-000009:0062",
+          "score": 0.4633071698729505
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0003",
+          "score": 0.4424186681259543
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0061",
+          "score": 0.41633402303862854
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0059",
+          "score": 0.41057407322967565
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0063",
+          "score": 0.3596826326468745
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0060",
+          "score": 0.357460498809817
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0010",
+          "score": 0.6612436377261006
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0073",
+          "score": 0.592890911658786
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0043",
+          "score": 0.5341733734814373
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0055",
+          "score": 0.5024933221928265
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0054",
+          "score": 0.49916926031296693
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0042",
+          "score": 0.4880646460094846
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0050",
+          "score": 0.48474341449062996
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0051",
+          "score": 0.47649481752484035
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0049",
+          "score": 0.41247254610061934
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0020",
+          "score": 0.5333722511904175
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0117",
+          "score": 0.49415418470824957
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0015",
+          "score": 0.47517391743349047
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0033",
+          "score": 0.4582924817974863
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 7.147790980525315,
+      "embed_ms": 0.7424579816870391,
+      "search_ms": 6.405332998838276,
+      "query_cached": true,
+      "embed_tokens": 36,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 1.0,
+        "precision@10": 0.1
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0061",
+      "question_set": "agent_drafted",
+      "class": "local",
+      "question": "What risks does Intel's FY2025 10-K identify from the U.S. government's acquisition of a significant equity stake in the company?",
+      "gold_chunk_ids": [
+        "0000050863-26-000011:0069"
+      ],
+      "filter": {
+        "companies": [
+          "INTC"
+        ],
+        "periods": [
+          "FY2025"
+        ],
+        "forms": [
+          "10-K"
+        ],
+        "accession_nos": [
+          "0000050863-26-000011"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0000050863-26-000011:0069",
+          "score": 0.7320073305375007
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0068",
+          "score": 0.6447603086912934
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0070",
+          "score": 0.500550568169424
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0071",
+          "score": 0.3873654767710546
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0030",
+          "score": 0.5853568838855842
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0127",
+          "score": 0.5048582704323071
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0180",
+          "score": 0.4374941047272244
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0179",
+          "score": 0.4163243894673748
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0189",
+          "score": 0.4141913077520294
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0031",
+          "score": 0.4077051293410555
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0066",
+          "score": 0.5019159765764474
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0072",
+          "score": 0.5000632405356464
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0067",
+          "score": 0.4734934081872417
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0065",
+          "score": 0.4727384101280707
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0084",
+          "score": 0.42330371419235713
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0086",
+          "score": 0.4057772941323876
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0085",
+          "score": 0.3618605029028583
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 6.099916994571686,
+      "embed_ms": 0.6256249616853893,
+      "search_ms": 5.4742920328862965,
+      "query_cached": true,
+      "embed_tokens": 31,
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "recall@10": 1.0,
+        "precision@10": 0.1
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0062",
+      "question_set": "agent_drafted",
+      "class": "local",
+      "question": "According to Intel's FY2025 risk factors, what consequences would Intel face if it paused or discontinued development of Intel 14A and later leading-edge nodes?",
+      "gold_chunk_ids": [
+        "0000050863-26-000011:0065",
+        "0000050863-26-000011:0067"
+      ],
+      "filter": {
+        "companies": [
+          "INTC"
+        ],
+        "periods": [
+          "FY2025"
+        ],
+        "forms": [],
+        "accession_nos": [
+          "0000050863-25-000074",
+          "0000050863-25-000109",
+          "0000050863-25-000179",
+          "0000050863-26-000011"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0000050863-26-000011:0034",
+          "score": 0.629596076631781
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0008",
+          "score": 0.6200283396227169
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0042",
+          "score": 0.586089099282677
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0021",
+          "score": 0.5620537828787057
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0020",
+          "score": 0.5483188840772727
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0022",
+          "score": 0.5141347340265084
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0065",
+          "score": 0.6460801555538296
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0064",
+          "score": 0.5417171716690102
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0061",
+          "score": 0.4771191505051672
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0063",
+          "score": 0.47227370904244803
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0062",
+          "score": 0.43905843030709857
+        },
+        {
+          "chunk_id": "0000050863-25-000179:0051",
+          "score": 0.6147322288315171
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0072",
+          "score": 0.4411582219255519
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0071",
+          "score": 0.2952463538871314
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0003",
+          "score": 0.5126155890317707
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0002",
+          "score": 0.4767391085624728
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 4.807999997865409,
+      "embed_ms": 0.6298749940469861,
+      "search_ms": 4.178125003818423,
+      "query_cached": true,
+      "embed_tokens": 34,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 0.5,
+        "precision@10": 0.1
+      },
+      "wrong_evidence": [
+        {
+          "chunk_id": "0000050863-26-000011:0034",
+          "relation": "same_company_same_filing",
+          "rank": 1,
+          "above_gold": true,
+          "cited": false
+        }
+      ]
+    },
+    {
+      "id": "q0064",
+      "question_set": "agent_drafted",
+      "class": "local",
+      "question": "What is the status of the third Texas patent case and the related license defense in Intel's VLSI litigation, according to the FY2025 10-K?",
+      "gold_chunk_ids": [
+        "0000050863-26-000011:0176"
+      ],
+      "filter": {
+        "companies": [
+          "INTC"
+        ],
+        "periods": [
+          "FY2025"
+        ],
+        "forms": [
+          "10-K"
+        ],
+        "accession_nos": [
+          "0000050863-26-000011"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0000050863-26-000011:0176",
+          "score": 0.6596587097441486
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0175",
+          "score": 0.6025618796161208
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0177",
+          "score": 0.5762015924573985
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0174",
+          "score": 0.4586872956007232
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0178",
+          "score": 0.4365374500360283
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0080",
+          "score": 0.40937649663547315
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0136",
+          "score": 0.32781438943958263
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0171",
+          "score": 0.49726417660714617
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0172",
+          "score": 0.4127474271203455
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0173",
+          "score": 0.4044252577081541
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0049",
+          "score": 0.2662384986111822
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0081",
+          "score": 0.32692262415694495
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0082",
+          "score": 0.26136828518851307
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 7.418499968480319,
+      "embed_ms": 1.423290988896042,
+      "search_ms": 5.995208979584277,
+      "query_cached": true,
+      "embed_tokens": 35,
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "recall@10": 1.0,
+        "precision@10": 0.1
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0067",
+      "question_set": "agent_drafted",
+      "class": "local",
+      "question": "How does NVIDIA's FY2026 10-K describe the oversight and management of cybersecurity risk?",
+      "gold_chunk_ids": [
+        "0001045810-26-000021:0054"
+      ],
+      "filter": {
+        "companies": [
+          "NVDA"
+        ],
+        "periods": [
+          "FY2026"
+        ],
+        "forms": [
+          "10-K"
+        ],
+        "accession_nos": [
+          "0001045810-26-000021"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0001045810-26-000021:0030",
+          "score": 0.4177388050867552
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0031",
+          "score": 0.4881439514074364
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0029",
+          "score": 0.44498208165169073
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0028",
+          "score": 0.4227525339870142
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0038",
+          "score": 0.37069291647118896
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0036",
+          "score": 0.36672105590827186
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0039",
+          "score": 0.4087328314781218
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0019",
+          "score": 0.3858213790761609
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0026",
+          "score": 0.37683502573758276
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0021",
+          "score": 0.36630438371844487
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0016",
+          "score": 0.47894624001108255
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0017",
+          "score": 0.3987788080805229
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 3.630540973972529,
+      "embed_ms": 1.3017500168643892,
+      "search_ms": 2.32879095710814,
+      "query_cached": true,
+      "embed_tokens": 21,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 0.0,
+        "precision@10": 0.0
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0069",
+      "question_set": "agent_drafted",
+      "class": "local",
+      "question": "How does NVIDIA describe its workforce and human capital approach at the end of fiscal year 2026?",
+      "gold_chunk_ids": [
+        "0001045810-26-000021:0016"
+      ],
+      "filter": {
+        "companies": [
+          "NVDA"
+        ],
+        "periods": [
+          "FY2026"
+        ],
+        "forms": [],
+        "accession_nos": [
+          "0001045810-25-000116",
+          "0001045810-25-000209",
+          "0001045810-25-000230",
+          "0001045810-26-000021"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0001045810-26-000021:0036",
+          "score": 0.41561089940201335
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0028",
+          "score": 0.3410196900367737
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0033",
+          "score": 0.3131575584411621
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0034",
+          "score": 0.30775750600568985
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0038",
+          "score": 0.29959696531295776
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0032",
+          "score": 0.2975066602230072
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0062",
+          "score": 0.4815063896039762
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0036",
+          "score": 0.4797131096974776
+        },
+        {
+          "chunk_id": "0001045810-25-000209:0035",
+          "score": 0.4095918062207643
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0063",
+          "score": 0.49453258579581305
+        },
+        {
+          "chunk_id": "0001045810-25-000116:0031",
+          "score": 0.46447688341140747
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0067",
+          "score": 0.4611967573410184
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0125",
+          "score": 0.45816489804773997
+        },
+        {
+          "chunk_id": "0001045810-25-000209:0036",
+          "score": 0.4557726979255676
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0023",
+          "score": 0.4478703439235687
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0030",
+          "score": 0.22019721745269227
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 4.587207979056984,
+      "embed_ms": 1.1573749943636358,
+      "search_ms": 3.4298329846933484,
+      "query_cached": true,
+      "embed_tokens": 21,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 0.0,
+        "precision@10": 0.0
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0071",
+      "question_set": "agent_drafted",
+      "class": "lookup",
+      "question": "What was NVIDIA's Compute & Networking segment revenue for fiscal year 2026 (ended January 25, 2026)?",
+      "gold_chunk_ids": [
+        "0001045810-26-000021:0066"
+      ],
+      "filter": {
+        "companies": [
+          "NVDA"
+        ],
+        "periods": [
+          "FY2026"
+        ],
+        "forms": [],
+        "accession_nos": [
+          "0001045810-25-000116",
+          "0001045810-25-000209",
+          "0001045810-25-000230",
+          "0001045810-26-000021"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0001045810-26-000021:0036",
+          "score": 0.487447438379665
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0028",
+          "score": 0.37607481337039617
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0031",
+          "score": 0.2837688793998294
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0033",
+          "score": 0.2827933003183192
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0034",
+          "score": 0.2509862408923723
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0032",
+          "score": 0.23311667043666107
+        },
+        {
+          "chunk_id": "0001045810-25-000209:0036",
+          "score": 0.6668360630772163
+        },
+        {
+          "chunk_id": "0001045810-25-000116:0031",
+          "score": 0.6640793480920415
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0125",
+          "score": 0.6617757870883688
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0067",
+          "score": 0.6608282731976372
+        },
+        {
+          "chunk_id": "0001045810-25-000116:0033",
+          "score": 0.6561454515717252
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0063",
+          "score": 0.6383523560552486
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0061",
+          "score": 0.6530688405036973
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0007",
+          "score": 0.547022846518594
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0005",
+          "score": 0.49551084584127025
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0008",
+          "score": 0.47611991847633606
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0004",
+          "score": 0.4226483702659637
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0009",
+          "score": 0.4093916728186122
+        },
+        {
+          "chunk_id": "0001045810-25-000209:0035",
+          "score": 0.5137126905065202
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0062",
+          "score": 0.5060089690107957
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0036",
+          "score": 0.3783376893408942
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 2.7822080301120877,
+      "embed_ms": 0.7097500492818654,
+      "search_ms": 2.0724579808302224,
+      "query_cached": true,
+      "embed_tokens": 29,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 0.0,
+        "precision@10": 0.0
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0075",
+      "question_set": "agent_drafted",
+      "class": "lookup",
+      "question": "What was NVIDIA's revenue for the first quarter of fiscal year 2025, and how much did it grow year over year?",
+      "gold_chunk_ids": [
+        "0001045810-24-000124:0029"
+      ],
+      "filter": {
+        "companies": [
+          "NVDA"
+        ],
+        "periods": [
+          "FY2025-Q1"
+        ],
+        "forms": [],
+        "accession_nos": [
+          "0001045810-24-000124"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0001045810-24-000124:0030",
+          "score": 0.6934829123636589
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0029",
+          "score": 0.6566739082336472
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0024",
+          "score": 0.6487045884132432
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0031",
+          "score": 0.6259833760852698
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0032",
+          "score": 0.6072629094123884
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0053",
+          "score": 0.23366206884384322
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0027",
+          "score": 0.6266057117816393
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0045",
+          "score": 0.5366601624095353
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0044",
+          "score": 0.43677217145132075
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0042",
+          "score": 0.5667877375863077
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 5.5397499818354845,
+      "embed_ms": 0.620083010289818,
+      "search_ms": 4.9196669715456665,
+      "query_cached": true,
+      "embed_tokens": 27,
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "recall@10": 1.0,
+        "precision@10": 0.1
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0076",
+      "question_set": "agent_drafted",
+      "class": "lookup",
+      "question": "What charge did NVIDIA record related to H20 in the first quarter of fiscal year 2026, and what was its gross margin that quarter?",
+      "gold_chunk_ids": [
+        "0001045810-25-000116:0030"
+      ],
+      "filter": {
+        "companies": [
+          "NVDA"
+        ],
+        "periods": [
+          "FY2026-Q1"
+        ],
+        "forms": [],
+        "accession_nos": [
+          "0001045810-25-000116"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0001045810-25-000116:0031",
+          "score": 0.6115798718678885
+        },
+        {
+          "chunk_id": "0001045810-25-000116:0033",
+          "score": 0.54038319713769
+        },
+        {
+          "chunk_id": "0001045810-25-000116:0043",
+          "score": 0.46897247248724017
+        },
+        {
+          "chunk_id": "0001045810-25-000116:0025",
+          "score": 0.43274960322681144
+        },
+        {
+          "chunk_id": "0001045810-25-000116:0048",
+          "score": 0.5614869259901777
+        },
+        {
+          "chunk_id": "0001045810-25-000116:0024",
+          "score": 0.4870605461037494
+        },
+        {
+          "chunk_id": "0001045810-25-000116:0028",
+          "score": 0.6699615323497692
+        },
+        {
+          "chunk_id": "0001045810-25-000116:0022",
+          "score": 0.47476750612259244
+        },
+        {
+          "chunk_id": "0001045810-25-000116:0020",
+          "score": 0.35473522735255025
+        },
+        {
+          "chunk_id": "0001045810-25-000116:0021",
+          "score": 0.318972170352938
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 6.881834007799625,
+      "embed_ms": 1.1487500160001218,
+      "search_ms": 5.733083991799504,
+      "query_cached": true,
+      "embed_tokens": 31,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 0.0,
+        "precision@10": 0.0
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0078",
+      "question_set": "agent_drafted",
+      "class": "lookup",
+      "question": "What was NVIDIA's Data Center networking revenue in the third quarter of fiscal year 2026, and how fast did it grow year over year?",
+      "gold_chunk_ids": [
+        "0001045810-25-000230:0037"
+      ],
+      "filter": {
+        "companies": [
+          "NVDA"
+        ],
+        "periods": [
+          "FY2026-Q3"
+        ],
+        "forms": [],
+        "accession_nos": [
+          "0001045810-25-000230"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0001045810-25-000230:0037",
+          "score": 0.7451419082368571
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0032",
+          "score": 0.6046341421982145
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0031",
+          "score": 0.5772757794373902
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0038",
+          "score": 0.47578090573663845
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0053",
+          "score": 0.4108681923668507
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0064",
+          "score": 0.286852193662398
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0061",
+          "score": 0.40971821546554854
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0060",
+          "score": 0.38452790791128966
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0063",
+          "score": 0.3606603956616168
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0062",
+          "score": 0.30011658071777225
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0036",
+          "score": 0.4308848555478203
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0041",
+          "score": 0.6925369134589331
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0040",
+          "score": 0.6556960735139902
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0035",
+          "score": 0.6384313677338992
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0042",
+          "score": 0.5321344454368628
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0052",
+          "score": 0.3685728687898654
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 3.6100000143051147,
+      "embed_ms": 0.8269579848274589,
+      "search_ms": 2.783042029477656,
+      "query_cached": true,
+      "embed_tokens": 30,
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "recall@10": 1.0,
+        "precision@10": 0.1
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0082",
+      "question_set": "agent_drafted",
+      "class": "lookup",
+      "question": "How much did AMD spend on research and development in fiscal year 2024, and why did it increase?",
+      "gold_chunk_ids": [
+        "0000002488-25-000012:0075"
+      ],
+      "filter": {
+        "companies": [
+          "AMD"
+        ],
+        "periods": [
+          "FY2024"
+        ],
+        "forms": [],
+        "accession_nos": [
+          "0000002488-24-000056",
+          "0000002488-24-000123",
+          "0000002488-24-000163",
+          "0000002488-25-000012"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0000002488-25-000012:0017",
+          "score": 0.3656481017365487
+        },
+        {
+          "chunk_id": "0000002488-24-000123:0062",
+          "score": 0.271428021362786
+        },
+        {
+          "chunk_id": "0000002488-24-000123:0065",
+          "score": 0.27119147777557373
+        },
+        {
+          "chunk_id": "0000002488-24-000123:0064",
+          "score": 0.24769364297389984
+        },
+        {
+          "chunk_id": "0000002488-24-000123:0063",
+          "score": 0.2058204561471939
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0069",
+          "score": 0.5860348837334098
+        },
+        {
+          "chunk_id": "0000002488-24-000163:0025",
+          "score": 0.5580804944038391
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0005",
+          "score": 0.520613983887851
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0100",
+          "score": 0.4805388880257824
+        },
+        {
+          "chunk_id": "0000002488-24-000123:0023",
+          "score": 0.47094078102178594
+        },
+        {
+          "chunk_id": "0000002488-24-000163:0011",
+          "score": 0.46750442586852414
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0026",
+          "score": 0.5074828267097473
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0025",
+          "score": 0.47421404565656544
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0023",
+          "score": 0.4277563479237172
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0024",
+          "score": 0.3979061483088827
+        },
+        {
+          "chunk_id": "0000002488-24-000056:0034",
+          "score": 0.3966972591461392
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0077",
+          "score": 0.5457520755677188
+        },
+        {
+          "chunk_id": "0000002488-24-000123:0032",
+          "score": 0.4777634584237178
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 9.337458002846688,
+      "embed_ms": 0.987833016552031,
+      "search_ms": 8.349624986294657,
+      "query_cached": true,
+      "embed_tokens": 23,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 0.0,
+        "precision@10": 0.0
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0088",
+      "question_set": "agent_drafted",
+      "class": "lookup",
+      "question": "How much cash did AMD generate from operating activities in the first quarter of fiscal 2024, and what were its cash, cash equivalents and short-term investments at quarter end?",
+      "gold_chunk_ids": [
+        "0000002488-24-000056:0022"
+      ],
+      "filter": {
+        "companies": [
+          "AMD"
+        ],
+        "periods": [
+          "FY2024-Q1"
+        ],
+        "forms": [],
+        "accession_nos": [
+          "0000002488-24-000056"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0000002488-24-000056:0012",
+          "score": 0.41539684442300606
+        },
+        {
+          "chunk_id": "0000002488-24-000056:0052",
+          "score": 0.3632463812828064
+        },
+        {
+          "chunk_id": "0000002488-24-000056:0039",
+          "score": 0.35555035736856777
+        },
+        {
+          "chunk_id": "0000002488-24-000056:0011",
+          "score": 0.3519197106361389
+        },
+        {
+          "chunk_id": "0000002488-24-000056:0062",
+          "score": 0.33114689588546753
+        },
+        {
+          "chunk_id": "0000002488-24-000056:0013",
+          "score": 0.2880059652332052
+        },
+        {
+          "chunk_id": "0000002488-24-000056:0063",
+          "score": 0.36835557222366333
+        },
+        {
+          "chunk_id": "0000002488-24-000056:0065",
+          "score": 0.3607944465157067
+        },
+        {
+          "chunk_id": "0000002488-24-000056:0053",
+          "score": 0.3577808652985618
+        },
+        {
+          "chunk_id": "0000002488-24-000056:0032",
+          "score": 0.31299648803493507
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 5.77037496259436,
+      "embed_ms": 1.0228329920209944,
+      "search_ms": 4.747541970573366,
+      "query_cached": true,
+      "embed_tokens": 36,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 0.0,
+        "precision@10": 0.0
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0091",
+      "question_set": "agent_drafted",
+      "class": "lookup",
+      "question": "In its fiscal 2025 10-K, how much in total charges did Intel expect to recognize under the 2025 Restructuring Plan, and what was the cumulative cost as of December 27, 2025?",
+      "gold_chunk_ids": [
+        "0000050863-26-000011:0135"
+      ],
+      "filter": {
+        "companies": [
+          "INTC"
+        ],
+        "periods": [
+          "FY2025"
+        ],
+        "forms": [
+          "10-K"
+        ],
+        "accession_nos": [
+          "0000050863-26-000011"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0000050863-26-000011:0082",
+          "score": 0.42201371586568337
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0080",
+          "score": 0.32673650006245203
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0081",
+          "score": 0.28196298616793647
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0032",
+          "score": 0.6976624699536815
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0179",
+          "score": 0.5489576891375298
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0030",
+          "score": 0.5245130218420335
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0031",
+          "score": 0.5022052379434025
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0118",
+          "score": 0.4947635672634215
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0049",
+          "score": 0.4910605988854708
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0133",
+          "score": 0.4751545049204099
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0106",
+          "score": 0.47418297750303107
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0129",
+          "score": 0.4373506773307735
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0006",
+          "score": 0.44895110872242205
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0007",
+          "score": 0.4221274084486787
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 4.734958987683058,
+      "embed_ms": 1.0517089976929128,
+      "search_ms": 3.683249989990145,
+      "query_cached": true,
+      "embed_tokens": 53,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 0.0,
+        "precision@10": 0.0
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0093",
+      "question_set": "agent_drafted",
+      "class": "lookup",
+      "question": "What were Intel's total restructuring and other charges in the second quarter of 2025, and how much of that was asset impairment charges?",
+      "gold_chunk_ids": [
+        "0000050863-25-000109:0052"
+      ],
+      "filter": {
+        "companies": [
+          "INTC"
+        ],
+        "periods": [
+          "FY2025-Q2"
+        ],
+        "forms": [],
+        "accession_nos": [
+          "0000050863-25-000109"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0000050863-25-000109:0053",
+          "score": 0.5695758035652643
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0023",
+          "score": 0.5226611366267049
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0047",
+          "score": 0.4687101049289266
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0012",
+          "score": 0.45910019563141424
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0025",
+          "score": 0.4315758774154197
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0026",
+          "score": 0.3968810495925904
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0061",
+          "score": 0.19547968452926723
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0021",
+          "score": 0.5544868542407021
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0040",
+          "score": 0.35034690351328357
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0055",
+          "score": 0.33259358995499655
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0063",
+          "score": 0.29501095071533
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0064",
+          "score": 0.23514363781902037
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0062",
+          "score": 0.22474174720720264
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0016",
+          "score": 0.4348928215908089
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0048",
+          "score": 0.34963433142117695
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0017",
+          "score": 0.3120989594489061
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 2.8286250308156013,
+      "embed_ms": 0.598291982896626,
+      "search_ms": 2.2303330479189754,
+      "query_cached": true,
+      "embed_tokens": 29,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 0.0,
+        "precision@10": 0.0
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0095",
+      "question_set": "agent_drafted",
+      "class": "lookup",
+      "question": "As of December 27, 2025, how much in capital expenditure commitments did Intel have for 2026, and how much was committed over the long term?",
+      "gold_chunk_ids": [
+        "0000050863-26-000011:0049"
+      ],
+      "filter": {
+        "companies": [
+          "INTC"
+        ],
+        "periods": [],
+        "forms": [],
+        "accession_nos": [
+          "0000050863-24-000076",
+          "0000050863-24-000124",
+          "0000050863-24-000149",
+          "0000050863-25-000009",
+          "0000050863-25-000074",
+          "0000050863-25-000109",
+          "0000050863-25-000179",
+          "0000050863-26-000011"
+        ]
+      },
+      "filter_matches_labels": false,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0000050863-25-000109:0002",
+          "score": 0.38629859008184675
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0003",
+          "score": 0.3548535877640764
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0023",
+          "score": 0.4457099735736847
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0061",
+          "score": 0.35486241310014865
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0003",
+          "score": 0.3473215881202736
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0075",
+          "score": 0.32460731267929077
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0072",
+          "score": 0.3043252916433006
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0076",
+          "score": 0.297965276120024
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0051",
+          "score": 0.4489972427188531
+        },
+        {
+          "chunk_id": "0000050863-25-000179:0051",
+          "score": 0.44314005970954895
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0131",
+          "score": 0.43583369789030113
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0042",
+          "score": 0.4343959391117096
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0038",
+          "score": 0.42324185371398926
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0120",
+          "score": 0.42058261755601345
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0049",
+          "score": 0.6456604984796356
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0170",
+          "score": 0.5722188353538513
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0042",
+          "score": 0.5549606680870056
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0154",
+          "score": 0.5275819301605225
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0124",
+          "score": 0.44948631525039673
+        },
+        {
+          "chunk_id": "0000050863-25-000179:0064",
+          "score": 0.44151195186519365
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 10.2484580129385,
+      "embed_ms": 0.8757500327192247,
+      "search_ms": 9.372707980219275,
+      "query_cached": true,
+      "embed_tokens": 38,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 0.0,
+        "precision@10": 0.0
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0096",
+      "question_set": "agent_drafted",
+      "class": "lookup",
+      "question": "In its fiscal 2024 10-K liquidity discussion, what did Intel report as total cash and short-term investments and total debt as of December 28, 2024?",
+      "gold_chunk_ids": [
+        "0000050863-25-000009:0043"
+      ],
+      "filter": {
+        "companies": [
+          "INTC"
+        ],
+        "periods": [
+          "FY2024"
+        ],
+        "forms": [
+          "10-K"
+        ],
+        "accession_nos": [
+          "0000050863-25-000009"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0000050863-25-000009:0062",
+          "score": 0.45575583508541495
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0003",
+          "score": 0.3805993484021787
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0059",
+          "score": 0.367571727326905
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0061",
+          "score": 0.3589834058890754
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0064",
+          "score": 0.34490324915609016
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0063",
+          "score": 0.338420996760076
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0117",
+          "score": 0.5255528061923057
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0021",
+          "score": 0.5137305992486594
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0119",
+          "score": 0.5051422420229088
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0111",
+          "score": 0.494027436135572
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0026",
+          "score": 0.4841464190221284
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0037",
+          "score": 0.47595790601780275
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0069",
+          "score": 0.37881568796541765
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0067",
+          "score": 0.3221372077938467
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0068",
+          "score": 0.261570847490059
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0137",
+          "score": 0.48524904602788776
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0138",
+          "score": 0.43833545585448386
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 4.696915973909199,
+      "embed_ms": 0.8664579945616424,
+      "search_ms": 3.830457979347557,
+      "query_cached": true,
+      "embed_tokens": 41,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 0.0,
+        "precision@10": 0.0
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0101",
+      "question_set": "agent_drafted",
+      "class": "lookup",
+      "question": "In its fiscal 2025 10-K risk factors, what risks does Intel identify from the U.S. government's acquisition of significant equity interests in the company?",
+      "gold_chunk_ids": [
+        "0000050863-26-000011:0069"
+      ],
+      "filter": {
+        "companies": [
+          "INTC"
+        ],
+        "periods": [
+          "FY2025"
+        ],
+        "forms": [
+          "10-K"
+        ],
+        "accession_nos": [
+          "0000050863-26-000011"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0000050863-26-000011:0069",
+          "score": 0.7254779391418074
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0068",
+          "score": 0.6313166586741823
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0070",
+          "score": 0.521953644985396
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0071",
+          "score": 0.4246124237313783
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0030",
+          "score": 0.5828579589299546
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0127",
+          "score": 0.4880261864670028
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0180",
+          "score": 0.4281305116609504
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0179",
+          "score": 0.418866438235837
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0106",
+          "score": 0.4126872193235669
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0189",
+          "score": 0.4110605733186863
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0072",
+          "score": 0.5119039430503787
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0066",
+          "score": 0.49495618000234987
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0065",
+          "score": 0.47786688408855515
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0067",
+          "score": 0.4635055457808892
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0033",
+          "score": 0.4491258069091284
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0086",
+          "score": 0.43408393074082574
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0084",
+          "score": 0.42424007347107884
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0085",
+          "score": 0.3940662326197044
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 4.547459015157074,
+      "embed_ms": 1.0947089758701622,
+      "search_ms": 3.4527500392869115,
+      "query_cached": true,
+      "embed_tokens": 35,
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "recall@10": 1.0,
+        "precision@10": 0.1
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0103",
+      "question_set": "agent_drafted",
+      "class": "lookup",
+      "question": "How much commercial paper did Intel have outstanding as of June 29, 2024, and at what interest rates?",
+      "gold_chunk_ids": [
+        "0000050863-24-000124:0023"
+      ],
+      "filter": {
+        "companies": [
+          "INTC"
+        ],
+        "periods": [],
+        "forms": [],
+        "accession_nos": [
+          "0000050863-24-000076",
+          "0000050863-24-000124",
+          "0000050863-24-000149",
+          "0000050863-25-000009",
+          "0000050863-25-000074",
+          "0000050863-25-000109",
+          "0000050863-25-000179",
+          "0000050863-26-000011"
+        ]
+      },
+      "filter_matches_labels": false,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0000050863-24-000124:0023",
+          "score": 0.6073976031067888
+        },
+        {
+          "chunk_id": "0000050863-24-000149:0027",
+          "score": 0.5854275575535044
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0137",
+          "score": 0.42626405641269316
+        },
+        {
+          "chunk_id": "0000050863-24-000124:0051",
+          "score": 0.42610205489701214
+        },
+        {
+          "chunk_id": "0000050863-24-000149:0026",
+          "score": 0.4244499369472221
+        },
+        {
+          "chunk_id": "0000050863-24-000076:0042",
+          "score": 0.3756600842273292
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0076",
+          "score": 0.3868954412278802
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0062",
+          "score": 0.35265418887138367
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0003",
+          "score": 0.3339536984022047
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0023",
+          "score": 0.3218877911567688
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0061",
+          "score": 0.30103750831112364
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0072",
+          "score": 0.28689230343378513
+        },
+        {
+          "chunk_id": "0000050863-24-000124:0020",
+          "score": 0.4511353373527527
+        },
+        {
+          "chunk_id": "0000050863-24-000124:0036",
+          "score": 0.40253525391431255
+        },
+        {
+          "chunk_id": "0000050863-24-000149:0039",
+          "score": 0.39317789673805237
+        },
+        {
+          "chunk_id": "0000050863-25-000009:0161",
+          "score": 0.36331806937671796
+        },
+        {
+          "chunk_id": "0000050863-24-000149:0034",
+          "score": 0.35867051974886677
+        },
+        {
+          "chunk_id": "0000050863-24-000076:0032",
+          "score": 0.35661035776138306
+        },
+        {
+          "chunk_id": "0000050863-25-000074:0003",
+          "score": 0.37915507679253424
+        },
+        {
+          "chunk_id": "0000050863-25-000074:0002",
+          "score": 0.3442947659316804
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 9.502415952738374,
+      "embed_ms": 1.512999995611608,
+      "search_ms": 7.989415957126766,
+      "query_cached": true,
+      "embed_tokens": 26,
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.2,
+        "recall@10": 1.0,
+        "precision@10": 0.1
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0110",
+      "question_set": "agent_drafted",
+      "class": "lookup",
+      "question": "What was AMD's gross margin for the nine months ended September 27, 2025, and why did it decline from the prior-year period?",
+      "gold_chunk_ids": [
+        "0000002488-25-000166:0035"
+      ],
+      "filter": {
+        "companies": [
+          "AMD"
+        ],
+        "periods": [],
+        "forms": [],
+        "accession_nos": [
+          "0000002488-24-000056",
+          "0000002488-24-000123",
+          "0000002488-24-000163",
+          "0000002488-25-000012",
+          "0000002488-25-000047",
+          "0000002488-25-000108",
+          "0000002488-25-000166",
+          "0000002488-26-000018"
+        ]
+      },
+      "filter_matches_labels": false,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0000002488-24-000056:0039",
+          "score": 0.3837208886479272
+        },
+        {
+          "chunk_id": "0000002488-24-000056:0042",
+          "score": 0.3629171468566206
+        },
+        {
+          "chunk_id": "0000002488-24-000056:0041",
+          "score": 0.34564691781997925
+        },
+        {
+          "chunk_id": "0000002488-24-000056:0040",
+          "score": 0.29076127465002144
+        },
+        {
+          "chunk_id": "0000002488-24-000056:0043",
+          "score": 0.28988099098205766
+        },
+        {
+          "chunk_id": "0000002488-24-000163:0046",
+          "score": 0.3734071628208666
+        },
+        {
+          "chunk_id": "0000002488-24-000163:0047",
+          "score": 0.32649378995615996
+        },
+        {
+          "chunk_id": "0000002488-24-000163:0049",
+          "score": 0.3033082240864835
+        },
+        {
+          "chunk_id": "0000002488-24-000163:0048",
+          "score": 0.29963632826372044
+        },
+        {
+          "chunk_id": "0000002488-24-000163:0050",
+          "score": 0.2861769879739907
+        },
+        {
+          "chunk_id": "0000002488-24-000163:0045",
+          "score": 0.25507736206054865
+        },
+        {
+          "chunk_id": "0000002488-26-000018:0023",
+          "score": 0.4136170025582031
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0030",
+          "score": 0.3734071628208666
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0023",
+          "score": 0.3541097603840071
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0022",
+          "score": 0.3504007563114431
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0024",
+          "score": 0.34820598363876587
+        },
+        {
+          "chunk_id": "0000002488-25-000166:0053",
+          "score": 0.3422174045780415
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0069",
+          "score": 0.3818837317436228
+        },
+        {
+          "chunk_id": "0000002488-25-000108:0046",
+          "score": 0.3786351003703302
+        },
+        {
+          "chunk_id": "0000002488-25-000047:0035",
+          "score": 0.3713995218277004
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 8.363874978385866,
+      "embed_ms": 1.0683329892344773,
+      "search_ms": 7.295541989151388,
+      "query_cached": true,
+      "embed_tokens": 32,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 0.0,
+        "precision@10": 0.0
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0114",
+      "question_set": "agent_drafted",
+      "class": "multi_hop",
+      "question": "For the calendar quarter ended September 2025 (NVIDIA's Q3 fiscal 2026, AMD's Q3 fiscal 2025), how did each company's data center revenue grow year over year?",
+      "gold_chunk_ids": [
+        "0001045810-25-000230:0032",
+        "0000002488-25-000166:0033"
+      ],
+      "filter": {
+        "companies": [
+          "NVDA",
+          "AMD"
+        ],
+        "periods": [
+          "FY2025-Q3",
+          "FY2026-Q3"
+        ],
+        "forms": [],
+        "accession_nos": [
+          "0000002488-25-000166",
+          "0001045810-24-000316",
+          "0001045810-25-000230"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0001045810-25-000230:0037",
+          "score": 0.6768813536692484
+        },
+        {
+          "chunk_id": "0001045810-24-000316:0036",
+          "score": 0.6596228683219736
+        },
+        {
+          "chunk_id": "0001045810-24-000316:0040",
+          "score": 0.6169947157499036
+        },
+        {
+          "chunk_id": "0001045810-24-000316:0033",
+          "score": 0.6022149029694356
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0032",
+          "score": 0.5806025612713444
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0031",
+          "score": 0.5587948201290998
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0011",
+          "score": 0.45924398545957434
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0036",
+          "score": 0.40762747662558807
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0041",
+          "score": 0.6196801209068442
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0040",
+          "score": 0.6134769090102271
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0035",
+          "score": 0.5891692569109136
+        }
+      ],
+      "companies_without_chunks": [
+        "AMD"
+      ],
+      "retrieval_ms": 8.171708032023162,
+      "embed_ms": 1.2797079980373383,
+      "search_ms": 6.892000033985823,
+      "query_cached": true,
+      "embed_tokens": 47,
+      "metrics": {
+        "recall@5": 0.5,
+        "precision@5": 0.2,
+        "recall@10": 0.5,
+        "precision@10": 0.1
+      },
+      "wrong_evidence": [
+        {
+          "chunk_id": "0001045810-25-000230:0040",
+          "relation": "same_company_same_filing",
+          "rank": 10,
+          "above_gold": true,
+          "cited": false
+        }
+      ]
+    },
+    {
+      "id": "q0116",
+      "question_set": "agent_drafted",
+      "class": "multi_hop",
+      "question": "How many employees did NVIDIA have at the end of fiscal 2026 and AMD at the end of fiscal 2025, and how did each workforce change from the prior year-end?",
+      "gold_chunk_ids": [
+        "0001045810-26-000021:0016",
+        "0000002488-26-000018:0016",
+        "0001045810-25-000023:0016",
+        "0000002488-25-000012:0015"
+      ],
+      "filter": {
+        "companies": [
+          "NVDA",
+          "AMD"
+        ],
+        "periods": [
+          "FY2025",
+          "FY2026"
+        ],
+        "forms": [],
+        "accession_nos": [
+          "0000002488-25-000047",
+          "0000002488-25-000108",
+          "0000002488-25-000166",
+          "0000002488-26-000018",
+          "0001045810-24-000124",
+          "0001045810-24-000264",
+          "0001045810-24-000316",
+          "0001045810-25-000023",
+          "0001045810-25-000116",
+          "0001045810-25-000209",
+          "0001045810-25-000230",
+          "0001045810-26-000021"
+        ]
+      },
+      "filter_matches_labels": false,
+      "filter_excluded_gold": [
+        "0000002488-25-000012:0015"
+      ],
+      "retrieved": [
+        {
+          "chunk_id": "0001045810-25-000023:0063",
+          "score": 0.5528583730116425
+        },
+        {
+          "chunk_id": "0001045810-25-000209:0035",
+          "score": 0.4961233887562162
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0036",
+          "score": 0.4885685145855089
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0062",
+          "score": 0.4831450129492758
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0036",
+          "score": 0.44366574287415816
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0028",
+          "score": 0.3848079878320736
+        },
+        {
+          "chunk_id": "0001045810-25-000023:0032",
+          "score": 0.3745912462960215
+        },
+        {
+          "chunk_id": "0001045810-25-000023:0035",
+          "score": 0.36637427015611546
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0033",
+          "score": 0.3535001452565045
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0032",
+          "score": 0.351719158682926
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0061",
+          "score": 0.5520768370490972
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0005",
+          "score": 0.5187667299052124
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0007",
+          "score": 0.5168843229092782
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0027",
+          "score": 0.4978898468148927
+        },
+        {
+          "chunk_id": "0001045810-25-000023:0007",
+          "score": 0.48503267943469874
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0008",
+          "score": 0.48152707682308404
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0011",
+          "score": 0.5719537563434228
+        }
+      ],
+      "companies_without_chunks": [
+        "AMD"
+      ],
+      "retrieval_ms": 12.863499985542148,
+      "embed_ms": 2.5530409766361117,
+      "search_ms": 10.310459008906037,
+      "query_cached": true,
+      "embed_tokens": 40,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 0.0,
+        "precision@10": 0.0
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0117",
+      "question_set": "agent_drafted",
+      "class": "multi_hop",
+      "question": "Compare the effective tax rates NVIDIA (fiscal 2026), AMD (fiscal 2025) and Intel (fiscal 2025) reported, and the main reason each gives.",
+      "gold_chunk_ids": [
+        "0001045810-26-000021:0069",
+        "0000002488-26-000018:0079",
+        "0000050863-26-000011:0046"
+      ],
+      "filter": {
+        "companies": [
+          "NVDA",
+          "AMD",
+          "INTC"
+        ],
+        "periods": [
+          "FY2025",
+          "FY2026"
+        ],
+        "forms": [],
+        "accession_nos": [
+          "0000002488-25-000047",
+          "0000002488-25-000108",
+          "0000002488-25-000166",
+          "0000002488-26-000018",
+          "0000050863-25-000074",
+          "0000050863-25-000109",
+          "0000050863-25-000179",
+          "0000050863-26-000011",
+          "0001045810-24-000124",
+          "0001045810-24-000264",
+          "0001045810-24-000316",
+          "0001045810-25-000023",
+          "0001045810-25-000116",
+          "0001045810-25-000209",
+          "0001045810-25-000230",
+          "0001045810-26-000021"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0001045810-26-000021:0052",
+          "score": 0.5415130530886032
+        },
+        {
+          "chunk_id": "0001045810-25-000023:0051",
+          "score": 0.5413347433406459
+        },
+        {
+          "chunk_id": "0001045810-25-000023:0050",
+          "score": 0.4721427857875824
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0051",
+          "score": 0.44910090858345764
+        },
+        {
+          "chunk_id": "0001045810-25-000209:0035",
+          "score": 0.4834745968423666
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0036",
+          "score": 0.4774951907986664
+        },
+        {
+          "chunk_id": "0001045810-25-000023:0063",
+          "score": 0.4630295060259406
+        },
+        {
+          "chunk_id": "0001045810-26-000021:0062",
+          "score": 0.44079962980742193
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0011",
+          "score": 0.5093717563901274
+        },
+        {
+          "chunk_id": "0000002488-25-000108:0035",
+          "score": 0.48340722819609894
+        },
+        {
+          "chunk_id": "0000002488-25-000108:0034",
+          "score": 0.43460220488296797
+        },
+        {
+          "chunk_id": "0000002488-25-000166:0034",
+          "score": 0.41099648606735595
+        }
+      ],
+      "companies_without_chunks": [
+        "INTC"
+      ],
+      "retrieval_ms": 3.8465000106953084,
+      "embed_ms": 0.6223339587450027,
+      "search_ms": 3.2241660519503057,
+      "query_cached": true,
+      "embed_tokens": 44,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 0.0,
+        "precision@10": 0.0
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0119",
+      "question_set": "agent_drafted",
+      "class": "multi_hop",
+      "question": "How did AMD's and Intel's gross margins move in fiscal 2025, and what drove the change at each company?",
+      "gold_chunk_ids": [
+        "0000002488-26-000018:0078",
+        "0000050863-26-000011:0043"
+      ],
+      "filter": {
+        "companies": [
+          "AMD",
+          "INTC"
+        ],
+        "periods": [
+          "FY2025"
+        ],
+        "forms": [],
+        "accession_nos": [
+          "0000002488-25-000047",
+          "0000002488-25-000108",
+          "0000002488-25-000166",
+          "0000002488-26-000018",
+          "0000050863-25-000074",
+          "0000050863-25-000109",
+          "0000050863-25-000179",
+          "0000050863-26-000011"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0000002488-26-000018:0023",
+          "score": 0.45320377825532376
+        },
+        {
+          "chunk_id": "0000002488-25-000108:0047",
+          "score": 0.4095791930211137
+        },
+        {
+          "chunk_id": "0000002488-26-000018:0024",
+          "score": 0.38668987830342205
+        },
+        {
+          "chunk_id": "0000002488-25-000166:0053",
+          "score": 0.3666194677352932
+        },
+        {
+          "chunk_id": "0000002488-25-000108:0055",
+          "score": 0.3406137729056944
+        },
+        {
+          "chunk_id": "0000002488-25-000166:0054",
+          "score": 0.3315101165479497
+        },
+        {
+          "chunk_id": "0000002488-25-000047:0036",
+          "score": 0.4120244576960155
+        },
+        {
+          "chunk_id": "0000002488-25-000108:0046",
+          "score": 0.4031393883741331
+        },
+        {
+          "chunk_id": "0000002488-25-000047:0037",
+          "score": 0.3756795153426842
+        },
+        {
+          "chunk_id": "0000050863-25-000074:0041",
+          "score": 0.5765539751383062
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0042",
+          "score": 0.5525263218566075
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0051",
+          "score": 0.5445561733577364
+        },
+        {
+          "chunk_id": "0000050863-25-000109:0050",
+          "score": 0.5400202548491889
+        },
+        {
+          "chunk_id": "0000050863-25-000179:0059",
+          "score": 0.5369729443756276
+        },
+        {
+          "chunk_id": "0000050863-26-000011:0037",
+          "score": 0.5218507362515182
+        },
+        {
+          "chunk_id": "0000002488-25-000047:0047",
+          "score": 0.44061788208697816
+        },
+        {
+          "chunk_id": "0000002488-25-000047:0034",
+          "score": 0.42334725082169555
+        },
+        {
+          "chunk_id": "0000002488-25-000047:0035",
+          "score": 0.36602942538612193
+        },
+        {
+          "chunk_id": "0000002488-25-000047:0041",
+          "score": 0.36220874561123595
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 7.339416944887489,
+      "embed_ms": 0.6049999501556158,
+      "search_ms": 6.734416994731873,
+      "query_cached": true,
+      "embed_tokens": 26,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 0.0,
+        "precision@10": 0.0
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0126",
+      "question_set": "agent_drafted",
+      "class": "multi_hop",
+      "question": "How did NVIDIA's Data Center networking revenue in the first quarter of fiscal 2026 compare with the first quarter of fiscal 2025, and what did each 10-Q say drove networking growth?",
+      "gold_chunk_ids": [
+        "0001045810-24-000124:0030",
+        "0001045810-25-000116:0031"
+      ],
+      "filter": {
+        "companies": [
+          "NVDA"
+        ],
+        "periods": [
+          "FY2025-Q1",
+          "FY2026-Q1"
+        ],
+        "forms": [
+          "10-Q"
+        ],
+        "accession_nos": [
+          "0001045810-24-000124",
+          "0001045810-25-000116"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0001045810-25-000116:0033",
+          "score": 0.693343524934685
+        },
+        {
+          "chunk_id": "0001045810-25-000116:0031",
+          "score": 0.6922974999128294
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0030",
+          "score": 0.6621743440628098
+        },
+        {
+          "chunk_id": "0001045810-25-000116:0025",
+          "score": 0.6362052776691254
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0024",
+          "score": 0.6278033408884216
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0032",
+          "score": 0.5792558883733616
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0027",
+          "score": 0.5844456305769472
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0031",
+          "score": 0.5181281146598036
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0045",
+          "score": 0.46111979848860574
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0044",
+          "score": 0.4425066973272985
+        },
+        {
+          "chunk_id": "0001045810-25-000116:0028",
+          "score": 0.6464367087407957
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0042",
+          "score": 0.5574713613110058
+        },
+        {
+          "chunk_id": "0001045810-24-000124:0029",
+          "score": 0.5451120787992572
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 3.900791984051466,
+      "embed_ms": 0.8822919917292893,
+      "search_ms": 3.0184999923221767,
+      "query_cached": true,
+      "embed_tokens": 44,
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "recall@10": 1.0,
+        "precision@10": 0.2
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0130",
+      "question_set": "agent_drafted",
+      "class": "multi_hop",
+      "question": "How did NVIDIA's Data Center compute revenue in the third quarter of fiscal 2026 compare with the third quarter of fiscal 2025, and which architectures did each 10-Q credit?",
+      "gold_chunk_ids": [
+        "0001045810-24-000316:0036",
+        "0001045810-25-000230:0037"
+      ],
+      "filter": {
+        "companies": [
+          "NVDA"
+        ],
+        "periods": [
+          "FY2025-Q3",
+          "FY2026-Q3"
+        ],
+        "forms": [
+          "10-Q"
+        ],
+        "accession_nos": [
+          "0001045810-24-000316",
+          "0001045810-25-000230"
+        ]
+      },
+      "filter_matches_labels": true,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0001045810-25-000230:0037",
+          "score": 0.688938773996981
+        },
+        {
+          "chunk_id": "0001045810-24-000316:0033",
+          "score": 0.6471878097299535
+        },
+        {
+          "chunk_id": "0001045810-24-000316:0040",
+          "score": 0.6296870553866604
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0032",
+          "score": 0.6253893821967429
+        },
+        {
+          "chunk_id": "0001045810-24-000316:0036",
+          "score": 0.6174881774215275
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0031",
+          "score": 0.5946651519934917
+        },
+        {
+          "chunk_id": "0001045810-24-000316:0027",
+          "score": 0.535551380912842
+        },
+        {
+          "chunk_id": "0001045810-24-000316:0034",
+          "score": 0.5555147992337228
+        },
+        {
+          "chunk_id": "0001045810-24-000316:0057",
+          "score": 0.4057552153687032
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0060",
+          "score": 0.38884726829247684
+        },
+        {
+          "chunk_id": "0001045810-24-000316:0058",
+          "score": 0.37489749492436975
+        },
+        {
+          "chunk_id": "0001045810-25-000230:0036",
+          "score": 0.4145816862583278
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 4.269208991900086,
+      "embed_ms": 1.514459028840065,
+      "search_ms": 2.7547499630600214,
+      "query_cached": true,
+      "embed_tokens": 42,
+      "metrics": {
+        "recall@5": 1.0,
+        "precision@5": 0.4,
+        "recall@10": 1.0,
+        "precision@10": 0.2
+      },
+      "wrong_evidence": []
+    },
+    {
+      "id": "q0135",
+      "question_set": "agent_drafted",
+      "class": "multi_hop",
+      "question": "How much did AMD spend repurchasing shares under its stock repurchase program in 2025 compared with 2024, and how did the amount remaining available under the program change?",
+      "gold_chunk_ids": [
+        "0000002488-25-000012:0070",
+        "0000002488-26-000018:0070"
+      ],
+      "filter": {
+        "companies": [
+          "AMD"
+        ],
+        "periods": [],
+        "forms": [],
+        "accession_nos": [
+          "0000002488-24-000056",
+          "0000002488-24-000123",
+          "0000002488-24-000163",
+          "0000002488-25-000012",
+          "0000002488-25-000047",
+          "0000002488-25-000108",
+          "0000002488-25-000166",
+          "0000002488-26-000018"
+        ]
+      },
+      "filter_matches_labels": false,
+      "filter_excluded_gold": [],
+      "retrieved": [
+        {
+          "chunk_id": "0000002488-25-000108:0035",
+          "score": 0.4911963944914184
+        },
+        {
+          "chunk_id": "0000002488-25-000108:0034",
+          "score": 0.40972153966637803
+        },
+        {
+          "chunk_id": "0000002488-25-000166:0034",
+          "score": 0.4045009016990777
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0076",
+          "score": 0.39280467162048804
+        },
+        {
+          "chunk_id": "0000002488-25-000047:0011",
+          "score": 0.48755070789741817
+        },
+        {
+          "chunk_id": "0000002488-25-000166:0017",
+          "score": 0.48560869865314127
+        },
+        {
+          "chunk_id": "0000002488-26-000018:0107",
+          "score": 0.4807439778904963
+        },
+        {
+          "chunk_id": "0000002488-25-000108:0018",
+          "score": 0.4714487825097138
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0103",
+          "score": 0.45751527458247576
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0075",
+          "score": 0.44097206348347995
+        },
+        {
+          "chunk_id": "0000002488-26-000018:0019",
+          "score": 0.42349740056717267
+        },
+        {
+          "chunk_id": "0000002488-25-000012:0017",
+          "score": 0.329430371871859
+        },
+        {
+          "chunk_id": "0000002488-24-000123:0065",
+          "score": 0.21328989108921548
+        },
+        {
+          "chunk_id": "0000002488-24-000123:0062",
+          "score": 0.20815026760101907
+        },
+        {
+          "chunk_id": "0000002488-24-000123:0064",
+          "score": 0.19068238846273688
+        },
+        {
+          "chunk_id": "0000002488-24-000123:0063",
+          "score": 0.17645425481149624
+        },
+        {
+          "chunk_id": "0000002488-26-000018:0117",
+          "score": 0.7003843306578802
+        },
+        {
+          "chunk_id": "0000002488-25-000108:0084",
+          "score": 0.5986845136472968
+        },
+        {
+          "chunk_id": "0000002488-25-000047:0071",
+          "score": 0.5958388219263978
+        },
+        {
+          "chunk_id": "0000002488-24-000123:0074",
+          "score": 0.5761595621013994
+        },
+        {
+          "chunk_id": "0000002488-24-000163:0074",
+          "score": 0.5573516087499374
+        }
+      ],
+      "companies_without_chunks": [],
+      "retrieval_ms": 26.241583982482553,
+      "embed_ms": 1.535333984065801,
+      "search_ms": 24.70624999841675,
+      "query_cached": true,
+      "embed_tokens": 40,
+      "metrics": {
+        "recall@5": 0.0,
+        "precision@5": 0.0,
+        "recall@10": 0.0,
+        "precision@10": 0.0
+      },
+      "wrong_evidence": []
+    }
+  ]
+}

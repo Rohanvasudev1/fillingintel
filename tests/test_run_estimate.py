@@ -8,7 +8,8 @@ import pytest
 from retrieve.arm import EstimateQuestion
 from retrieve.run_estimate import GLOBAL_ANSWER_STAGES, GRAPH_GLOBAL_RUN, MeasuredEstimate
 
-GLOBAL_RUN = MeasuredEstimate(GRAPH_GLOBAL_RUN, answer_stages=GLOBAL_ANSWER_STAGES)
+GLOBAL_RUN = MeasuredEstimate(GRAPH_GLOBAL_RUN, answer_stages=GLOBAL_ANSWER_STAGES,
+                              arm="graph_global")
 Q0004 = EstimateQuestion("q0004", "decline")  # total 0.09037368, judges 0.0001428
 
 
@@ -39,4 +40,4 @@ def test_the_estimate_sums_the_questions():
 def test_an_unreadable_run_file_cannot_estimate(tmp_path):
     (tmp_path / "run.json").write_text("{}")
     with pytest.raises(ValueError, match="run.json"):
-        MeasuredEstimate(tmp_path / "run.json")([Q0004], retrieval_only=False)
+        MeasuredEstimate(tmp_path / "run.json", arm="vector")([Q0004], retrieval_only=False)
