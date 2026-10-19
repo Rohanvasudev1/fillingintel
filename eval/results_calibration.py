@@ -19,6 +19,9 @@ from eval.results_sources import InputFile, read_json
 
 JUDGED = ("faithfulness", "answer_relevancy", "citation_support")
 NO_GOLD = (("decline_correct", "decline"), ("not_found_correct", "not-found"))
+DEFERRED = ("Calibration: deferred (user decision, 2026-10-19; RESEARCH-PLAN amendment). The "
+            "user has not scored the drawn answers, so every judged column is uncalibrated. "
+            "The tools, draw and claims are committed (`python -m eval.calibrate`).")
 KIND_NAMES = {"changed_number": "changed number", "swapped_period": "swapped period",
               "wrong_citation": "wrong citation", "added_sentence": "added sentence"}
 
@@ -87,8 +90,7 @@ def _commit(calibration: Calibration, path: str) -> str:
 def _report_lines(calibration: Calibration) -> list[str]:
     report = calibration.report
     if report is None:
-        return ["Calibration: not scored yet (`python -m eval.calibrate`, the user only). "
-                "Until then every judged column is uncalibrated.", ""]
+        return [DEFERRED, ""]
     rows = report["metrics"]
     lines = [f"Calibration against the user's own scores of {report['scored']} of "
              f"{report['drawn']} drawn dev answers (each judged column on its own n of "

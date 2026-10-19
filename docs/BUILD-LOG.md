@@ -2545,9 +2545,9 @@ Both are harness changes the user approved on 2026-10-15 (Step 12 grilling). Bra
 **Next session starts with**
 1. `/implement` on `.scratch/step-13/issues/04-judge-calibration-and-corruption-test.md` (the user scores 30 answers, about an hour).
 
-## 2026-10-18: Step 13 ticket 04, judge calibration tools and the corruption test (scoring pending)
+## 2026-10-18/19: Step 13 ticket 04, judge calibration tools and the corruption test (calibration deferred)
 
-Branch `claude/judge-calibration-corruption-test-f6143c`. The calibration tools and the corruption test are built, and the corruption test has run. The user's scoring has not happened yet. The PR waits for it, as the ticket says.
+Branch `claude/judge-calibration-corruption-test-f6143c`. The calibration tools and the corruption test are built, and the corruption test has run. On 2026-10-19 the user decided to skip scoring for now: calibration is deferred (RESEARCH-PLAN amendment, OPEN-DECISIONS), every judged column stays "uncalibrated", and the PR opens without it. The user saved 3 answers before stopping; that partial scores file is not committed, since 3 answers support no statistic.
 
 - **Draw** (`eval/calibration/draw.py`, `benchmarks/calibration/draw.json`, written once, seed 20261016). It holds 24 answerable answers with at least one kept sentence and 6 decline or unanswerable answers, from the four arms' own dev runs, one answer per question. Answers are taken round-robin over the 13 arm-and-class strata, so every stratum gets one before any gets two. Global ends up with 8 of the 24, because four arms answer it.
 - **Claims** (`eval/calibration/claims.py`, `prompts/claims/v1.md` pinned as `claims/v1@2fc9ef54`; claude-sonnet-5-5 at effort high). The split produced 425 claims over the 24 answers (2 to 37 per answer). It cost $0.2454 against a $0.4372 estimate. The plan had guessed about $0.10, which assumed short replies. A spot check of the claims found them atomic, with the sentence's own figures and periods.
@@ -2573,8 +2573,8 @@ Branch `claude/judge-calibration-corruption-test-f6143c`. The calibration tools 
 - **Spend.** Claims $0.25 and corruption $0.75 recorded. Step 13 is at $2.13 of $10 (`eval/step13_spend.py`, which now counts both files).
 
 **Next session starts with**
-1. The user scores: `uv run python -m eval.calibrate --reviewer "Rohan Vasudev"`, then `uv run python -m eval.calibration.report --reviewer "Rohan Vasudev"` and `uv run python -m eval.results_table`, committing the scores, the report and results.md to this PR. Check the pace log in the report.
-2. The 10-answer re-score about a week later (`--rescore 10`), in a later PR.
+1. `/implement` on `.scratch/step-13/issues/05-test-run-and-closing-step-13.md` (the `test` run; judged columns stay uncalibrated).
+2. Judge calibration whenever the user has time (OPEN-DECISIONS): `uv run python -m eval.calibrate --reviewer "Rohan Vasudev"`, then the report and `results.md`.
 
 ---
 

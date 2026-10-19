@@ -71,7 +71,7 @@ def _header(text):
 def test_without_a_report_judged_columns_stay_uncalibrated(files):
     text = build(calibration=files())
     assert "faithfulness (uncalibrated)" in _header(text)
-    assert "not scored yet" in text
+    assert "Calibration: deferred" in text
 
 
 def test_a_passing_column_is_labelled_and_a_failing_one_leaves_the_table(files):

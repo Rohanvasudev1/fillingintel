@@ -4,7 +4,7 @@
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** done with calibration deferred (user decision, 2026-10-19: the user's scoring is skipped; judged columns stay "uncalibrated"; the tools, draw, claims and corruption test are in the PR).
 
 **Parallel sessions:** one ticket at a time (user, 2026-10-16). `neo4j-test` is shared: run the full `uv run --env-file .env pytest` only when no other session is running pytest, with dev Neo4j stopped. Symlink `data/` and `.env` from the main checkout; run API commands with `env -u ANTHROPIC_BASE_URL`. One branch and PR per ticket. Step 13 spend is capped at $10 in all, counting committed spend; show the estimate before any paid call. Agents never run `eval.calibrate`; it is the user's. Before the user scores, explain what checking means and the pace check; afterwards, check the time log.
 

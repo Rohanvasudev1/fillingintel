@@ -212,7 +212,7 @@ Precision 0.958 [0.864, 1.000], recall 0.428 [0.298, 0.572]; agent-labelled (gpt
 
 ### Judge calibration
 
-Calibration: not scored yet (`python -m eval.calibrate`, the user only). Until then every judged column is uncalibrated.
+Calibration: deferred (user decision, 2026-10-19; RESEARCH-PLAN amendment). The user has not scored the drawn answers, so every judged column is uncalibrated. The tools, draw and claims are committed (`python -m eval.calibrate`).
 
 Corruption test, not calibration: `benchmarks/calibration/corruption-run1.json` at `8ed7350+dirty`. Four known errors planted in 30 dev answers outside the calibration draw. A faithfulness catch is a lower mean score than the uncorrupted answer's; a citation-support catch is a not-supported majority on the changed sentence.
 
