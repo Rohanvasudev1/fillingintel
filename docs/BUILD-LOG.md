@@ -2695,6 +2695,14 @@ Branch `claude/step-14-readme-03`. The README is rewritten around the `test` res
 
 ---
 
+## 2026-11-05: a short paper on the build
+
+Branch `claude/step-14-paper`. `docs/PAPER.md` summarises the project as a short paper: question, system, method, `test` results, the six hypotheses, build-quality figures, limitations and next experiments. Its numbers come from `benchmarks/results.md`, the generated README blocks and dated entries in this log. The total API spend (about $37) is a sum of the per-step totals recorded here, not a harness figure. Docs only; no code changed and nothing was spent.
+
+**Next session starts with** the user's edits to the paper, if any. Judge calibration and Step 13b stay deferred unless the user reopens them.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.
