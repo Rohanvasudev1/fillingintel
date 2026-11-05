@@ -37,8 +37,13 @@ def classified(run: RunFile) -> list[Classified]:
     return rows
 
 
+def router_metrics(run: RunFile) -> dict[str, object]:
+    """``eval.route_metrics`` over one router run's per-question routing."""
+    return route_metrics(classified(run))
+
+
 def router_accuracy(run: RunFile) -> RouterAccuracy:
-    metrics = route_metrics(classified(run))
+    metrics = router_metrics(run)
     accuracy, declines = metrics["accuracy"], metrics["declines"]
     return RouterAccuracy(accuracy["correct"], accuracy["n"], declines["declined"],
                           declines["n"])

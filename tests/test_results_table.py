@@ -131,13 +131,15 @@ def test_the_provenance_block_lists_the_dev_and_test_runs(text):
 
 
 def test_check_exits_0_on_a_match_and_4_on_a_one_character_difference(tmp_path, capsys):
-    output = tmp_path / "results.md"
-    assert main(["--output", str(output)]) == EXIT_OK
-    assert main(["--check", "--output", str(output)]) == EXIT_OK
+    output, readme = tmp_path / "results.md", tmp_path / "README.md"
+    readme.write_text((REPO_ROOT / "README.md").read_text(encoding="utf-8"), encoding="utf-8")
+    paths = ["--output", str(output), "--readme", str(readme)]
+    assert main(paths) == EXIT_OK
+    assert main(["--check", *paths]) == EXIT_OK
     output.write_text(output.read_text(encoding="utf-8") + " ", encoding="utf-8")
-    assert main(["--check", "--output", str(output)]) == EXIT_DIFFERS
+    assert main(["--check", *paths]) == EXIT_DIFFERS
     assert "differs" in capsys.readouterr().err
 
 
 def test_the_committed_results_file_matches_the_committed_runs():
-    assert main(["--check", "--output", str(REPO_ROOT / RESULTS_MD)]) == EXIT_OK
+    assert main(["--check", "--output", str(REPO_ROOT / RESULTS_MD)]) == EXIT_OK  # README too

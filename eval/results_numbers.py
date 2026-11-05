@@ -89,7 +89,7 @@ def extraction(root: Path = REPO_ROOT) -> Block:
                      f"{summary['accuracy']:.3f} [{low:.3f}, {high:.3f}] | "
                      f"{', '.join(summary['prompt_versions'])} | {_source(info)} |")
         inputs.append(info)
-    runs, run_inputs = _latest_v2_runs(root)
+    runs, run_inputs = latest_v2_runs(root)
     candidates = sum(r["candidates"] for r in runs)
     rejected = sum(r["rejections"]["total"] for r in runs)
     violations = sum(len(r["violations"]) for r in runs)
@@ -108,7 +108,7 @@ def extraction(root: Path = REPO_ROOT) -> Block:
     return lines, inputs + run_inputs
 
 
-def _latest_v2_runs(root: Path) -> tuple[list[dict], list[InputFile]]:
+def latest_v2_runs(root: Path) -> tuple[list[dict], list[InputFile]]:
     latest: dict[str, tuple[int, str]] = {}
     for path in sorted((root / EXTRACTION_DIR).glob("*-run*.json")):
         match = _EXTRACT_RUN.fullmatch(path.name)

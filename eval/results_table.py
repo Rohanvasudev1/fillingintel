@@ -13,9 +13,12 @@ never the dev-best rule or H1–H5.
 
 Usage::
 
-    uv run python -m eval.results_table            # write benchmarks/results.md
-    uv run python -m eval.results_table --check    # exit 4 if the committed file differs
+    uv run python -m eval.results_table            # write results.md and the README blocks
+    uv run python -m eval.results_table --check    # exit 4 if either committed file differs
     uv run python -m eval.results_table --dev-best # write the dev-best map, once
+
+It also rewrites the two generated blocks of ``README.md`` (``eval.readme_blocks``)
+between their marker comments, leaving the prose around them alone.
 
 Exit codes: 0 written or matching; 2 bad arguments or the map already exists;
 3 an input is missing or inconsistent; 4 ``--check`` found a difference.
@@ -38,6 +41,7 @@ from eval.dev_best import (
     read_map,
     write_map,
 )
+from eval.readme_blocks import README, readme_blocks, splice
 from eval.results_calibration import (
     Calibration,
     calibration_block,
@@ -328,16 +332,18 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPO_ROOT) -> int:
     parser = argparse.ArgumentParser(description="Build benchmarks/results.md offline.")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--check", action="store_true",
-                      help="exit 4 when the committed file differs from a fresh build")
+                      help="exit 4 when the committed results file or README blocks differ")
     mode.add_argument("--dev-best", action="store_true",
                       help=f"write {DEV_BEST_MAP} once from the dev runs")
     parser.add_argument("--output", type=Path, default=None,
                         help=f"the results file (default {RESULTS_MD})")
+    parser.add_argument("--readme", type=Path, default=None,
+                        help=f"the README holding the generated blocks (default {README})")
     try:
         args = parser.parse_args(argv)
     except SystemExit as exc:
         return EXIT_OK if exc.code == 0 else EXIT_USAGE
-    output = args.output or root / RESULTS_MD
+    output, readme = args.output or root / RESULTS_MD, args.readme or root / README
     try:
         if args.dev_best:
             dev = load_split(DEV_RUNS, root)
@@ -346,6 +352,10 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPO_ROOT) -> int:
             print(f"wrote {DEV_BEST_MAP}")
             return EXIT_OK
         text = build(root)
+        current_readme = _read(readme)
+        if current_readme is None:
+            raise ResultsInputError(f"cannot read {readme}")
+        new_readme = splice(current_readme, readme_blocks(root))
     except DevBestError as exc:
         print(f"results table: {exc}", file=sys.stderr)
         return EXIT_USAGE
@@ -353,16 +363,26 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPO_ROOT) -> int:
         print(f"results table could not run: {type(exc).__name__}: {exc}", file=sys.stderr)
         return EXIT_COULD_NOT_RUN
     if args.check:
-        committed = output.read_text(encoding="utf-8") if output.exists() else None
-        if committed != text:
-            print(f"{output} differs from a fresh build; run python -m eval.results_table "
-                  "and commit it", file=sys.stderr)
-            return EXIT_DIFFERS
-        print(f"{output} matches the committed runs")
-        return EXIT_OK
+        return _check({output: text, readme: new_readme})
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(text, encoding="utf-8")
-    print(f"wrote {output}")
+    readme.write_text(new_readme, encoding="utf-8")
+    print(f"wrote {output} and the generated blocks of {readme}")
+    return EXIT_OK
+
+
+def _read(path: Path) -> str | None:
+    return path.read_text(encoding="utf-8") if path.exists() else None
+
+
+def _check(expected: Mapping[Path, str]) -> int:
+    differing = [path for path, text in expected.items() if _read(path) != text]
+    for path in differing:
+        print(f"{path} differs from a fresh build; run python -m eval.results_table "
+              "and commit it", file=sys.stderr)
+    if differing:
+        return EXIT_DIFFERS
+    print(" and ".join(str(p) for p in expected) + " match the committed runs")
     return EXIT_OK
 
 
