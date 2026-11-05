@@ -14,7 +14,7 @@
 - [ ] Live questions: the estimate shown before sending; a refusal message when the cap is reached; the session's spend shown.
 - [ ] Answer: kept sentences escaped, with numbered markers; dropped sentences counted; decline and not-found show their fixed sentences. One `st.pills` chip per cited chunk selects the passage. No custom component, no JavaScript.
 - [ ] Source panel: metadata header, EDGAR link, surrounding text dimmed and the chunk highlighted, all escaped preformatted text. A test with filing text holding `<script>`, `|` and `*` shows it verbatim.
-- [ ] Trace, in an expander, for each option: route; `graph_local` anchors and a `st.graphviz_chart` of anchor, edge and kept chunk (DOT labels escaped); Cypher attempts with outcome, rows and fallback; communities with title, summary, map points and reduce membership; `vector`'s ranked chunks. Display only.
+- [ ] Trace, in an expander, for each option: route; `graph_local` anchors and a `st.graphviz_chart` of anchor, edge and kept chunk (DOT labels escaped); Cypher attempts with outcome, row count and fallback, plus the retrieved chunk IDs (user decision 2026-11-04: no new field for the rows themselves); communities with title, summary, map points and reduce membership; `vector`'s ranked chunks. Display only.
 - [ ] Metrics: a sample shows its committed per-question `dev` metrics, labelled "agent-drafted questions, judged uncalibrated"; every answer shows sentences kept and dropped, citations inside the retrieved chunks, and cost and latency per stage.
 - [ ] Phoenix link shown only when tracing is on.
 - [ ] Benchmarks tab: committed `benchmarks/results.md` rendered with HTML escaped, under a header repeating its labels.
