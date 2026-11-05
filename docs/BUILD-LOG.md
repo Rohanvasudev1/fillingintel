@@ -2670,6 +2670,31 @@ Branch `claude/step-14-ui-02`. `uv run --env-file .env streamlit run ui/app.py` 
 
 ---
 
+## 2026-11-04: Step 14 ticket 03, README and closing Step 14
+
+Branch `claude/step-14-readme-03`. The README is rewritten around the `test` results, its numbers are generated and checked in CI, the docs describe what was built, and the repo has a licence. No paid call was made (Step 14 spend $0 of $2).
+
+- **Generated README blocks** (`eval/readme_blocks.py`, `eval/readme_headline.py`, `eval/readme_numbers.py`). `python -m eval.results_table` now also rewrites two blocks of `README.md` between marker comments and leaves the prose around them alone; `--check` (already in CI's lint-and-test job, so no CI change) compares `results.md` and both blocks and exits 4 on a difference, and a README without the markers exits 3. Tests first (`tests/test_readme_blocks.py`): the splice, two hash seeds, the rows, prose edits outside the markers passing `--check`, a changed block failing it.
+  - Block 1, the `test` headline: four arms and both routers; recall@10 per class with n, pooled recall@10, the pooled paired difference against vector, pooled faithfulness (uncalibrated), cost per question and p95 total latency. A row pools each class from the file `results.md` reads for it, so graph_global's pooled recall@10 (0.439) joins its full global run with its retrieval-only run of the other 33 questions, and its pooled judged, cost and latency cells say "retrieval only". Pooled differences use `eval.compare`'s question order and generator key, and equal `results.md`'s pooled rows (graph_local −0.309 [−0.439, −0.184]); graph_global's (−0.485 [−0.623, −0.349]) has no `results.md` row, since no single graph_global file holds every class.
+  - Block 2, numbers most projects don't publish: entity-resolution precision, recall and adjudicator accuracy (round 2), Cypher validity first pass and after repair, router `test` accuracy, extraction violation and rejection rates and both review rounds, persistence precision and recall, graph_global provenance on dev and `test`, and the corruption test's catch rates, each with label, file, commit and a `results.md` link. Labels are read from the report files; the extraction totals, round summaries and value formatting are shared with `results.md`'s code.
+- **README.** The RUNBOOK's six parts in order (what it does with the screenshot, the `test` table, interpretation, architecture, the numbers block, what I'd do differently), then Running it and Scope. The per-step sections are gone; their figures are in `results.md`. The interpretation and "what I'd do differently" are agent-drafted from this log's Step 13 `test` entry and Findings, every number traced to `results.md` or this log by both reviewers, **for the user to edit in review**. A line under the table says router latency is replay time.
+- **Docs and licence.** ARCHITECTURE.md: one Mermaid flowchart replaces the ASCII art; drift fixed (agent-drafted eval set, no path precision, no Cypher floor or graph gate in CI, no FastAPI, the Cypher guards of ADR-0007 instead of read-only credentials, Phoenix in compose, graph_global's own answer path). RUNBOOK: `api/` dropped from the tree and a Step 14 "As built" note; `api/` deleted (it held only `__init__.py`). An MIT LICENSE with a note that the filings are SEC public records and the questions are agent-drafted. OPEN-DECISIONS: calibration still deferred, Step 13b still skipped, a short "After Step 14" section.
+- **Review** (`mattpocock-skills:code-review`). Fixed: an unguarded `next()` and unchecked run sources that would crash instead of exiting 3; labels hardcoded where the files hold them (pairs, set, filings, corruption answers); a "the one the arm uses" claim on the Cypher report, dropped because the `test` header's rendered `cypher/v1` hash differs from the report's (ontology 5 moved it); helpers duplicated from `results_numbers` and `results_render`, now shared (`row_text` also replaces `results_router`'s copy); a write error leaving the two files out of step; a duplicate test; README and ARCHITECTURE saying every graph arm uses `answer/v1` (graph_global answers through its reduce prompt); reports said to exist for every community (only 3+ members); persistence counts and weighted recall read as one basis; two prose tells. Spec axis, for the user: CLAUDE.md's Step 9 and 9b entries promised README rows for round 1 and the rules' share of true matches; the Step 14 spec asks for round 2 only, so round 1 stays in `results.md` and the adjudicator accuracy row was added. The corruption rows cite `8ed7350+dirty`, as the run file records.
+- **Stop condition.**
+  - The app answers through all six options from the cache: `LiveBackend` answered one answerable dev sample per option (q0022 for five options, q0026 for graph_traversal) with dummy API keys, all replayed, $0. The dev Neo4j was started for it and stopped after.
+  - AppTest is in CI (ticket 02); `--check` covers the README; the screenshot is `docs/img/filingintel-ask.png` (ticket 02); every README number traces to a committed file.
+  - Open: the user's approval of the interpretation and "what I'd do differently", in PR review.
+- **Evidence.** `uv run ruff check .` clean; `python -m eval.results_table --check` passes; full `uv run --env-file .env pytest` at `cc38802`: 2,966 passed, 1 skipped, in 1,137 s.
+
+**Step 14 stop condition.** Met except the user's approval of the prose, which is the PR review.
+
+**Next session starts with**
+1. The user's edits to the README's interpretation and "what I'd do differently" (PR review), then merge.
+2. Judge calibration whenever the user has time (OPEN-DECISIONS); `eval.results_table` then rebuilds both files.
+3. Step 13b (agentic arms) only if the user reopens it.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.
