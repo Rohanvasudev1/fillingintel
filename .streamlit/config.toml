@@ -1,0 +1,11 @@
+# Streamlit settings for `uv run --env-file .env streamlit run ui/app.py` (Step 14).
+# Telemetry off, no browser opened, and the app reachable from this machine only.
+[browser]
+gatherUsageStats = false
+
+[server]
+headless = true
+address = "127.0.0.1"
+
+[client]
+toolbarMode = "minimal"

@@ -8,11 +8,12 @@ from retrieve.answer import enforce_citations, not_found_without_call
 from retrieve.answer_model import TokenUsage
 from retrieve.arm import ArmResult, GraphRetrieval, RetrievedChunk, Routing, StageCost
 from retrieve.question_filter import QuestionFilter
-from ui.backend import UiAnswer
+from ui.backend import UiAnswer, phoenix_trace_url
 from ui.errors import AnswerFailed, SourceNotFound
 from ui.spend import check_spend, fresh_cost
 
 CHUNK = "0001045810-26-000021:0013"
+PHOENIX = "http://localhost:6006"
 NO_FILTER = QuestionFilter((), (), (), None)
 
 
@@ -78,7 +79,9 @@ class FakeBackend:
         return UiAnswer(option=option, question=question, result=result, total_ms=1200.0,
                         cost=question_cost(result), spent_usd=fresh_cost(result),
                         replayed=replayed(result), is_sample=is_sample,
-                        trace_id=self._trace_id, communities=self._communities)
+                        trace_id=self._trace_id,
+                        trace_url=phoenix_trace_url(PHOENIX, self._trace_id),
+                        communities=self._communities)
 
     def estimate(self, option):
         return self._estimate

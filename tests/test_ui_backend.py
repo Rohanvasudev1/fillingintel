@@ -259,11 +259,22 @@ def test_tracing_roots_each_question_in_an_answer_question_span(tmp_path):
     assert root.parent is None
 
 
+def test_a_traced_answer_links_to_its_trace_in_phoenix(tmp_path):
+    provider = TracerProvider(shutdown_on_exit=False)
+    provider.add_span_processor(SimpleSpanProcessor(InMemorySpanExporter()))
+    environ = {**ENV, "PHOENIX_COLLECTOR_ENDPOINT": "http://localhost:6006/"}
+    backend = _backend(Registry(), environ=environ, tracing=lambda environ: provider,
+                       tmp_path=tmp_path)
+    answer = backend.answer(LIVE, "vector", spent_usd=0)
+    assert answer.trace_url == f"http://localhost:6006/redirects/traces/{answer.trace_id}"
+
+
 def test_with_tracing_off_no_provider_is_built(tmp_path):
     built = []
     backend = _backend(Registry(), tracing=lambda environ: built.append(environ) or None,
                        tmp_path=tmp_path)
-    assert backend.answer(LIVE, "vector", spent_usd=0).trace_id is None
+    answer = backend.answer(LIVE, "vector", spent_usd=0)
+    assert answer.trace_id is None and answer.trace_url is None
     assert built == [ENV]  # asked once, at start; build_provider imports no SDK when unset
 
 
