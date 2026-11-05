@@ -260,3 +260,17 @@ _Avoid_: eval gate, regression test
 **Gate baseline**:
 The committed retrieval scores the quality gate compares against. It changes only by a deliberate update in a pull request, never to get a failing one through.
 _Avoid_: baseline, when meaning the baseline run of the eval harness
+
+## Interface
+
+**Sample question**:
+A `dev` eval record's question offered in the UI. Its answer replays from the response cache, at no cost, and the UI shows that record's committed metrics beside it. `test` questions are never samples.
+_Avoid_: example, demo question
+
+**Live question**:
+A question typed into the UI. It is answered by real model calls, and the UI shows its cost. It has no gold, so no recall or judged metric is shown for it.
+_Avoid_: custom query, ad-hoc question
+
+**Answer trace**:
+What the arm did to reach an answer, shown beside it: the route, the anchors, the Cypher with any repair or fallback, or the selected communities and map points. Display only. It is never cited and never changes the answer.
+_Avoid_: reasoning path, when meaning a cited graph path; explanation
