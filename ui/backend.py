@@ -36,6 +36,7 @@ from retrieve.pricing import price_table
 from retrieve.response_cache import DEFAULT_CACHE_DIR
 from retrieve.router import Router
 from retrieve.tracing import (
+    ENDPOINT_ENV,
     QUESTION_SPAN,
     Kind,
     SpanRecorder,
@@ -64,6 +65,7 @@ if TYPE_CHECKING:
     from opentelemetry.sdk.trace import TracerProvider
 
 TRACER_NAME = "filingintel.ui"
+PHOENIX_TRACE_PATH = "/redirects/traces/"  # Phoenix resolves an OpenTelemetry trace ID
 _MS_PER_SECOND = 1000.0
 
 logger = logging.getLogger(__name__)
@@ -80,9 +82,15 @@ class UiAnswer:
     cost: Mapping[str, float]  # eval.operational.question_cost: USD per stage and total
     spent_usd: float  # what this call added to the session: calls replayed cost nothing
     replayed: bool  # any call replayed from a cache
-    is_sample: bool  # a committed sample question for this option
+    sample_id: str | None  # the committed sample's record ID; None for a live question
     trace_id: str | None = None  # the Phoenix trace, when tracing is on
+    trace_url: str | None = None  # that trace's page in the Phoenix UI
     communities: Mapping[str, CommunityInfo] = field(default_factory=dict)  # graph_global
+
+    @property
+    def is_sample(self) -> bool:
+        """A committed sample question for this option, replayed from the cache."""
+        return self.sample_id is not None
 
 
 class Backend(Protocol):
@@ -154,10 +162,10 @@ class LiveBackend:
         picked = picker_option(option)
         spec = option_spec(picked, self._arms)
         _check_settings(spec, self._environ)
-        is_sample = question in {s.question for s in self.samples(option)}
+        sample_id = sample_id_of(question, self.samples(option))
         # A sample replays for free, so it needs no estimate; but if one ever spent (a
         # cleared cache), a session already past the cap is still refused.
-        estimate = 0.0 if is_sample else self.estimate(option)
+        estimate = 0.0 if sample_id is not None else self.estimate(option)
         check_spend(estimate=estimate, spent=spent_usd, cap=self._max_spend)
         arm, lock = self._arm(picked, spec)
         with lock:
@@ -165,7 +173,8 @@ class LiveBackend:
         return UiAnswer(
             option=option, question=question, result=result, total_ms=total_ms,
             cost=question_cost(result), spent_usd=fresh_cost(result),
-            replayed=replayed(result), is_sample=is_sample, trace_id=trace_id,
+            replayed=replayed(result), sample_id=sample_id, trace_id=trace_id,
+            trace_url=phoenix_trace_url(self._environ.get(ENDPOINT_ENV, ""), trace_id),
             communities=self._read_communities(result))
 
     def estimate(self, option: str) -> float:
@@ -262,6 +271,18 @@ class LiveBackend:
             return self._communities(tuple(c.community_id for c in search.calls))
         except (Neo4jError, DriverError) as exc:
             raise DatabaseUnavailable(NEO4J_DOWN) from exc
+
+
+def sample_id_of(question: str, samples: Collection[Sample]) -> str | None:
+    """The ID of the sample asking *question*; None when it is not a sample."""
+    return next((s.id for s in samples if s.question == question), None)
+
+
+def phoenix_trace_url(endpoint: str, trace_id: str | None) -> str | None:
+    """The Phoenix page for *trace_id*, served where the collector endpoint is."""
+    if trace_id is None or not endpoint.strip():
+        return None
+    return f"{endpoint.strip().rstrip('/')}{PHOENIX_TRACE_PATH}{trace_id}"
 
 
 def _check_settings(spec: ArmSpec, environ: Mapping[str, str]) -> None:

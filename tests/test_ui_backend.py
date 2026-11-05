@@ -129,7 +129,7 @@ def test_a_sample_is_answered_with_its_cost_and_time_and_spends_nothing(tmp_path
                                                           spent_usd=0.5)
     assert answer.result is registry.result
     assert answer.option == "vector"
-    assert answer.is_sample is True
+    assert answer.is_sample is True and answer.sample_id is not None
     assert answer.total_ms == pytest.approx(250.0)
     assert answer.cost == question_cost(registry.result)
     assert answer.spent_usd == 0.0
@@ -158,7 +158,7 @@ def test_a_router_option_opens_the_router_under_its_map(tmp_path):
 def test_a_live_question_adds_what_its_fresh_calls_cost(tmp_path):
     registry = Registry(arm_result(answer_cost=0.02, embed_cost=0.001))
     answer = _backend(registry, tmp_path=tmp_path).answer(LIVE, "vector", spent_usd=0.0)
-    assert answer.is_sample is False
+    assert answer.is_sample is False and answer.sample_id is None
     assert answer.spent_usd == pytest.approx(0.021)
     assert answer.replayed is False
 
@@ -259,11 +259,22 @@ def test_tracing_roots_each_question_in_an_answer_question_span(tmp_path):
     assert root.parent is None
 
 
+def test_a_traced_answer_links_to_its_trace_in_phoenix(tmp_path):
+    provider = TracerProvider(shutdown_on_exit=False)
+    provider.add_span_processor(SimpleSpanProcessor(InMemorySpanExporter()))
+    environ = {**ENV, "PHOENIX_COLLECTOR_ENDPOINT": "http://localhost:6006/"}
+    backend = _backend(Registry(), environ=environ, tracing=lambda environ: provider,
+                       tmp_path=tmp_path)
+    answer = backend.answer(LIVE, "vector", spent_usd=0)
+    assert answer.trace_url == f"http://localhost:6006/redirects/traces/{answer.trace_id}"
+
+
 def test_with_tracing_off_no_provider_is_built(tmp_path):
     built = []
     backend = _backend(Registry(), tracing=lambda environ: built.append(environ) or None,
                        tmp_path=tmp_path)
-    assert backend.answer(LIVE, "vector", spent_usd=0).trace_id is None
+    answer = backend.answer(LIVE, "vector", spent_usd=0)
+    assert answer.trace_id is None and answer.trace_url is None
     assert built == [ENV]  # asked once, at start; build_provider imports no SDK when unset
 
 
