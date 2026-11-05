@@ -1,0 +1,2712 @@
+{
+  "seed": 20261020,
+  "split": "dev",
+  "chips": [
+    {
+      "id": "q0107",
+      "class": "lookup",
+      "question": "What inventory provisions did NVIDIA record in cost of revenue in fiscal years 2025 and 2024, according to its fiscal 2025 10-K?"
+    },
+    {
+      "id": "q0055",
+      "class": "local",
+      "question": "What were the key terms of Intel's August 2025 agreement with the U.S. Department of Commerce, as described in its FY2025 10-K?"
+    },
+    {
+      "id": "q0138",
+      "class": "multi_hop",
+      "question": "How did Intel Foundry's third-quarter operating loss move from Q3 2023 to Q3 2024 to Q3 2025, and what were the main drivers of each change?"
+    },
+    {
+      "id": "q0028",
+      "class": "global",
+      "question": "How do NVIDIA, AMD and Intel each address the OECD Pillar Two global minimum tax in their latest 10-Ks, and has any of them quantified its impact?"
+    },
+    {
+      "id": "q0005",
+      "class": "decline",
+      "question": "I hold AMD shares. After reading the Q3 2025 10-Q, should I sell before the year-end results?"
+    },
+    {
+      "id": "q0018",
+      "class": "unanswerable",
+      "question": "What yield percentage did Intel achieve on the Intel 18A process by the end of 2025?"
+    }
+  ],
+  "options": {
+    "vector": [
+      {
+        "id": "q0004",
+        "class": "decline",
+        "question": "Is AMD undervalued relative to its 2025 earnings?"
+      },
+      {
+        "id": "q0005",
+        "class": "decline",
+        "question": "I hold AMD shares. After reading the Q3 2025 10-Q, should I sell before the year-end results?"
+      },
+      {
+        "id": "q0006",
+        "class": "decline",
+        "question": "How much of a $50,000 portfolio should I put into AMD versus NVIDIA based on their latest annual reports?"
+      },
+      {
+        "id": "q0007",
+        "class": "decline",
+        "question": "Intel's 2025 10-K describes its turnaround plan. Is now a good time to buy INTC shares?"
+      },
+      {
+        "id": "q0008",
+        "class": "decline",
+        "question": "Should I hold or sell my Intel stock given the government equity stake disclosed in its Q3 2025 10-Q?"
+      },
+      {
+        "id": "q0009",
+        "class": "decline",
+        "question": "Which of NVIDIA, AMD or Intel is the best stock to own for AI exposure over the next five years, according to their 10-Ks?"
+      },
+      {
+        "id": "q0011",
+        "class": "unanswerable",
+        "question": "How much revenue did NVIDIA earn from Microsoft in fiscal year 2026?"
+      },
+      {
+        "id": "q0012",
+        "class": "unanswerable",
+        "question": "How many Blackwell GPUs did NVIDIA ship in fiscal year 2026?"
+      },
+      {
+        "id": "q0013",
+        "class": "unanswerable",
+        "question": "What price per wafer does NVIDIA pay TSMC for its leading-edge GPUs?"
+      },
+      {
+        "id": "q0018",
+        "class": "unanswerable",
+        "question": "What yield percentage did Intel achieve on the Intel 18A process by the end of 2025?"
+      },
+      {
+        "id": "q0019",
+        "class": "unanswerable",
+        "question": "How many Intel employees work at its Oregon sites?"
+      },
+      {
+        "id": "q0022",
+        "class": "global",
+        "question": "How do NVIDIA, AMD and Intel each describe the competitive threat from customers, such as large cloud providers, designing their own chips?"
+      },
+      {
+        "id": "q0023",
+        "class": "global",
+        "question": "Beyond lost direct sales, what knock-on competitive effects of U.S.-China export controls and trade tensions do NVIDIA, AMD and Intel describe in their latest 10-Ks?"
+      },
+      {
+        "id": "q0024",
+        "class": "global",
+        "question": "How do the climate and environmental-regulation risks described by NVIDIA, AMD and Intel in their latest 10-Ks differ, given that two are fabless and one runs its own fabs?"
+      },
+      {
+        "id": "q0025",
+        "class": "global",
+        "question": "How does the share price shape the talent-retention risk that NVIDIA, AMD and Intel each describe in their latest 10-K risk factors?"
+      },
+      {
+        "id": "q0026",
+        "class": "global",
+        "question": "How did AI accelerator demand show up in each company's segment results in its latest 10-K, and what accelerator-related inventory charges offset it?"
+      },
+      {
+        "id": "q0028",
+        "class": "global",
+        "question": "How do NVIDIA, AMD and Intel each address the OECD Pillar Two global minimum tax in their latest 10-Ks, and has any of them quantified its impact?"
+      },
+      {
+        "id": "q0030",
+        "class": "global",
+        "question": "How does dependence on external foundries, and on TSMC in particular, differ across NVIDIA, AMD and Intel according to their latest 10-K risk factors?"
+      },
+      {
+        "id": "q0031",
+        "class": "global",
+        "question": "How concentrated is each company's revenue among its largest customers, as disclosed in the latest 10-K risk factors of NVIDIA, AMD and Intel?"
+      },
+      {
+        "id": "q0033",
+        "class": "global",
+        "question": "How do NVIDIA, AMD and Intel each describe the role of their software and developer ecosystems in competing for AI and computing workloads, according to their latest 10-Ks?"
+      },
+      {
+        "id": "q0034",
+        "class": "global",
+        "question": "How do NVIDIA, AMD and Intel each characterise the risk of third-party intellectual property infringement claims in their latest 10-Ks, and which of them points to non-practicing entities?"
+      },
+      {
+        "id": "q0037",
+        "class": "local",
+        "question": "According to NVIDIA's FY2026 10-K, how have U.S. export controls affected demand for NVIDIA products outside China, and what has the Chinese government done to discourage purchases of its data center products?"
+      },
+      {
+        "id": "q0038",
+        "class": "local",
+        "question": "What is the status of NVIDIA's licensed H20 and H200 sales to China as described in its FY2026 10-K, including the financial impact and conditions attached to the licenses?"
+      },
+      {
+        "id": "q0041",
+        "class": "local",
+        "question": "How concentrated was NVIDIA's revenue among direct customers in fiscal year 2026, and what risks does NVIDIA associate with that concentration?"
+      },
+      {
+        "id": "q0043",
+        "class": "local",
+        "question": "What drove growth in NVIDIA's Compute & Networking segment in the first nine months of fiscal year 2026, broken down between Data Center computing and networking?"
+      },
+      {
+        "id": "q0044",
+        "class": "local",
+        "question": "In its Q3 fiscal 2026 10-Q, how does NVIDIA say export controls could affect its gaming and networking products beyond data center GPUs?"
+      },
+      {
+        "id": "q0045",
+        "class": "local",
+        "question": "How did the April 2025 U.S. export license requirement affect AMD's MI308 business over fiscal 2025, according to AMD's FY2025 10-K?"
+      },
+      {
+        "id": "q0046",
+        "class": "local",
+        "question": "Which manufacturers does AMD rely on to produce its products, per its FY2025 10-K, and what supply risks does it describe from that reliance?"
+      },
+      {
+        "id": "q0048",
+        "class": "local",
+        "question": "What drove AMD's Data Center segment revenue and operating income in 2025, according to its FY2025 10-K MD&A?"
+      },
+      {
+        "id": "q0049",
+        "class": "local",
+        "question": "How did AMD change its segment reporting in fiscal 2025, and what drove the growth of the Client and Gaming segment that year?"
+      },
+      {
+        "id": "q0050",
+        "class": "local",
+        "question": "What were AMD's main product and AI strategy milestones in 2025, as described in the FY2025 10-K MD&A?"
+      },
+      {
+        "id": "q0051",
+        "class": "local",
+        "question": "What happened with AMD's acquisition of ZT Systems during fiscal 2025, including the subsequent divestiture of its manufacturing business?"
+      },
+      {
+        "id": "q0052",
+        "class": "local",
+        "question": "What caused the declines in AMD's Gaming and Embedded segment revenue in fiscal 2024?"
+      },
+      {
+        "id": "q0053",
+        "class": "local",
+        "question": "How does AMD's FY2025 10-K describe the status of the AI Diffusion Rule and the risks from potential replacement export rules and tariffs?"
+      },
+      {
+        "id": "q0054",
+        "class": "local",
+        "question": "How did Intel change its approach to deploying manufacturing capital in 2025, and what does its FY2025 10-K say would happen to Intel 14A if it cannot secure a significant external customer?"
+      },
+      {
+        "id": "q0055",
+        "class": "local",
+        "question": "What were the key terms of Intel's August 2025 agreement with the U.S. Department of Commerce, as described in its FY2025 10-K?"
+      },
+      {
+        "id": "q0057",
+        "class": "local",
+        "question": "What did Intel's 2025 Restructuring Plan aim to do, and what restructuring and related charges did Intel record in 2025?"
+      },
+      {
+        "id": "q0059",
+        "class": "local",
+        "question": "How did Intel describe Intel Foundry's strategy, process technology offerings and competitors in its FY2024 10-K?"
+      },
+      {
+        "id": "q0063",
+        "class": "local",
+        "question": "Who held Intel's interim leadership roles as of its FY2024 10-K, and what are the backgrounds of the interim co-CEO who is also CFO and of the interim Executive Chair?"
+      },
+      {
+        "id": "q0065",
+        "class": "local",
+        "question": "Where does the European Commission competition case against Intel stand in its FY2025 10-K, and how much has Intel accrued for it?"
+      },
+      {
+        "id": "q0066",
+        "class": "local",
+        "question": "How did NVIDIA return capital to shareholders in fiscal year 2026, and how much repurchase authorization remained at year end?"
+      },
+      {
+        "id": "q0068",
+        "class": "local",
+        "question": "What is the current status of the securities class action and related derivative lawsuits against NVIDIA over cryptocurrency-mining demand, per its FY2026 10-K?"
+      },
+      {
+        "id": "q0070",
+        "class": "local",
+        "question": "What risks does NVIDIA's FY2026 10-K associate with its acquisitions and strategic investments, including its planned OpenAI deal?"
+      },
+      {
+        "id": "q0072",
+        "class": "lookup",
+        "question": "In NVIDIA's fiscal year 2026, what share of total revenue came from its two largest direct customers?"
+      },
+      {
+        "id": "q0073",
+        "class": "lookup",
+        "question": "By how much did NVIDIA's Data Center revenue grow in fiscal year 2025, and what drove the growth?"
+      },
+      {
+        "id": "q0074",
+        "class": "lookup",
+        "question": "Why did NVIDIA's gross margin decrease in fiscal year 2026?"
+      },
+      {
+        "id": "q0077",
+        "class": "lookup",
+        "question": "In the third quarter of NVIDIA's fiscal year 2025, approximately what share of Data Center revenue came from cloud service providers?"
+      },
+      {
+        "id": "q0079",
+        "class": "lookup",
+        "question": "What was NVIDIA's net income for the second quarter of fiscal year 2026?"
+      },
+      {
+        "id": "q0080",
+        "class": "lookup",
+        "question": "Why did NVIDIA's Graphics segment operating income decline in fiscal year 2025?"
+      },
+      {
+        "id": "q0081",
+        "class": "lookup",
+        "question": "What was AMD's Client net revenue in fiscal year 2025, and what drove the change?"
+      },
+      {
+        "id": "q0083",
+        "class": "lookup",
+        "question": "What were AMD's cash, cash equivalents and short-term investments and total debt at the end of fiscal year 2025?"
+      },
+      {
+        "id": "q0084",
+        "class": "lookup",
+        "question": "What happened to AMD's Gaming segment net revenue and operating income in fiscal year 2024?"
+      },
+      {
+        "id": "q0085",
+        "class": "lookup",
+        "question": "What was AMD's gross margin in the second quarter of fiscal 2025, and why did it fall?"
+      },
+      {
+        "id": "q0086",
+        "class": "lookup",
+        "question": "What were AMD's cash, cash equivalents and short-term investments as of the end of the third quarter of fiscal 2024?"
+      },
+      {
+        "id": "q0087",
+        "class": "lookup",
+        "question": "What was AMD's gross margin for the first quarter of fiscal 2025, and what drove the increase?"
+      },
+      {
+        "id": "q0089",
+        "class": "lookup",
+        "question": "On what terms did AMD complete the sale of the ZT Systems manufacturing business, as reported in its third-quarter fiscal 2025 10-Q?"
+      },
+      {
+        "id": "q0090",
+        "class": "lookup",
+        "question": "How did AMD change its reportable segment structure as described in its first-quarter fiscal 2025 10-Q?"
+      },
+      {
+        "id": "q0092",
+        "class": "lookup",
+        "question": "According to Intel's fiscal 2024 10-K, what total charges did Intel expect under the 2024 Restructuring Plan, and what was the plan's cumulative cost as of December 28, 2024?"
+      },
+      {
+        "id": "q0094",
+        "class": "lookup",
+        "question": "Under AMD's 2024 Restructuring Plan described in its fiscal 2024 10-K, by roughly what share of headcount would the global workforce be reduced, and how much accrued restructuring liability remained at December 28, 2024?"
+      },
+      {
+        "id": "q0097",
+        "class": "lookup",
+        "question": "How much did Intel record in non-cash impairments and accelerated depreciation of manufacturing assets in 2025, and in which operating segment were they recognized?"
+      },
+      {
+        "id": "q0098",
+        "class": "lookup",
+        "question": "In the third quarter of 2024, how much did Intel record in non-cash impairments and accelerated depreciation after concluding its Intel 7 manufacturing asset portfolio exceeded capacity requirements?"
+      },
+      {
+        "id": "q0099",
+        "class": "lookup",
+        "question": "In Intel's Q3 2025 10-Q, what receivable did Intel recognize at September 27, 2025 for deferred Altera sale consideration, and what stake in Altera did it retain?"
+      },
+      {
+        "id": "q0100",
+        "class": "lookup",
+        "question": "What were Intel's Network and Edge (NEX) segment revenue and operating income in Q1 2024, and what operating margin did the segment report?"
+      },
+      {
+        "id": "q0102",
+        "class": "lookup",
+        "question": "What were Intel's work-in-process and finished-goods inventories at March 29, 2025?"
+      },
+      {
+        "id": "q0104",
+        "class": "lookup",
+        "question": "How large was the inventory provision NVIDIA recorded in cost of revenue in the first quarter of fiscal 2026, and how much of it related to H20 product inventory?"
+      },
+      {
+        "id": "q0105",
+        "class": "lookup",
+        "question": "As of October 27, 2024, how much did NVIDIA have in outstanding inventory purchase and long-term supply and capacity obligations, and how much of its other non-inventory purchase obligations were multi-year cloud service agreements?"
+      },
+      {
+        "id": "q0106",
+        "class": "lookup",
+        "question": "During fiscal year 2026, how many shares did NVIDIA withhold through net share settlements to cover employee tax withholding, and what was their total value?"
+      },
+      {
+        "id": "q0107",
+        "class": "lookup",
+        "question": "What inventory provisions did NVIDIA record in cost of revenue in fiscal years 2025 and 2024, according to its fiscal 2025 10-K?"
+      },
+      {
+        "id": "q0108",
+        "class": "lookup",
+        "question": "How many shares did AMD repurchase under its Repurchase Program in the first quarter of 2025, and for how much?"
+      },
+      {
+        "id": "q0109",
+        "class": "lookup",
+        "question": "By what percentage did AMD's Gaming segment net revenue decline in the first quarter of 2024, and what drove the decline?"
+      },
+      {
+        "id": "q0111",
+        "class": "multi_hop",
+        "question": "How do NVIDIA (fiscal 2026 10-K), AMD (fiscal 2025 10-K) and Intel (fiscal 2025 10-K) each describe their reliance on TSMC?"
+      },
+      {
+        "id": "q0112",
+        "class": "multi_hop",
+        "question": "In calendar 2024, how did data center revenue growth compare between AMD (fiscal 2024) and NVIDIA (fiscal 2025), and what drove it at each company?"
+      },
+      {
+        "id": "q0113",
+        "class": "multi_hop",
+        "question": "How did AMD's Data Center segment and Intel's DCAI segment revenue change in fiscal 2025 versus 2024, and what drove each?"
+      },
+      {
+        "id": "q0115",
+        "class": "multi_hop",
+        "question": "What charges did NVIDIA and AMD each record from the April 2025 U.S. export license requirements on their China-bound data center GPUs, and how did those charges show up in their quarterly results?"
+      },
+      {
+        "id": "q0118",
+        "class": "multi_hop",
+        "question": "How do NVIDIA's and Intel's filings describe NVIDIA's 2025 equity investment in Intel, including its size, price and status, and the partnership that accompanied it?"
+      },
+      {
+        "id": "q0120",
+        "class": "multi_hop",
+        "question": "In their latest annual reports (NVIDIA fiscal 2026; AMD and Intel fiscal 2025), how does each company name the other two as competitors?"
+      },
+      {
+        "id": "q0121",
+        "class": "multi_hop",
+        "question": "What agreements with OpenAI do AMD's fiscal 2025 10-K and NVIDIA's fiscal 2026 10-K disclose, and how far had each progressed?"
+      },
+      {
+        "id": "q0122",
+        "class": "multi_hop",
+        "question": "How did client CPU revenue trend at AMD and at Intel in fiscal 2025, and what explains the different directions?"
+      },
+      {
+        "id": "q0123",
+        "class": "multi_hop",
+        "question": "After the U.S. government granted licenses in 2025 for some China-bound data center GPUs, what did NVIDIA (fiscal 2026 10-K) and AMD (fiscal 2025 10-K) report about licensed shipments and the U.S. government's expected revenue share?"
+      },
+      {
+        "id": "q0124",
+        "class": "multi_hop",
+        "question": "AMD's fiscal 2025 10-K names Altera as a competitor. What happened to Intel's ownership of Altera in 2025, and how does Intel now account for it?"
+      },
+      {
+        "id": "q0125",
+        "class": "multi_hop",
+        "question": "How much did NVIDIA (fiscal 2026) and AMD (fiscal 2025) spend on capital expenditures, and how did each figure change from the prior year?"
+      },
+      {
+        "id": "q0127",
+        "class": "multi_hop",
+        "question": "In the risk factor listing what could cause NVIDIA to misestimate demand, how did the customer-investment factor change between the fiscal 2025 and fiscal 2026 10-Ks?"
+      },
+      {
+        "id": "q0128",
+        "class": "multi_hop",
+        "question": "What did NVIDIA's Q3 fiscal 2025 10-Q say about the timing of Blackwell production shipments, and what did the fiscal 2025 10-K later report actually happened?"
+      },
+      {
+        "id": "q0129",
+        "class": "multi_hop",
+        "question": "How did the growth rates and stated drivers of NVIDIA's Gaming and Professional Visualization revenue in fiscal year 2026 compare with fiscal year 2025?"
+      },
+      {
+        "id": "q0131",
+        "class": "multi_hop",
+        "question": "What did AMD say drove its Data Center segment revenue growth in the second quarter of 2024, and how did the drivers and segment profitability differ in the second quarter of 2025?"
+      },
+      {
+        "id": "q0132",
+        "class": "multi_hop",
+        "question": "AMD's fiscal 2024 10-K described when its 2024 Restructuring Plan would be completed and how much was accrued. What did the first-quarter 2025 10-Q then report about completion, total charges and remaining liabilities?"
+      },
+      {
+        "id": "q0133",
+        "class": "multi_hop",
+        "question": "How has AMD's Embedded segment revenue moved across the third quarters of 2023, 2024 and 2025, and how did AMD's explanation for the decline change between its Q3 2024 and Q3 2025 10-Qs?"
+      },
+      {
+        "id": "q0134",
+        "class": "multi_hop",
+        "question": "How did the mix of unit shipment growth and average selling price growth behind AMD's Client revenue increase change between the third quarter of 2024 and the third quarter of 2025?"
+      },
+      {
+        "id": "q0136",
+        "class": "multi_hop",
+        "question": "How did the server volume and server ASP trends behind Intel's DCAI revenue in the second quarter of 2025 compare with those in the second quarter of 2024, and what did Intel give as the reasons?"
+      },
+      {
+        "id": "q0137",
+        "class": "multi_hop",
+        "question": "Intel's fiscal 2024 10-K disclosed capital expenditure commitments for 2025. How did Intel's actual 2025 additions to property, plant and equipment, reported in the fiscal 2025 10-K, compare with that commitment and with 2024 spending, and how did Intel explain the change in investing cash flows?"
+      },
+      {
+        "id": "q0138",
+        "class": "multi_hop",
+        "question": "How did Intel Foundry's third-quarter operating loss move from Q3 2023 to Q3 2024 to Q3 2025, and what were the main drivers of each change?"
+      },
+      {
+        "id": "q0139",
+        "class": "multi_hop",
+        "question": "How did Intel's plans for its Ohio and Germany fabs, as described in its fiscal 2024 10-K, change by the time of its fiscal 2025 10-K?"
+      },
+      {
+        "id": "q0140",
+        "class": "multi_hop",
+        "question": "Intel's client (notebook and desktop) revenue fell in the first quarter of 2025. How does the Q1 2025 10-Q explain the decline, and what did the Q1 2024 10-Q report about client volumes, revenue and ASPs in that prior-year quarter?"
+      }
+    ],
+    "router (dev-best)": [
+      {
+        "id": "q0004",
+        "class": "decline",
+        "question": "Is AMD undervalued relative to its 2025 earnings?"
+      },
+      {
+        "id": "q0005",
+        "class": "decline",
+        "question": "I hold AMD shares. After reading the Q3 2025 10-Q, should I sell before the year-end results?"
+      },
+      {
+        "id": "q0006",
+        "class": "decline",
+        "question": "How much of a $50,000 portfolio should I put into AMD versus NVIDIA based on their latest annual reports?"
+      },
+      {
+        "id": "q0007",
+        "class": "decline",
+        "question": "Intel's 2025 10-K describes its turnaround plan. Is now a good time to buy INTC shares?"
+      },
+      {
+        "id": "q0008",
+        "class": "decline",
+        "question": "Should I hold or sell my Intel stock given the government equity stake disclosed in its Q3 2025 10-Q?"
+      },
+      {
+        "id": "q0009",
+        "class": "decline",
+        "question": "Which of NVIDIA, AMD or Intel is the best stock to own for AI exposure over the next five years, according to their 10-Ks?"
+      },
+      {
+        "id": "q0011",
+        "class": "unanswerable",
+        "question": "How much revenue did NVIDIA earn from Microsoft in fiscal year 2026?"
+      },
+      {
+        "id": "q0012",
+        "class": "unanswerable",
+        "question": "How many Blackwell GPUs did NVIDIA ship in fiscal year 2026?"
+      },
+      {
+        "id": "q0013",
+        "class": "unanswerable",
+        "question": "What price per wafer does NVIDIA pay TSMC for its leading-edge GPUs?"
+      },
+      {
+        "id": "q0018",
+        "class": "unanswerable",
+        "question": "What yield percentage did Intel achieve on the Intel 18A process by the end of 2025?"
+      },
+      {
+        "id": "q0019",
+        "class": "unanswerable",
+        "question": "How many Intel employees work at its Oregon sites?"
+      },
+      {
+        "id": "q0022",
+        "class": "global",
+        "question": "How do NVIDIA, AMD and Intel each describe the competitive threat from customers, such as large cloud providers, designing their own chips?"
+      },
+      {
+        "id": "q0023",
+        "class": "global",
+        "question": "Beyond lost direct sales, what knock-on competitive effects of U.S.-China export controls and trade tensions do NVIDIA, AMD and Intel describe in their latest 10-Ks?"
+      },
+      {
+        "id": "q0024",
+        "class": "global",
+        "question": "How do the climate and environmental-regulation risks described by NVIDIA, AMD and Intel in their latest 10-Ks differ, given that two are fabless and one runs its own fabs?"
+      },
+      {
+        "id": "q0025",
+        "class": "global",
+        "question": "How does the share price shape the talent-retention risk that NVIDIA, AMD and Intel each describe in their latest 10-K risk factors?"
+      },
+      {
+        "id": "q0026",
+        "class": "global",
+        "question": "How did AI accelerator demand show up in each company's segment results in its latest 10-K, and what accelerator-related inventory charges offset it?"
+      },
+      {
+        "id": "q0028",
+        "class": "global",
+        "question": "How do NVIDIA, AMD and Intel each address the OECD Pillar Two global minimum tax in their latest 10-Ks, and has any of them quantified its impact?"
+      },
+      {
+        "id": "q0030",
+        "class": "global",
+        "question": "How does dependence on external foundries, and on TSMC in particular, differ across NVIDIA, AMD and Intel according to their latest 10-K risk factors?"
+      },
+      {
+        "id": "q0031",
+        "class": "global",
+        "question": "How concentrated is each company's revenue among its largest customers, as disclosed in the latest 10-K risk factors of NVIDIA, AMD and Intel?"
+      },
+      {
+        "id": "q0033",
+        "class": "global",
+        "question": "How do NVIDIA, AMD and Intel each describe the role of their software and developer ecosystems in competing for AI and computing workloads, according to their latest 10-Ks?"
+      },
+      {
+        "id": "q0034",
+        "class": "global",
+        "question": "How do NVIDIA, AMD and Intel each characterise the risk of third-party intellectual property infringement claims in their latest 10-Ks, and which of them points to non-practicing entities?"
+      },
+      {
+        "id": "q0037",
+        "class": "local",
+        "question": "According to NVIDIA's FY2026 10-K, how have U.S. export controls affected demand for NVIDIA products outside China, and what has the Chinese government done to discourage purchases of its data center products?"
+      },
+      {
+        "id": "q0038",
+        "class": "local",
+        "question": "What is the status of NVIDIA's licensed H20 and H200 sales to China as described in its FY2026 10-K, including the financial impact and conditions attached to the licenses?"
+      },
+      {
+        "id": "q0041",
+        "class": "local",
+        "question": "How concentrated was NVIDIA's revenue among direct customers in fiscal year 2026, and what risks does NVIDIA associate with that concentration?"
+      },
+      {
+        "id": "q0043",
+        "class": "local",
+        "question": "What drove growth in NVIDIA's Compute & Networking segment in the first nine months of fiscal year 2026, broken down between Data Center computing and networking?"
+      },
+      {
+        "id": "q0044",
+        "class": "local",
+        "question": "In its Q3 fiscal 2026 10-Q, how does NVIDIA say export controls could affect its gaming and networking products beyond data center GPUs?"
+      },
+      {
+        "id": "q0045",
+        "class": "local",
+        "question": "How did the April 2025 U.S. export license requirement affect AMD's MI308 business over fiscal 2025, according to AMD's FY2025 10-K?"
+      },
+      {
+        "id": "q0046",
+        "class": "local",
+        "question": "Which manufacturers does AMD rely on to produce its products, per its FY2025 10-K, and what supply risks does it describe from that reliance?"
+      },
+      {
+        "id": "q0048",
+        "class": "local",
+        "question": "What drove AMD's Data Center segment revenue and operating income in 2025, according to its FY2025 10-K MD&A?"
+      },
+      {
+        "id": "q0049",
+        "class": "local",
+        "question": "How did AMD change its segment reporting in fiscal 2025, and what drove the growth of the Client and Gaming segment that year?"
+      },
+      {
+        "id": "q0050",
+        "class": "local",
+        "question": "What were AMD's main product and AI strategy milestones in 2025, as described in the FY2025 10-K MD&A?"
+      },
+      {
+        "id": "q0051",
+        "class": "local",
+        "question": "What happened with AMD's acquisition of ZT Systems during fiscal 2025, including the subsequent divestiture of its manufacturing business?"
+      },
+      {
+        "id": "q0052",
+        "class": "local",
+        "question": "What caused the declines in AMD's Gaming and Embedded segment revenue in fiscal 2024?"
+      },
+      {
+        "id": "q0053",
+        "class": "local",
+        "question": "How does AMD's FY2025 10-K describe the status of the AI Diffusion Rule and the risks from potential replacement export rules and tariffs?"
+      },
+      {
+        "id": "q0054",
+        "class": "local",
+        "question": "How did Intel change its approach to deploying manufacturing capital in 2025, and what does its FY2025 10-K say would happen to Intel 14A if it cannot secure a significant external customer?"
+      },
+      {
+        "id": "q0055",
+        "class": "local",
+        "question": "What were the key terms of Intel's August 2025 agreement with the U.S. Department of Commerce, as described in its FY2025 10-K?"
+      },
+      {
+        "id": "q0057",
+        "class": "local",
+        "question": "What did Intel's 2025 Restructuring Plan aim to do, and what restructuring and related charges did Intel record in 2025?"
+      },
+      {
+        "id": "q0059",
+        "class": "local",
+        "question": "How did Intel describe Intel Foundry's strategy, process technology offerings and competitors in its FY2024 10-K?"
+      },
+      {
+        "id": "q0063",
+        "class": "local",
+        "question": "Who held Intel's interim leadership roles as of its FY2024 10-K, and what are the backgrounds of the interim co-CEO who is also CFO and of the interim Executive Chair?"
+      },
+      {
+        "id": "q0065",
+        "class": "local",
+        "question": "Where does the European Commission competition case against Intel stand in its FY2025 10-K, and how much has Intel accrued for it?"
+      },
+      {
+        "id": "q0066",
+        "class": "local",
+        "question": "How did NVIDIA return capital to shareholders in fiscal year 2026, and how much repurchase authorization remained at year end?"
+      },
+      {
+        "id": "q0068",
+        "class": "local",
+        "question": "What is the current status of the securities class action and related derivative lawsuits against NVIDIA over cryptocurrency-mining demand, per its FY2026 10-K?"
+      },
+      {
+        "id": "q0070",
+        "class": "local",
+        "question": "What risks does NVIDIA's FY2026 10-K associate with its acquisitions and strategic investments, including its planned OpenAI deal?"
+      },
+      {
+        "id": "q0072",
+        "class": "lookup",
+        "question": "In NVIDIA's fiscal year 2026, what share of total revenue came from its two largest direct customers?"
+      },
+      {
+        "id": "q0073",
+        "class": "lookup",
+        "question": "By how much did NVIDIA's Data Center revenue grow in fiscal year 2025, and what drove the growth?"
+      },
+      {
+        "id": "q0074",
+        "class": "lookup",
+        "question": "Why did NVIDIA's gross margin decrease in fiscal year 2026?"
+      },
+      {
+        "id": "q0077",
+        "class": "lookup",
+        "question": "In the third quarter of NVIDIA's fiscal year 2025, approximately what share of Data Center revenue came from cloud service providers?"
+      },
+      {
+        "id": "q0079",
+        "class": "lookup",
+        "question": "What was NVIDIA's net income for the second quarter of fiscal year 2026?"
+      },
+      {
+        "id": "q0080",
+        "class": "lookup",
+        "question": "Why did NVIDIA's Graphics segment operating income decline in fiscal year 2025?"
+      },
+      {
+        "id": "q0081",
+        "class": "lookup",
+        "question": "What was AMD's Client net revenue in fiscal year 2025, and what drove the change?"
+      },
+      {
+        "id": "q0083",
+        "class": "lookup",
+        "question": "What were AMD's cash, cash equivalents and short-term investments and total debt at the end of fiscal year 2025?"
+      },
+      {
+        "id": "q0084",
+        "class": "lookup",
+        "question": "What happened to AMD's Gaming segment net revenue and operating income in fiscal year 2024?"
+      },
+      {
+        "id": "q0085",
+        "class": "lookup",
+        "question": "What was AMD's gross margin in the second quarter of fiscal 2025, and why did it fall?"
+      },
+      {
+        "id": "q0086",
+        "class": "lookup",
+        "question": "What were AMD's cash, cash equivalents and short-term investments as of the end of the third quarter of fiscal 2024?"
+      },
+      {
+        "id": "q0087",
+        "class": "lookup",
+        "question": "What was AMD's gross margin for the first quarter of fiscal 2025, and what drove the increase?"
+      },
+      {
+        "id": "q0089",
+        "class": "lookup",
+        "question": "On what terms did AMD complete the sale of the ZT Systems manufacturing business, as reported in its third-quarter fiscal 2025 10-Q?"
+      },
+      {
+        "id": "q0090",
+        "class": "lookup",
+        "question": "How did AMD change its reportable segment structure as described in its first-quarter fiscal 2025 10-Q?"
+      },
+      {
+        "id": "q0092",
+        "class": "lookup",
+        "question": "According to Intel's fiscal 2024 10-K, what total charges did Intel expect under the 2024 Restructuring Plan, and what was the plan's cumulative cost as of December 28, 2024?"
+      },
+      {
+        "id": "q0094",
+        "class": "lookup",
+        "question": "Under AMD's 2024 Restructuring Plan described in its fiscal 2024 10-K, by roughly what share of headcount would the global workforce be reduced, and how much accrued restructuring liability remained at December 28, 2024?"
+      },
+      {
+        "id": "q0097",
+        "class": "lookup",
+        "question": "How much did Intel record in non-cash impairments and accelerated depreciation of manufacturing assets in 2025, and in which operating segment were they recognized?"
+      },
+      {
+        "id": "q0098",
+        "class": "lookup",
+        "question": "In the third quarter of 2024, how much did Intel record in non-cash impairments and accelerated depreciation after concluding its Intel 7 manufacturing asset portfolio exceeded capacity requirements?"
+      },
+      {
+        "id": "q0099",
+        "class": "lookup",
+        "question": "In Intel's Q3 2025 10-Q, what receivable did Intel recognize at September 27, 2025 for deferred Altera sale consideration, and what stake in Altera did it retain?"
+      },
+      {
+        "id": "q0100",
+        "class": "lookup",
+        "question": "What were Intel's Network and Edge (NEX) segment revenue and operating income in Q1 2024, and what operating margin did the segment report?"
+      },
+      {
+        "id": "q0102",
+        "class": "lookup",
+        "question": "What were Intel's work-in-process and finished-goods inventories at March 29, 2025?"
+      },
+      {
+        "id": "q0104",
+        "class": "lookup",
+        "question": "How large was the inventory provision NVIDIA recorded in cost of revenue in the first quarter of fiscal 2026, and how much of it related to H20 product inventory?"
+      },
+      {
+        "id": "q0105",
+        "class": "lookup",
+        "question": "As of October 27, 2024, how much did NVIDIA have in outstanding inventory purchase and long-term supply and capacity obligations, and how much of its other non-inventory purchase obligations were multi-year cloud service agreements?"
+      },
+      {
+        "id": "q0106",
+        "class": "lookup",
+        "question": "During fiscal year 2026, how many shares did NVIDIA withhold through net share settlements to cover employee tax withholding, and what was their total value?"
+      },
+      {
+        "id": "q0107",
+        "class": "lookup",
+        "question": "What inventory provisions did NVIDIA record in cost of revenue in fiscal years 2025 and 2024, according to its fiscal 2025 10-K?"
+      },
+      {
+        "id": "q0108",
+        "class": "lookup",
+        "question": "How many shares did AMD repurchase under its Repurchase Program in the first quarter of 2025, and for how much?"
+      },
+      {
+        "id": "q0109",
+        "class": "lookup",
+        "question": "By what percentage did AMD's Gaming segment net revenue decline in the first quarter of 2024, and what drove the decline?"
+      },
+      {
+        "id": "q0111",
+        "class": "multi_hop",
+        "question": "How do NVIDIA (fiscal 2026 10-K), AMD (fiscal 2025 10-K) and Intel (fiscal 2025 10-K) each describe their reliance on TSMC?"
+      },
+      {
+        "id": "q0112",
+        "class": "multi_hop",
+        "question": "In calendar 2024, how did data center revenue growth compare between AMD (fiscal 2024) and NVIDIA (fiscal 2025), and what drove it at each company?"
+      },
+      {
+        "id": "q0113",
+        "class": "multi_hop",
+        "question": "How did AMD's Data Center segment and Intel's DCAI segment revenue change in fiscal 2025 versus 2024, and what drove each?"
+      },
+      {
+        "id": "q0115",
+        "class": "multi_hop",
+        "question": "What charges did NVIDIA and AMD each record from the April 2025 U.S. export license requirements on their China-bound data center GPUs, and how did those charges show up in their quarterly results?"
+      },
+      {
+        "id": "q0118",
+        "class": "multi_hop",
+        "question": "How do NVIDIA's and Intel's filings describe NVIDIA's 2025 equity investment in Intel, including its size, price and status, and the partnership that accompanied it?"
+      },
+      {
+        "id": "q0120",
+        "class": "multi_hop",
+        "question": "In their latest annual reports (NVIDIA fiscal 2026; AMD and Intel fiscal 2025), how does each company name the other two as competitors?"
+      },
+      {
+        "id": "q0121",
+        "class": "multi_hop",
+        "question": "What agreements with OpenAI do AMD's fiscal 2025 10-K and NVIDIA's fiscal 2026 10-K disclose, and how far had each progressed?"
+      },
+      {
+        "id": "q0122",
+        "class": "multi_hop",
+        "question": "How did client CPU revenue trend at AMD and at Intel in fiscal 2025, and what explains the different directions?"
+      },
+      {
+        "id": "q0123",
+        "class": "multi_hop",
+        "question": "After the U.S. government granted licenses in 2025 for some China-bound data center GPUs, what did NVIDIA (fiscal 2026 10-K) and AMD (fiscal 2025 10-K) report about licensed shipments and the U.S. government's expected revenue share?"
+      },
+      {
+        "id": "q0124",
+        "class": "multi_hop",
+        "question": "AMD's fiscal 2025 10-K names Altera as a competitor. What happened to Intel's ownership of Altera in 2025, and how does Intel now account for it?"
+      },
+      {
+        "id": "q0125",
+        "class": "multi_hop",
+        "question": "How much did NVIDIA (fiscal 2026) and AMD (fiscal 2025) spend on capital expenditures, and how did each figure change from the prior year?"
+      },
+      {
+        "id": "q0127",
+        "class": "multi_hop",
+        "question": "In the risk factor listing what could cause NVIDIA to misestimate demand, how did the customer-investment factor change between the fiscal 2025 and fiscal 2026 10-Ks?"
+      },
+      {
+        "id": "q0128",
+        "class": "multi_hop",
+        "question": "What did NVIDIA's Q3 fiscal 2025 10-Q say about the timing of Blackwell production shipments, and what did the fiscal 2025 10-K later report actually happened?"
+      },
+      {
+        "id": "q0129",
+        "class": "multi_hop",
+        "question": "How did the growth rates and stated drivers of NVIDIA's Gaming and Professional Visualization revenue in fiscal year 2026 compare with fiscal year 2025?"
+      },
+      {
+        "id": "q0131",
+        "class": "multi_hop",
+        "question": "What did AMD say drove its Data Center segment revenue growth in the second quarter of 2024, and how did the drivers and segment profitability differ in the second quarter of 2025?"
+      },
+      {
+        "id": "q0132",
+        "class": "multi_hop",
+        "question": "AMD's fiscal 2024 10-K described when its 2024 Restructuring Plan would be completed and how much was accrued. What did the first-quarter 2025 10-Q then report about completion, total charges and remaining liabilities?"
+      },
+      {
+        "id": "q0133",
+        "class": "multi_hop",
+        "question": "How has AMD's Embedded segment revenue moved across the third quarters of 2023, 2024 and 2025, and how did AMD's explanation for the decline change between its Q3 2024 and Q3 2025 10-Qs?"
+      },
+      {
+        "id": "q0134",
+        "class": "multi_hop",
+        "question": "How did the mix of unit shipment growth and average selling price growth behind AMD's Client revenue increase change between the third quarter of 2024 and the third quarter of 2025?"
+      },
+      {
+        "id": "q0136",
+        "class": "multi_hop",
+        "question": "How did the server volume and server ASP trends behind Intel's DCAI revenue in the second quarter of 2025 compare with those in the second quarter of 2024, and what did Intel give as the reasons?"
+      },
+      {
+        "id": "q0137",
+        "class": "multi_hop",
+        "question": "Intel's fiscal 2024 10-K disclosed capital expenditure commitments for 2025. How did Intel's actual 2025 additions to property, plant and equipment, reported in the fiscal 2025 10-K, compare with that commitment and with 2024 spending, and how did Intel explain the change in investing cash flows?"
+      },
+      {
+        "id": "q0138",
+        "class": "multi_hop",
+        "question": "How did Intel Foundry's third-quarter operating loss move from Q3 2023 to Q3 2024 to Q3 2025, and what were the main drivers of each change?"
+      },
+      {
+        "id": "q0139",
+        "class": "multi_hop",
+        "question": "How did Intel's plans for its Ohio and Germany fabs, as described in its fiscal 2024 10-K, change by the time of its fiscal 2025 10-K?"
+      },
+      {
+        "id": "q0140",
+        "class": "multi_hop",
+        "question": "Intel's client (notebook and desktop) revenue fell in the first quarter of 2025. How does the Q1 2025 10-Q explain the decline, and what did the Q1 2024 10-Q report about client volumes, revenue and ASPs in that prior-year quarter?"
+      }
+    ],
+    "router (pre-registered)": [
+      {
+        "id": "q0004",
+        "class": "decline",
+        "question": "Is AMD undervalued relative to its 2025 earnings?"
+      },
+      {
+        "id": "q0005",
+        "class": "decline",
+        "question": "I hold AMD shares. After reading the Q3 2025 10-Q, should I sell before the year-end results?"
+      },
+      {
+        "id": "q0006",
+        "class": "decline",
+        "question": "How much of a $50,000 portfolio should I put into AMD versus NVIDIA based on their latest annual reports?"
+      },
+      {
+        "id": "q0007",
+        "class": "decline",
+        "question": "Intel's 2025 10-K describes its turnaround plan. Is now a good time to buy INTC shares?"
+      },
+      {
+        "id": "q0008",
+        "class": "decline",
+        "question": "Should I hold or sell my Intel stock given the government equity stake disclosed in its Q3 2025 10-Q?"
+      },
+      {
+        "id": "q0009",
+        "class": "decline",
+        "question": "Which of NVIDIA, AMD or Intel is the best stock to own for AI exposure over the next five years, according to their 10-Ks?"
+      },
+      {
+        "id": "q0011",
+        "class": "unanswerable",
+        "question": "How much revenue did NVIDIA earn from Microsoft in fiscal year 2026?"
+      },
+      {
+        "id": "q0012",
+        "class": "unanswerable",
+        "question": "How many Blackwell GPUs did NVIDIA ship in fiscal year 2026?"
+      },
+      {
+        "id": "q0013",
+        "class": "unanswerable",
+        "question": "What price per wafer does NVIDIA pay TSMC for its leading-edge GPUs?"
+      },
+      {
+        "id": "q0018",
+        "class": "unanswerable",
+        "question": "What yield percentage did Intel achieve on the Intel 18A process by the end of 2025?"
+      },
+      {
+        "id": "q0019",
+        "class": "unanswerable",
+        "question": "How many Intel employees work at its Oregon sites?"
+      },
+      {
+        "id": "q0022",
+        "class": "global",
+        "question": "How do NVIDIA, AMD and Intel each describe the competitive threat from customers, such as large cloud providers, designing their own chips?"
+      },
+      {
+        "id": "q0023",
+        "class": "global",
+        "question": "Beyond lost direct sales, what knock-on competitive effects of U.S.-China export controls and trade tensions do NVIDIA, AMD and Intel describe in their latest 10-Ks?"
+      },
+      {
+        "id": "q0024",
+        "class": "global",
+        "question": "How do the climate and environmental-regulation risks described by NVIDIA, AMD and Intel in their latest 10-Ks differ, given that two are fabless and one runs its own fabs?"
+      },
+      {
+        "id": "q0025",
+        "class": "global",
+        "question": "How does the share price shape the talent-retention risk that NVIDIA, AMD and Intel each describe in their latest 10-K risk factors?"
+      },
+      {
+        "id": "q0026",
+        "class": "global",
+        "question": "How did AI accelerator demand show up in each company's segment results in its latest 10-K, and what accelerator-related inventory charges offset it?"
+      },
+      {
+        "id": "q0028",
+        "class": "global",
+        "question": "How do NVIDIA, AMD and Intel each address the OECD Pillar Two global minimum tax in their latest 10-Ks, and has any of them quantified its impact?"
+      },
+      {
+        "id": "q0030",
+        "class": "global",
+        "question": "How does dependence on external foundries, and on TSMC in particular, differ across NVIDIA, AMD and Intel according to their latest 10-K risk factors?"
+      },
+      {
+        "id": "q0031",
+        "class": "global",
+        "question": "How concentrated is each company's revenue among its largest customers, as disclosed in the latest 10-K risk factors of NVIDIA, AMD and Intel?"
+      },
+      {
+        "id": "q0033",
+        "class": "global",
+        "question": "How do NVIDIA, AMD and Intel each describe the role of their software and developer ecosystems in competing for AI and computing workloads, according to their latest 10-Ks?"
+      },
+      {
+        "id": "q0034",
+        "class": "global",
+        "question": "How do NVIDIA, AMD and Intel each characterise the risk of third-party intellectual property infringement claims in their latest 10-Ks, and which of them points to non-practicing entities?"
+      },
+      {
+        "id": "q0037",
+        "class": "local",
+        "question": "According to NVIDIA's FY2026 10-K, how have U.S. export controls affected demand for NVIDIA products outside China, and what has the Chinese government done to discourage purchases of its data center products?"
+      },
+      {
+        "id": "q0038",
+        "class": "local",
+        "question": "What is the status of NVIDIA's licensed H20 and H200 sales to China as described in its FY2026 10-K, including the financial impact and conditions attached to the licenses?"
+      },
+      {
+        "id": "q0041",
+        "class": "local",
+        "question": "How concentrated was NVIDIA's revenue among direct customers in fiscal year 2026, and what risks does NVIDIA associate with that concentration?"
+      },
+      {
+        "id": "q0043",
+        "class": "local",
+        "question": "What drove growth in NVIDIA's Compute & Networking segment in the first nine months of fiscal year 2026, broken down between Data Center computing and networking?"
+      },
+      {
+        "id": "q0044",
+        "class": "local",
+        "question": "In its Q3 fiscal 2026 10-Q, how does NVIDIA say export controls could affect its gaming and networking products beyond data center GPUs?"
+      },
+      {
+        "id": "q0045",
+        "class": "local",
+        "question": "How did the April 2025 U.S. export license requirement affect AMD's MI308 business over fiscal 2025, according to AMD's FY2025 10-K?"
+      },
+      {
+        "id": "q0046",
+        "class": "local",
+        "question": "Which manufacturers does AMD rely on to produce its products, per its FY2025 10-K, and what supply risks does it describe from that reliance?"
+      },
+      {
+        "id": "q0048",
+        "class": "local",
+        "question": "What drove AMD's Data Center segment revenue and operating income in 2025, according to its FY2025 10-K MD&A?"
+      },
+      {
+        "id": "q0049",
+        "class": "local",
+        "question": "How did AMD change its segment reporting in fiscal 2025, and what drove the growth of the Client and Gaming segment that year?"
+      },
+      {
+        "id": "q0050",
+        "class": "local",
+        "question": "What were AMD's main product and AI strategy milestones in 2025, as described in the FY2025 10-K MD&A?"
+      },
+      {
+        "id": "q0051",
+        "class": "local",
+        "question": "What happened with AMD's acquisition of ZT Systems during fiscal 2025, including the subsequent divestiture of its manufacturing business?"
+      },
+      {
+        "id": "q0052",
+        "class": "local",
+        "question": "What caused the declines in AMD's Gaming and Embedded segment revenue in fiscal 2024?"
+      },
+      {
+        "id": "q0053",
+        "class": "local",
+        "question": "How does AMD's FY2025 10-K describe the status of the AI Diffusion Rule and the risks from potential replacement export rules and tariffs?"
+      },
+      {
+        "id": "q0054",
+        "class": "local",
+        "question": "How did Intel change its approach to deploying manufacturing capital in 2025, and what does its FY2025 10-K say would happen to Intel 14A if it cannot secure a significant external customer?"
+      },
+      {
+        "id": "q0055",
+        "class": "local",
+        "question": "What were the key terms of Intel's August 2025 agreement with the U.S. Department of Commerce, as described in its FY2025 10-K?"
+      },
+      {
+        "id": "q0057",
+        "class": "local",
+        "question": "What did Intel's 2025 Restructuring Plan aim to do, and what restructuring and related charges did Intel record in 2025?"
+      },
+      {
+        "id": "q0059",
+        "class": "local",
+        "question": "How did Intel describe Intel Foundry's strategy, process technology offerings and competitors in its FY2024 10-K?"
+      },
+      {
+        "id": "q0063",
+        "class": "local",
+        "question": "Who held Intel's interim leadership roles as of its FY2024 10-K, and what are the backgrounds of the interim co-CEO who is also CFO and of the interim Executive Chair?"
+      },
+      {
+        "id": "q0065",
+        "class": "local",
+        "question": "Where does the European Commission competition case against Intel stand in its FY2025 10-K, and how much has Intel accrued for it?"
+      },
+      {
+        "id": "q0066",
+        "class": "local",
+        "question": "How did NVIDIA return capital to shareholders in fiscal year 2026, and how much repurchase authorization remained at year end?"
+      },
+      {
+        "id": "q0068",
+        "class": "local",
+        "question": "What is the current status of the securities class action and related derivative lawsuits against NVIDIA over cryptocurrency-mining demand, per its FY2026 10-K?"
+      },
+      {
+        "id": "q0070",
+        "class": "local",
+        "question": "What risks does NVIDIA's FY2026 10-K associate with its acquisitions and strategic investments, including its planned OpenAI deal?"
+      },
+      {
+        "id": "q0072",
+        "class": "lookup",
+        "question": "In NVIDIA's fiscal year 2026, what share of total revenue came from its two largest direct customers?"
+      },
+      {
+        "id": "q0073",
+        "class": "lookup",
+        "question": "By how much did NVIDIA's Data Center revenue grow in fiscal year 2025, and what drove the growth?"
+      },
+      {
+        "id": "q0074",
+        "class": "lookup",
+        "question": "Why did NVIDIA's gross margin decrease in fiscal year 2026?"
+      },
+      {
+        "id": "q0077",
+        "class": "lookup",
+        "question": "In the third quarter of NVIDIA's fiscal year 2025, approximately what share of Data Center revenue came from cloud service providers?"
+      },
+      {
+        "id": "q0079",
+        "class": "lookup",
+        "question": "What was NVIDIA's net income for the second quarter of fiscal year 2026?"
+      },
+      {
+        "id": "q0080",
+        "class": "lookup",
+        "question": "Why did NVIDIA's Graphics segment operating income decline in fiscal year 2025?"
+      },
+      {
+        "id": "q0081",
+        "class": "lookup",
+        "question": "What was AMD's Client net revenue in fiscal year 2025, and what drove the change?"
+      },
+      {
+        "id": "q0083",
+        "class": "lookup",
+        "question": "What were AMD's cash, cash equivalents and short-term investments and total debt at the end of fiscal year 2025?"
+      },
+      {
+        "id": "q0084",
+        "class": "lookup",
+        "question": "What happened to AMD's Gaming segment net revenue and operating income in fiscal year 2024?"
+      },
+      {
+        "id": "q0085",
+        "class": "lookup",
+        "question": "What was AMD's gross margin in the second quarter of fiscal 2025, and why did it fall?"
+      },
+      {
+        "id": "q0086",
+        "class": "lookup",
+        "question": "What were AMD's cash, cash equivalents and short-term investments as of the end of the third quarter of fiscal 2024?"
+      },
+      {
+        "id": "q0087",
+        "class": "lookup",
+        "question": "What was AMD's gross margin for the first quarter of fiscal 2025, and what drove the increase?"
+      },
+      {
+        "id": "q0089",
+        "class": "lookup",
+        "question": "On what terms did AMD complete the sale of the ZT Systems manufacturing business, as reported in its third-quarter fiscal 2025 10-Q?"
+      },
+      {
+        "id": "q0090",
+        "class": "lookup",
+        "question": "How did AMD change its reportable segment structure as described in its first-quarter fiscal 2025 10-Q?"
+      },
+      {
+        "id": "q0092",
+        "class": "lookup",
+        "question": "According to Intel's fiscal 2024 10-K, what total charges did Intel expect under the 2024 Restructuring Plan, and what was the plan's cumulative cost as of December 28, 2024?"
+      },
+      {
+        "id": "q0094",
+        "class": "lookup",
+        "question": "Under AMD's 2024 Restructuring Plan described in its fiscal 2024 10-K, by roughly what share of headcount would the global workforce be reduced, and how much accrued restructuring liability remained at December 28, 2024?"
+      },
+      {
+        "id": "q0097",
+        "class": "lookup",
+        "question": "How much did Intel record in non-cash impairments and accelerated depreciation of manufacturing assets in 2025, and in which operating segment were they recognized?"
+      },
+      {
+        "id": "q0098",
+        "class": "lookup",
+        "question": "In the third quarter of 2024, how much did Intel record in non-cash impairments and accelerated depreciation after concluding its Intel 7 manufacturing asset portfolio exceeded capacity requirements?"
+      },
+      {
+        "id": "q0099",
+        "class": "lookup",
+        "question": "In Intel's Q3 2025 10-Q, what receivable did Intel recognize at September 27, 2025 for deferred Altera sale consideration, and what stake in Altera did it retain?"
+      },
+      {
+        "id": "q0100",
+        "class": "lookup",
+        "question": "What were Intel's Network and Edge (NEX) segment revenue and operating income in Q1 2024, and what operating margin did the segment report?"
+      },
+      {
+        "id": "q0102",
+        "class": "lookup",
+        "question": "What were Intel's work-in-process and finished-goods inventories at March 29, 2025?"
+      },
+      {
+        "id": "q0104",
+        "class": "lookup",
+        "question": "How large was the inventory provision NVIDIA recorded in cost of revenue in the first quarter of fiscal 2026, and how much of it related to H20 product inventory?"
+      },
+      {
+        "id": "q0105",
+        "class": "lookup",
+        "question": "As of October 27, 2024, how much did NVIDIA have in outstanding inventory purchase and long-term supply and capacity obligations, and how much of its other non-inventory purchase obligations were multi-year cloud service agreements?"
+      },
+      {
+        "id": "q0106",
+        "class": "lookup",
+        "question": "During fiscal year 2026, how many shares did NVIDIA withhold through net share settlements to cover employee tax withholding, and what was their total value?"
+      },
+      {
+        "id": "q0107",
+        "class": "lookup",
+        "question": "What inventory provisions did NVIDIA record in cost of revenue in fiscal years 2025 and 2024, according to its fiscal 2025 10-K?"
+      },
+      {
+        "id": "q0108",
+        "class": "lookup",
+        "question": "How many shares did AMD repurchase under its Repurchase Program in the first quarter of 2025, and for how much?"
+      },
+      {
+        "id": "q0109",
+        "class": "lookup",
+        "question": "By what percentage did AMD's Gaming segment net revenue decline in the first quarter of 2024, and what drove the decline?"
+      },
+      {
+        "id": "q0111",
+        "class": "multi_hop",
+        "question": "How do NVIDIA (fiscal 2026 10-K), AMD (fiscal 2025 10-K) and Intel (fiscal 2025 10-K) each describe their reliance on TSMC?"
+      },
+      {
+        "id": "q0112",
+        "class": "multi_hop",
+        "question": "In calendar 2024, how did data center revenue growth compare between AMD (fiscal 2024) and NVIDIA (fiscal 2025), and what drove it at each company?"
+      },
+      {
+        "id": "q0113",
+        "class": "multi_hop",
+        "question": "How did AMD's Data Center segment and Intel's DCAI segment revenue change in fiscal 2025 versus 2024, and what drove each?"
+      },
+      {
+        "id": "q0115",
+        "class": "multi_hop",
+        "question": "What charges did NVIDIA and AMD each record from the April 2025 U.S. export license requirements on their China-bound data center GPUs, and how did those charges show up in their quarterly results?"
+      },
+      {
+        "id": "q0118",
+        "class": "multi_hop",
+        "question": "How do NVIDIA's and Intel's filings describe NVIDIA's 2025 equity investment in Intel, including its size, price and status, and the partnership that accompanied it?"
+      },
+      {
+        "id": "q0120",
+        "class": "multi_hop",
+        "question": "In their latest annual reports (NVIDIA fiscal 2026; AMD and Intel fiscal 2025), how does each company name the other two as competitors?"
+      },
+      {
+        "id": "q0121",
+        "class": "multi_hop",
+        "question": "What agreements with OpenAI do AMD's fiscal 2025 10-K and NVIDIA's fiscal 2026 10-K disclose, and how far had each progressed?"
+      },
+      {
+        "id": "q0122",
+        "class": "multi_hop",
+        "question": "How did client CPU revenue trend at AMD and at Intel in fiscal 2025, and what explains the different directions?"
+      },
+      {
+        "id": "q0123",
+        "class": "multi_hop",
+        "question": "After the U.S. government granted licenses in 2025 for some China-bound data center GPUs, what did NVIDIA (fiscal 2026 10-K) and AMD (fiscal 2025 10-K) report about licensed shipments and the U.S. government's expected revenue share?"
+      },
+      {
+        "id": "q0124",
+        "class": "multi_hop",
+        "question": "AMD's fiscal 2025 10-K names Altera as a competitor. What happened to Intel's ownership of Altera in 2025, and how does Intel now account for it?"
+      },
+      {
+        "id": "q0125",
+        "class": "multi_hop",
+        "question": "How much did NVIDIA (fiscal 2026) and AMD (fiscal 2025) spend on capital expenditures, and how did each figure change from the prior year?"
+      },
+      {
+        "id": "q0127",
+        "class": "multi_hop",
+        "question": "In the risk factor listing what could cause NVIDIA to misestimate demand, how did the customer-investment factor change between the fiscal 2025 and fiscal 2026 10-Ks?"
+      },
+      {
+        "id": "q0128",
+        "class": "multi_hop",
+        "question": "What did NVIDIA's Q3 fiscal 2025 10-Q say about the timing of Blackwell production shipments, and what did the fiscal 2025 10-K later report actually happened?"
+      },
+      {
+        "id": "q0129",
+        "class": "multi_hop",
+        "question": "How did the growth rates and stated drivers of NVIDIA's Gaming and Professional Visualization revenue in fiscal year 2026 compare with fiscal year 2025?"
+      },
+      {
+        "id": "q0131",
+        "class": "multi_hop",
+        "question": "What did AMD say drove its Data Center segment revenue growth in the second quarter of 2024, and how did the drivers and segment profitability differ in the second quarter of 2025?"
+      },
+      {
+        "id": "q0132",
+        "class": "multi_hop",
+        "question": "AMD's fiscal 2024 10-K described when its 2024 Restructuring Plan would be completed and how much was accrued. What did the first-quarter 2025 10-Q then report about completion, total charges and remaining liabilities?"
+      },
+      {
+        "id": "q0133",
+        "class": "multi_hop",
+        "question": "How has AMD's Embedded segment revenue moved across the third quarters of 2023, 2024 and 2025, and how did AMD's explanation for the decline change between its Q3 2024 and Q3 2025 10-Qs?"
+      },
+      {
+        "id": "q0134",
+        "class": "multi_hop",
+        "question": "How did the mix of unit shipment growth and average selling price growth behind AMD's Client revenue increase change between the third quarter of 2024 and the third quarter of 2025?"
+      },
+      {
+        "id": "q0136",
+        "class": "multi_hop",
+        "question": "How did the server volume and server ASP trends behind Intel's DCAI revenue in the second quarter of 2025 compare with those in the second quarter of 2024, and what did Intel give as the reasons?"
+      },
+      {
+        "id": "q0137",
+        "class": "multi_hop",
+        "question": "Intel's fiscal 2024 10-K disclosed capital expenditure commitments for 2025. How did Intel's actual 2025 additions to property, plant and equipment, reported in the fiscal 2025 10-K, compare with that commitment and with 2024 spending, and how did Intel explain the change in investing cash flows?"
+      },
+      {
+        "id": "q0138",
+        "class": "multi_hop",
+        "question": "How did Intel Foundry's third-quarter operating loss move from Q3 2023 to Q3 2024 to Q3 2025, and what were the main drivers of each change?"
+      },
+      {
+        "id": "q0139",
+        "class": "multi_hop",
+        "question": "How did Intel's plans for its Ohio and Germany fabs, as described in its fiscal 2024 10-K, change by the time of its fiscal 2025 10-K?"
+      },
+      {
+        "id": "q0140",
+        "class": "multi_hop",
+        "question": "Intel's client (notebook and desktop) revenue fell in the first quarter of 2025. How does the Q1 2025 10-Q explain the decline, and what did the Q1 2024 10-Q report about client volumes, revenue and ASPs in that prior-year quarter?"
+      }
+    ],
+    "graph_local": [
+      {
+        "id": "q0004",
+        "class": "decline",
+        "question": "Is AMD undervalued relative to its 2025 earnings?"
+      },
+      {
+        "id": "q0005",
+        "class": "decline",
+        "question": "I hold AMD shares. After reading the Q3 2025 10-Q, should I sell before the year-end results?"
+      },
+      {
+        "id": "q0006",
+        "class": "decline",
+        "question": "How much of a $50,000 portfolio should I put into AMD versus NVIDIA based on their latest annual reports?"
+      },
+      {
+        "id": "q0007",
+        "class": "decline",
+        "question": "Intel's 2025 10-K describes its turnaround plan. Is now a good time to buy INTC shares?"
+      },
+      {
+        "id": "q0008",
+        "class": "decline",
+        "question": "Should I hold or sell my Intel stock given the government equity stake disclosed in its Q3 2025 10-Q?"
+      },
+      {
+        "id": "q0009",
+        "class": "decline",
+        "question": "Which of NVIDIA, AMD or Intel is the best stock to own for AI exposure over the next five years, according to their 10-Ks?"
+      },
+      {
+        "id": "q0011",
+        "class": "unanswerable",
+        "question": "How much revenue did NVIDIA earn from Microsoft in fiscal year 2026?"
+      },
+      {
+        "id": "q0012",
+        "class": "unanswerable",
+        "question": "How many Blackwell GPUs did NVIDIA ship in fiscal year 2026?"
+      },
+      {
+        "id": "q0013",
+        "class": "unanswerable",
+        "question": "What price per wafer does NVIDIA pay TSMC for its leading-edge GPUs?"
+      },
+      {
+        "id": "q0018",
+        "class": "unanswerable",
+        "question": "What yield percentage did Intel achieve on the Intel 18A process by the end of 2025?"
+      },
+      {
+        "id": "q0019",
+        "class": "unanswerable",
+        "question": "How many Intel employees work at its Oregon sites?"
+      },
+      {
+        "id": "q0022",
+        "class": "global",
+        "question": "How do NVIDIA, AMD and Intel each describe the competitive threat from customers, such as large cloud providers, designing their own chips?"
+      },
+      {
+        "id": "q0023",
+        "class": "global",
+        "question": "Beyond lost direct sales, what knock-on competitive effects of U.S.-China export controls and trade tensions do NVIDIA, AMD and Intel describe in their latest 10-Ks?"
+      },
+      {
+        "id": "q0024",
+        "class": "global",
+        "question": "How do the climate and environmental-regulation risks described by NVIDIA, AMD and Intel in their latest 10-Ks differ, given that two are fabless and one runs its own fabs?"
+      },
+      {
+        "id": "q0025",
+        "class": "global",
+        "question": "How does the share price shape the talent-retention risk that NVIDIA, AMD and Intel each describe in their latest 10-K risk factors?"
+      },
+      {
+        "id": "q0026",
+        "class": "global",
+        "question": "How did AI accelerator demand show up in each company's segment results in its latest 10-K, and what accelerator-related inventory charges offset it?"
+      },
+      {
+        "id": "q0028",
+        "class": "global",
+        "question": "How do NVIDIA, AMD and Intel each address the OECD Pillar Two global minimum tax in their latest 10-Ks, and has any of them quantified its impact?"
+      },
+      {
+        "id": "q0030",
+        "class": "global",
+        "question": "How does dependence on external foundries, and on TSMC in particular, differ across NVIDIA, AMD and Intel according to their latest 10-K risk factors?"
+      },
+      {
+        "id": "q0031",
+        "class": "global",
+        "question": "How concentrated is each company's revenue among its largest customers, as disclosed in the latest 10-K risk factors of NVIDIA, AMD and Intel?"
+      },
+      {
+        "id": "q0033",
+        "class": "global",
+        "question": "How do NVIDIA, AMD and Intel each describe the role of their software and developer ecosystems in competing for AI and computing workloads, according to their latest 10-Ks?"
+      },
+      {
+        "id": "q0034",
+        "class": "global",
+        "question": "How do NVIDIA, AMD and Intel each characterise the risk of third-party intellectual property infringement claims in their latest 10-Ks, and which of them points to non-practicing entities?"
+      },
+      {
+        "id": "q0037",
+        "class": "local",
+        "question": "According to NVIDIA's FY2026 10-K, how have U.S. export controls affected demand for NVIDIA products outside China, and what has the Chinese government done to discourage purchases of its data center products?"
+      },
+      {
+        "id": "q0038",
+        "class": "local",
+        "question": "What is the status of NVIDIA's licensed H20 and H200 sales to China as described in its FY2026 10-K, including the financial impact and conditions attached to the licenses?"
+      },
+      {
+        "id": "q0041",
+        "class": "local",
+        "question": "How concentrated was NVIDIA's revenue among direct customers in fiscal year 2026, and what risks does NVIDIA associate with that concentration?"
+      },
+      {
+        "id": "q0043",
+        "class": "local",
+        "question": "What drove growth in NVIDIA's Compute & Networking segment in the first nine months of fiscal year 2026, broken down between Data Center computing and networking?"
+      },
+      {
+        "id": "q0044",
+        "class": "local",
+        "question": "In its Q3 fiscal 2026 10-Q, how does NVIDIA say export controls could affect its gaming and networking products beyond data center GPUs?"
+      },
+      {
+        "id": "q0045",
+        "class": "local",
+        "question": "How did the April 2025 U.S. export license requirement affect AMD's MI308 business over fiscal 2025, according to AMD's FY2025 10-K?"
+      },
+      {
+        "id": "q0046",
+        "class": "local",
+        "question": "Which manufacturers does AMD rely on to produce its products, per its FY2025 10-K, and what supply risks does it describe from that reliance?"
+      },
+      {
+        "id": "q0048",
+        "class": "local",
+        "question": "What drove AMD's Data Center segment revenue and operating income in 2025, according to its FY2025 10-K MD&A?"
+      },
+      {
+        "id": "q0049",
+        "class": "local",
+        "question": "How did AMD change its segment reporting in fiscal 2025, and what drove the growth of the Client and Gaming segment that year?"
+      },
+      {
+        "id": "q0050",
+        "class": "local",
+        "question": "What were AMD's main product and AI strategy milestones in 2025, as described in the FY2025 10-K MD&A?"
+      },
+      {
+        "id": "q0051",
+        "class": "local",
+        "question": "What happened with AMD's acquisition of ZT Systems during fiscal 2025, including the subsequent divestiture of its manufacturing business?"
+      },
+      {
+        "id": "q0052",
+        "class": "local",
+        "question": "What caused the declines in AMD's Gaming and Embedded segment revenue in fiscal 2024?"
+      },
+      {
+        "id": "q0053",
+        "class": "local",
+        "question": "How does AMD's FY2025 10-K describe the status of the AI Diffusion Rule and the risks from potential replacement export rules and tariffs?"
+      },
+      {
+        "id": "q0054",
+        "class": "local",
+        "question": "How did Intel change its approach to deploying manufacturing capital in 2025, and what does its FY2025 10-K say would happen to Intel 14A if it cannot secure a significant external customer?"
+      },
+      {
+        "id": "q0055",
+        "class": "local",
+        "question": "What were the key terms of Intel's August 2025 agreement with the U.S. Department of Commerce, as described in its FY2025 10-K?"
+      },
+      {
+        "id": "q0057",
+        "class": "local",
+        "question": "What did Intel's 2025 Restructuring Plan aim to do, and what restructuring and related charges did Intel record in 2025?"
+      },
+      {
+        "id": "q0059",
+        "class": "local",
+        "question": "How did Intel describe Intel Foundry's strategy, process technology offerings and competitors in its FY2024 10-K?"
+      },
+      {
+        "id": "q0063",
+        "class": "local",
+        "question": "Who held Intel's interim leadership roles as of its FY2024 10-K, and what are the backgrounds of the interim co-CEO who is also CFO and of the interim Executive Chair?"
+      },
+      {
+        "id": "q0065",
+        "class": "local",
+        "question": "Where does the European Commission competition case against Intel stand in its FY2025 10-K, and how much has Intel accrued for it?"
+      },
+      {
+        "id": "q0066",
+        "class": "local",
+        "question": "How did NVIDIA return capital to shareholders in fiscal year 2026, and how much repurchase authorization remained at year end?"
+      },
+      {
+        "id": "q0068",
+        "class": "local",
+        "question": "What is the current status of the securities class action and related derivative lawsuits against NVIDIA over cryptocurrency-mining demand, per its FY2026 10-K?"
+      },
+      {
+        "id": "q0070",
+        "class": "local",
+        "question": "What risks does NVIDIA's FY2026 10-K associate with its acquisitions and strategic investments, including its planned OpenAI deal?"
+      },
+      {
+        "id": "q0072",
+        "class": "lookup",
+        "question": "In NVIDIA's fiscal year 2026, what share of total revenue came from its two largest direct customers?"
+      },
+      {
+        "id": "q0073",
+        "class": "lookup",
+        "question": "By how much did NVIDIA's Data Center revenue grow in fiscal year 2025, and what drove the growth?"
+      },
+      {
+        "id": "q0074",
+        "class": "lookup",
+        "question": "Why did NVIDIA's gross margin decrease in fiscal year 2026?"
+      },
+      {
+        "id": "q0077",
+        "class": "lookup",
+        "question": "In the third quarter of NVIDIA's fiscal year 2025, approximately what share of Data Center revenue came from cloud service providers?"
+      },
+      {
+        "id": "q0079",
+        "class": "lookup",
+        "question": "What was NVIDIA's net income for the second quarter of fiscal year 2026?"
+      },
+      {
+        "id": "q0080",
+        "class": "lookup",
+        "question": "Why did NVIDIA's Graphics segment operating income decline in fiscal year 2025?"
+      },
+      {
+        "id": "q0081",
+        "class": "lookup",
+        "question": "What was AMD's Client net revenue in fiscal year 2025, and what drove the change?"
+      },
+      {
+        "id": "q0083",
+        "class": "lookup",
+        "question": "What were AMD's cash, cash equivalents and short-term investments and total debt at the end of fiscal year 2025?"
+      },
+      {
+        "id": "q0084",
+        "class": "lookup",
+        "question": "What happened to AMD's Gaming segment net revenue and operating income in fiscal year 2024?"
+      },
+      {
+        "id": "q0085",
+        "class": "lookup",
+        "question": "What was AMD's gross margin in the second quarter of fiscal 2025, and why did it fall?"
+      },
+      {
+        "id": "q0086",
+        "class": "lookup",
+        "question": "What were AMD's cash, cash equivalents and short-term investments as of the end of the third quarter of fiscal 2024?"
+      },
+      {
+        "id": "q0087",
+        "class": "lookup",
+        "question": "What was AMD's gross margin for the first quarter of fiscal 2025, and what drove the increase?"
+      },
+      {
+        "id": "q0089",
+        "class": "lookup",
+        "question": "On what terms did AMD complete the sale of the ZT Systems manufacturing business, as reported in its third-quarter fiscal 2025 10-Q?"
+      },
+      {
+        "id": "q0090",
+        "class": "lookup",
+        "question": "How did AMD change its reportable segment structure as described in its first-quarter fiscal 2025 10-Q?"
+      },
+      {
+        "id": "q0092",
+        "class": "lookup",
+        "question": "According to Intel's fiscal 2024 10-K, what total charges did Intel expect under the 2024 Restructuring Plan, and what was the plan's cumulative cost as of December 28, 2024?"
+      },
+      {
+        "id": "q0094",
+        "class": "lookup",
+        "question": "Under AMD's 2024 Restructuring Plan described in its fiscal 2024 10-K, by roughly what share of headcount would the global workforce be reduced, and how much accrued restructuring liability remained at December 28, 2024?"
+      },
+      {
+        "id": "q0097",
+        "class": "lookup",
+        "question": "How much did Intel record in non-cash impairments and accelerated depreciation of manufacturing assets in 2025, and in which operating segment were they recognized?"
+      },
+      {
+        "id": "q0098",
+        "class": "lookup",
+        "question": "In the third quarter of 2024, how much did Intel record in non-cash impairments and accelerated depreciation after concluding its Intel 7 manufacturing asset portfolio exceeded capacity requirements?"
+      },
+      {
+        "id": "q0099",
+        "class": "lookup",
+        "question": "In Intel's Q3 2025 10-Q, what receivable did Intel recognize at September 27, 2025 for deferred Altera sale consideration, and what stake in Altera did it retain?"
+      },
+      {
+        "id": "q0100",
+        "class": "lookup",
+        "question": "What were Intel's Network and Edge (NEX) segment revenue and operating income in Q1 2024, and what operating margin did the segment report?"
+      },
+      {
+        "id": "q0102",
+        "class": "lookup",
+        "question": "What were Intel's work-in-process and finished-goods inventories at March 29, 2025?"
+      },
+      {
+        "id": "q0104",
+        "class": "lookup",
+        "question": "How large was the inventory provision NVIDIA recorded in cost of revenue in the first quarter of fiscal 2026, and how much of it related to H20 product inventory?"
+      },
+      {
+        "id": "q0105",
+        "class": "lookup",
+        "question": "As of October 27, 2024, how much did NVIDIA have in outstanding inventory purchase and long-term supply and capacity obligations, and how much of its other non-inventory purchase obligations were multi-year cloud service agreements?"
+      },
+      {
+        "id": "q0106",
+        "class": "lookup",
+        "question": "During fiscal year 2026, how many shares did NVIDIA withhold through net share settlements to cover employee tax withholding, and what was their total value?"
+      },
+      {
+        "id": "q0107",
+        "class": "lookup",
+        "question": "What inventory provisions did NVIDIA record in cost of revenue in fiscal years 2025 and 2024, according to its fiscal 2025 10-K?"
+      },
+      {
+        "id": "q0108",
+        "class": "lookup",
+        "question": "How many shares did AMD repurchase under its Repurchase Program in the first quarter of 2025, and for how much?"
+      },
+      {
+        "id": "q0109",
+        "class": "lookup",
+        "question": "By what percentage did AMD's Gaming segment net revenue decline in the first quarter of 2024, and what drove the decline?"
+      },
+      {
+        "id": "q0111",
+        "class": "multi_hop",
+        "question": "How do NVIDIA (fiscal 2026 10-K), AMD (fiscal 2025 10-K) and Intel (fiscal 2025 10-K) each describe their reliance on TSMC?"
+      },
+      {
+        "id": "q0112",
+        "class": "multi_hop",
+        "question": "In calendar 2024, how did data center revenue growth compare between AMD (fiscal 2024) and NVIDIA (fiscal 2025), and what drove it at each company?"
+      },
+      {
+        "id": "q0113",
+        "class": "multi_hop",
+        "question": "How did AMD's Data Center segment and Intel's DCAI segment revenue change in fiscal 2025 versus 2024, and what drove each?"
+      },
+      {
+        "id": "q0115",
+        "class": "multi_hop",
+        "question": "What charges did NVIDIA and AMD each record from the April 2025 U.S. export license requirements on their China-bound data center GPUs, and how did those charges show up in their quarterly results?"
+      },
+      {
+        "id": "q0118",
+        "class": "multi_hop",
+        "question": "How do NVIDIA's and Intel's filings describe NVIDIA's 2025 equity investment in Intel, including its size, price and status, and the partnership that accompanied it?"
+      },
+      {
+        "id": "q0120",
+        "class": "multi_hop",
+        "question": "In their latest annual reports (NVIDIA fiscal 2026; AMD and Intel fiscal 2025), how does each company name the other two as competitors?"
+      },
+      {
+        "id": "q0121",
+        "class": "multi_hop",
+        "question": "What agreements with OpenAI do AMD's fiscal 2025 10-K and NVIDIA's fiscal 2026 10-K disclose, and how far had each progressed?"
+      },
+      {
+        "id": "q0122",
+        "class": "multi_hop",
+        "question": "How did client CPU revenue trend at AMD and at Intel in fiscal 2025, and what explains the different directions?"
+      },
+      {
+        "id": "q0123",
+        "class": "multi_hop",
+        "question": "After the U.S. government granted licenses in 2025 for some China-bound data center GPUs, what did NVIDIA (fiscal 2026 10-K) and AMD (fiscal 2025 10-K) report about licensed shipments and the U.S. government's expected revenue share?"
+      },
+      {
+        "id": "q0124",
+        "class": "multi_hop",
+        "question": "AMD's fiscal 2025 10-K names Altera as a competitor. What happened to Intel's ownership of Altera in 2025, and how does Intel now account for it?"
+      },
+      {
+        "id": "q0125",
+        "class": "multi_hop",
+        "question": "How much did NVIDIA (fiscal 2026) and AMD (fiscal 2025) spend on capital expenditures, and how did each figure change from the prior year?"
+      },
+      {
+        "id": "q0127",
+        "class": "multi_hop",
+        "question": "In the risk factor listing what could cause NVIDIA to misestimate demand, how did the customer-investment factor change between the fiscal 2025 and fiscal 2026 10-Ks?"
+      },
+      {
+        "id": "q0128",
+        "class": "multi_hop",
+        "question": "What did NVIDIA's Q3 fiscal 2025 10-Q say about the timing of Blackwell production shipments, and what did the fiscal 2025 10-K later report actually happened?"
+      },
+      {
+        "id": "q0129",
+        "class": "multi_hop",
+        "question": "How did the growth rates and stated drivers of NVIDIA's Gaming and Professional Visualization revenue in fiscal year 2026 compare with fiscal year 2025?"
+      },
+      {
+        "id": "q0131",
+        "class": "multi_hop",
+        "question": "What did AMD say drove its Data Center segment revenue growth in the second quarter of 2024, and how did the drivers and segment profitability differ in the second quarter of 2025?"
+      },
+      {
+        "id": "q0132",
+        "class": "multi_hop",
+        "question": "AMD's fiscal 2024 10-K described when its 2024 Restructuring Plan would be completed and how much was accrued. What did the first-quarter 2025 10-Q then report about completion, total charges and remaining liabilities?"
+      },
+      {
+        "id": "q0133",
+        "class": "multi_hop",
+        "question": "How has AMD's Embedded segment revenue moved across the third quarters of 2023, 2024 and 2025, and how did AMD's explanation for the decline change between its Q3 2024 and Q3 2025 10-Qs?"
+      },
+      {
+        "id": "q0134",
+        "class": "multi_hop",
+        "question": "How did the mix of unit shipment growth and average selling price growth behind AMD's Client revenue increase change between the third quarter of 2024 and the third quarter of 2025?"
+      },
+      {
+        "id": "q0136",
+        "class": "multi_hop",
+        "question": "How did the server volume and server ASP trends behind Intel's DCAI revenue in the second quarter of 2025 compare with those in the second quarter of 2024, and what did Intel give as the reasons?"
+      },
+      {
+        "id": "q0137",
+        "class": "multi_hop",
+        "question": "Intel's fiscal 2024 10-K disclosed capital expenditure commitments for 2025. How did Intel's actual 2025 additions to property, plant and equipment, reported in the fiscal 2025 10-K, compare with that commitment and with 2024 spending, and how did Intel explain the change in investing cash flows?"
+      },
+      {
+        "id": "q0138",
+        "class": "multi_hop",
+        "question": "How did Intel Foundry's third-quarter operating loss move from Q3 2023 to Q3 2024 to Q3 2025, and what were the main drivers of each change?"
+      },
+      {
+        "id": "q0139",
+        "class": "multi_hop",
+        "question": "How did Intel's plans for its Ohio and Germany fabs, as described in its fiscal 2024 10-K, change by the time of its fiscal 2025 10-K?"
+      },
+      {
+        "id": "q0140",
+        "class": "multi_hop",
+        "question": "Intel's client (notebook and desktop) revenue fell in the first quarter of 2025. How does the Q1 2025 10-Q explain the decline, and what did the Q1 2024 10-Q report about client volumes, revenue and ASPs in that prior-year quarter?"
+      }
+    ],
+    "graph_traversal": [
+      {
+        "id": "q0026",
+        "class": "global",
+        "question": "How did AI accelerator demand show up in each company's segment results in its latest 10-K, and what accelerator-related inventory charges offset it?"
+      },
+      {
+        "id": "q0049",
+        "class": "local",
+        "question": "How did AMD change its segment reporting in fiscal 2025, and what drove the growth of the Client and Gaming segment that year?"
+      },
+      {
+        "id": "q0051",
+        "class": "local",
+        "question": "What happened with AMD's acquisition of ZT Systems during fiscal 2025, including the subsequent divestiture of its manufacturing business?"
+      },
+      {
+        "id": "q0054",
+        "class": "local",
+        "question": "How did Intel change its approach to deploying manufacturing capital in 2025, and what does its FY2025 10-K say would happen to Intel 14A if it cannot secure a significant external customer?"
+      },
+      {
+        "id": "q0112",
+        "class": "multi_hop",
+        "question": "In calendar 2024, how did data center revenue growth compare between AMD (fiscal 2024) and NVIDIA (fiscal 2025), and what drove it at each company?"
+      },
+      {
+        "id": "q0113",
+        "class": "multi_hop",
+        "question": "How did AMD's Data Center segment and Intel's DCAI segment revenue change in fiscal 2025 versus 2024, and what drove each?"
+      },
+      {
+        "id": "q0115",
+        "class": "multi_hop",
+        "question": "What charges did NVIDIA and AMD each record from the April 2025 U.S. export license requirements on their China-bound data center GPUs, and how did those charges show up in their quarterly results?"
+      },
+      {
+        "id": "q0118",
+        "class": "multi_hop",
+        "question": "How do NVIDIA's and Intel's filings describe NVIDIA's 2025 equity investment in Intel, including its size, price and status, and the partnership that accompanied it?"
+      },
+      {
+        "id": "q0121",
+        "class": "multi_hop",
+        "question": "What agreements with OpenAI do AMD's fiscal 2025 10-K and NVIDIA's fiscal 2026 10-K disclose, and how far had each progressed?"
+      },
+      {
+        "id": "q0122",
+        "class": "multi_hop",
+        "question": "How did client CPU revenue trend at AMD and at Intel in fiscal 2025, and what explains the different directions?"
+      },
+      {
+        "id": "q0123",
+        "class": "multi_hop",
+        "question": "After the U.S. government granted licenses in 2025 for some China-bound data center GPUs, what did NVIDIA (fiscal 2026 10-K) and AMD (fiscal 2025 10-K) report about licensed shipments and the U.S. government's expected revenue share?"
+      },
+      {
+        "id": "q0124",
+        "class": "multi_hop",
+        "question": "AMD's fiscal 2025 10-K names Altera as a competitor. What happened to Intel's ownership of Altera in 2025, and how does Intel now account for it?"
+      },
+      {
+        "id": "q0125",
+        "class": "multi_hop",
+        "question": "How much did NVIDIA (fiscal 2026) and AMD (fiscal 2025) spend on capital expenditures, and how did each figure change from the prior year?"
+      },
+      {
+        "id": "q0127",
+        "class": "multi_hop",
+        "question": "In the risk factor listing what could cause NVIDIA to misestimate demand, how did the customer-investment factor change between the fiscal 2025 and fiscal 2026 10-Ks?"
+      },
+      {
+        "id": "q0128",
+        "class": "multi_hop",
+        "question": "What did NVIDIA's Q3 fiscal 2025 10-Q say about the timing of Blackwell production shipments, and what did the fiscal 2025 10-K later report actually happened?"
+      },
+      {
+        "id": "q0129",
+        "class": "multi_hop",
+        "question": "How did the growth rates and stated drivers of NVIDIA's Gaming and Professional Visualization revenue in fiscal year 2026 compare with fiscal year 2025?"
+      },
+      {
+        "id": "q0131",
+        "class": "multi_hop",
+        "question": "What did AMD say drove its Data Center segment revenue growth in the second quarter of 2024, and how did the drivers and segment profitability differ in the second quarter of 2025?"
+      },
+      {
+        "id": "q0132",
+        "class": "multi_hop",
+        "question": "AMD's fiscal 2024 10-K described when its 2024 Restructuring Plan would be completed and how much was accrued. What did the first-quarter 2025 10-Q then report about completion, total charges and remaining liabilities?"
+      },
+      {
+        "id": "q0133",
+        "class": "multi_hop",
+        "question": "How has AMD's Embedded segment revenue moved across the third quarters of 2023, 2024 and 2025, and how did AMD's explanation for the decline change between its Q3 2024 and Q3 2025 10-Qs?"
+      },
+      {
+        "id": "q0134",
+        "class": "multi_hop",
+        "question": "How did the mix of unit shipment growth and average selling price growth behind AMD's Client revenue increase change between the third quarter of 2024 and the third quarter of 2025?"
+      },
+      {
+        "id": "q0136",
+        "class": "multi_hop",
+        "question": "How did the server volume and server ASP trends behind Intel's DCAI revenue in the second quarter of 2025 compare with those in the second quarter of 2024, and what did Intel give as the reasons?"
+      },
+      {
+        "id": "q0137",
+        "class": "multi_hop",
+        "question": "Intel's fiscal 2024 10-K disclosed capital expenditure commitments for 2025. How did Intel's actual 2025 additions to property, plant and equipment, reported in the fiscal 2025 10-K, compare with that commitment and with 2024 spending, and how did Intel explain the change in investing cash flows?"
+      },
+      {
+        "id": "q0138",
+        "class": "multi_hop",
+        "question": "How did Intel Foundry's third-quarter operating loss move from Q3 2023 to Q3 2024 to Q3 2025, and what were the main drivers of each change?"
+      },
+      {
+        "id": "q0139",
+        "class": "multi_hop",
+        "question": "How did Intel's plans for its Ohio and Germany fabs, as described in its fiscal 2024 10-K, change by the time of its fiscal 2025 10-K?"
+      },
+      {
+        "id": "q0140",
+        "class": "multi_hop",
+        "question": "Intel's client (notebook and desktop) revenue fell in the first quarter of 2025. How does the Q1 2025 10-Q explain the decline, and what did the Q1 2024 10-Q report about client volumes, revenue and ASPs in that prior-year quarter?"
+      }
+    ],
+    "graph_global": [
+      {
+        "id": "q0004",
+        "class": "decline",
+        "question": "Is AMD undervalued relative to its 2025 earnings?"
+      },
+      {
+        "id": "q0005",
+        "class": "decline",
+        "question": "I hold AMD shares. After reading the Q3 2025 10-Q, should I sell before the year-end results?"
+      },
+      {
+        "id": "q0006",
+        "class": "decline",
+        "question": "How much of a $50,000 portfolio should I put into AMD versus NVIDIA based on their latest annual reports?"
+      },
+      {
+        "id": "q0007",
+        "class": "decline",
+        "question": "Intel's 2025 10-K describes its turnaround plan. Is now a good time to buy INTC shares?"
+      },
+      {
+        "id": "q0008",
+        "class": "decline",
+        "question": "Should I hold or sell my Intel stock given the government equity stake disclosed in its Q3 2025 10-Q?"
+      },
+      {
+        "id": "q0009",
+        "class": "decline",
+        "question": "Which of NVIDIA, AMD or Intel is the best stock to own for AI exposure over the next five years, according to their 10-Ks?"
+      },
+      {
+        "id": "q0011",
+        "class": "unanswerable",
+        "question": "How much revenue did NVIDIA earn from Microsoft in fiscal year 2026?"
+      },
+      {
+        "id": "q0012",
+        "class": "unanswerable",
+        "question": "How many Blackwell GPUs did NVIDIA ship in fiscal year 2026?"
+      },
+      {
+        "id": "q0013",
+        "class": "unanswerable",
+        "question": "What price per wafer does NVIDIA pay TSMC for its leading-edge GPUs?"
+      },
+      {
+        "id": "q0018",
+        "class": "unanswerable",
+        "question": "What yield percentage did Intel achieve on the Intel 18A process by the end of 2025?"
+      },
+      {
+        "id": "q0019",
+        "class": "unanswerable",
+        "question": "How many Intel employees work at its Oregon sites?"
+      },
+      {
+        "id": "q0022",
+        "class": "global",
+        "question": "How do NVIDIA, AMD and Intel each describe the competitive threat from customers, such as large cloud providers, designing their own chips?"
+      },
+      {
+        "id": "q0023",
+        "class": "global",
+        "question": "Beyond lost direct sales, what knock-on competitive effects of U.S.-China export controls and trade tensions do NVIDIA, AMD and Intel describe in their latest 10-Ks?"
+      },
+      {
+        "id": "q0024",
+        "class": "global",
+        "question": "How do the climate and environmental-regulation risks described by NVIDIA, AMD and Intel in their latest 10-Ks differ, given that two are fabless and one runs its own fabs?"
+      },
+      {
+        "id": "q0025",
+        "class": "global",
+        "question": "How does the share price shape the talent-retention risk that NVIDIA, AMD and Intel each describe in their latest 10-K risk factors?"
+      },
+      {
+        "id": "q0026",
+        "class": "global",
+        "question": "How did AI accelerator demand show up in each company's segment results in its latest 10-K, and what accelerator-related inventory charges offset it?"
+      },
+      {
+        "id": "q0028",
+        "class": "global",
+        "question": "How do NVIDIA, AMD and Intel each address the OECD Pillar Two global minimum tax in their latest 10-Ks, and has any of them quantified its impact?"
+      },
+      {
+        "id": "q0030",
+        "class": "global",
+        "question": "How does dependence on external foundries, and on TSMC in particular, differ across NVIDIA, AMD and Intel according to their latest 10-K risk factors?"
+      },
+      {
+        "id": "q0031",
+        "class": "global",
+        "question": "How concentrated is each company's revenue among its largest customers, as disclosed in the latest 10-K risk factors of NVIDIA, AMD and Intel?"
+      },
+      {
+        "id": "q0033",
+        "class": "global",
+        "question": "How do NVIDIA, AMD and Intel each describe the role of their software and developer ecosystems in competing for AI and computing workloads, according to their latest 10-Ks?"
+      },
+      {
+        "id": "q0034",
+        "class": "global",
+        "question": "How do NVIDIA, AMD and Intel each characterise the risk of third-party intellectual property infringement claims in their latest 10-Ks, and which of them points to non-practicing entities?"
+      },
+      {
+        "id": "q0111",
+        "class": "multi_hop",
+        "question": "How do NVIDIA (fiscal 2026 10-K), AMD (fiscal 2025 10-K) and Intel (fiscal 2025 10-K) each describe their reliance on TSMC?"
+      },
+      {
+        "id": "q0120",
+        "class": "multi_hop",
+        "question": "In their latest annual reports (NVIDIA fiscal 2026; AMD and Intel fiscal 2025), how does each company name the other two as competitors?"
+      }
+    ]
+  },
+  "not_replayed": {
+    "vector": [],
+    "router (dev-best)": [],
+    "router (pre-registered)": [],
+    "graph_local": [],
+    "graph_traversal": [
+      {
+        "id": "q0004",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rLKyJUp5Wbtrpg26P'}"
+      },
+      {
+        "id": "q0005",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rM294JrquMKoZHGVb'}"
+      },
+      {
+        "id": "q0006",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rMTgm3TCYWep4KZRh'}"
+      },
+      {
+        "id": "q0007",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rMwT2cpwgnG2WC2Q2'}"
+      },
+      {
+        "id": "q0008",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rNPjkQWYoswvb6U2x'}"
+      },
+      {
+        "id": "q0009",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rNr2fBRypoWAJtwxk'}"
+      },
+      {
+        "id": "q0011",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rPKoVVMohaWxXD7AG'}"
+      },
+      {
+        "id": "q0012",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rPop71hSE8xbLV839'}"
+      },
+      {
+        "id": "q0013",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rQJ6Lpvaa2KitmRny'}"
+      },
+      {
+        "id": "q0018",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rQkdKcRSz3SwgKNS6'}"
+      },
+      {
+        "id": "q0019",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rRZjHp6eUL4x9zuvx'}"
+      },
+      {
+        "id": "q0022",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rS2kvAMce6CaRMbHv'}"
+      },
+      {
+        "id": "q0023",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rSZGEKVCGsLdLu2qK'}"
+      },
+      {
+        "id": "q0024",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rT1YTpnsdFrweEJKC'}"
+      },
+      {
+        "id": "q0025",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rTkCaHGcWwnE8tSx1'}"
+      },
+      {
+        "id": "q0028",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rUrBSUD9b47vah2pC'}"
+      },
+      {
+        "id": "q0030",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rVFjMY4p8K8dkRUMJ'}"
+      },
+      {
+        "id": "q0031",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rVzsuSaeJQTzsD9gf'}"
+      },
+      {
+        "id": "q0033",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rWSBHEYwTWPZHq72h'}"
+      },
+      {
+        "id": "q0034",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rWuTYyrUfAvQ5QVx3'}"
+      },
+      {
+        "id": "q0037",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rXLW7jKp96218oLGP'}"
+      },
+      {
+        "id": "q0038",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rXon2WqzGw8tWyzef'}"
+      },
+      {
+        "id": "q0041",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rYFZW9tEyQe5nWdrc'}"
+      },
+      {
+        "id": "q0043",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rYibaYh5TT8swNW4Z'}"
+      },
+      {
+        "id": "q0044",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rZBdBGPDU1r8gsVJV'}"
+      },
+      {
+        "id": "q0045",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rZcvKDCZfDkj2BGeG'}"
+      },
+      {
+        "id": "q0046",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1ra3UW692LmgsrmccH'}"
+      },
+      {
+        "id": "q0048",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1raUX4pf9UBtUKYJZK'}"
+      },
+      {
+        "id": "q0050",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rbLrPKELLuf3YNG5A'}"
+      },
+      {
+        "id": "q0052",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rc4kpP2TYec5h2a5i'}"
+      },
+      {
+        "id": "q0053",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rckS5BfV8MjRJzvpS'}"
+      },
+      {
+        "id": "q0055",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rdV5pejxmv9Zddq84'}"
+      },
+      {
+        "id": "q0057",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rdv9Ag69jSkcGYD8g'}"
+      },
+      {
+        "id": "q0059",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rePAr4pTMu7nu12yN'}"
+      },
+      {
+        "id": "q0063",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rezNPzTqBsJGYkrrQ'}"
+      },
+      {
+        "id": "q0065",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rfTu9PUJdgtdSoVfM'}"
+      },
+      {
+        "id": "q0066",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rftT4NssAnYWSnHSq'}"
+      },
+      {
+        "id": "q0068",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rgLVXKnkSM8dcJU5U'}"
+      },
+      {
+        "id": "q0070",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rhALyHxLX1oGSesM9'}"
+      },
+      {
+        "id": "q0072",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rhe7mdgcFjLRKRZr1'}"
+      },
+      {
+        "id": "q0073",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1ri6QbXmwR7uEVFKoX'}"
+      },
+      {
+        "id": "q0074",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1ribAjEoNFNHbQ26QD'}"
+      },
+      {
+        "id": "q0077",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rjSGM7dGNJtX2nDyW'}"
+      },
+      {
+        "id": "q0079",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rjqpwNd75BEEUr3mE'}"
+      },
+      {
+        "id": "q0080",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rkJrzDzfke33XiaP2'}"
+      },
+      {
+        "id": "q0081",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rkku5aq2bmCMSdZZe'}"
+      },
+      {
+        "id": "q0083",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rmDgUFN5iPWWaczKV'}"
+      },
+      {
+        "id": "q0084",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rmiwgVfkkgKLRg3A5'}"
+      },
+      {
+        "id": "q0085",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rn8k8c9hT98SsvGTr'}"
+      },
+      {
+        "id": "q0086",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rnbXT5v1ennwGhQ6g'}"
+      },
+      {
+        "id": "q0087",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1ro2KEG4qEf4x7Ry9g'}"
+      },
+      {
+        "id": "q0089",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1roUrnvBMMnt8dmsRt'}"
+      },
+      {
+        "id": "q0090",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1roveT2qDQe28puBQT'}"
+      },
+      {
+        "id": "q0092",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rpPBJHDkMBsGqQZ8U'}"
+      },
+      {
+        "id": "q0094",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rprCTHmWMecnHzRU8'}"
+      },
+      {
+        "id": "q0097",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rqNTYzEfaryBcXTvu'}"
+      },
+      {
+        "id": "q0098",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rrAb2eAy8QgFbSe1m'}"
+      },
+      {
+        "id": "q0099",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rrerg42d7cRjUzgu5'}"
+      },
+      {
+        "id": "q0100",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rs6tRBfzdPYSQXYci'}"
+      },
+      {
+        "id": "q0102",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rsYw7H25bAjsbGU2S'}"
+      },
+      {
+        "id": "q0104",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rszxjY1rwFDkJ1bhX'}"
+      },
+      {
+        "id": "q0105",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rtQmEgBeoeWcZQbfb'}"
+      },
+      {
+        "id": "q0106",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rtvn3zKtw8eKchY9D'}"
+      },
+      {
+        "id": "q0107",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1ruPK1A2ENMvEvJmtN'}"
+      },
+      {
+        "id": "q0108",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1ruvoGMDwfZot2GEXv'}"
+      },
+      {
+        "id": "q0109",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rvcyPzUkCJk2Y8RXV'}"
+      },
+      {
+        "id": "q0111",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rw6Fr3Fb5m3zygh2d'}"
+      },
+      {
+        "id": "q0120",
+        "reason": "graph_traversal arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1rxutKASqQU59pjDzP'}"
+      }
+    ],
+    "graph_global": [
+      {
+        "id": "q0037",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1s75mgp6JSmr4pYXcG'}"
+      },
+      {
+        "id": "q0038",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1s872uqbtEbB5kFZaW'}"
+      },
+      {
+        "id": "q0041",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1s8jjNW8Bw4TS9iPaG'}"
+      },
+      {
+        "id": "q0043",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1s9QRVCXJrJJwKJoJ5'}"
+      },
+      {
+        "id": "q0044",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sADnDN9t2qAvhL1pR'}"
+      },
+      {
+        "id": "q0045",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sAwwCiwn3tuY1frZM'}"
+      },
+      {
+        "id": "q0046",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sBg6fDpm9N4jwpYEK'}"
+      },
+      {
+        "id": "q0048",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sCZRnjWdVVoGDfuQh'}"
+      },
+      {
+        "id": "q0049",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sDFMAkh3SU9qGzHLe'}"
+      },
+      {
+        "id": "q0050",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sDt3N2fw6A3eTtEsC'}"
+      },
+      {
+        "id": "q0051",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sEqr7cRKZvxcRR9Ne'}"
+      },
+      {
+        "id": "q0052",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sFRp8k2LU93fYyQUf'}"
+      },
+      {
+        "id": "q0053",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sG6k23w6yvgh9SQ6a'}"
+      },
+      {
+        "id": "q0054",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sH8FuPhhHKLcmmhaS'}"
+      },
+      {
+        "id": "q0055",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sHrAtZJUsumES6oLW'}"
+      },
+      {
+        "id": "q0057",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sJSswX917cs2q4Wn2'}"
+      },
+      {
+        "id": "q0059",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sKCnNnyFJkyznMFVH'}"
+      },
+      {
+        "id": "q0063",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sKtSomwcz7QqEExZj'}"
+      },
+      {
+        "id": "q0065",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sLhZqd32tGZZFYmjH'}"
+      },
+      {
+        "id": "q0066",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sMYurTiFuWWp284Ee'}"
+      },
+      {
+        "id": "q0068",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sNGpj3fybT3BkkAwW'}"
+      },
+      {
+        "id": "q0070",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sNrYzh2Yibx5g2MXf'}"
+      },
+      {
+        "id": "q0072",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sPnbg9xy1cBWKip9S'}"
+      },
+      {
+        "id": "q0073",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sQU2pDD1a3WDSBiLR'}"
+      },
+      {
+        "id": "q0074",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sR8DnqtnZZYiu8rTi'}"
+      },
+      {
+        "id": "q0077",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sRvqxZXySvurH5pEM'}"
+      },
+      {
+        "id": "q0079",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sSbn17HxhnDogZFPq'}"
+      },
+      {
+        "id": "q0080",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sTDiwvoLKH2o6zr7g'}"
+      },
+      {
+        "id": "q0081",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sUHy4VTJzxS5GVv74'}"
+      },
+      {
+        "id": "q0083",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sUwADjfbhBG4SN1Pw'}"
+      },
+      {
+        "id": "q0084",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sVhou9XKauUT5B5mD'}"
+      },
+      {
+        "id": "q0085",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sWPyfyuHXn1vcqCoo'}"
+      },
+      {
+        "id": "q0086",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sWxx9gCpnK1zxS4Pe'}"
+      },
+      {
+        "id": "q0087",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sXfcma4SoiwwXdcqb'}"
+      },
+      {
+        "id": "q0089",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sYYTVrtMX1u1WsMmr'}"
+      },
+      {
+        "id": "q0090",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sZAQm1ZPvuKh8rGoS'}"
+      },
+      {
+        "id": "q0092",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1saACXScMaPcFmYENn'}"
+      },
+      {
+        "id": "q0094",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sav61TgbGLbbDVYGv'}"
+      },
+      {
+        "id": "q0097",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sbhDr8S1pmesZr1yS'}"
+      },
+      {
+        "id": "q0098",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1scHRni4VK1GmtTaBk'}"
+      },
+      {
+        "id": "q0099",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sdAmNag8wxyjMSgTm'}"
+      },
+      {
+        "id": "q0100",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sdoxSNv3u16uS6Hk7'}"
+      },
+      {
+        "id": "q0102",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sear5DoN6V7CMGRTk'}"
+      },
+      {
+        "id": "q0104",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sfNE7ysiZvGbGfENt'}"
+      },
+      {
+        "id": "q0105",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sgA6irwgw3EDzLG1F'}"
+      },
+      {
+        "id": "q0106",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sgrmBGnJ2i3fbKHen'}"
+      },
+      {
+        "id": "q0107",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1shoppwEAdvqvz8nhj'}"
+      },
+      {
+        "id": "q0108",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1siTG1gq16nASq1eFd'}"
+      },
+      {
+        "id": "q0109",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sj2VVwFH7C9b2qwmk'}"
+      },
+      {
+        "id": "q0112",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1skFfUeUmADubfgn48'}"
+      },
+      {
+        "id": "q0113",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sm2nciEwGRxcTkptH'}"
+      },
+      {
+        "id": "q0115",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1smw7ARDeUqribuHcC'}"
+      },
+      {
+        "id": "q0118",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1snpwwbs1yJuoZZZ93'}"
+      },
+      {
+        "id": "q0121",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sohn5fXHBvq6YfFhU'}"
+      },
+      {
+        "id": "q0122",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1spTfaC2aWVdAcvVjL'}"
+      },
+      {
+        "id": "q0123",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sq9bSAfnkg8cTkvkm'}"
+      },
+      {
+        "id": "q0124",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sr1gYFMRyYPAeAmCi'}"
+      },
+      {
+        "id": "q0125",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1srkLJTzxEy1ntMiST'}"
+      },
+      {
+        "id": "q0127",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1ssTVnh79DbSyzWU1D'}"
+      },
+      {
+        "id": "q0128",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1stk8is2XzqVcjij3r'}"
+      },
+      {
+        "id": "q0129",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1svSb3kYkUyUKYtntG'}"
+      },
+      {
+        "id": "q0131",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1swCUTZy1dTAKUjq6V'}"
+      },
+      {
+        "id": "q0132",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1swtu2hevTRtV7vYsB'}"
+      },
+      {
+        "id": "q0133",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1sxc4Qwiiey332BnEx'}"
+      },
+      {
+        "id": "q0134",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1syTuZQPfP8aR14yQK'}"
+      },
+      {
+        "id": "q0136",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1szAaRHaxo9MwAMSnW'}"
+      },
+      {
+        "id": "q0137",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1t1QUzLwEK4YUF5ria'}"
+      },
+      {
+        "id": "q0138",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1t2FL1HBTL56EfV2YA'}"
+      },
+      {
+        "id": "q0139",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1t3D8ZnTsHixn2EyH3'}"
+      },
+      {
+        "id": "q0140",
+        "reason": "graph_global arm failed (AnswerModelError): Anthropic API call failed: AuthenticationError (HTTP 401): Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011Cgj1t3qq9wjoaeA3PQJv8'}"
+      }
+    ]
+  }
+}

@@ -66,6 +66,35 @@ class Anchor:
 
 
 @dataclass(frozen=True)
+class SupportEdge:
+    """An edge touching an anchor, as the answer trace shows it."""
+
+    type: str
+    other_label: str
+    other_id: str  # the other end's key, or cik / accession_no for a Company or Filing
+    other_name: str | None  # its name or title; None for a Filing
+    outgoing: bool = field(kw_only=True)  # the anchor is the edge's start
+
+
+@dataclass(frozen=True)
+class ChunkSupport:
+    """How one anchor scored one kept chunk in graph_local's ranking (Step 14, display only).
+
+    ``score`` is the anchor's share of the chunk's score: its similarity times one
+    plus the number of its ``edges`` citing the chunk.  A chunk's shares add up to
+    its score.
+    """
+
+    chunk_id: str
+    anchor_label: str
+    anchor_key: str
+    evidenced: bool  # the anchor's own EVIDENCED_BY edge points at the chunk
+    edges: tuple[SupportEdge, ...]  # the anchor's edges whose chunk_ids cite the chunk
+    neighbours: tuple[SupportEdge, ...]  # 2 hops: edges to a node the chunk evidences
+    score: float
+
+
+@dataclass(frozen=True)
 class CypherAttempt:
     """One generated query and how the guard and executor treated it."""
 
@@ -177,6 +206,9 @@ class GraphRetrieval:
     cypher_attempts: tuple[CypherAttempt, ...] = ()
     fallback_reason: FallbackReason | None = None
     global_search: GlobalSearch | None = None  # graph_global only
+    # graph_local (and a traversal fallback): each kept chunk's anchors, in retrieval
+    # order then anchor rank.  For the answer trace only; run files never record it.
+    support: tuple[ChunkSupport, ...] = ()
 
     def __post_init__(self) -> None:
         unknown = sorted(set(self.stages) - set(GRAPH_STAGES))

@@ -51,6 +51,7 @@ from retrieve.arm import (
     ArmError,
     ArmResult,
     ArmSpec,
+    ChunkSupport,
     GraphProvenance,
     GraphRetrieval,
     Retrieval,
@@ -66,7 +67,7 @@ from retrieve.arm_steps import (
     embed_question,
     load_answer_prompt,
 )
-from retrieve.graph_expand import expand, rank_chunks
+from retrieve.graph_expand import chunk_support, expand, rank_chunks
 from retrieve.graph_nodes import NODE_INPUT_TYPE, distinct_texts, read_anchor_nodes
 from retrieve.pricing import embedding_cost
 from retrieve.query_cache import CachedBatchEmbedder, CachedQueryEmbedder, CacheError
@@ -104,6 +105,7 @@ class LocalResult:
     anchors: tuple[Anchor, ...]
     hops: int
     anchor_ms: float
+    support: tuple[ChunkSupport, ...] = ()  # for the answer trace only
 
 
 class LocalSearch:
@@ -138,7 +140,8 @@ class LocalSearch:
             reach = expand(self._driver, anchors, self._hops, self._database) if anchors else {}
             retrieved = rank_chunks(anchors, reach, accession_nos, self._k)
             span.set_attributes(retrieval_attributes(retrieved))
-        return LocalResult(retrieved, anchors, self._hops, (linked - start) * _MS_PER_SECOND)
+        return LocalResult(retrieved, anchors, self._hops, (linked - start) * _MS_PER_SECOND,
+                           chunk_support(anchors, reach, retrieved))
 
 
 class GraphLocalArm:
@@ -228,6 +231,7 @@ class GraphLocalArm:
                 anchors=found.anchors,
                 hops=found.hops,
                 no_anchor=not found.anchors,
+                support=found.support,
             ),
         )
 

@@ -184,7 +184,7 @@ class GraphTraversalArm:
                 retrieved = local.retrieved
                 graph = replace(
                     graph, fallback_reason=reason, anchors=local.anchors, hops=local.hops,
-                    no_anchor=not local.anchors,
+                    no_anchor=not local.anchors, support=local.support,
                     stages=MappingProxyType({**traversal.stages, "anchor_linking":
                                              StageCost(ms=local.anchor_ms)}))
             searched = self._clock()
