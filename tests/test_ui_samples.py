@@ -107,3 +107,20 @@ def test_the_samples_file_round_trips_and_is_stable(tmp_path):
     document = json.loads(first)
     assert document["seed"] == 3
     assert [c["id"] for c in document["chips"]] == [c.id for c in samples.chips]
+
+
+def test_the_committed_samples_file_holds_only_dev_questions_and_six_chips():
+    from ui.options import OPTIONS
+    from ui.samples import SAMPLES_FILE
+
+    samples = read_samples(SAMPLES_FILE)
+    by_id = {r.id: r for r in RECORDS}
+    assert set(samples.options) == {o.label for o in OPTIONS}
+    for found in samples.options.values():
+        for sample in found:
+            record = by_id[sample.id]
+            assert record.split == "dev"
+            assert (sample.class_, sample.question) == (record.class_, record.question)
+    assert [c.class_ for c in samples.chips] == list(CLASSES)
+    assert set(samples.chips) <= set(samples.options["vector"])
+    assert samples.chips == draw_chips(samples.options["vector"], seed=samples.seed)

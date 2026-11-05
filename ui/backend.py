@@ -16,6 +16,7 @@ comes back as a ``BackendError`` in plain words.  With
 """
 from __future__ import annotations
 
+import logging
 import os
 import threading
 import time
@@ -46,11 +47,13 @@ from retrieve.tracing import (
 from ui.committed import SampleMetrics, mean_dev_cost, sample_metrics
 from ui.communities import CommunityInfo
 from ui.errors import (
+    NEO4J_DOWN,
+    POSTGRES_DOWN,
     AnswerFailed,
     DatabaseUnavailable,
     SettingsMissing,
-    SourceNotFound,
     UnpricedModel,
+    neo4j_settings_missing,
 )
 from ui.options import PickerOption, option_spec, picker_option
 from ui.samples import Sample, Samples, read_samples
@@ -62,9 +65,8 @@ if TYPE_CHECKING:
 
 TRACER_NAME = "filingintel.ui"
 _MS_PER_SECOND = 1000.0
-_NEO4J_DOWN = ("Neo4j stopped answering. Start it with docker compose up -d, then ask again.")
-_POSTGRES_DOWN = ("Postgres stopped answering. Start it with docker compose up -d, then ask "
-                  "again.")
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -123,8 +125,8 @@ class LiveBackend:
         samples: Callable[[], Samples] = read_samples,
         probe: Probe | None = None,
         tracing: Callable[[Mapping[str, str]], TracerProvider | None] = build_provider,
-        communities: CommunityReader | None = None,
-        source_reader: SourceReader | None = None,
+        communities: CommunityReader,
+        source_reader: SourceReader,
         clock: Callable[[], float] = time.perf_counter,
     ):
         self._environ = dict(os.environ if environ is None else environ)
@@ -133,8 +135,8 @@ class LiveBackend:
         self._read_samples = samples
         self._samples: Samples | None = None
         self._probe = probe or probe_databases(self._environ)
-        self._communities = communities or _unavailable("communities")
-        self._source_reader = source_reader or _unavailable("source passages")
+        self._communities = communities
+        self._source_reader = source_reader
         self._clock = clock
         self._max_spend = max_spend(self._environ)
         self._provider = tracing(self._environ)
@@ -153,8 +155,10 @@ class LiveBackend:
         spec = option_spec(picked, self._arms)
         _check_settings(spec, self._environ)
         is_sample = question in {s.question for s in self.samples(option)}
-        if not is_sample:
-            check_spend(estimate=self.estimate(option), spent=spent_usd, cap=self._max_spend)
+        # A sample replays for free, so it needs no estimate; but if one ever spent (a
+        # cleared cache), a session already past the cap is still refused.
+        estimate = 0.0 if is_sample else self.estimate(option)
+        check_spend(estimate=estimate, spent=spent_usd, cap=self._max_spend)
         arm, lock = self._arm(picked, spec)
         with lock:
             result, total_ms, trace_id = self._run(arm, question, picked)
@@ -180,10 +184,13 @@ class LiveBackend:
         return sample_metrics(picker_option(option), question_id)
 
     def close(self) -> None:
+        """Close every opened arm, each once its current question is answered."""
         with self._opening:
-            for stack, _, _ in self._open.values():
-                stack.close()
+            opened = list(self._open.values())
             self._open.clear()
+        for stack, _, lock in opened:
+            with lock:
+                stack.close()
         if self._provider is not None:
             self._provider.shutdown()
 
@@ -228,10 +235,10 @@ class LiveBackend:
             raise AnswerFailed(str(exc)) from exc
         except (Neo4jError, DriverError) as exc:
             self._drop(option)
-            raise DatabaseUnavailable(_NEO4J_DOWN) from exc
+            raise DatabaseUnavailable(NEO4J_DOWN) from exc
         except psycopg.OperationalError as exc:
             self._drop(option)
-            raise DatabaseUnavailable(_POSTGRES_DOWN) from exc
+            raise DatabaseUnavailable(POSTGRES_DOWN) from exc
         trace_id = span.get_span_context().trace_id
         return result, total_ms, (f"{trace_id:032x}" if trace_id else None)
 
@@ -242,8 +249,10 @@ class LiveBackend:
         if opened is not None:
             try:
                 opened[0].close()
-            except (Neo4jError, DriverError, psycopg.Error):
-                pass  # the connection is already gone; closing it again can fail
+            except (Neo4jError, DriverError, psycopg.Error) as exc:
+                # The connection is already gone; its message can quote the URL.
+                logger.warning("closing %s after a lost connection failed: %s", option.label,
+                               type(exc).__name__)
 
     def _read_communities(self, result: ArmResult) -> Mapping[str, CommunityInfo]:
         search = result.graph.global_search if result.graph is not None else None
@@ -252,7 +261,7 @@ class LiveBackend:
         try:
             return self._communities(tuple(c.community_id for c in search.calls))
         except (Neo4jError, DriverError) as exc:
-            raise DatabaseUnavailable(_NEO4J_DOWN) from exc
+            raise DatabaseUnavailable(NEO4J_DOWN) from exc
 
 
 def _check_settings(spec: ArmSpec, environ: Mapping[str, str]) -> None:
@@ -274,13 +283,6 @@ def _check_prices(arm: Arm) -> None:
         raise UnpricedModel(f"The cost of this option cannot be shown: {exc}") from exc
 
 
-def _unavailable(what: str) -> Callable[..., object]:
-    def refuse(*_args: object) -> object:
-        raise SourceNotFound(f"this backend reads no {what}")
-
-    return refuse
-
-
 def probe_databases(environ: Mapping[str, str]) -> Probe:
     """A probe that checks the databases *spec* needs answer, before its arm opens."""
 
@@ -297,8 +299,7 @@ def _probe_postgres(environ: Mapping[str, str]) -> None:
     try:
         psycopg.connect(environ.get("DATABASE_URL", ""), connect_timeout=3).close()
     except psycopg.Error as exc:  # the message can quote the URL: never shown
-        raise DatabaseUnavailable("Postgres is not reachable at DATABASE_URL. Start it with "
-                                  "docker compose up -d.") from exc
+        raise DatabaseUnavailable(POSTGRES_DOWN) from exc
 
 
 def _probe_neo4j(environ: Mapping[str, str]) -> None:
@@ -308,7 +309,6 @@ def _probe_neo4j(environ: Mapping[str, str]) -> None:
         with driver_from_env() as driver:
             driver.verify_connectivity()
     except GraphSettingsMissing as exc:
-        raise SettingsMissing(f"{exc}; set it in .env and restart the app.") from exc
+        raise neo4j_settings_missing(exc) from exc
     except (Neo4jError, DriverError, OSError) as exc:
-        raise DatabaseUnavailable("Neo4j is not reachable at NEO4J_URI. Start it with "
-                                  "docker compose up -d.") from exc
+        raise DatabaseUnavailable(NEO4J_DOWN) from exc

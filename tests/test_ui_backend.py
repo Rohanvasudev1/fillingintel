@@ -30,7 +30,7 @@ from retrieve.arm import (
 )
 from retrieve.tracing import FILTER_SPAN, Kind
 from tests.ui_fakes import arm_result
-from ui.backend import LiveBackend
+from ui.backend import Backend, LiveBackend
 from ui.communities import CommunityInfo
 from ui.errors import (
     AnswerFailed,
@@ -118,14 +118,15 @@ def _backend(registry, *, environ=ENV, probe=None, tracing=None, communities=Non
     return LiveBackend(
         environ=environ, arms=registry.specs(), samples=_samples,
         probe=probe or (lambda spec: None), tracing=tracing or (lambda environ: None),
-        communities=communities or (lambda ids: {}), source_reader=source,
+        communities=communities or (lambda ids: {}),
+        source_reader=source or (lambda chunk_id: None),
         clock=clock, response_cache=tmp_path)
 
 
 def test_a_sample_is_answered_with_its_cost_and_time_and_spends_nothing(tmp_path):
     registry = Registry(arm_result(answer_cost=0.02, query_cached=True, answer_cached=True))
     answer = _backend(registry, tmp_path=tmp_path).answer(SAMPLE.question, "vector",
-                                                          spent_usd=5.0)
+                                                          spent_usd=0.5)
     assert answer.result is registry.result
     assert answer.option == "vector"
     assert answer.is_sample is True
@@ -170,7 +171,9 @@ def test_the_cap_refuses_a_live_question_before_anything_opens(tmp_path):
     with pytest.raises(SpendCapReached, match="cap"):
         backend.answer(LIVE, "vector", spent_usd=0.05 - estimate / 2)
     assert registry.opened == []
-    backend.answer(SAMPLE.question, "vector", spent_usd=1.0)  # a sample is never refused
+    backend.answer(SAMPLE.question, "vector", spent_usd=0.05)  # a sample needs no estimate
+    with pytest.raises(SpendCapReached):  # but a session already past the cap is refused
+        backend.answer(SAMPLE.question, "vector", spent_usd=0.06)
 
 
 def test_the_estimate_and_cap_are_reported(tmp_path):
@@ -233,7 +236,7 @@ def test_an_arm_that_cannot_open_is_shown_in_its_words(tmp_path):
     specs["graph_local"] = replace(specs["graph_local"], open=refuse)
     backend = LiveBackend(environ=ENV, arms=specs, samples=_samples, probe=lambda spec: None,
                           tracing=lambda environ: None, communities=lambda ids: {},
-                          response_cache=tmp_path)
+                          source_reader=lambda chunk_id: None, response_cache=tmp_path)
     with pytest.raises(AnswerFailed, match="no cached"):
         backend.answer(LIVE, "graph_local", spent_usd=0)
 
@@ -300,3 +303,17 @@ def test_the_source_passage_comes_from_the_reader(tmp_path):
                             "item_1", 0, 3, 0, "", "abc", "")
     backend = _backend(Registry(), source=lambda chunk_id: passage, tmp_path=tmp_path)
     assert backend.source("c:0001") is passage
+
+
+def test_the_fake_backend_keeps_the_real_cap_rule():
+    from tests.ui_fakes import FakeBackend
+
+    result = arm_result(answer_cost=0.02)
+    fake = FakeBackend({(LIVE, "vector"): result}, samples={"vector": (SAMPLE,)},
+                       estimate=0.3, max_spend=1.0)
+    backend: Backend = fake
+    assert backend.answer(LIVE, "vector", spent_usd=0.5).spent_usd == pytest.approx(0.02)
+    with pytest.raises(SpendCapReached):
+        backend.answer(LIVE, "vector", spent_usd=0.8)
+    with pytest.raises(AnswerFailed):
+        backend.answer(SAMPLE.question, "vector", spent_usd=1.0)  # a sample needs no estimate

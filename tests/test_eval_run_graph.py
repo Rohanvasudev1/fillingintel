@@ -436,3 +436,13 @@ def test_chunk_support_never_reaches_the_run_file(eval_dir, tmp_path, monkeypatc
     monkeypatch.setattr(f"{__name__}._graph",
                         lambda record_id: replace(original(record_id), support=SUPPORT))
     assert _records_without_wall_time(eval_dir, tmp_path / "traced") == plain
+
+
+def test_a_graph_record_with_chunk_support_has_the_committed_files_fields():
+    from eval.graph_report import question_graph
+    from ingest.provenance import REPO_ROOT
+
+    committed = json.loads((REPO_ROOT / "benchmarks" / "runs" /
+                            "2026-10-14-graph_local-dev-375efac.json").read_text())
+    expected = list(committed["questions"][0]["graph"])
+    assert list(question_graph(replace(_graph("q0113"), support=SUPPORT))) == expected

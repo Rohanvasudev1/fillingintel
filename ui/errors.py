@@ -6,6 +6,11 @@ traceback, a key or a connection string.
 """
 from __future__ import annotations
 
+POSTGRES_DOWN = ("Postgres is not reachable at DATABASE_URL. Start it with docker compose up -d, "
+                 "then try again.")
+NEO4J_DOWN = ("Neo4j is not reachable at NEO4J_URI. Start it with docker compose up -d, then "
+              "try again.")
+
 
 class BackendError(RuntimeError):
     """Something the reader can act on; the message is safe to show."""
@@ -49,3 +54,8 @@ class SamplesFileError(BackendError, ValueError):
 
 class CommittedRunError(BackendError, ValueError):
     """A committed run file cannot be read."""
+
+
+def neo4j_settings_missing(exc: Exception) -> SettingsMissing:
+    """The plain error for ``graph.connection.GraphSettingsMissing``."""
+    return SettingsMissing(f"{exc}; set it in .env and restart the app.")

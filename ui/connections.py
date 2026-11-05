@@ -18,12 +18,8 @@ from neo4j.exceptions import DriverError, Neo4jError
 from graph.connection import GraphSettingsMissing, driver_from_env
 from ui.backend import LiveBackend
 from ui.communities import CommunityInfo, read_communities
-from ui.errors import DatabaseUnavailable, SettingsMissing
+from ui.errors import NEO4J_DOWN, POSTGRES_DOWN, DatabaseUnavailable, neo4j_settings_missing
 from ui.source import SourcePassage, read_source
-
-_POSTGRES_DOWN = ("Postgres is not reachable at DATABASE_URL. Start it with docker compose "
-                  "up -d.")
-_NEO4J_DOWN = "Neo4j is not reachable at NEO4J_URI. Start it with docker compose up -d."
 
 
 class SharedConnections:
@@ -45,7 +41,7 @@ class SharedConnections:
                 except psycopg.OperationalError as exc:
                     self._close_postgres()
                     if attempt == 2:
-                        raise DatabaseUnavailable(_POSTGRES_DOWN) from exc
+                        raise DatabaseUnavailable(POSTGRES_DOWN) from exc
         raise AssertionError("unreachable")
 
     def communities(self, community_ids: Collection[str]) -> Mapping[str, CommunityInfo]:
@@ -54,13 +50,13 @@ class SharedConnections:
                 try:
                     self._driver = self._make_driver()
                 except GraphSettingsMissing as exc:
-                    raise SettingsMissing(f"{exc}; set it in .env and restart the app.") from exc
+                    raise neo4j_settings_missing(exc) from exc
             try:
                 return read_communities(self._driver, community_ids)
             except (Neo4jError, DriverError) as exc:
                 self._driver.close()
                 self._driver = None
-                raise DatabaseUnavailable(_NEO4J_DOWN) from exc
+                raise DatabaseUnavailable(NEO4J_DOWN) from exc
 
     def close(self) -> None:
         with self._lock:
@@ -74,7 +70,7 @@ class SharedConnections:
             try:
                 self._conn = self._connect()
             except psycopg.Error as exc:  # the message can quote the URL: never shown
-                raise DatabaseUnavailable(_POSTGRES_DOWN) from exc
+                raise DatabaseUnavailable(POSTGRES_DOWN) from exc
         return self._conn
 
     def _close_postgres(self) -> None:
