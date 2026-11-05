@@ -95,7 +95,7 @@ def answerable_table(split: Split, labels: Mapping[str, str | None] | None = Non
     head = ["class", "arm", "n", *RETRIEVAL, "wrong evidence",
             *(f"{m.replace('_', ' ')} ({labels[m]})" for m in shown),
             "p50 total ms", "p95 total ms", "cost / question (USD)"]
-    lines = [_row(head), _row(["---"] * len(head))]
+    lines = [row_text(head), row_text(["---"] * len(head))]
     for class_ in GATED_CLASSES:
         for arm, runs in split.items():
             source = runs.source(class_)
@@ -104,7 +104,7 @@ def answerable_table(split: Split, labels: Mapping[str, str | None] | None = Non
             cell, mode = source.cell(class_), source.mode
             judged = ([RETRIEVAL_ONLY_TEXT] * len(shown) if mode == RETRIEVAL_ONLY
                       else [_judged(cell, m) for m in shown])
-            lines.append(_row([class_, arm, _n(cell), *(_metric(cell, m) for m in RETRIEVAL),
+            lines.append(row_text([class_, arm, _n(cell), *(_metric(cell, m) for m in RETRIEVAL),
                                _wrong(cell, mode), *judged, *_total(cell, mode),
                                _cost(cell, mode)]))
     return lines
@@ -114,19 +114,19 @@ def no_gold_table(split: Split, label: str | None = None) -> list[str]:
     label = label if label is not None else judged_labels(split)
     head = ["class", "arm", "n", f"correct ({label})", "p50 total ms", "p95 total ms",
             "cost / question (USD)"]
-    lines = [_row(head), _row(["---"] * len(head))]
+    lines = [row_text(head), row_text(["---"] * len(head))]
     for class_, metric in NO_GOLD_JUDGED.items():
         for arm, runs in split.items():
             source = runs.source(class_)
             if source is None:
                 continue
             cell = source.cell(class_)
-            lines.append(_row([class_, arm, _n(cell), _judged(cell, metric),
+            lines.append(row_text([class_, arm, _n(cell), _judged(cell, metric),
                                *_total(cell, source.mode), _cost(cell, source.mode)]))
     return lines
 
 
-def _row(cells: Sequence[str]) -> str:
+def row_text(cells: Sequence[str]) -> str:
     return "| " + " | ".join(cells) + " |"
 
 
@@ -164,11 +164,11 @@ def _pooled_source(files: Sequence[RunFile]) -> RunFile | None:
 def paired_table(split: Split, dropped: Sequence[str] = ()) -> list[str]:
     head = ["arm", "class", "metric", "n", "difference (arm - vector) [95%]", "counts",
             "note"]
-    lines = [_row(head), _row(["---"] * len(head))]
+    lines = [row_text(head), row_text(["---"] * len(head))]
     for arm, _, d in paired_rows(split, dropped):
         notes = [n for n in ("directional" if d.directional else None, d.label,
                              f"{d.unpaired} unpaired" if d.unpaired else None) if n]
-        lines.append(_row([arm, d.class_, METRIC_NAMES.get(d.metric, d.metric), str(d.n),
+        lines.append(row_text([arm, d.class_, METRIC_NAMES.get(d.metric, d.metric), str(d.n),
                            difference_text(d),
                            "yes" if d.counts else "no", ", ".join(notes) or "-"]))
     return lines

@@ -141,5 +141,5 @@ def test_check_exits_0_on_a_match_and_4_on_a_one_character_difference(tmp_path, 
     assert "differs" in capsys.readouterr().err
 
 
-def test_the_committed_results_file_matches_the_committed_runs():
-    assert main(["--check", "--output", str(REPO_ROOT / RESULTS_MD)]) == EXIT_OK  # README too
+def test_the_committed_results_file_and_readme_match_the_committed_runs():
+    assert main(["--check", "--output", str(REPO_ROOT / RESULTS_MD)]) == EXIT_OK

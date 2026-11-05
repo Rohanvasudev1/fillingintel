@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
 
 from eval.results_inputs import (
@@ -26,13 +27,18 @@ _EXTRACT_RUN = re.compile(r"(\d{10}-\d{2}-\d{6})-run(\d+)\.json")
 _EXTRACT_V2 = "extract/v2@"
 
 
-def _interval(value: float, interval: Mapping[str, float] | None) -> str:
+def interval_text(value: float, interval: Mapping[str, float] | None) -> str:
     if not interval:
         return f"{value:.3f}"
     return f"{value:.3f} [{interval['low']:.3f}, {interval['high']:.3f}]"
 
 
-def _source(info: InputFile) -> str:
+def scored(block: Mapping) -> str:
+    """A report's ``{value, interval}`` block as ``value [low, high]``."""
+    return interval_text(block["value"], block.get("interval"))
+
+
+def source_text(info: InputFile) -> str:
     return f"`{info.path}` at `{info.commit}`"
 
 
@@ -47,7 +53,7 @@ def cypher_validity(root: Path = REPO_ROOT) -> Block:
             f"| {report['prompt']['version']} | {pooled['n']} | "
             + " | ".join(f"{pooled[k + '_count']} ({pooled[k]:.3f})" for k in
                          ("first_pass_valid", "valid_after_repair", "non_empty", "fallback"))
-            + f" | {_source(info)} |")
+            + f" | {source_text(info)} |")
         inputs.append(info)
     lines.append("")
     lines.append("Agent-drafted questions, dev, all classes. `cypher/v1` is the one the "
@@ -65,9 +71,9 @@ def resolution(root: Path = REPO_ROOT) -> Block:
         adjudicator = score["adjudicator"]["accuracy"]
         lines.append(
             f"| {number} ({score['provenance']['set']}) | "
-            f"{_interval(score['precision']['value'], score['precision']['interval'])} | "
-            f"{_interval(score['recall']['value'], score['recall']['interval'])} | "
-            f"{_interval(adjudicator['value'], adjudicator['interval'])} | {_source(info)} |")
+            f"{scored(score['precision'])} | "
+            f"{scored(score['recall'])} | "
+            f"{scored(adjudicator)} | {source_text(info)} |")
         inputs.append(info)
     lines += ["", "Pairwise, weighted by stratum, fixed-seed bootstrap 95% intervals; "
                   "agent-labelled (gpt-6-luna). Rounds 1 and 2 are different draws, not a "
@@ -80,32 +86,67 @@ def extraction(root: Path = REPO_ROOT) -> Block:
              "|---|---|---|---|---|---|"]
     inputs = []
     for name, path in EXTRACTION_ROUNDS:
-        rows, info = read_jsonl(path, root)
-        summary = next((r for r in rows if r.get("kind") == "summary"), None)
-        if summary is None:
-            raise ResultsInputError(f"{path} has no summary line")
+        summary, info = round_summary(path, root)
         low, high = summary["wilson_95"]
         lines.append(f"| {name} | {Path(path).name.split('-round')[0]} | {summary['judged']} | "
                      f"{summary['accuracy']:.3f} [{low:.3f}, {high:.3f}] | "
-                     f"{', '.join(summary['prompt_versions'])} | {_source(info)} |")
+                     f"{', '.join(summary['prompt_versions'])} | {source_text(info)} |")
         inputs.append(info)
-    runs, run_inputs = latest_v2_runs(root)
-    candidates = sum(r["candidates"] for r in runs)
-    rejected = sum(r["rejections"]["total"] for r in runs)
-    violations = sum(len(r["violations"]) for r in runs)
-    commits = ", ".join(f"`{c}`" for c in sorted({i.commit for i in run_inputs}))
+    counts = extraction_counts(root)
     lines += ["",
               "Accuracy is the user's judgment of 30 sampled edges per round (Step 8 round 2: "
               "NVIDIA FY2026 10-K, claude-sonnet-5-5; Step 9 round 3: AMD FY2025 10-K, "
               "claude-haiku-5-5). The two rounds judge different models and prompts and are not "
               "compared.",
               "",
-              f"Over the latest `extract/v2` run of each of the {len(runs)} filings "
-              f"(`{EXTRACTION_DIR}/*-run*.json`, commit {commits}): violation rate "
-              f"{violations / candidates:.3f} ({violations} ontology violations reached the "
-              f"write path out of {candidates:,} candidate triples); rejection rate "
-              f"{rejected / candidates:.3f} ({rejected} candidates rejected before it)."]
-    return lines, inputs + run_inputs
+              f"Over the latest `extract/v2` run of each of the {counts.filings} filings "
+              f"(`{EXTRACTION_DIR}/*-run*.json`, commit {counts.commits}): violation rate "
+              f"{counts.violation_rate:.3f} ({counts.violations} ontology violations reached the "
+              f"write path out of {counts.candidates:,} candidate triples); rejection rate "
+              f"{counts.rejection_rate:.3f} ({counts.rejected} candidates rejected before it)."]
+    return lines, inputs + list(counts.inputs)
+
+
+@dataclass(frozen=True)
+class ExtractionCounts:
+    """Totals over the latest ``extract/v2`` run of each filing."""
+
+    filings: int
+    candidates: int
+    rejected: int
+    violations: int
+    commits: str  # the runs' commits, formatted for markdown
+    inputs: tuple[InputFile, ...]
+
+    @property
+    def violation_rate(self) -> float:
+        return self.violations / self.candidates
+
+    @property
+    def rejection_rate(self) -> float:
+        return self.rejected / self.candidates
+
+
+def extraction_counts(root: Path = REPO_ROOT) -> ExtractionCounts:
+    runs, inputs = latest_v2_runs(root)
+    if not runs:
+        raise ResultsInputError(f"no extract/v2 run reports in {EXTRACTION_DIR}")
+    return ExtractionCounts(
+        filings=len(runs),
+        candidates=sum(r["candidates"] for r in runs),
+        rejected=sum(r["rejections"]["total"] for r in runs),
+        violations=sum(len(r["violations"]) for r in runs),
+        commits=", ".join(f"`{c}`" for c in sorted({i.commit for i in inputs})),
+        inputs=tuple(inputs))
+
+
+def round_summary(path: str, root: Path = REPO_ROOT) -> tuple[dict, InputFile]:
+    """A review round file's summary line; a file without one is refused."""
+    rows, info = read_jsonl(path, root)
+    summary = next((r for r in rows if r.get("kind") == "summary"), None)
+    if summary is None:
+        raise ResultsInputError(f"{path} has no summary line")
+    return summary, info
 
 
 def latest_v2_runs(root: Path) -> tuple[list[dict], list[InputFile]]:
@@ -129,9 +170,9 @@ def latest_v2_runs(root: Path) -> tuple[list[dict], list[InputFile]]:
 
 def persistence(root: Path = REPO_ROOT) -> Block:
     score, info = read_json(PERSISTENCE_SCORE, root)
-    return ([f"Precision {_interval(score['precision']['value'], score['precision']['interval'])}"
-             f", recall {_interval(score['recall']['value'], score['recall']['interval'])}; "
-             f"agent-labelled (gpt-6-luna); {_source(info)}."], [info])
+    return ([f"Precision {scored(score['precision'])}"
+             f", recall {scored(score['recall'])}; "
+             f"agent-labelled (gpt-6-luna); {source_text(info)}."], [info])
 
 
 def provenance(root: Path = REPO_ROOT) -> Block:
@@ -144,7 +185,7 @@ def provenance(root: Path = REPO_ROOT) -> Block:
                      f"kept citations, {report['breaks']} breaks through any selected community "
                      f"(the gate); {strict['breaks']} breaks when each citation must trace "
                      f"through the community of the kept map point that cited it. Agent-drafted "
-                     f"questions; {_source(info)}.")
+                     f"questions; {source_text(info)}.")
         inputs.append(info)
     return "\n\n".join(lines).split("\n"), inputs
 
@@ -152,7 +193,7 @@ def provenance(root: Path = REPO_ROOT) -> Block:
 def handoff(root: Path = REPO_ROOT) -> Block:
     report, info = read_json(GLOBAL_HANDOFF, root)
     lines = [f"`graph_global` chunk handoff, {report['label']} (the arm is unchanged), "
-             f"{report['questions']}; {_source(info)}.", "",
+             f"{report['questions']}; {source_text(info)}.", "",
              "| class | n | as built recall@5 | as built recall@10 | handoff recall@5 | "
              "handoff recall@10 |", "|---|---|---|---|---|---|"]
     for class_, built in report["scores"]["as_built"].items():

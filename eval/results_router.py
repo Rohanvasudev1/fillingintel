@@ -17,7 +17,7 @@ from statistics import fmean
 
 from eval.gate_scores import GATED_CLASSES
 from eval.hypotheses import RouterAccuracy
-from eval.results_render import value
+from eval.results_render import row_text, value
 from eval.results_sources import RETRIEVAL_ONLY, ArmRuns, ResultsInputError, RunFile, Split
 from eval.route_metrics import LABEL, PREDICTED_ORDER, Classified, route_metrics
 from retrieve.routing_maps import H6_MAP
@@ -49,21 +49,17 @@ def router_accuracy(run: RunFile) -> RouterAccuracy:
                           declines["n"])
 
 
-def _row(cells: Sequence[str]) -> str:
-    return "| " + " | ".join(cells) + " |"
-
-
 def sweep_table(route_runs: Sequence[tuple[Mapping, str]], frozen: tuple[str, str]
                 ) -> list[str]:
     """One row per classifier run: prompt, effort, accuracy and spend; the frozen one marked."""
-    lines = [_row(["run", "prompt", "effort", "accuracy [Wilson 95%]", "declines declined",
+    lines = [row_text(["run", "prompt", "effort", "accuracy [Wilson 95%]", "declines declined",
                    "false declines", "spent (USD)", "commit", "router uses"]),
-             _row(["---"] * 9)]
+             row_text(["---"] * 9)]
     for document, path in route_runs:
         metrics = document["metrics"]
         accuracy = metrics["accuracy"]
         uses = (document["prompt"]["version"], document["effort"]) == frozen
-        lines.append(_row([
+        lines.append(row_text([
             f"`{path}`", f"`{document['prompt']['version']}`", document["effort"],
             f"{accuracy['correct']} of {accuracy['n']} "
             f"{value(accuracy['value'], {'low': accuracy['low'], 'high': accuracy['high']})}",
@@ -84,11 +80,11 @@ def accuracy_lines(run: RunFile) -> list[str]:
              f"{value(accuracy['value'], {'low': accuracy['low'], 'high': accuracy['high']})} "
              "(Wilson 95%). Answerable and decline questions count; a decline question counts "
              "only when the router declined it.", "",
-             _row(["gold \\ predicted", *columns, "accuracy"]),
-             _row(["---"] * (len(columns) + 2))]
+             row_text(["gold \\ predicted", *columns, "accuracy"]),
+             row_text(["---"] * (len(columns) + 2))]
     for gold, row in metrics["confusion"].items():
         per_class = metrics["per_class"][gold]
-        lines.append(_row([gold, *(str(row.get(c, 0)) for c in columns),
+        lines.append(row_text([gold, *(str(row.get(c, 0)) for c in columns),
                            f"{per_class['correct']} of {per_class['n']}"]))
     declines = metrics["declines"]
     false = ", ".join(f"`{i}`" for i in metrics["false_declines"]) or "none"
@@ -102,8 +98,8 @@ def accuracy_lines(run: RunFile) -> list[str]:
 
 def unanswerable_lines(routers: Split) -> list[str]:
     """Per router run, how the unanswerable questions were routed and answered."""
-    lines = [_row(["router", "unanswerable n", "predicted classes", "answered not_found",
-                   "declined"]), _row(["---"] * 5)]
+    lines = [row_text(["router", "unanswerable n", "predicted classes", "answered not_found",
+                   "declined"]), row_text(["---"] * 5)]
     for name, runs in routers.items():
         for run in runs.full_files():
             questions = [q for q in run.questions() if q["class"] == "unanswerable"]
@@ -111,7 +107,7 @@ def unanswerable_lines(routers: Split) -> list[str]:
                 continue
             shares = route_metrics(classified(run))["unanswerable"]["share"]
             status = [q["answer"]["status"] for q in questions]
-            lines.append(_row([
+            lines.append(row_text([
                 name, str(len(questions)),
                 ", ".join(f"{c} {s:.2f}" for c, s in shares.items()),
                 f"{status.count('not_found')} of {len(questions)}",
@@ -128,8 +124,9 @@ def oracle_lines(arms: Split, routers: Split) -> list[str]:
     """Recall@10 per answerable class: the oracle (gold class through the pre-registered map,
     from the mapped arm's own run) beside each router run."""
     names = list(routers)
-    lines = [_row(["class", "oracle arm", "oracle recall@10", *(f"{n} recall@10" for n in names)]),
-             _row(["---"] * (3 + len(names)))]
+    lines = [row_text(["class", "oracle arm", "oracle recall@10",
+                       *(f"{n} recall@10" for n in names)]),
+             row_text(["---"] * (3 + len(names)))]
     oracle_all: list[Mapping] = []
     router_all: dict[str, list[Mapping]] = {n: [] for n in names}
     for class_ in GATED_CLASSES:
@@ -145,8 +142,8 @@ def oracle_lines(arms: Split, routers: Split) -> list[str]:
             found = [q for q in _router_questions(routers[name]) if q["class"] == class_]
             router_all[name] += found
             cells.append(_text(_recall(found)))
-        lines.append(_row([class_, f"{arm}{mark}", _text(_recall(mine)), *cells]))
-    lines.append(_row([POOLED, "-", _text(_recall(oracle_all)),
+        lines.append(row_text([class_, f"{arm}{mark}", _text(_recall(mine)), *cells]))
+    lines.append(row_text([POOLED, "-", _text(_recall(oracle_all)),
                        *(_text(_recall(router_all[n])) for n in names)]))
     return lines
 

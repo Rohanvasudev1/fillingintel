@@ -17,8 +17,14 @@ from statistics import fmean
 from eval.bootstrap import interval_rng, is_directional, mean_interval, percentile
 from eval.gate_scores import GATED_CLASSES, POOLED
 from eval.results_inputs import CONTROL_ARM
-from eval.results_render import NO_GOLD_JUDGED, RETRIEVAL_ONLY_TEXT, judged_labels, value
-from eval.results_sources import RETRIEVAL_ONLY, ArmRuns, ResultsInputError, Split
+from eval.results_render import (
+    NO_GOLD_JUDGED,
+    RETRIEVAL_ONLY_TEXT,
+    judged_labels,
+    row_text,
+    value,
+)
+from eval.results_sources import RETRIEVAL_ONLY, ArmRuns, ResultsInputError, RunFile, Split
 
 RECALL = "recall@10"
 FAITHFULNESS = "faithfulness"
@@ -35,14 +41,17 @@ class _Question:
         return str(self.record["id"])
 
 
+def _source(runs: ArmRuns, class_: str) -> RunFile:
+    source = runs.source(class_)
+    if source is None:
+        raise ResultsInputError(f"{runs.arm} has no run holding {class_}")
+    return source
+
+
 def _pooled(runs: ArmRuns) -> list[_Question]:
     """The answerable questions of each class from the file that class's row reads, in
     file order then each file's own question order (the order ``eval.compare`` pairs in)."""
-    sources = {}
-    for class_ in GATED_CLASSES:
-        sources[class_] = runs.source(class_)
-        if sources[class_] is None:
-            raise ResultsInputError(f"{runs.arm} has no run holding {class_}")
+    sources = {class_: _source(runs, class_) for class_ in GATED_CLASSES}
     return [_Question(q, source.mode == RETRIEVAL_ONLY) for source in runs.files
             for q in source.questions() if sources.get(q["class"]) is source]
 
@@ -95,17 +104,13 @@ def _cost_and_p95(questions: list[_Question]) -> tuple[str, str]:
 
 
 def _class_ns(control: ArmRuns) -> dict[str, int]:
-    return {c: int(control.source(c).cell(c)["n"]) for c in GATED_CLASSES}
+    return {c: int(_source(control, c).cell(c)["n"]) for c in GATED_CLASSES}
 
 
 def _class_cell(runs: ArmRuns, class_: str, n: int) -> str:
-    cell = runs.source(class_).cell(class_)
+    cell = _source(runs, class_).cell(class_)
     text = f"{cell['metrics'][RECALL]:.3f}"
     return text if cell["n"] == n else f"{text} (n {cell['n']})"
-
-
-def _row(cells: Sequence[str]) -> str:
-    return "| " + " | ".join(cells) + " |"
 
 
 def _head(ns: Mapping[str, int], label: str) -> list[str]:
@@ -113,7 +118,7 @@ def _head(ns: Mapping[str, int], label: str) -> list[str]:
                for c, n in ns.items()]
     head = ["row", *classes, f"pooled {RECALL} [95%]", "vs vector [95%]",
             f"faithfulness ({label})", "cost / question (USD)", "p95 total ms"]
-    return [_row(head), _row(["---"] * len(head))]
+    return [row_text(head), row_text(["---"] * len(head))]
 
 
 def _label_line(split: Split, pooled_n: int) -> str:
@@ -129,8 +134,8 @@ def _label_line(split: Split, pooled_n: int) -> str:
 
 def _no_gold_line(split: Split) -> str:
     control = split[CONTROL_ARM]
-    ns = {c: control.source(c).cell(c)["n"] for c in NO_GOLD_JUDGED}
-    means = {(arm, c): runs.source(c).cell(c)["judged"]["metrics"][m]["mean"]
+    ns = {c: _source(control, c).cell(c)["n"] for c in NO_GOLD_JUDGED}
+    means = {(arm, c): _source(runs, c).cell(c)["judged"]["metrics"][m]["mean"]
              for arm, runs in split.items() for c, m in NO_GOLD_JUDGED.items()}
     head = f"Decline ({ns['decline']}) and unanswerable ({ns['unanswerable']}) questions"
     if all(v == 1.0 for v in means.values()):
@@ -154,7 +159,7 @@ def headline_block(split: Split) -> list[str]:
                             "readme", arm, RECALL)
         paired = DASH if arm == CONTROL_ARM else _paired_text(pooled[CONTROL_ARM], questions,
                                                               seed)
-        lines.append(_row([arm, *(_class_cell(runs, c, n) for c, n in ns.items()), recall,
+        lines.append(row_text([arm, *(_class_cell(runs, c, n) for c, n in ns.items()), recall,
                            paired, _faithfulness(questions, seed, arm),
                            *_cost_and_p95(questions)]))
     lines += ["", *_partial_notes(pooled), _no_gold_line(split)]

@@ -364,9 +364,14 @@ def main(argv: Sequence[str] | None = None, *, root: Path = REPO_ROOT) -> int:
         return EXIT_COULD_NOT_RUN
     if args.check:
         return _check({output: text, readme: new_readme})
-    output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(text, encoding="utf-8")
-    readme.write_text(new_readme, encoding="utf-8")
+    try:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(text, encoding="utf-8")
+        readme.write_text(new_readme, encoding="utf-8")
+    except OSError as exc:
+        print(f"results table could not write: {exc}; rerun once the path is writable, since "
+              f"{output} and {readme} may now disagree", file=sys.stderr)
+        return EXIT_COULD_NOT_RUN
     print(f"wrote {output} and the generated blocks of {readme}")
     return EXIT_OK
 

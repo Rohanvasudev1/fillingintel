@@ -70,7 +70,7 @@ Four arms, each runnable on its own from the CLI (`--arm <name>`) so the benchma
 The **router** is a plain dispatch function (Step 13; LangGraph is not used, see docs/research/router-langgraph-and-judge-calibration.md). A claude-haiku-5-5 classifier gives each question a predicted class (`lookup`, `local`, `multi_hop`, `global` or `decline`). A `decline` returns the fixed decline sentence with no retrieval; any other class goes to the arm a routing map names. Every routing decision is logged as a span, and router accuracy is measured against the eval set's gold classes. The classifier runs `route/v2` at effort `low`, both chosen on dev with `python -m eval.route`; the router is run with `eval.run --arm router --map pre_registered|dev_best`, and `benchmarks/router/frozen.json` (`python -m eval.freeze`) pins every arm, the router and both maps before `test` is scored.
 
 ### Generate
-Answers are generated only from retrieved context. Every claim must cite a real chunk ID, and uncited sentences are removed before display. Graph arms hand at most 10 ranked chunks to the same answer prompt as `vector` (ADR-0007), so answers carry chunk citations, not graph paths; path context is an open decision. Answers never infer causation from co-occurrence in the graph.
+Answers are generated only from retrieved context. Every claim must cite a real chunk ID, and uncited sentences are removed before display. `graph_local` and `graph_traversal` hand at most 10 ranked chunks to the same answer prompt as `vector` (ADR-0007); `graph_global` answers through its own map and reduce prompts, and its map points cite chunks (ADR-0008). Answers carry chunk citations, not graph paths; path context is an open decision. Answers never infer causation from co-occurrence in the graph.
 
 ### Evaluate
 - **Eval set:** 140 agent-drafted questions in `eval/agent_drafted_set.jsonl` (120 answerable, labelled `lookup`, `local`, `multi_hop` or `global`, plus decline and unanswerable questions), each with gold chunk IDs pinned by SHA-256, used without human review. About 30% are held out as `test` and were scored once. `eval/eval_set.jsonl`, for human-written or human-verified questions, is empty.
@@ -99,7 +99,7 @@ These restate CLAUDE.md invariants where they shape the architecture:
 
 ## Infrastructure
 
-One `docker-compose.yml` runs Postgres (with pgvector) and Neo4j Community. Phoenix runs locally for tracing. Everything else is Python 3.11+ with pinned dependencies.
+One `docker-compose.yml` runs Postgres (with pgvector), Neo4j Community, a separate Neo4j test instance and Phoenix, each image pinned and bound to 127.0.0.1. Everything else is Python 3.11+ with pinned dependencies.
 
 ---
 

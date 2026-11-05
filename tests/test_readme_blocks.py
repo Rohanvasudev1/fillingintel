@@ -111,6 +111,7 @@ def test_the_headline_names_split_labels_commit_and_the_no_gold_rows(blocks):
 def test_the_unpublished_numbers_carry_value_label_commit_and_a_link(blocks):
     block = blocks["unpublished-numbers"]
     assert "0.783 [0.600, 0.947]" in block  # ER recall, round 2
+    assert "set `scoring2`" in block and "adjudicator accuracy" in block
     assert "38 of 42" in block  # router test accuracy
     assert "0 breaks in 163" in block and "0 breaks in 82" in block
     assert "23 of 24" in block  # corruption: changed number, faithfulness
@@ -158,7 +159,3 @@ def test_a_readme_without_markers_cannot_run(tmp_path):
     readme.write_text(PROSE, encoding="utf-8")
     assert main(["--check", "--output", str(tmp_path / "r.md"), "--readme", str(readme)]) \
         == EXIT_COULD_NOT_RUN
-
-
-def test_the_committed_readme_matches_the_committed_runs():
-    assert main(["--check"]) == EXIT_OK
