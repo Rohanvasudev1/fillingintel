@@ -8,6 +8,10 @@ chunks of the nodes at the other end of those edges.
 A chunk scores the sum over anchors of similarity x (1 + the number of that
 anchor's edges citing it).  Chunks outside the question filter are dropped,
 ties go to the smaller chunk ID, and the list is cut to *k*.
+
+``chunk_support`` says, for the answer trace, which anchor and which edges gave
+each kept chunk its score (Step 14).  It reads what ranking read and changes
+nothing about the ranking.
 """
 from __future__ import annotations
 
@@ -22,16 +26,20 @@ from graph.connection import DATABASE, read_session
 from graph.cypher import quoted
 from graph.ontology import CONFIDENCE_RANK, LABELS_BY_NAME, Confidence, Kind
 from ingest.chunker import accession_of
-from retrieve.arm import Anchor, RetrievedChunk
+from retrieve.arm import Anchor, ChunkSupport, RetrievedChunk, SupportEdge
 
 HOP_CHOICES = (1, 2)
 SCORE_DECIMALS = 9  # scores are compared after rounding, so float noise never breaks a tie
+# The other end of an edge, as the answer trace names it: label, identity, name, and
+# whether the anchor is the edge's start.
+_END = ("labels({o})[0], coalesce({o}.key, {o}.cik, {o}.accession_no), "
+        "coalesce({o}.name, {o}.title, {o}.concept), startNode(r) = a")
 _EVIDENCE = "COLLECT { MATCH (a)-[e:EVIDENCED_BY]->(c:Chunk) RETURN [c.chunk_id, e.confidence] }"
-_EDGES = ("COLLECT { MATCH (a)-[r]-() WHERE r.chunk_ids IS NOT NULL "
-          "RETURN [r.chunk_ids, r.confidences] }")
+_EDGES = ("COLLECT { MATCH (a)-[r]-(o) WHERE r.chunk_ids IS NOT NULL "
+          f"RETURN [r.chunk_ids, r.confidences, type(r), {_END.format(o='o')}] }}")
 _NEIGHBOURS = ("COLLECT { MATCH (a)-[r]-(n)-[e:EVIDENCED_BY]->(c:Chunk) "
                "WHERE r.chunk_ids IS NOT NULL AND n <> a "
-               "RETURN [c.chunk_id, e.confidence] }")
+               f"RETURN [c.chunk_id, e.confidence, type(r), {_END.format(o='n')}] }}")
 
 AnchorId = tuple[str, str]  # (label, key): keys are unique per label
 
@@ -39,10 +47,13 @@ AnchorId = tuple[str, str]  # (label, key): keys are unique per label
 @dataclass(frozen=True)
 class Reach:
     """What one anchor reaches: each chunk's best confidence, and how many of the
-    anchor's edges cite it."""
+    anchor's edges cite it.  The rest says how, for the answer trace only."""
 
     confidence: Mapping[str, Confidence] = field(default_factory=dict)
     edge_citations: Mapping[str, int] = field(default_factory=dict)
+    evidenced: frozenset[str] = frozenset()  # the anchor's own EVIDENCED_BY chunks
+    edges: Mapping[str, tuple[SupportEdge, ...]] = field(default_factory=dict)
+    neighbours: Mapping[str, tuple[SupportEdge, ...]] = field(default_factory=dict)
 
 
 def expand(driver: Driver, anchors: Sequence[Anchor], hops: int,
@@ -79,14 +90,32 @@ def _read(tx: ManagedTransaction, queries: Mapping[str, str],
 def _reach(row: Mapping[str, list]) -> Reach:
     best: dict[str, Confidence] = {}
     citations: dict[str, int] = defaultdict(int)
-    for chunk_id, confidence in (*row["own"], *row["neighbours"]):
+    edges: dict[str, list[SupportEdge]] = defaultdict(list)
+    neighbours: dict[str, list[SupportEdge]] = defaultdict(list)
+    for chunk_id, confidence in row["own"]:
         _keep_best(best, chunk_id, Confidence(confidence))
-    for chunk_ids, confidences in row["edges"]:
+    for chunk_id, confidence, *end in row["neighbours"]:
+        _keep_best(best, chunk_id, Confidence(confidence))
+        neighbours[chunk_id].append(_support_edge(*end))
+    for chunk_ids, confidences, *end in row["edges"]:
         for chunk_id, confidence in zip(chunk_ids, confidences, strict=True):
             _keep_best(best, chunk_id, Confidence(confidence))
         for chunk_id in set(chunk_ids):
             citations[chunk_id] += 1
-    return Reach(confidence=best, edge_citations=dict(citations))
+            edges[chunk_id].append(_support_edge(*end))
+    return Reach(confidence=best, edge_citations=dict(citations),
+                 evidenced=frozenset(chunk_id for chunk_id, _ in row["own"]),
+                 edges={c: _sorted(e) for c, e in edges.items()},
+                 neighbours={c: _sorted(e) for c, e in neighbours.items()})
+
+
+def _support_edge(edge_type: str, label: str, identity: str, name: str | None,
+                  outgoing: bool) -> SupportEdge:
+    return SupportEdge(edge_type, label, identity, name, outgoing=outgoing)
+
+
+def _sorted(edges: Sequence[SupportEdge]) -> tuple[SupportEdge, ...]:
+    return tuple(sorted(edges, key=lambda e: (e.type, e.other_label, e.other_id, e.outgoing)))
 
 
 def _keep_best(best: dict[str, Confidence], chunk_id: str, level: Confidence) -> None:
@@ -110,3 +139,23 @@ def rank_chunks(anchors: Sequence[Anchor], reach: Mapping[AnchorId, Reach],
             _keep_best(confidence, chunk_id, level)
     ranked = sorted(scores, key=lambda c: (-round(scores[c], SCORE_DECIMALS), c))[:k]
     return tuple(RetrievedChunk(c, scores[c], confidence[c]) for c in ranked)
+
+
+def chunk_support(anchors: Sequence[Anchor], reach: Mapping[AnchorId, Reach],
+                  retrieved: Sequence[RetrievedChunk]) -> tuple[ChunkSupport, ...]:
+    """Each kept chunk's anchors, in retrieval order then anchor order, with the edges
+    that cited it and each anchor's share of its score, as ``rank_chunks`` computed it."""
+    support = []
+    for chunk in retrieved:
+        for anchor in anchors:
+            anchor_reach = reach.get((anchor.label, anchor.key), Reach())
+            if chunk.chunk_id not in anchor_reach.confidence:
+                continue
+            cited = anchor_reach.edge_citations.get(chunk.chunk_id, 0)
+            support.append(ChunkSupport(
+                chunk_id=chunk.chunk_id, anchor_label=anchor.label, anchor_key=anchor.key,
+                evidenced=chunk.chunk_id in anchor_reach.evidenced,
+                edges=anchor_reach.edges.get(chunk.chunk_id, ()),
+                neighbours=anchor_reach.neighbours.get(chunk.chunk_id, ()),
+                score=anchor.similarity * (1 + cited)))
+    return tuple(support)

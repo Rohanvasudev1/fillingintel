@@ -17,7 +17,7 @@ from graph.schema_text import SCHEMA_TEXT_SHA256
 from graph.write import write_batch
 from ingest.chunker import chunk_filing
 from ingest.store import load_filing
-from retrieve.arm import ArmError, GraphProvenance
+from retrieve.arm import ArmError, GraphProvenance, SupportEdge
 from retrieve.arms import ARMS
 from retrieve.graph_local import GraphLocalArm
 from retrieve.query_cache import CachedBatchEmbedder
@@ -46,6 +46,8 @@ from tests.graph_test_data import (
     EXPORT_CHUNK,
     EXPORT_CONTROLS,
     HUANG,
+    NVDA_10K,
+    NVDA_CIK,
     OFFICERS_CHUNK,
     SEGMENTS_CHUNK,
     SUPPLY_CHUNK,
@@ -264,3 +266,55 @@ def test_a_retrieval_failure_is_an_arm_error(corpus, graph, tmp_path):
                         _node_cache(tmp_path, SIMILARITIES), ScriptedAnswerModel())
     with pytest.raises(ArmError, match="graph_local arm failed.*zero vector"):
         arm.retrieve(UNFILTERED)
+
+
+# Chunk support for the answer trace (Step 14 ticket 01): display only; the ranking
+# tests above are unchanged.
+
+def _support(result, chunk_id):
+    return [s for s in result.graph.support if s.chunk_id == chunk_id]
+
+
+def test_each_kept_chunk_names_the_anchors_and_edges_that_scored_it(corpus, graph, tmp_path):
+    result = _arm(corpus, graph, tmp_path).run(UNFILTERED)
+    [export] = _support(result, EXPORT_CHUNK)
+    assert (export.anchor_label, export.anchor_key) == ("Regulation", key_of(EXPORT_CONTROLS))
+    assert export.evidenced is True
+    assert export.edges == (
+        SupportEdge("SUBJECT_TO", "Company", NVDA_CIK, "NVIDIA CORP", outgoing=False),)
+    assert export.score == pytest.approx(0.9 * 2)
+
+
+def test_a_chunk_cited_by_several_edges_lists_each(corpus, graph, tmp_path):
+    result = _arm(corpus, graph, tmp_path, {K_RISK: 0.9}).run(UNFILTERED)
+    by_anchor = {s.anchor_key: s for s in _support(result, K_RISK_CHUNK)}
+    k_risk = by_anchor[key_of(K_RISK)]
+    assert sorted((e.type, e.other_label, e.other_id, e.outgoing) for e in k_risk.edges) == [
+        ("DISCLOSES", "Filing", NVDA_10K, False),
+        ("PERSISTS_AS", "RiskFactor", key_of(Q_RISK), True),
+    ]
+    assert k_risk.score == pytest.approx(0.9 * 3)
+    q_support = {s.anchor_key: s for s in _support(result, Q_RISK_CHUNK)}
+    assert q_support[key_of(K_RISK)].evidenced is False  # reached only through the link
+
+
+def test_the_support_scores_add_up_to_each_chunks_score(corpus, graph, tmp_path):
+    result = _arm(corpus, graph, tmp_path).run(UNFILTERED)
+    assert {s.chunk_id for s in result.graph.support} == {r.chunk_id for r in result.retrieved}
+    for chunk in result.retrieved:
+        assert sum(s.score for s in _support(result, chunk.chunk_id)) == pytest.approx(chunk.score)
+
+
+def test_support_follows_retrieval_order_then_anchor_rank(corpus, graph, tmp_path):
+    result = _arm(corpus, graph, tmp_path).run(UNFILTERED)
+    order = [r.chunk_id for r in result.retrieved]
+    anchors = [a.key for a in result.graph.anchors]
+    keys = [(order.index(s.chunk_id), anchors.index(s.anchor_key)) for s in result.graph.support]
+    assert keys == sorted(keys)
+
+
+def test_every_other_end_but_a_filing_has_a_name(corpus, graph, tmp_path):
+    result = _arm(corpus, graph, tmp_path, SIMILARITIES).run(UNFILTERED)
+    names = {e.other_label: e.other_name for s in result.graph.support for e in s.edges}
+    assert names.pop("Filing", None) is None
+    assert None not in names.values()

@@ -10,6 +10,7 @@ to local search.  Nothing here needs a database.
 """
 import json
 from contextlib import nullcontext
+from dataclasses import replace
 from datetime import date
 from pathlib import Path
 from types import MappingProxyType
@@ -30,11 +31,13 @@ from retrieve.arm import (
     ArmConfig,
     ArmResult,
     ArmSpec,
+    ChunkSupport,
     CypherAttempt,
     GraphProvenance,
     GraphRetrieval,
     RetrievedChunk,
     StageCost,
+    SupportEdge,
 )
 from retrieve.pricing import anthropic_cost, embedding_cost
 from retrieve.question_filter import parse_question_filter
@@ -413,3 +416,23 @@ def test_a_vector_run_file_gains_no_graph_field(tmp_path):
         assert set(cell["latency_ms"]) == {"retrieval", "embed", "search", "generation"}
         assert set(cell["cost_usd"]) == {"per_query_embedding", "per_query_generation",
                                          "per_query_total", "total", "intervals"}
+
+SUPPORT = (ChunkSupport(
+    chunk_id="0001045810-26-000021:0013", anchor_label="Regulation",
+    anchor_key="regulation:us-export-controls", evidenced=True,
+    edges=(SupportEdge("SUBJECT_TO", "Company", "1045810", "NVIDIA CORP", outgoing=False),),
+    neighbours=(), score=1.8),)
+
+
+def _records_without_wall_time(eval_dir: Path, tmp_path: Path) -> list[dict]:
+    questions = _questions(_document(eval_dir, tmp_path))
+    return [{k: v for k, v in q.items() if k != "total_ms"} for q in questions.values()]
+
+
+def test_chunk_support_never_reaches_the_run_file(eval_dir, tmp_path, monkeypatch):
+    # Step 14: the answer trace's field leaves every question record as it was.
+    plain = _records_without_wall_time(eval_dir, tmp_path / "plain")
+    original = _graph
+    monkeypatch.setattr(f"{__name__}._graph",
+                        lambda record_id: replace(original(record_id), support=SUPPORT))
+    assert _records_without_wall_time(eval_dir, tmp_path / "traced") == plain

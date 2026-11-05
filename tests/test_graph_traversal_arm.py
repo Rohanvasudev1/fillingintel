@@ -149,6 +149,7 @@ def test_a_recorded_query_retrieves_its_evidence(corpus, graph, tmp_path, name):
     assert attempt.query == json.loads(recorded(name)["response"]["content"][-1]["text"])["cypher"]
     assert result.graph.fallback_reason is None
     assert result.graph.anchors == ()
+    assert result.graph.support == ()
     assert (result.graph.first_pass_valid, result.graph.non_empty) == (True, True)
     assert list(result.graph.stages) == ["cypher_generation", "cypher_execution"]
     assert result.graph.stages["cypher_generation"].cost_usd > 0
@@ -203,6 +204,7 @@ def test_an_empty_result_is_repaired_then_falls_back_to_local_search(corpus, gra
     assert _ids(result)[:2] == LOCAL_TOP
     assert result.graph.anchors[0].key == "regulation:us-export-controls"
     assert result.graph.hops == 1
+    assert list(dict.fromkeys(s.chunk_id for s in result.graph.support))[:2] == LOCAL_TOP
     assert (result.graph.first_pass_valid, result.graph.valid_after_repair,
             result.graph.non_empty) == (True, True, False)
     assert set(result.graph.stages) == {"cypher_generation", "cypher_repair", "cypher_execution",
