@@ -19,7 +19,7 @@ Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstra
 - graph_local's dev–`test` gap on local questions (recall@10 0.909 on dev, 0.500 on `test`, n 13). The arm stays as frozen; a look at which local questions it misses would be a dev-only ablation, never a change to the `test` rows.
 - Replay credit in pre-run estimates reads `benchmarks/runs/`, which is gitignored, so an uncommitted local run there counts as committed (as `eval/step13_spend.py` already does). Fine while every file there is force-added; a later step that keeps local runs should name its inputs instead of globbing.
 - Router latency on `test` is replay time, since both router runs replayed every arm answer. An end-to-end router latency needs an `--uncached` router run (about $6 at `test` prices) or a sample of it.
-- Judge calibration deferred (user decision, 2026-10-19): the user did not score the 30 drawn answers, so every judged number stays "uncalibrated". To run it later, nothing needs building: `uv run python -m eval.calibrate --reviewer "<name>"` (about 1.5–2 hours for 425 claims), then `python -m eval.calibration.report` and `python -m eval.results_table`. Options when reopened: score all 30; score fewer and report them as directional (a research-plan amendment); or a later, larger calibration (about 60–100 answers).
+- Judge calibration deferred (user decision, 2026-10-19): the user did not score the 30 drawn answers, so every judged number stays "uncalibrated". To run it later, nothing needs building: `uv run python -m eval.calibrate --reviewer "<name>"` (about 1.5–2 hours for 425 claims), then `python -m eval.calibration.report` and `python -m eval.results_table`. Options when reopened: score all 30; score fewer and report them as directional (a research-plan amendment); or a later, larger calibration (about 60–100 answers). Still deferred at the close of Step 14 (2026-11-04): the README publishes every judged number as uncalibrated.
 
 ## After Step 8
 - Haiku 5.5 against Sonnet 5.5 extraction quality is not compared: Step 9 switched the extractor to Haiku for cost (2026-10-10) and round 3 judges Haiku with prompt v2 only. A comparison would need a Sonnet run under v2 and its own review round.
@@ -45,9 +45,13 @@ Done in Step 5: judge model and effort pinned, 3 judge runs per answer, bootstra
 - Ablations not run in Step 12 or 13: Haiku 5.5 for map calls; a cheap model rating reports (GraphRAG's dynamic community selection) instead of embedding rank.
 
 ## Step 13b — agentic arms
-- Skipped for now (user decision, 2026-10-19): Step 14 comes next. Reopen after the write-up if agentic arms are still wanted.
+- Skipped for now (user decision, 2026-10-19); still skipped at the close of Step 14 (2026-11-04). Reopen if agentic arms are still wanted.
 - Set the tool-call cap before the benchmark run.
 - Whether to use LangGraph for the agentic loops (not adopted in Step 13). If used: set `recursion_limit` explicitly (the installed default is 10,007) and count tool calls in state.
+
+## After Step 14 — interface and write-up
+- Router latency in the README's headline table is replay time (see the Step 13 entry above); the README says so under the table.
+- A hosted demo stays out of scope (Step 14 spec): the app is local only, with no public keys.
 
 ## Paper
 - Decide on a UCSD faculty co-author.

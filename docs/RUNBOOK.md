@@ -20,7 +20,6 @@ filingintel/
   index/         chunking, embedding, graph build
   retrieve/      the four arms
   eval/          eval set, metrics, runner
-  api/           FastAPI
   ui/            Streamlit
   prompts/       versioned prompt files
   benchmarks/    generated results
@@ -293,6 +292,8 @@ Then the README, which is what most people will actually read:
 Point 6 matters more than it looks. It's the difference between a portfolio project and a tutorial follow-along.
 
 **Stop condition** (added at the grilling, 2026-10-20): the app answers a sample question through every arm-picker option from the response cache; the UI tests pass in CI; the README's generated tables pass `eval.results_table --check`; the screenshot is committed; the user has approved the interpretation and "what I'd do differently"; every README number traces to a committed file.
+
+**As built** (2026-11-04): a local Streamlit app (`ui/`), no FastAPI layer (`api/` deleted); six arm-picker options; sample questions from `dev` only, replayed from the response cache. The README follows the six points above, with the `test` table and the "numbers most projects don't publish" generated between marker comments by `eval.results_table` and checked in CI. Its interpretation and "what I'd do differently" were drafted by an agent from BUILD-LOG for the user to edit in review. Judged numbers are published as uncalibrated. Point 4's "diagrams" became one Mermaid flowchart in docs/ARCHITECTURE.md.
 
 ---
 
