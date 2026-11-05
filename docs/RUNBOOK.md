@@ -292,6 +292,8 @@ Then the README, which is what most people will actually read:
 
 Point 6 matters more than it looks. It's the difference between a portfolio project and a tutorial follow-along.
 
+**Stop condition** (added at the grilling, 2026-10-20): the app answers a sample question through every arm-picker option from the response cache; the UI tests pass in CI; the README's generated tables pass `eval.results_table --check`; the screenshot is committed; the user has approved the interpretation and "what I'd do differently"; every README number traces to a committed file.
+
 ---
 
 ## Timing
