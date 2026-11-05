@@ -2632,6 +2632,44 @@ Branch `claude/step-14-backend-samples-01`. The backend the Streamlit app (ticke
 
 ---
 
+## 2026-11-04: Step 14 ticket 02, the UI
+
+Branch `claude/step-14-ui-02`. `uv run --env-file .env streamlit run ui/app.py` opens the app on 127.0.0.1:8501. No paid call was made (Step 14 spend $0 of $2): every check used cached samples with dummy API keys.
+
+- **Ask tab** (`ui/page.py`, `ui/answer_view.py`). The picker lists the six options, with `vector` as the default and the notes "best measured arm" and "tuned on dev". Under it come the sample chips, a selectbox of every cached dev question for the chosen option, and a question box in a form. A chip the chosen option would answer live is hidden, with a caption giving the count, so a chip never spends (spec review). Under graph_traversal and graph_global only some of the six chips replay. A typed question's estimate (the option's mean committed dev cost) and the session's spend show under the form before sending. The cap refuses in plain words. An answer runs inside `st.status` and is kept in session state.
+- **Answer and sources.** The page shows each kept sentence HTML-escaped, with numbered markers and the count of dropped sentences. Declines and not-found answers show their fixed sentences, and a refusal says so. A row of `st.pills` chips picks the passage, and the first citation opens with a new answer. The source panel shows ticker, form, period, section and chunk ID, plus an EDGAR index link. The chunk is highlighted between short dimmed boxes holding up to 1,500 characters either side, all escaped `<pre>` text. The box before the chunk opens at its end through CSS `column-reverse`, so the chunk is in view with no JavaScript. Filing text still holds the parser's Markdown escapes (`re\-use`), and the panel shows them as stored.
+- **Trace** (`ui/trace_view.py`), display only:
+  - the route with its reason;
+  - graph_local's anchors and a `st.graphviz_chart` of anchor, edges and kept chunk (`ui/render.support_dot`, labels escaped for DOT);
+  - every Cypher attempt with its outcome, row count, guard rule and fallback (no rows, per the user's 2026-11-04 decision);
+  - graph_global's communities with title and summary, and its map points with score, drop reason and reduce membership;
+  - the ranked chunks with scores.
+- **Phoenix link.** With tracing on, a link to Phoenix's `/redirects/traces/{trace_id}` (a route checked in Phoenix's source). `UiAnswer` gained `trace_url` and `sample_id`.
+- **Metrics** (`ui/metrics_view.py`). A sample shows its committed dev record, labelled "agent-drafted questions, judged uncalibrated", with the run file named. Every answer shows citations inside the retrieved chunks, and latency, cost and replay per stage.
+- **Benchmarks tab.** The committed `results.md` rendered with `st.markdown` (HTML escaped), under a header repeating its labels.
+- **Escaping.** Streamlit's Markdown reads `$...$` as LaTeX, so the first browser check showed the cost line as a formula. Every caption and error with a price now escapes `$`. Model, filing and error text reaching Markdown, pill labels or DOT is escaped, with tests holding `<script>`, `|`, `*`, `$`, quotes and backslashes.
+- **Config and dependencies.** `streamlit==1.66.0` in main. `.streamlit/config.toml` turns telemetry off, runs headless, binds to 127.0.0.1 and sets `toolbarMode = "minimal"`, which hides the Deploy button and goes beyond the spec. `playwright==1.64.0` sits in its own `screenshot` group, so CI's `--group dev` never installs it. No locked version moved.
+- **Screenshot.** `uv run --group screenshot --env-file .env python scripts/screenshot.py` starts the app with dummy keys and clicks the lookup chip. It opens the trace, waits for Streamlit's `notRunning` state, and saves `docs/img/filingintel-ask.png`: the question, the cited answer, the highlighted passage and the trace.
+- **Checked by hand** in the browser with dummy keys: a sample answered through all six options. These were a vector lookup, a graph_local local question, a cached graph_traversal question, the graph_global global chip, the dev-best router declining the decline chip, and the pre-registered router on the unanswerable chip.
+- **Review** (`mattpocock-skills:code-review`). Fixed:
+  - the spec finding on chips;
+  - the session's source cache and spend are now replaced, not mutated;
+  - the screenshot script prints the app's log tail on failure instead of discarding it;
+  - error text gets full Markdown escaping;
+  - one callback queues both sample widgets;
+  - the metrics view reads `UiAnswer.sample_id` instead of matching question text;
+  - `app.py` keeps the backend and its close function in a NamedTuple;
+  - the drop-reason tables live together;
+  - layout numbers are named.
+
+  Left as is: the estimate is a standing caption per option, not a confirm step (the spec asks for none).
+- **Evidence.** `uv run ruff check .` is clean. A full `uv run --env-file .env pytest` on the review-fix tree, with code as committed and before this entry was written, gave 2,954 passed and 1 skipped in 982 s. An earlier full run gave 19 UI-test failures, which happened only because I edited `ui/page.py` while it was running. The rerun on the finished tree passed. `git diff origin/main -- benchmarks/ eval/` is empty.
+
+**Next session starts with**
+1. Ticket 03, the README and closing Step 14: `/implement .scratch/step-14/issues/03-readme-and-closing-step-14.md`. The screenshot is `docs/img/filingintel-ask.png`.
+
+---
+
 ## Findings worth telling
 
 Short versions of the stories from this build so far, for interviews and write-ups.

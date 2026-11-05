@@ -11,7 +11,9 @@ from __future__ import annotations
 
 import os
 import sys
+from collections.abc import Callable
 from pathlib import Path
+from typing import NamedTuple
 
 REPO = Path(__file__).resolve().parents[1]
 if str(REPO) not in sys.path:  # `streamlit run` puts only ui/ on the path
@@ -25,21 +27,26 @@ from ui.backend import LiveBackend  # noqa: E402
 from ui.connections import open_backend  # noqa: E402
 from ui.errors import BackendError  # noqa: E402
 from ui.page import main  # noqa: E402
-from ui.render import markdown_dollars  # noqa: E402
+from ui.render import md_escape  # noqa: E402
 
 
-def _close(opened: tuple[LiveBackend, object]) -> None:
-    opened[1]()
+class _Opened(NamedTuple):
+    backend: LiveBackend
+    close: Callable[[], None]
+
+
+def _close(opened: _Opened) -> None:
+    opened.close()
 
 
 @st.cache_resource(show_spinner="Opening the backend...", on_release=_close)
-def _live_backend() -> tuple[LiveBackend, object]:
-    return open_backend()
+def _live_backend() -> _Opened:
+    return _Opened(*open_backend())
 
 
 try:
-    backend = _live_backend()[0]
+    backend = _live_backend().backend
 except (BackendError, TracingConfigError) as exc:  # a bad setting: fix it and restart
-    st.error(markdown_dollars(str(exc)))
+    st.error(md_escape(str(exc)))
     st.stop()
 main(backend)

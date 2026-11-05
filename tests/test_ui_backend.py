@@ -129,7 +129,7 @@ def test_a_sample_is_answered_with_its_cost_and_time_and_spends_nothing(tmp_path
                                                           spent_usd=0.5)
     assert answer.result is registry.result
     assert answer.option == "vector"
-    assert answer.is_sample is True
+    assert answer.is_sample is True and answer.sample_id is not None
     assert answer.total_ms == pytest.approx(250.0)
     assert answer.cost == question_cost(registry.result)
     assert answer.spent_usd == 0.0
@@ -158,7 +158,7 @@ def test_a_router_option_opens_the_router_under_its_map(tmp_path):
 def test_a_live_question_adds_what_its_fresh_calls_cost(tmp_path):
     registry = Registry(arm_result(answer_cost=0.02, embed_cost=0.001))
     answer = _backend(registry, tmp_path=tmp_path).answer(LIVE, "vector", spent_usd=0.0)
-    assert answer.is_sample is False
+    assert answer.is_sample is False and answer.sample_id is None
     assert answer.spent_usd == pytest.approx(0.021)
     assert answer.replayed is False
 

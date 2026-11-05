@@ -12,15 +12,15 @@ import streamlit as st
 from ui.backend import Backend, UiAnswer
 from ui.committed import SampleMetrics
 from ui.errors import BackendError
-from ui.render import markdown_dollars
+from ui.render import markdown_dollars, md_escape
 
 SAMPLE_LABEL = "agent-drafted questions, judged uncalibrated"
 
 
 def show_metrics(backend: Backend, answer: UiAnswer) -> None:
     st.markdown("#### Metrics")
-    if answer.is_sample:
-        _sample_metrics(backend, answer)
+    if answer.sample_id is not None:
+        _sample_metrics(backend, answer.option, answer.sample_id)
     check = answer.result.answer.citation_check
     st.markdown(f"Citations inside the retrieved chunks: {check.citations_retrieved} of "
                 f"{check.citations}")
@@ -32,21 +32,17 @@ def show_metrics(backend: Backend, answer: UiAnswer) -> None:
         "the session."))
 
 
-def _sample_metrics(backend: Backend, answer: UiAnswer) -> None:
-    sample = next((s for s in backend.samples(answer.option)
-                   if s.question == answer.question), None)
-    if sample is None:
-        return
+def _sample_metrics(backend: Backend, option: str, sample_id: str) -> None:
     try:
-        metrics = backend.sample_metrics(answer.option, sample.id)
+        metrics = backend.sample_metrics(option, sample_id)
     except BackendError as exc:
-        st.error(markdown_dollars(str(exc)))
+        st.error(md_escape(str(exc)))
         return
     if metrics is None:
         return
     st.dataframe(sample_rows(metrics), hide_index=True)
     judged = "" if metrics.judged_label else " Retrieval only: this run wrote no answer."
-    st.caption(f"Committed dev metrics for {sample.id} ({metrics.class_}), from "
+    st.caption(f"Committed dev metrics for {sample_id} ({metrics.class_}), from "
                f"`{metrics.run_file}`: {SAMPLE_LABEL}.{judged}")
 
 

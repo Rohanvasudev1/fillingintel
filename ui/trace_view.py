@@ -12,11 +12,7 @@ import streamlit as st
 from retrieve.arm import ArmResult, GlobalSearch, GraphRetrieval, Routing
 from ui.backend import UiAnswer
 from ui.communities import CommunityInfo
-from ui.render import citation_numbers, md_escape, plural, support_dot
-
-MAP_DROPS: Mapping[str, str] = {"no_citation": "no citation",
-                                "citation_not_shown": "cites a chunk not shown",
-                                "bad_score": "score not 0 to 100"}
+from ui.render import MAP_DROPS, citation_numbers, md_escape, plural, support_dot
 
 
 def show_trace(answer: UiAnswer) -> None:

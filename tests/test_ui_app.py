@@ -111,7 +111,9 @@ def test_a_backend_error_is_shown_as_its_plain_message():
     error = DatabaseUnavailable(NEO4J_DOWN)
     at = ask_typed(open_app(FakeBackend(error=error)))
 
-    assert at.error[0].value == NEO4J_DOWN
+    # Markdown-escaped, so it shows exactly as NEO4J_DOWN reads.
+    assert at.error[0].value == (r"Neo4j is not reachable at NEO4J\_URI. Start it with docker "
+                                 r"compose up \-d, then try again.")
     assert not at.exception
 
 
@@ -199,3 +201,17 @@ def test_a_refused_answer_says_so():
     at = ask_with(replace(arm_result(), answer=refused))
 
     assert "refused" in at.warning[0].value
+
+
+def test_only_chips_the_chosen_option_replays_are_offered():
+    other = Sample("q0002", "local", "What did Intel agree with the DOC?")
+    backend = FakeBackend(samples={"vector": (LOOKUP, other), "graph_traversal": (other,)},
+                          chips=(LOOKUP, other))
+    at = open_app(backend)
+    assert len(at.pills(key="chip").options) == 2
+
+    at.selectbox(key="option").set_value("graph_traversal").run()
+
+    assert at.pills(key="chip").options == ["local: What did Intel agree with the DOC?"]
+    assert "1 sample chip is not cached for graph_traversal" in " ".join(
+        c.value for c in at.caption)

@@ -15,6 +15,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 from urllib.error import URLError
@@ -30,6 +31,7 @@ DUMMY_KEYS = ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "VOYAGE_API_KEY")
 VIEWPORT = {"width": 1400, "height": 3200}  # tall: Streamlit scrolls its own container
 CHIP = "lookup:"  # the lookup chip: a cached sample with citations
 START_TIMEOUT_S = 60
+LOG_TAIL_LINES = 20
 ANSWER_TIMEOUT_MS = 120_000
 IDLE = "[data-testid='stApp'][data-test-script-state='notRunning']"
 
@@ -80,10 +82,21 @@ def _capture(page: Page) -> None:
 
 
 def main() -> int:
-    app = subprocess.Popen(
-        [sys.executable, "-m", "streamlit", "run", "ui/app.py", "--server.port", str(PORT),
-         "--server.headless", "true"],
-        cwd=REPO, env=_app_env(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    with tempfile.TemporaryFile("w+", encoding="utf-8") as log:
+        app = subprocess.Popen(
+            [sys.executable, "-m", "streamlit", "run", "ui/app.py", "--server.port", str(PORT),
+             "--server.headless", "true"],
+            cwd=REPO, env=_app_env(), stdout=log, stderr=subprocess.STDOUT)
+        try:
+            return _run(app)
+        except BaseException:
+            log.seek(0)
+            tail = log.read().splitlines()[-LOG_TAIL_LINES:]
+            print("the app's last output:", *tail, sep="\n", file=sys.stderr)
+            raise
+
+
+def _run(app: subprocess.Popen) -> int:
     try:
         _wait_for_server()
         with sync_playwright() as playwright:

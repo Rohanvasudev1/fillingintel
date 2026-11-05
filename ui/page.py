@@ -20,6 +20,7 @@ from ui.samples import Sample
 from ui.trace_view import show_trace
 
 TITLE = "FilingIntel"
+QUESTION_BOX_PX = 80
 
 
 def main(backend: Backend) -> None:
@@ -36,7 +37,7 @@ def _ask_view(backend: Backend) -> None:
     state = st.session_state
     state.setdefault("spent", 0.0)
     option = _picker()
-    _sample_chips(backend)
+    _sample_chips(backend, option)
     _sample_list(backend, option)
     _question_form()
     cost_line = st.empty()
@@ -45,7 +46,7 @@ def _ask_view(backend: Backend) -> None:
         _ask(backend, pending, option)
     cost_line.caption(markdown_dollars(_cost_line(backend, option)))
     if state.get("error"):
-        st.error(markdown_dollars(state["error"]))
+        st.error(md_escape(state["error"]))
     answer = state.get("answer")
     if answer is not None:
         show_answer(backend, answer)
@@ -57,40 +58,49 @@ def _queue(question: str) -> None:
     st.session_state["pending"] = question
 
 
-def _chip_picked(chips: Sequence[Sample]) -> None:
-    picked = st.session_state.get("chip")
-    st.session_state["chip"] = None
-    _queue(next(s.question for s in chips if s.id == picked))
+def _queue_sample(key: str, samples: Sequence[Sample]) -> None:
+    """A sample widget's callback: queue the picked sample and clear the widget."""
+    picked = st.session_state.get(key)
+    st.session_state[key] = None
+    question = next((s.question for s in samples if s.id == picked), None)
+    if question is not None:
+        _queue(question)
 
 
-def _sample_chips(backend: Backend) -> None:
-    chips = backend.chips()
+def _sample_label(sample: Sample) -> str:
+    """A pill label: pills render Markdown, so the question is escaped."""
+    return f"{sample.class_}: {md_escape(sample.question)}"
+
+
+def _sample_chips(backend: Backend, option: str) -> None:
+    """The six chips, less any *option* would answer live: a chip never spends."""
+    cached = {s.id for s in backend.samples(option)}
+    chips = tuple(c for c in backend.chips() if c.id in cached)
     by_id = {s.id: s for s in chips}
     st.pills("Try a sample question", list(by_id), key="chip",
-             format_func=lambda sid: f"{by_id[sid].class_}: {md_escape(by_id[sid].question)}",
-             on_change=_chip_picked, args=(chips,))
-
-
-def _sample_picked(samples: Sequence[Sample]) -> None:
-    picked = st.session_state.get("sample_pick")
-    st.session_state["sample_pick"] = None
-    if picked is not None:
-        _queue(next(s.question for s in samples if s.id == picked))
+             format_func=lambda sid: _sample_label(by_id[sid]),
+             on_change=_queue_sample, args=("chip", chips))
+    hidden = len(backend.chips()) - len(chips)
+    if hidden:
+        noun = "chip is" if hidden == 1 else "chips are"
+        st.caption(f"{hidden} sample {noun} not cached for {option}, so not offered here.")
 
 
 def _sample_list(backend: Backend, option: str) -> None:
     samples = backend.samples(option)
     by_id = {s.id: s for s in samples}
+    # Selectbox options are plain text, not Markdown, so the question needs no escaping.
     st.selectbox(f"Or pick any of the {len(samples)} dev questions {option} answers from the "
                  "cache", list(by_id), index=None, key="sample_pick",
                  placeholder="Choose a sample question",
                  format_func=lambda sid: f"{by_id[sid].class_}: {by_id[sid].question}",
-                 on_change=_sample_picked, args=(samples,))
+                 on_change=_queue_sample, args=("sample_pick", samples))
 
 
 def _question_form() -> None:
     with st.form("ask_form", border=False):
-        typed = st.text_area("Or type your own question", key="typed", height=80)
+        typed = st.text_area("Or type your own question", key="typed",
+                             height=QUESTION_BOX_PX)
         if st.form_submit_button("Ask") and typed.strip():
             _queue(typed.strip())
 
@@ -100,7 +110,7 @@ def _cost_line(backend: Backend, option: str) -> str:
     try:
         estimate = f"about ${backend.estimate(option):.3f}"
     except BackendError as exc:
-        estimate = f"an unknown amount ({exc})"
+        estimate = f"an unknown amount ({md_escape(str(exc))})"
     return (f"A typed question that is not a sample runs live and costs {estimate} with "
             f"{option} (its mean dev cost per question). Session spend: "
             f"${st.session_state['spent']:.2f} of ${backend.max_spend:.2f}. "
@@ -117,7 +127,7 @@ def _ask(backend: Backend, question: str, option: str) -> None:
             state["error"] = str(exc)
             return
         status.update(label=f"Answered with {option}", state="complete")
-    state["spent"] += answer.spent_usd
+    state["spent"] = state["spent"] + answer.spent_usd
     state["answer"] = answer
     state["error"] = None
     state["citation"] = first_citation(answer)

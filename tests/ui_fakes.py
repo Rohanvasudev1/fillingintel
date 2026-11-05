@@ -8,7 +8,7 @@ from retrieve.answer import enforce_citations, not_found_without_call
 from retrieve.answer_model import TokenUsage
 from retrieve.arm import ArmResult, GraphRetrieval, RetrievedChunk, Routing, StageCost
 from retrieve.question_filter import QuestionFilter
-from ui.backend import UiAnswer, phoenix_trace_url
+from ui.backend import UiAnswer, phoenix_trace_url, sample_id_of
 from ui.errors import AnswerFailed, SourceNotFound
 from ui.spend import check_spend, fresh_cost
 
@@ -67,8 +67,8 @@ class FakeBackend:
         return self._max_spend
 
     def answer(self, question, option, *, spent_usd):
-        is_sample = question in {s.question for s in self.samples(option)}
-        check_spend(estimate=0.0 if is_sample else self._estimate, spent=spent_usd,
+        sample_id = sample_id_of(question, self.samples(option))
+        check_spend(estimate=0.0 if sample_id is not None else self._estimate, spent=spent_usd,
                     cap=self._max_spend)
         self.asked.append((question, option))
         if self._error is not None:
@@ -78,7 +78,7 @@ class FakeBackend:
             raise AnswerFailed(f"no scripted answer for {question!r} through {option}")
         return UiAnswer(option=option, question=question, result=result, total_ms=1200.0,
                         cost=question_cost(result), spent_usd=fresh_cost(result),
-                        replayed=replayed(result), is_sample=is_sample,
+                        replayed=replayed(result), sample_id=sample_id,
                         trace_id=self._trace_id,
                         trace_url=phoenix_trace_url(PHOENIX, self._trace_id),
                         communities=self._communities)

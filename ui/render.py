@@ -19,6 +19,9 @@ from ui.source import SourcePassage
 LEAD_TEXT: Mapping[str, str] = {"declined": DECLINE_TEXT, "not_found": NOT_FOUND_TEXT}
 DROP_REASONS: Mapping[str, str] = {"no_citation": "no citation",
                                    "citation_not_retrieved": "cites a chunk not retrieved"}
+MAP_DROPS: Mapping[str, str] = {"no_citation": "no citation",
+                                "citation_not_shown": "cites a chunk not shown",
+                                "bad_score": "score not 0 to 100"}
 _PRE = ("margin:0;white-space:pre-wrap;word-break:break-word;font-size:0.85rem;"
         "line-height:1.45;padding:0.5rem 0.75rem")
 _DIM = "opacity:0.55"

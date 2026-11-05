@@ -9,11 +9,12 @@ from ui.render import (
     answer_html,
     citation_numbers,
     dropped_line,
-    markdown_dollars,
     md_escape,
     passage_html,
 )
 from ui.source import CONTEXT_CHARS, SourcePassage
+
+ANSWER_COLUMNS = (3, 2)  # answer : source panel widths
 
 
 def first_citation(answer: UiAnswer) -> str | None:
@@ -25,7 +26,7 @@ def show_answer(backend: Backend, answer: UiAnswer) -> None:
     check = answer.result.answer.citation_check
     numbers = citation_numbers(check.kept)
     st.subheader(md_escape(answer.question))
-    left, right = st.columns([3, 2], gap="large")
+    left, right = st.columns(ANSWER_COLUMNS, gap="large")
     with left:
         _status_note(answer)
         st.html(answer_html(answer.result.answer.status, check.kept, numbers))
@@ -49,15 +50,24 @@ def _status_note(answer: UiAnswer) -> None:
         st.caption("The answer had no status line; its cited sentences are shown as written.")
 
 
-def _source_panel(backend: Backend, chunk_id: str, number: int | None) -> None:
-    sources = st.session_state.setdefault("sources", {})
+def _passage(backend: Backend, chunk_id: str) -> SourcePassage | None:
+    """*chunk_id*'s passage, read once per session; None after showing why it could not be."""
+    sources = st.session_state.get("sources", {})
     if chunk_id not in sources:
         try:
-            sources[chunk_id] = backend.source(chunk_id)
+            passage = backend.source(chunk_id)
         except BackendError as exc:
-            st.error(markdown_dollars(str(exc)))
-            return
-    passage: SourcePassage = sources[chunk_id]
+            st.error(md_escape(str(exc)))
+            return None
+        sources = {**sources, chunk_id: passage}
+        st.session_state["sources"] = sources
+    return sources[chunk_id]
+
+
+def _source_panel(backend: Backend, chunk_id: str, number: int | None) -> None:
+    passage = _passage(backend, chunk_id)
+    if passage is None:
+        return
     marker = f"[{number}] " if number is not None else ""
     st.markdown(f"**{marker}{passage.ticker} {passage.form_type} {passage.fiscal_period}**  \n"
                 f"{md_escape(passage.company_name)} · section `{passage.section}` · "
